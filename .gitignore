@@ -1,5 +1,6 @@
 build*/
-
+doc/html/
+doc/latex
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++,visualstudiocode,visualstudio,linux,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++,visualstudiocode,visualstudio,linux,windows
