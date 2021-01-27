@@ -16,3 +16,6 @@ target_include_directories( ${LIB_NAME} PUBLIC .)
 
 # set the folder where to place the projects
 set_target_properties( ${LIB_NAME} PROPERTIES FOLDER lib )
+
+
+# add executable
