@@ -11,6 +11,6 @@ add_subdirectory(extractor)
 include_directories(.)
 
 # library
-add_library( ${LIB_NAME} INTERFACE)
+add_library( ${LIB_NAME} SHARED "icov_core.cpp")
 
-target_link_libraries(${LIB_NAME} INTERFACE IcovDecoderLib IcovCommonLib)
+target_link_libraries(${LIB_NAME} IcovDecoderLib IcovCommonLib IcovExtractorLib)

@@ -1,0 +1,11 @@
+# each line including Warning adds one to the Warning counter
+warning /^Warning/
+warning /attention :/
+warning /warning:/
+warning /warning/
+
+# each line including Error adds one to the Error counter
+error /^Error/
+error /error: /
+error /error /
+error /erreur /
