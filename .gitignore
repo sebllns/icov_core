@@ -1,4 +1,5 @@
-build*/
+src/build*/
+/build*/
 doc/html/
 doc/latex
 
