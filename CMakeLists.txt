@@ -6,14 +6,14 @@ project(icov_core LANGUAGES CXX)
 set( LIB_NAME IcovCoreLib )
 
 
-add_subdirectory(common)
-#add_subdirectory(encoder)
-add_subdirectory(decoder)
-add_subdirectory(extractor)
+include_directories(src)
 
-include_directories(.)
+add_subdirectory(src/common)
+#add_subdirectory(src/encoder)
+add_subdirectory(src/decoder)
+add_subdirectory(src/extractor)
 
 # library
-add_library( ${LIB_NAME} SHARED "icov_core.cpp")
+add_library( ${LIB_NAME} SHARED "src/icov_core.cpp")
 
 target_link_libraries(${LIB_NAME} IcovDecoderLib IcovCommonLib IcovExtractorLib)
