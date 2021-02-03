@@ -1,7 +1,5 @@
 #!/bin/sh
-cd ${ICOV_SRC_DIR}
-
-mkdir build_tests
-cd build_tests
-cmake -DCMAKE_BUILD_TYPE=Debug ../icov_tests
+mkdir build-tests
+cd build-tests
+cmake -DCMAKE_BUILD_TYPE=Debug ../tests
 make -j8
