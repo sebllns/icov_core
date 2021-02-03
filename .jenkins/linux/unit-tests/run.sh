@@ -1,4 +1,4 @@
 #!/bin/sh
-cd ./ICOV_SRC/build_tests
+cd build-tests
 
 ./icov_tests
