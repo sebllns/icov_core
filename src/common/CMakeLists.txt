@@ -7,6 +7,8 @@ file(GLOB_RECURSE SRC_FILES "*.cpp" )
 # get include files
 file(GLOB_RECURSE INC_FILES "*.h" )
 
+include_directories(.)
+
 # library
 add_library( ${LIB_NAME} STATIC ${SRC_FILES} ${INC_FILES})
 
