@@ -1,5 +1,5 @@
 /****************************************************************************
-/** @addtogroup core
+/** @addtogroup core ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
  
 /** @addtogroup common
@@ -21,25 +21,25 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  * See the GNU Affero General Public License for more details.
- *
+ * <br/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * <br/>
  * For using ICOV with software or under terms that will not comply with the GNU
  * GPL, please contact Inria about acquiring an ICOV Professional
  * Edition License.
- *
+ * <br/>
  * See see contact section in README file for more information.
- *
+ * <br/>
  * This software was developed at:
  * Inria Rennes - Bretagne Atlantique
  * Campus Universitaire de Beaulieu
  * 35042 Rennes Cedex
  * France
- *
+ * <br/>
  * If you have questions regarding the use of this software, please contact
  * Inria using the contact section in the README file.
- *
+ * <br/>
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
