@@ -1,5 +1,6 @@
 /****************************************************************************
-/** @addtogroup core ICOV, open source Interactive Coder for Omnidirectional Videos.
+/** @addtogroup core 
+ * ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
  
 /** @addtogroup common
