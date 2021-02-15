@@ -1,3 +1,4 @@
+/****************************************************************************
 /** @addtogroup core
  */
  
@@ -5,11 +6,13 @@
  *  @ingroup core
  */
 
-/****************************************************************************
- *
- * ICOV, open source Interactive Coder for Omnidirectional Videos.
- * Copyright (C) 2021 by Inria. All rights reserved.
- *
+/** @file common.h
+ *  @brief Defines version information, constants and small in-line functions
+ *  @ingroup common
+ *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @version 0.0.1
+ *  @date 2021
+ *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
  * The copyright in this software is being made available under 
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -40,13 +43,6 @@
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @file common.h
- * @brief Defines version information, constants and small in-line functions
- * @ingroup common
- * @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- * @version 0.0.1
- * @date 2021
- * @copyright Inria. All rights reserved.
  *****************************************************************************/
 
 
