@@ -1,6 +1,6 @@
-/****************************************************************************
+/****************************************************************************/
 /** @addtogroup core 
- * ICOV, open source Interactive Coder for Omnidirectional Videos.
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
  
 /** @addtogroup common
@@ -51,7 +51,7 @@
 
 #include "common.h"
 
-/****************************************************************************
+/****************************************************************************/
 /** @ingroup common
  *  @brief Defines the interface for any Request object sent to extractor.
  */
