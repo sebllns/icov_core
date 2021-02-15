@@ -1,3 +1,10 @@
+/** @addtogroup core
+ */
+ 
+/** @addtogroup common
+ *  @ingroup core
+ */
+
 /****************************************************************************
  *
  * ICOV, open source Interactive Coder for Omnidirectional Videos.
@@ -33,9 +40,6 @@
  * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @addtogroup core
- * @addtogroup common
- * \ingroup core
  * @file common.h
  * @brief Defines version information, constants and small in-line functions
  * @ingroup common
