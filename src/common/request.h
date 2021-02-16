@@ -26,11 +26,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * <br/>
- * For using ICOV with software or under terms that will not comply with the GNU
- * GPL, please contact Inria about acquiring an ICOV Professional
+ * For using ICOV under terms that will not comply with the GNU
+ * AGPL, please contact Inria about acquiring an ICOV Professional
  * Edition License.
  * <br/>
- * See see contact section in README file for more information.
+ * See contact section in README file for more information.
  * <br/>
  * This software was developed at:
  * Inria Rennes - Bretagne Atlantique
