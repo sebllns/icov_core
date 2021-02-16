@@ -1,10 +1,10 @@
 /****************************************************************************/
-/** @addtogroup core 
+/** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
  
 /** @addtogroup common
- *  @ingroup core
+ *  @ingroup icov-core
  */
 
 /** @file typeDef.h

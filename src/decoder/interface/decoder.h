@@ -1,11 +1,11 @@
 /****************************************************************************/
-/** @addtogroup core 
+/** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
  
 /** @addtogroup decoder
  * Decoder package (client side).
- *  @ingroup core
+ *  @ingroup icov-core
  */
 
 /** @file decoder.h
