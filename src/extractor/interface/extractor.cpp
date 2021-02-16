@@ -8,7 +8,7 @@
  *  @ingroup icov-core
  */
 
-/** @file interface/extractor.h
+/** @file interface/extractor.cpp
  *  @brief An abstract ICOV extractor implementation.
  *  @ingroup extractor
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
