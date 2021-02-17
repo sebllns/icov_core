@@ -52,7 +52,7 @@
 
 #include "request.h"
 
-class PoVRequest : public IRequest
+class ICOV_EXPORT PoVRequest : public IRequest
 {
 
 public:

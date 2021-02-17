@@ -53,7 +53,7 @@
 #include "request.h"
 #include "common.h"
 
-class IRenderer
+class ICOV_EXPORT IRenderer
 {
 protected:
   IRequest *m_request;

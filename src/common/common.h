@@ -61,5 +61,6 @@ using namespace std;
 
 #include "typedef.h"
 #include "version.h"
+#include "DLLDefines.h"
 
 #endif // COMMON_H
