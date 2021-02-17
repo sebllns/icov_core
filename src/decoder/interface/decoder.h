@@ -54,7 +54,7 @@
 #include "common.h"
 #include "renderer.h"
 
-class ICOV_EXPORT IDecoder
+class IDecoder
 {
 protected:
   std::unique_ptr<IRenderer> m_renderer;

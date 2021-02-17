@@ -52,7 +52,7 @@
 
 #include "interface/decoder.h"
 
-class ICOV_EXPORT Decoder : public IDecoder
+class Decoder : public IDecoder
 {
 public:
   Decoder();

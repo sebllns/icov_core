@@ -52,7 +52,7 @@
 
 #include "common.h"
 
-class ICOV_EXPORT IParameters
+class IParameters
 {
 public:
   IParameters();
