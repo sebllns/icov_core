@@ -50,8 +50,9 @@
 #ifndef IPARAMETERS_H
 #define IPARAMETERS_H
 
+#include "common.h"
 
-class IParameters
+class ICOV_EXPORT IParameters
 {
 public:
   IParameters();

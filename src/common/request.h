@@ -55,7 +55,7 @@
 /** @ingroup common
  *  @brief Defines the interface for any Request object sent to extractor.
  */
-class IRequest
+class ICOV_EXPORT IRequest
 {
 protected:
   float m_angleY;

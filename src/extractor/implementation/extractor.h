@@ -52,7 +52,7 @@
 
 #include "interface/extractor.h"
 
-class Extractor : public IExtractor
+class ICOV_EXPORT Extractor : public IExtractor
 {
 public:
   Extractor();

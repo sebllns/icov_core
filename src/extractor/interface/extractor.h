@@ -53,7 +53,7 @@
 
 #include "common.h"
 
-class IExtractor
+class ICOV_EXPORT IExtractor
 {
 protected:
 
