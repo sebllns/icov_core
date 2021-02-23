@@ -17,3 +17,7 @@ include_directories(.)
 
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})
+
+#install(TARGETS ${LIB_NAME} DESTINATION ./lib EXPORT icov-targets)
+#install(EXPORT icov-targets DESTINATION lib/icov)
+
