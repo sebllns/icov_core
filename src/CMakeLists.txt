@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
+
+
+
+#SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/client_application/UnityProject/Assets/Plugins/)
+
 project(icov_core LANGUAGES CXX)
 
 # library
