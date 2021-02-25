@@ -1,7 +1,12 @@
-# ICOV-core
+[![Download ICOV](https://img.shields.io/sourceforge/dw/icov.svg)](https://sourceforge.net/projects/icov/files/latest/download)
+
+# ICOV-core 
 
 Core part  of the ADT project ICOV.
 All the source code in this project are meant to be shared publicly 
+
+[![Download ICOV](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/icov/files/latest/download)
+
 
 ## Links
 
