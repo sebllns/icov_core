@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(icov_core LANGUAGES CXX)
 
-add_compile_options(-Wall)
+#add_compile_options(-Wall)
 
 # library
 set( LIB_NAME IcovCoreLib )
