@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup decoder
  * Decoder package (client side).
  *  @ingroup icov-core
@@ -49,14 +49,21 @@
 
 #include "decoder.h"
 
-void IDecoder::setRenderer(IRenderer* r)
+void IDecoder::setRenderer(IRenderer *r)
 {
   cout << "Decoder::setRenderer" << endl;
   m_renderer = std::unique_ptr<IRenderer>(r);
 }
 
-
-const IRenderer& IDecoder::getRenderer() const
+const IRenderer &IDecoder::getRenderer() const
 {
   return *m_renderer;
+}
+
+void IDecoder::setTexture(unsigned char *pixels, int width, int height, int rowPitch)
+{
+  m_pixels = pixels;
+  m_height = height;
+  m_width = width;
+  m_rowPitch = rowPitch;
 }

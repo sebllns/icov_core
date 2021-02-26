@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup decoder
  * Decoder package (client side).
  *  @ingroup icov-core
@@ -51,7 +51,12 @@
 
 IRenderer::IRenderer()
 {
+}
 
+IRenderer::~IRenderer()
+{
+  delete m_pixels;
+  delete m_request;
 }
 
 void IRenderer::setRequest(IRequest *r)
@@ -62,4 +67,19 @@ void IRenderer::setRequest(IRequest *r)
 const IRequest &IRenderer::getRequest() const
 {
   return *m_request;
+}
+
+const unsigned char *IRenderer::getPixels() const
+{
+  return m_pixels;
+}
+
+const int IRenderer::getWidth() const
+{
+  return m_width;
+}
+
+const int IRenderer::getHeight() const
+{
+  return m_height;
 }

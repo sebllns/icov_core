@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup decoder
  * Decoder package (client side).
  *  @ingroup icov-core
@@ -57,12 +57,19 @@ class IRenderer
 {
 protected:
   IRequest *m_request;
+  unsigned char *m_pixels;
+  int m_width;
+  int m_height;
+
 public:
   IRenderer();
-  virtual ~IRenderer(){}
-  virtual void drawPixels(/*pixels*/) = 0;
-  void setRequest(IRequest*);
-  const IRequest& getRequest() const;
+  virtual ~IRenderer();
+  virtual void drawPixels(unsigned char *pixels, int width, int height) = 0;
+  void setRequest(IRequest *);
+  const IRequest &getRequest() const;
+  const unsigned char *getPixels() const;
+  const int getWidth() const;
+  const int getHeight() const;
 };
 
 #endif // IRENDERER_H

@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup decoder
  * Decoder package (client side).
  *  @ingroup icov-core
@@ -47,8 +47,6 @@
  *
  *****************************************************************************/
 
-
-
 #include "decoder.h"
 
 Decoder::Decoder()
@@ -61,10 +59,49 @@ Decoder::~Decoder()
   cout << "destroy Decoder" << endl;
 }
 
-
 void Decoder::decode()
 {
-  cout<<"Decoder::decode"<<endl;
-  m_renderer -> drawPixels();
-}
+  cout << "Decoder::decode" << endl;
 
+  int width = m_width;
+  int height = m_height;
+  unsigned char *dst = (unsigned char *)m_pixels;
+
+
+  for (int y = 0; y < height; ++y)
+  {
+    unsigned char *ptr = dst;
+    for (int x = 0; x < width; ++x)
+    {
+
+      // Write the texture pixel
+      //ptr[0] = 127.0f + (xAngle / 360.0f) * 127.0f;
+      //ptr[1] = 127.0f + (yAngle / 360.0f) * 127.0f;
+      //ptr[2] = 0.0f;
+
+      ptr[0] = 0.0f;
+      ptr[1] = 0.0f;
+      ptr[2] = 0.0f;
+      ptr[3] = 0.0f;
+
+      if (x % 128 == 0 || y % 128 == 0)
+      {
+        ptr[1] = 255.0f;
+        ptr[3] = 255.0f;
+      }
+
+     /* if (x > 0.4f * width && x < 0.6f * width && y > 0.4f * height && y < 0.6f * height)
+      {
+        ptr[2] = ptr[3] = 127.0f * 0.5f * (1 + sinf(0.8f * t));
+      }*/
+
+      // To next pixel (our pixels are 4 bpp)
+      ptr += 4;
+    }
+
+    // To next image row
+    dst += m_rowPitch;
+  }
+
+  m_renderer->drawPixels(m_pixels, m_width, m_height);
+}
