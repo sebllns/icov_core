@@ -59,6 +59,7 @@ protected:
   IRequest *m_request;
 public:
   IRenderer();
+  virtual ~IRenderer(){}
   virtual void drawPixels(/*pixels*/) = 0;
   void setRequest(IRequest*);
   const IRequest& getRequest() const;
