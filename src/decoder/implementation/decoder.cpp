@@ -48,10 +48,12 @@
  *****************************************************************************/
 
 #include "decoder.h"
+#include <cmath>
 
 Decoder::Decoder()
 {
   cout << "new Decoder" << endl;
+  m_startTime = clock();
 }
 
 Decoder::~Decoder()
@@ -66,6 +68,8 @@ void Decoder::decode()
   int width = m_width;
   int height = m_height;
   unsigned char *dst = (unsigned char *)m_pixels;
+
+  float t = getTime();
 
 
   for (int y = 0; y < height; ++y)
@@ -90,10 +94,10 @@ void Decoder::decode()
         ptr[3] = 255.0f;
       }
 
-     /* if (x > 0.4f * width && x < 0.6f * width && y > 0.4f * height && y < 0.6f * height)
+      if (x > 0.4f * width && x < 0.6f * width && y > 0.4f * height && y < 0.6f * height)
       {
         ptr[2] = ptr[3] = 127.0f * 0.5f * (1 + sinf(0.8f * t));
-      }*/
+      }
 
       // To next pixel (our pixels are 4 bpp)
       ptr += 4;
@@ -104,4 +108,9 @@ void Decoder::decode()
   }
 
   m_renderer->drawPixels(m_pixels, m_width, m_height);
+}
+
+float Decoder::getTime() 
+{
+  return (float)(clock() - m_startTime)/CLOCKS_PER_SEC;
 }

@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup decoder
  * Decoder package (client side).
  *  @ingroup icov-core
@@ -54,9 +54,13 @@
 
 class Decoder : public IDecoder
 {
+private:
+  clock_t m_startTime;
+
 public:
   Decoder();
   virtual void decode(/*stream*/);
+  float getTime();
   ~Decoder();
 };
 
