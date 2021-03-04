@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 
 project(icov_core LANGUAGES CXX)
 
-file (STRINGS "version.txt" ICOV_CORE_VERSION)
+
+set(ICOV_CORE_VERSION_MAJOR "0")
+set(ICOV_CORE_VERSION_MINOR "2")
+set(ICOV_CORE_VERSION_PATCH "1")
+set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
+
+file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
