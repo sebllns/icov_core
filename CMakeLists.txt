@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-message(BUILD ICOV CORE PROJECT)
+message("BUILD ICOV CORE PROJECT")
 
 project(icov_core LANGUAGES CXX)
 
