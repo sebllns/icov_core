@@ -47,6 +47,9 @@
  *
  *****************************************************************************/
 
+/// \todo remove this after the test is done
+#pragma warning( disable : 4244 ) 
+
 #include "decoder.h"
 #include <cmath>
 
