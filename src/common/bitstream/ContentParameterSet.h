@@ -10,7 +10,7 @@
 class ContentParameterSet
 {
 protected:
-  ContentType m_content_type;
+  icov::ContentType m_content_type;
   int m_content_width;
   int m_content_height;
   float m_content_framerate;
