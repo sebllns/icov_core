@@ -50,6 +50,11 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#if _MSC_VER
+#define _HAS_STD_BYTE 0
+#include <Windows.h>
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
