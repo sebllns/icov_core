@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup common
  *  @ingroup icov-core
  */
@@ -66,29 +66,40 @@ public:
       uint32_t nuhReservedZeroBit = 0,
       uint32_t forbiddenZeroBit = 0,
       int nuhLayerId = 0)
-      : m_nalUnitType(nalUnitType), m_temporalId(temporalId), 
-      m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit), m_nuhReservedZeroBit(nuhReservedZeroBit),
-      m_rbsp(nullptr),
-      m_rbsp_length(0)
+      : m_nalUnitType(nalUnitType), m_temporalId(temporalId),
+        m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit), m_nuhReservedZeroBit(nuhReservedZeroBit),
+        m_rbsp(nullptr),
+        m_rbsp_length(0)
   {
-
   }
 
-  void setRbsp(const icov::byte* data, int length);
+
+    NalUnit()
+      : m_nalUnitType(icov::NalUnitType::NAL_UNIT_INVALID), m_temporalId(0),
+        m_nuhLayerId(0), m_forbiddenZeroBit(0), m_nuhReservedZeroBit(0),
+        m_rbsp(nullptr),
+        m_rbsp_length(0)
+  {
+  }
+
+  void serialize(icov::byte *&dst) const;
+  void deserialize(const icov::byte *src);
+
+  void setRbsp(icov::byte *data, int length);
   icov::NalUnitType getType() const;
   int getRbspLength() const;
-  const void readRbsp(icov::byte* dst, int length, int offset = 0) const;
+  const void readRbsp(icov::byte *dst, int length, int offset = 0) const;
   const icov::byte getRbspByte(int position) const;
 
 private:
   /// 3 bits
-  ushort m_temporalId;
+  u_int8_t m_temporalId;
 
   /// 5 bits
   icov::NalUnitType m_nalUnitType;
 
   /// 6 bits
-  ushort m_nuhLayerId;
+  u_int8_t m_nuhLayerId;
 
   /// 1 bit
   bool m_nuhReservedZeroBit;
@@ -96,7 +107,7 @@ private:
   /// 1 bit
   bool m_forbiddenZeroBit;
 
-  const icov::byte *m_rbsp;
+  icov::byte *m_rbsp;
   int m_rbsp_length;
 };
 
