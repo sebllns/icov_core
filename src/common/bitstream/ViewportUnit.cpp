@@ -10,7 +10,6 @@ NalUnit ViewportUnit::ToNal()
 
     icov::bitstreambuf buf;
     icov::obitstream os(&buf);
-    os.sync_with_stdio(false);
 
     for (int i = 0; i < m_icus.size(); i++)
     {
@@ -18,9 +17,9 @@ NalUnit ViewportUnit::ToNal()
         os.write(m_icus[i].GetEncodedData(), m_icus[i].GetDataLength());
     }
 
-    std::cout << os.rdbuf()->in_avail() << std::endl;
-    std::cout << os.tellp() << std::endl;
-    std::cout << buf.size() << std::endl;
+    //std::cout << os.rdbuf()->in_avail() << std::endl;
+    //std::cout << os.tellp() << std::endl;
+    //std::cout << buf.size() << std::endl;
 
     icov::byte *data = new icov::byte[buf.size()];
     buf.sgetn(data, buf.size());
