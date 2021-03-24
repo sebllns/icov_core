@@ -10,11 +10,11 @@
 class InteractiveCodedUnit
 {
 public:
-  InteractiveCodedUnit(const icov::byte *encodedData, uint8_t dataLength) : m_encodedData(encodedData), m_dataLength(dataLength)
+  InteractiveCodedUnit(const icov::byte *encodedData, icov::int8b dataLength) : m_encodedData(encodedData), m_dataLength(dataLength)
   {
   }
 
-  const uint8_t GetDataLength() const
+  const icov::int8b  GetDataLength() const
   {
     return m_dataLength;
   }
@@ -26,7 +26,7 @@ public:
 
 private:
   const icov::byte *m_encodedData;
-  uint8_t m_dataLength;
+  icov::int8b  m_dataLength;
 };
 
 #endif // INTERACTIVECODEDUNIT_H

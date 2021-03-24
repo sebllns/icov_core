@@ -93,8 +93,13 @@ namespace icov
       m_out.rdbuf(m_sink);
     }
 
+    std::streambuf *getSink()
+    {
+      return m_sink;
+    }
+
     // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-    const std::string getTime() const
+    static const std::string getTime(const char *format = "%Y-%m-%d.%X")
     {
       time_t now = time(0);
       struct tm tstruct;
@@ -102,7 +107,7 @@ namespace icov
       tstruct = *localtime(&now);
       // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
       // for more information about date/time format
-      strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+      strftime(buf, sizeof(buf), format, &tstruct);
 
       return buf;
     }
@@ -128,15 +133,9 @@ namespace icov
 
       if (m_newline)
       {
-        if (m_callback != nullptr)
-        {
-          const std::string tmp = m_stringstream.str();
-          const char *tmsg = tmp.c_str();
-          m_callback(tmsg, (int)strlen(tmsg));
-          m_stringstream.clear();
-        }
-
         std::ostream &str = *m_pstream;
+
+        // --   add timestamp level here
         if (showTimestamp && !(str << "[" << getTime() << "] "))
           return traits_type::eof(); // Error
 
@@ -146,13 +145,31 @@ namespace icov
       }
 
       m_newline = traits_type::to_char_type(m) == '\n';
+
+      if (m_callback != nullptr)
+      {
+
+        m_stringstream << traits_type::to_char_type(m);
+
+        if (m_newline)
+        {
+          const std::string tmp = m_stringstream.str();
+          const char *tmsg = tmp.c_str();
+          m_callback(tmsg, (int)strlen(tmsg));
+          m_stringstream.str("");
+          m_stringstream.clear();
+        }
+
+        return m;
+      }
+
       return m_sink->sputc(m);
     }
 
   private:
     Logger(const Logger &);
     Logger &operator=(const Logger &); // not copyable
-    // --   Members
+
     std::basic_ios<char> &m_out;
     std::streambuf *m_sink;
     bool m_newline;

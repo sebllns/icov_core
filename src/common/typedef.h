@@ -64,6 +64,7 @@
 namespace icov
 {
   typedef uint8_t byte;
+  typedef uint8_t int8b;
 
   //typedef std::basic_streambuf<icov::byte> bitstreambuf;
 

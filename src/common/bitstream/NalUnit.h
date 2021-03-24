@@ -93,13 +93,13 @@ public:
 
 private:
   /// 3 bits
-  u_int8_t m_temporalId;
+  icov::int8b m_temporalId;
 
   /// 5 bits
   icov::NalUnitType m_nalUnitType;
 
   /// 6 bits
-  u_int8_t m_nuhLayerId;
+  icov::int8b m_nuhLayerId;
 
   /// 1 bit
   bool m_nuhReservedZeroBit;

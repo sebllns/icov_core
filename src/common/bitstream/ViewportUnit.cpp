@@ -43,7 +43,7 @@ bool ViewportUnit::TryParse(NalUnit nal)
         icov::byte* icu_data = new icov::byte[icu_size];
         nal.readRbsp(icu_data, icu_size, position);
         position += icu_size;
-        addIcu(InteractiveCodedUnit(icu_data, (uint8_t)icu_size));
+        addIcu(InteractiveCodedUnit(icu_data, (icov::int8b)icu_size));
     }
   
 
