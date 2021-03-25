@@ -55,8 +55,8 @@ IRenderer::IRenderer()
 
 IRenderer::~IRenderer()
 {
-  delete m_pixels;
-  delete m_request;
+  if(m_pixels != nullptr) delete m_pixels;
+  if(m_request != nullptr) delete m_request;
 }
 
 void IRenderer::setRequest(IRequest *r)

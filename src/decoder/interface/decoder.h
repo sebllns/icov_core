@@ -61,8 +61,13 @@ protected:
   int m_width;
   int m_height;
   int m_rowPitch;
-  
+
 public:
+  IDecoder() : m_width(0),
+               m_height(0),
+               m_rowPitch(0),
+               m_pixels(nullptr) {}
+               
   virtual ~IDecoder() {}
   virtual void decode(/*stream*/) = 0;
   void setTexture(unsigned char *pixels, int width, int height, int rowPitch);

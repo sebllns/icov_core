@@ -62,7 +62,10 @@ protected:
   int m_height;
 
 public:
-  IRenderer();
+  IRenderer() : m_request(nullptr),
+                m_pixels(nullptr),
+                m_width(0),
+                m_height(0) {}
   virtual ~IRenderer();
   virtual void drawPixels(unsigned char *pixels, int width, int height) = 0;
   void setRequest(IRequest *);
