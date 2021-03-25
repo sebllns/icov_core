@@ -131,13 +131,14 @@ namespace icov
 
   enum LogType
   {
+    LOG_TYPE_SILLY,
     LOG_TYPE_VERBOSE = 0,
     LOG_TYPE_DEBUG = 1,
     LOG_TYPE_INFO,
     LOG_TYPE_WARNING,
     LOG_TYPE_ERROR,
     LOG_TYPE_EXCEPTION,
-    LOG_TYPE_MAX
+    LOG_TYPE_MAX,
   };
 
   enum ContentType

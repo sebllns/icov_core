@@ -14,7 +14,7 @@ public:
   {
   }
 
-  const icov::int8b  GetDataLength() const
+  const icov::int8b GetDataLength() const
   {
     return m_dataLength;
   }
@@ -26,7 +26,7 @@ public:
 
 private:
   const icov::byte *m_encodedData;
-  icov::int8b  m_dataLength;
+  icov::int8b m_dataLength;
 };
 
 #endif // INTERACTIVECODEDUNIT_H

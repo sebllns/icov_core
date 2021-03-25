@@ -2,7 +2,7 @@
 /** @addtogroup icov-core 
  * ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup common
  *  @ingroup icov-core
  */
@@ -46,7 +46,6 @@
  *
  *****************************************************************************/
 
-
 #ifndef COMMON_H
 #define COMMON_H
 
@@ -64,7 +63,6 @@
 #include <fstream>
 
 using namespace std;
-
 
 #include "typedef.h"
 #include "version.h"

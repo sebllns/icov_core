@@ -76,12 +76,14 @@ namespace icov
 
     bool showTimestamp;
     bool showLogLevel;
+    bool showLogConsole;
 
-    static constexpr const char *logTypeStr[5] = {"DEBUG", "INFO", "WARNING", "ERROR", "EXCEPTION"};
-
-    Logger(std::basic_ios<char> &out, bool showLogLevel_ = true, bool addTimestamp_ = false, LogType logLevelFilter_ = LogType::LOG_TYPE_INFO)
-        : m_out(out), m_sink(), m_newline(true), showLogLevel(showLogLevel_), showTimestamp(addTimestamp_),
-          logLevel(LogType::LOG_TYPE_INFO), logLevelFilter(logLevelFilter_), m_callback(nullptr)
+    Logger(std::basic_ios<char> &out, bool showLogLevel_ = true, bool addTimestamp_ = false, LogType logLevelFilter_ = LogType::LOG_TYPE_INFO, bool showLogConsole_ = true)
+        : m_out(out), m_sink(), m_newline(true), m_callback(nullptr),
+          showLogLevel(showLogLevel_),
+          showTimestamp(addTimestamp_),
+          showLogConsole(showLogConsole_),
+          logLevel(LogType::LOG_TYPE_INFO), logLevelFilter(logLevelFilter_)
     {
       setp(0, 0);
       m_sink = m_out.rdbuf(this);
@@ -90,6 +92,9 @@ namespace icov
     }
     ~Logger()
     {
+      if (m_logfile.is_open())
+        m_logfile.close();
+
       m_out.rdbuf(m_sink);
     }
 
@@ -112,6 +117,11 @@ namespace icov
       return buf;
     }
 
+    void logToFile(const char *filename)
+    {
+      m_logfile.open(filename, ios::out);
+    }
+
     void redirect(LogCallBack callback)
     {
       m_callback = callback;
@@ -122,7 +132,44 @@ namespace icov
       m_pstream = &m_stringstream;
     }
 
+    bool callbackEnabled()
+    {
+      return m_callback != nullptr;
+    }
+
+    std::string logTypeStr(LogType logType)
+    {
+      switch (logType)
+      {
+      case LogType::LOG_TYPE_INFO:
+        return "INFO";
+      case LogType::LOG_TYPE_DEBUG:
+        return "DEBUG";
+      case LogType::LOG_TYPE_WARNING:
+        return "WARNING";
+      case LogType::LOG_TYPE_ERROR:
+        return "ERROR";
+      }
+
+      return "";
+    }
+
   protected:
+    bool writeHeader(std::ostream &str)
+    {
+      bool result = true;
+
+      // --   add timestamp level here
+      if (showTimestamp && !(str << "[" << getTime() << "] "))
+        result = false;
+
+      // --   add log level here
+      if (showLogLevel && logLevel > 0 && logLevel < 6 && !(str << "[" << logTypeStr(logLevel) << "] "))
+        result = false;
+
+      return result;
+    }
+
     int_type overflow(int_type m = traits_type::eof())
     {
       if (traits_type::eq_int_type(m, traits_type::eof()))
@@ -131,25 +178,29 @@ namespace icov
       if (logLevel < logLevelFilter)
         return traits_type::eof();
 
-      if (m_newline)
+      if (m_newline && (showLogConsole || callbackEnabled()))
       {
         std::ostream &str = *m_pstream;
 
-        // --   add timestamp level here
-        if (showTimestamp && !(str << "[" << getTime() << "] "))
-          return traits_type::eof(); // Error
+        if (!writeHeader(str))
+        {
+          traits_type::eof(); // Error
+        }
+      }
 
-        // --   add log level here
-        if (showLogLevel && logLevel > 0 && logLevel < 6 && !(str << "[" << logTypeStr[logLevel - 1] << "] "))
-          return traits_type::eof(); // Error
+      if (m_logfile.is_open())
+      {
+        if (m_newline)
+          writeHeader(m_logfile);
+        m_logfile.put(traits_type::to_char_type(m));
       }
 
       m_newline = traits_type::to_char_type(m) == '\n';
 
-      if (m_callback != nullptr)
+      if (callbackEnabled())
       {
 
-        m_stringstream << traits_type::to_char_type(m);
+        m_stringstream.put(traits_type::to_char_type(m));
 
         if (m_newline)
         {
@@ -163,7 +214,10 @@ namespace icov
         return m;
       }
 
-      return m_sink->sputc(m);
+      if (showLogConsole)
+        return m_sink->sputc(m);
+
+      return m;
     }
 
   private:
@@ -176,6 +230,7 @@ namespace icov
     std::stringstream m_stringstream;
     std::ostream *m_pstream;
     LogCallBack m_callback;
+    ofstream m_logfile;
   };
 }
 #endif // CONTENTPARAMETERSET_H
