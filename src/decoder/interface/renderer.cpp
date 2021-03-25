@@ -49,10 +49,6 @@
 
 #include "renderer.h"
 
-IRenderer::IRenderer()
-{
-}
-
 IRenderer::~IRenderer()
 {
   if(m_pixels != nullptr) delete m_pixels;
