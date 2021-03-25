@@ -149,6 +149,8 @@ namespace icov
         return "WARNING";
       case LogType::LOG_TYPE_ERROR:
         return "ERROR";
+      default:
+        return "";
       }
 
       return "";
