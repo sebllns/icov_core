@@ -57,13 +57,13 @@ class PoVRequest : public IRequest
 
 public:
   PoVRequest();
+  ~PoVRequest(){}
+
   void serialize() const;
   void deserialize();
 
 
-
   // IRequest interface
-public:
   void print();
 };
 
