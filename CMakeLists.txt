@@ -25,21 +25,35 @@ endif()
 
 #set(INSTALL_DEMO 1)
 
-if(INSTALL_DEMO)
-    make_directory(demo)
+# message(${CMAKE_CURRENT_SOURCE_DIR})
+# message(${CMAKE_SOURCE_DIR})
+# message(${CMAKE_BINARY_DIR})
 
-    if(NOT DEFINED DEMO_VERSION)
-        file(DOWNLOAD url_version.txt demo/version.txt)
-        file(STRINGS "version.txt" ICOV_DEMO_VERSION)
+if(INSTALL_DEMO)
+
+    set(ICOV_DEMO_ROOT_DIR "${CMAKE_BINARY_DIR}/demo")
+
+    make_directory(${ICOV_DEMO_ROOT_DIR})
+
+    if(NOT DEFINED ICOV_DEMO_VERSION)
+        set(ICOV_DEMO_VERSION_PATH ${ICOV_DEMO_ROOT_DIR}/version.txt)
+        file(DOWNLOAD https://sourceforge.net/projects/icov/files/icov-demonstrator/version.txt ${ICOV_DEMO_VERSION_PATH})
+        file(STRINGS "${ICOV_DEMO_VERSION_PATH}" ICOV_DEMO_VERSION)
     endif()
 
+
+    set(ICOV_DEMO_DIR "${ICOV_DEMO_ROOT_DIR}/${ICOV_DEMO_VERSION}")
+
     #write version
-    #make_directory(ICOV_DEMO_VERSION)
+    make_directory(${ICOV_DEMO_DIR})
 
+#     if(UNIX)
+# message("DLunix")
+# endif()
 
-    message(STATUS "[INFO] Downloading demo")
-    file(DOWNLOAD https://downloads.sourceforge.net/project/icov/icov-demonstrator/icov-equirect-sample/v1/linux/demo-linux.zip demo-linux.zip)
+    message(STATUS "[INFO] Downloading demo v${ICOV_DEMO_VERSION} to ${ICOV_DEMO_DIR}")
+    file(DOWNLOAD https://downloads.sourceforge.net/project/icov/icov-demonstrator/icov-equirect-sample/v1/linux/demo-linux.zip  ${ICOV_DEMO_ROOT_DIR}/demo.zip)
 
     message(STATUS "[INFO] Extracting demo")
-    #file(ARCHIVE_EXTRACT INPUT <archive> [...])
+    file(ARCHIVE_EXTRACT INPUT ${ICOV_DEMO_ROOT_DIR}/demo.zip DESTINATION ${ICOV_DEMO_DIR} VERBOSE)
 endif()
