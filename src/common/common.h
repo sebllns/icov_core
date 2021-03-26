@@ -54,7 +54,8 @@
 #include <Windows.h>
 #endif
 
-#include <cctype>
+#include <locale.h>
+#include <ctype.h>
 #include <string>
 #include <algorithm>
 #include <iomanip>
