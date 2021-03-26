@@ -54,6 +54,8 @@
 #include <Windows.h>
 #endif
 
+#include <cstdio>
+#include <locale>
 #include <locale.h>
 #include <ctype.h>
 #include <string>
