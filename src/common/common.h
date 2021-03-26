@@ -54,13 +54,13 @@
 #include <Windows.h>
 #endif
 
+#include <string>
 #include <algorithm>
-#include <iostream>
 #include <iomanip>
 #include <limits>
 #include <memory>
-#include <string>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
