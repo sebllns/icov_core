@@ -54,10 +54,9 @@
 #include <Windows.h>
 #endif
 
-#include <cstdio>
+#include <ctype.h>
 #include <locale>
 #include <locale.h>
-#include <ctype.h>
 #include <string>
 #include <algorithm>
 #include <iomanip>
@@ -65,6 +64,7 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <cstdio>
 
 using namespace std;
 
