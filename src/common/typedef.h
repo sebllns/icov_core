@@ -103,7 +103,7 @@ namespace icov
     int_type overflow(int_type ch)
     {
       if (ch != EOF)
-        m_buffer.push_back(ch);
+        m_buffer.push_back(traits_type::to_char_type(ch));
       return traits_type::to_int_type(ch);
     }
 
