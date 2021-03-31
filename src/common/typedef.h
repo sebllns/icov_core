@@ -64,7 +64,7 @@
 namespace icov
 {
   
-#if defined(__linux__) || defined(_WIN32)
+#if  !defined(__ANDROID__) && (defined(__linux__) || defined(_WIN32))
   typedef uint8_t byte;
   typedef uint8_t int8b;
 #else
