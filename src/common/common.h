@@ -50,7 +50,9 @@
 #define COMMON_H
 
 #if _MSC_VER
+#ifndef _HAS_STD_BYTE
 #define _HAS_STD_BYTE 0
+#endif
 #include <Windows.h>
 #endif
 
