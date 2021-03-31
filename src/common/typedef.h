@@ -63,18 +63,30 @@
 
 namespace icov
 {
+  
+#if defined(UNIX) || defined(WIN32)
   typedef uint8_t byte;
   typedef uint8_t int8b;
+#else
+  typedef char byte;
+  typedef char int8b;
+#endif
 
   //typedef std::basic_streambuf<icov::byte> bitstreambuf;
 
   /// Base class for @c icov::byte output streams.
   typedef std::basic_ostream<icov::byte> obitstream;
 
-  class bitstreambuf : public std::basic_streambuf<icov::byte>
+  class bitstreambuf : public std::basic_streambuf<icov::byte, std::char_traits<icov::byte>>
   {
 
   public:
+    typedef icov::byte char_type; //1
+    typedef std::char_traits<icov::byte> traits_type;
+    typedef typename traits_type::int_type int_type;
+    typedef typename traits_type::off_type off_type;
+    typedef typename traits_type::pos_type pos_type;
+
     typedef std::vector<char_type>::size_type size_type;
     using Base = std::basic_streambuf<icov::byte>;
     bitstreambuf() : m_buffer(), read_pos(0)
