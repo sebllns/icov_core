@@ -46,7 +46,7 @@ void NalUnit::serialize(icov::byte *&dst) const
     memcpy(dst + sizeof(header), m_rbsp, m_rbsp_length);
 }
 
-void NalUnit::deserialize(const icov::byte *src)
+void NalUnit::deserialize(icov::byte *src)
 {
     icov::byte header[6];
     memcpy(header, src, sizeof(header));
@@ -65,7 +65,7 @@ void NalUnit::deserialize(const icov::byte *src)
     header[4] = (m_rbsp_length >> 8) & 0xFF;
     header[5] = m_rbsp_length & 0xFF;
 
-    m_rbsp = new icov::byte[m_rbsp_length];
-
-    memcpy(m_rbsp, src + sizeof(header), m_rbsp_length);
+    //m_rbsp = new icov::byte[m_rbsp_length];
+    //memcpy(m_rbsp, src + sizeof(header), m_rbsp_length);
+    m_rbsp = src + sizeof(header);
 }

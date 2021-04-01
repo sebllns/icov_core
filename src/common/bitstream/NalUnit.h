@@ -83,7 +83,7 @@ public:
   }
 
   void serialize(icov::byte *&dst) const;
-  void deserialize(const icov::byte *src);
+  void deserialize(icov::byte *src);
 
   void setRbsp(icov::byte *data, int length);
   icov::NalUnitType getType() const;

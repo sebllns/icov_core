@@ -13,8 +13,9 @@ NalUnit ViewportUnit::ToNal()
 
     for (int i = 0; i < m_icus.size(); i++)
     {
-        os << (icov::byte)m_icus[i].GetDataLength();
-        os.write(m_icus[i].GetEncodedData(), m_icus[i].GetDataLength());
+        icov::int8b icu_size = m_icus[i].GetDataLength();
+        os << (icov::byte)icu_size;
+        os.write(m_icus[i].GetEncodedData(), icu_size * icu_size);
     }
 
     //std::cout << os.rdbuf()->in_avail() << std::endl;
@@ -37,15 +38,15 @@ bool ViewportUnit::TryParse(NalUnit nal)
     int size = nal.getRbspLength();
     int position = 0;
 
-    while(position < size)
+    while (position < size)
     {
-        int icu_size = (int)nal.getRbspByte(position++);   
-        icov::byte* icu_data = new icov::byte[icu_size];
-        nal.readRbsp(icu_data, icu_size, position);
-        position += icu_size;
-        addIcu(InteractiveCodedUnit(icu_data, (icov::int8b)icu_size));
+        int icu_size = (icov::int8b)nal.getRbspByte(position++);
+        int icu_pixel_count = (int)(icu_size * icu_size);
+        icov::byte *icu_data = new icov::byte[icu_pixel_count];
+        nal.readRbsp(icu_data, icu_pixel_count, position);
+        position += icu_pixel_count;
+        addIcu(InteractiveCodedUnit(icu_data, icu_size));
     }
-  
 
     return true;
 }
