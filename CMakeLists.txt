@@ -20,7 +20,11 @@ add_subdirectory(src)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
-    add_subdirectory(tests)
+    add_subdirectory(tests/unit_tests)
+endif()
+
+if(ICOV_EXTENSIONS_ENABLED)
+    add_subdirectory(extensions)
 endif()
 
 #set(INSTALL_DEMO 1)

@@ -1,9 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
-
-project(icov_tests LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+message("BUILD ICOV CORE UNIT TESTS")
 
 set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON)  
