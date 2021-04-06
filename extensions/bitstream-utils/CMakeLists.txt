@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.45.0 REQUIRED COMPONENTS *boost libraries here*) 
+find_package(Boost 1.45.0 REQUIRED COMPONENTS CRC) 
 
 #add_compile_options(-Wall)
 
