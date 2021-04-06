@@ -104,7 +104,7 @@ namespace icov
     {
       if (ch != EOF)
         m_buffer.push_back(traits_type::to_char_type(ch));
-      return traits_type::to_int_type(ch);
+      return ch;
     }
 
     std::streamsize xsputn(const char_type *s, std::streamsize num)
