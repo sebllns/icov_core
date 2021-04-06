@@ -129,7 +129,7 @@ namespace icov
 
     int size()
     {
-      return m_buffer.size();
+      return (int) m_buffer.size();
     }
 
   private:
