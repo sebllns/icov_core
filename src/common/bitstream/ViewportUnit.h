@@ -63,19 +63,7 @@ public:
   void addIcu(InteractiveCodedUnit icu);
 
   int getIcuCount() { return m_icus.size(); }
-
-  void tmp_writeToFile(std::string filename)
-  {
-    std::ofstream fout;
-    fout.open(filename, ios::binary | ios::out);
-
-    for (int i = 0; i < m_icus.size(); i++)
-    {
-      fout.write((char *)m_icus[i].GetEncodedData(), m_icus[i].GetDataLength() * m_icus[i].GetDataLength());
-    }
-
-    fout.close();
-  }
+  const std::vector<InteractiveCodedUnit> &getIcus() const { return m_icus; }
 
 private:
   std::vector<InteractiveCodedUnit> m_icus;

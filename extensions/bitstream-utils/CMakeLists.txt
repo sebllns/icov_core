@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
+message("BUILD BITSTREAM-UTILS EXTENSION")
+
 find_package(Boost 1.45.0 REQUIRED) 
+
 
 #add_compile_options(-Wall)
 

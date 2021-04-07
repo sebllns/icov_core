@@ -14,7 +14,7 @@ namespace icov
 
 		checksum_t GetCheckSum(const byte *buffer, int length)
 		{
-			boost::crc_16_type result;
+			boost::crc_32_type result;
 			result.process_bytes(buffer, length);
 			return (checksum_t)result.checksum();
 		}
