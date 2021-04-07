@@ -5,7 +5,8 @@ message("BUILD BITSTREAM-UTILS EXTENSION")
 set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.45.0 REQUIRED) 
+
+find_package(Boost 1.70.0 COMPONENTS unit_test_framework)
 
 
 #add_compile_options(-Wall)
@@ -28,6 +29,9 @@ include_directories(. ${Boost_INCLUDE_DIRS})
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})
 add_library( s_${LIB_NAME} STATIC ${SRC_FILES} ${INC_FILES})
+
+target_include_directories(${LIB_NAME} ${Boost_LIBRARIES})
+target_include_directories(s_${LIB_NAME} ${Boost_LIBRARIES})
 
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
 target_link_libraries(s_${LIB_NAME} ${Boost_LIBRARIES})
