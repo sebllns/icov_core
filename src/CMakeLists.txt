@@ -13,10 +13,10 @@ set( LIB_NAME IcovCoreLib )
 file(GLOB_RECURSE SRC_FILES "*.cpp" )
 
 # get include files
-file(GLOB_RECURSE INC_FILES "*.h" )
+file(GLOB_RECURSE INC_FILES "*.h" "*.hpp")
 
 
-include_directories(.)
+include_directories(. common/interactive_coder)
 
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})
