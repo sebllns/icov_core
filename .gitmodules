@@ -1,0 +1,3 @@
+[submodule "third-party/aff3ct"]
+	path = third-party/aff3ct
+	url = https://github.com/aff3ct/aff3ct.git

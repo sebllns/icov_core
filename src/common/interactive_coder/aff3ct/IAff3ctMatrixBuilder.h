@@ -1,7 +1,7 @@
 #ifndef IAFF3CTMATRIXBUILDER_H
 #define IAFF3CTMATRIXBUILDER_H
 
-#include <IMatrixBuilder.h>
+#include "interactive_coder/interface/IMatrixBuilder.h"
 #include <aff3ct.hpp>
 
 using namespace aff3ct;

@@ -1,7 +1,7 @@
 #ifndef IMTMATRIXBUILDER_H
 #define IMTMATRIXBUILDER_H
 
-#include <IAff3ctMatrixBuilder.h>
+#include "interactive_coder/aff3ct/IAff3ctMatrixBuilder.h"
 #include "IMTSyndrome.h"
 
 namespace icov {

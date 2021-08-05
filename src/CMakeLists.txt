@@ -18,6 +18,7 @@ file(GLOB_RECURSE INC_FILES "*.h" "*.hpp")
 
 include_directories(. common/interactive_coder)
 
+
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})
 add_library( s_${LIB_NAME} STATIC ${SRC_FILES} ${INC_FILES})

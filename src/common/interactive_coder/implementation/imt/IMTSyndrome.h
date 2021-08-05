@@ -1,7 +1,7 @@
 #ifndef IMTSYNDROME_H
 #define IMTSYNDROME_H
 
-#include "ISyndrome.h"
+#include "interactive_coder/interface/ISyndrome.h"
 #include <fstream>
 #include <sstream>
 #include <filesystem>

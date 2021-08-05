@@ -1,7 +1,7 @@
 #ifndef AFF3CTDECODER_H
 #define AFF3CTDECODER_H
 
-#include "IDecoder.h"
+#include "interactive_coder/interface/IDecoder.h"
 
 #include <aff3ct.hpp>
 

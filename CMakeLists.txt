@@ -4,6 +4,10 @@ message("BUILD ICOV CORE PROJECT")
 
 project(icov_core LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 
 set(ICOV_CORE_VERSION_MAJOR "0")
 set(ICOV_CORE_VERSION_MINOR "3")
@@ -14,18 +18,35 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(src)
+include_directories(src third-party/aff3ct/src) 
+
+set(AFF3CT_COMPILE_STATIC_LIB ON)
+add_subdirectory(third-party/aff3ct)
+
+# Link with the "Threads library (required to link with AFF3CT after)
+
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+# Link with AFF3CT
+set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-2.3.5/")
+message("AFF3CT_DIR=${AFF3CT_DIR}")
+find_package(AFF3CT CONFIG 2.3.5 REQUIRED)
 
 add_subdirectory(src)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
+    add_subdirectory(tests/icov_interactive_coder_test)
 endif()
 
 if(ICOV_EXTENSIONS_ENABLED)
     add_subdirectory(extensions)
 endif()
+
+
 
 #set(INSTALL_DEMO 1)
 
