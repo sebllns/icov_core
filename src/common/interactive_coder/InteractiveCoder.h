@@ -37,7 +37,7 @@ public:
 
     int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, const std::vector<SIVal> &side_info, uint32_t numcodeMax, uint32_t n_ite, const ISyndromeEncodage<SyndromeTools>& synd_enc, const ISyndromeDecodage<SyndromeTools>& synd_dec);
 
-    bool decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const std::vector<SIVal>& side_info, const Syndrome& syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec);
+    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const std::vector<SIVal>& side_info, const Syndrome& syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec);
 
 
 protected:

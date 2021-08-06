@@ -54,32 +54,33 @@ int InteractiveCoder<Matrix, SyndromeTools>::encode(uint32_t &io_numcode,  Syndr
 //        decoder()->decode(decoded, n, io_numcode, n_ite, side_info, m_decodage_syndrome, getMatrix(io_numcode));
 
 
+//TEST FOR DEBUG (todo remove or move elsewhere)
 
-        synd_dec.compute(*m_decodage_syndrome.get(), o_stored_syndrome, io_numcode, *tools());
+//        synd_dec.compute(*m_decodage_syndrome.get(), o_stored_syndrome, io_numcode, *tools());
 
-        bool synd_test;
+//        bool synd_test;
 
-        if(m_decodage_syndrome->size() != m_ptools->get_m(io_numcode))
-        {
-            std::cout << "error" << std::endl;
-        }
+//        if(m_decodage_syndrome->size() != m_ptools->get_m(io_numcode))
+//        {
+//            std::cout << "error" << std::endl;
+//        }
 
 
-        for(int i = 0 ; i < m_ptools->get_m(io_numcode); i++)
-        {
-            synd_test = 0;
-            for(const auto& vn: getMatrix(io_numcode).get_rows_from_col(i))
-            {
-                synd_test ^= source[vn];
-            }
+//        for(int i = 0 ; i < m_ptools->get_m(io_numcode); i++)
+//        {
+//            synd_test = 0;
+//            for(const auto& vn: getMatrix(io_numcode).get_rows_from_col(i))
+//            {
+//                synd_test ^= source[vn];
+//            }
 
-            //m_decodage_syndrome->at(i) = synd_test;
+//            //m_decodage_syndrome->at(i) = synd_test;
 
-            if(synd_test != m_decodage_syndrome->at(i))
-            {
-                std::cout << "error" << std::endl;
-            }
-        }
+//            if(synd_test != m_decodage_syndrome->at(i))
+//            {
+//                std::cout << "error" << std::endl;
+//            }
+//        }
 
          this->decode(decoded, io_numcode, n_ite, side_info, o_stored_syndrome, synd_dec);
 
@@ -93,10 +94,10 @@ int InteractiveCoder<Matrix, SyndromeTools>::encode(uint32_t &io_numcode,  Syndr
 }
 
 template<class Matrix, class SyndromeTools>
-bool InteractiveCoder<Matrix, SyndromeTools>::decode(std::vector<CodedVal> &o_decoded, uint32_t numcode, uint32_t n_ite, const std::vector<SIVal> &side_info, const Syndrome &stored_syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec)
+void InteractiveCoder<Matrix, SyndromeTools>::decode(std::vector<CodedVal> &o_decoded, uint32_t numcode, uint32_t n_ite, const std::vector<SIVal> &side_info, const Syndrome &stored_syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec)
 {
     //std::cout<<"compute dec synd\n";
-    //synd_dec.compute(*m_decodage_syndrome.get(), stored_syndrome, numcode, *tools());
+    synd_dec.compute(*m_decodage_syndrome.get(), stored_syndrome, numcode, *tools());
 
     //std::cout<<"decode\n";
     decoder()->decode(o_decoded, tools()->get_n(), numcode, n_ite, side_info, *m_decodage_syndrome.get(), getMatrix(numcode));
