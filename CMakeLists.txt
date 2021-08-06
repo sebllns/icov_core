@@ -18,7 +18,7 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(src third-party/aff3ct/src) 
+include_directories(src third-party/aff3ct/src third-party/aff3ct/include)
 
 set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
@@ -54,6 +54,7 @@ endif()
 # message(${CMAKE_CURRENT_SOURCE_DIR})
 # message(${CMAKE_SOURCE_DIR})
 # message(${CMAKE_BINARY_DIR})
+# message(${EXECUTABLE_OUTPUT_PATH})
 
 if(INSTALL_DEMO)
 
@@ -83,3 +84,5 @@ if(INSTALL_DEMO)
     message(STATUS "[INFO] Extracting demo")
     file(ARCHIVE_EXTRACT INPUT ${ICOV_DEMO_ROOT_DIR}/demo.zip DESTINATION ${ICOV_DEMO_DIR} VERBOSE)
 endif()
+
+FILE(COPY "data/" DESTINATION "${EXECUTABLE_OUTPUT_PATH}/data")

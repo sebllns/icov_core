@@ -13,7 +13,7 @@ set( LIB_NAME IcovCoreLib )
 file(GLOB_RECURSE SRC_FILES "*.cpp" )
 
 # get include files
-file(GLOB_RECURSE INC_FILES "*.h" "*.hpp")
+file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
 
 
 include_directories(. common/interactive_coder)

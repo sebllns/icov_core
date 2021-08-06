@@ -20,7 +20,7 @@ using namespace icov;
 /****************************************************************************************/
 struct params
 {
-    std::string filename = "./imt_data/";
+    std::string filename = "./data/imt/";
     int   K         =   256;     // number of information bits
     int   N         =   256;     // codeword size
     int   n_ite	=   100;
