@@ -20,6 +20,7 @@ message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
 include_directories(src third-party/aff3ct/src) 
 
+set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
 add_subdirectory(third-party/aff3ct)
 
@@ -30,9 +31,9 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # Link with AFF3CT
-set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-2.3.5/")
+set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-3.0.1/")
+find_package(AFF3CT CONFIG 3.0.1 REQUIRED)
 message("AFF3CT_DIR=${AFF3CT_DIR}")
-find_package(AFF3CT CONFIG 2.3.5 REQUIRED)
 
 add_subdirectory(src)
 
