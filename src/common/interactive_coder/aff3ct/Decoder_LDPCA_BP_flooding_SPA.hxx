@@ -180,7 +180,7 @@ void Decoder_LDPCA_BP_flooding_SPA<B,R>
 
 template <typename B, typename R>
 void Decoder_LDPCA_BP_flooding_SPA<B,R>
-::initialize_var_to_chk(const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &msg_var_to_chk)
+::_initialize_var_to_chk(const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &msg_var_to_chk)
 {
     auto *msg_chk_to_var_ptr = msg_chk_to_var.data();
     auto *msg_var_to_chk_ptr = msg_var_to_chk.data();
@@ -197,6 +197,8 @@ void Decoder_LDPCA_BP_flooding_SPA<B,R>
         const auto tmp = Y_N[v] + sum_msg_chk_to_var;
 
         LLR_overall[v] = tmp;
+
+        //std::cout << tmp << ", ";
 
         for (auto c = 0; c < var_degree; c++)
             msg_var_to_chk_ptr[c] = tmp - msg_chk_to_var_ptr[c];

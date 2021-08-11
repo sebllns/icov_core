@@ -29,6 +29,10 @@ public:
     FastArray<bool> syndrome14;
     FastArray<bool> syndrome18;
 
+     std::vector<CodedVal> source;
+
+
+
     FastMatrix<uint32_t> *c18;
 
     std::filesystem::path root_dir;
@@ -250,7 +254,7 @@ public:
 
     // ISyndromeEncodage interface
 public:
-    virtual void compute(Syndrome &o_stored_syndrome, int numcode, const IMTTools &tool) const override;
+    virtual void compute(Syndrome &o_stored_syndrome, int numcode, const IMTTools &tool, const LLRProvider& llr_provider) const override;
 };
 
 
@@ -263,7 +267,7 @@ public:
 
     // ISyndromeDeaccumulation interface
 public:
-    virtual void compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, const IMTTools &tool) const override;
+    virtual void compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, const IMTTools &tool, LLRProvider& llr_provider) const override;
 };
 
 

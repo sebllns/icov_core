@@ -2,6 +2,7 @@
 #define ISYNDROME_H
 
 #include "common_types.h"
+#include "interactive_coder/LLRProvider.h"
 
 namespace icov
 {
@@ -21,6 +22,7 @@ public:
     {
         return this->n;
     }
+
 protected:
     uint32_t n;
 };
@@ -42,7 +44,7 @@ public:
     ISyndromeEncodage() = default;
     virtual ~ISyndromeEncodage() = default;
 
-    virtual void compute(Syndrome& o_stored_syndrome, int numcode,  const SyndromeTools& tool) const = 0;
+    virtual void compute(Syndrome& o_stored_syndrome, int numcode, const SyndromeTools& tool, const LLRProvider& llr_provider) const = 0;
 };
 
 
@@ -52,8 +54,7 @@ class ISyndromeDecodage
 public:
     ISyndromeDecodage() = default;
     virtual ~ISyndromeDecodage() = default;
-
-    virtual void compute(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, const SyndromeTools& tool) const = 0;
+    virtual void compute(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, const SyndromeTools& tool, LLRProvider& llr_provider) const = 0;
 };
 
 }

@@ -16,7 +16,7 @@ void InteractiveCoder<Matrix, SyndromeTools>::buildMatrices(IMatrixBuilder<Matri
 template<class Matrix, class SyndromeTools>
 const Matrix& InteractiveCoder<Matrix, SyndromeTools>::getMatrix(int numcode) const
 {
-    return *(m_matrices[numcode]);
+    return *(m_matrices[std::min(numcode, (int)m_matrices.size()-1)]);
 }
 
 template<class Matrix, class SyndromeTools>
@@ -49,7 +49,7 @@ int InteractiveCoder<Matrix, SyndromeTools>::encode(uint32_t &io_numcode,  Syndr
 //        std::cout<<"encode " << io_numcode <<std::endl;
 
 //        std::cout<<"compute stored\n";
-        synd_enc.compute(o_stored_syndrome, io_numcode, *tools());
+        synd_enc.compute(o_stored_syndrome, io_numcode, *tools(), *llrProvider());
 //        synd_dec.compute(m_decodage_syndrome, o_stored_syndrome, io_numcode, tools());
 //        decoder()->decode(decoded, n, io_numcode, n_ite, side_info, m_decodage_syndrome, getMatrix(io_numcode));
 
@@ -89,6 +89,8 @@ int InteractiveCoder<Matrix, SyndromeTools>::encode(uint32_t &io_numcode,  Syndr
             return 0;
         }
     }
+
+    std::cout << io_numcode << std::endl;
     io_numcode = numcodeMax - 1;
     return errorCount(decoded, source);
 }
@@ -96,9 +98,12 @@ int InteractiveCoder<Matrix, SyndromeTools>::encode(uint32_t &io_numcode,  Syndr
 template<class Matrix, class SyndromeTools>
 void InteractiveCoder<Matrix, SyndromeTools>::decode(std::vector<CodedVal> &o_decoded, uint32_t numcode, uint32_t n_ite, const std::vector<SIVal> &side_info, const Syndrome &stored_syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec)
 {
+
     //std::cout<<"compute dec synd\n";
-    synd_dec.compute(*m_decodage_syndrome.get(), stored_syndrome, numcode, *tools());
+    synd_dec.compute(*m_decodage_syndrome.get(), stored_syndrome, numcode, *tools(), *llrProvider());
 
     //std::cout<<"decode\n";
-    decoder()->decode(o_decoded, tools()->get_n(), numcode, n_ite, side_info, *m_decodage_syndrome.get(), getMatrix(numcode));
+
+    //if tools()->processMatrix() ...
+    decoder()->decode(o_decoded, tools()->get_n(), numcode, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(numcode));
 }

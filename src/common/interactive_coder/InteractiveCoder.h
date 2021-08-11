@@ -7,6 +7,7 @@
 #include "interface/IMatrixBuilder.h"
 #include "interface/IDecoder.h"
 #include "interface/ISyndrome.h"
+#include "LLRProvider.h"
 
 namespace icov {
 
@@ -14,8 +15,8 @@ template <class Matrix, class SyndromeTools = DefaultSyndromeTools>
 class InteractiveCoder
 {
 public:
-    InteractiveCoder(IDecoder<Matrix>* dec, SyndromeTools* tools):
-       m_pdecoder(dec), m_ptools(tools)
+    InteractiveCoder(IDecoder<Matrix>* dec, SyndromeTools* tools, LLRProvider* llrProvider):
+       m_pdecoder(dec), m_ptools(tools), m_pllrProvider(llrProvider)
     {
         m_decodage_syndrome = std::unique_ptr<Syndrome>(new Syndrome(tools->get_n()));
     };
@@ -44,6 +45,7 @@ protected:
 
     inline IDecoder<Matrix>* decoder() const {return  this->m_pdecoder.get();}
     inline SyndromeTools* tools() const {return  this->m_ptools.get();}
+    inline LLRProvider* llrProvider() const {return  this->m_pllrProvider.get();}
 
     inline ISyndromeAccumulation<SyndromeTools>* synd_acc() const {return  this->m_psyndAcc.get();}
 
@@ -52,6 +54,7 @@ protected:
     std::unique_ptr<IDecoder<Matrix>> m_pdecoder;
     std::unique_ptr<ISyndromeAccumulation<SyndromeTools>> m_psyndAcc;
     std::unique_ptr<SyndromeTools> m_ptools;
+    std::unique_ptr<LLRProvider> m_pllrProvider;
 };
 
 

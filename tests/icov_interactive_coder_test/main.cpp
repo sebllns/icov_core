@@ -11,6 +11,7 @@
 #include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
 #include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
 #include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
+#include "interactive_coder/LLRProvider.h"
 
 using namespace aff3ct;
 using namespace icov;
@@ -24,7 +25,7 @@ struct params
     int   K         =   256;     // number of information bits
     int   N         =   256;     // codeword size
     int   n_ite	=   100;
-    int n_ite_crossover = 10;
+    int n_ite_crossover = 100;
 
     //IMT R = M/N M varying from 12 to N
     float R;                   // code rate (R=K/N)
@@ -206,9 +207,10 @@ int main(int argc, char** argv)
 
     std::cout<<"init coder\n";
 
-    IMTTools imt_tools(256);
+    IMTTools imt_tools(p.N);
+    LLRProvider llrProvider(p.N);
     Aff3ctDecoder ldpca_dec;
-    auto interactive_coder = new InteractiveCoder<AffMatrix, IMTTools>(&ldpca_dec, &imt_tools);
+    auto interactive_coder = new InteractiveCoder<AffMatrix, IMTTools>(&ldpca_dec, &imt_tools, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -260,20 +262,23 @@ int main(int argc, char** argv)
         for(int i = 0; i < b.pcrossover.size(); i++)
         {
             std::cout << "pcrossover=" << b.pcrossover[i] << std::endl;
-            for(int k = 0 ; k < p.N ; k++)
-            {
-                int sideinfo_BSC = ((int) (b.src_bits[k] + (((((double)rand() / (double)RAND_MAX) < b.pcrossover[i])) ? 1.0 : 0.0))) % 2;
-                double pCond = (1-b.pcrossover[i])*(1-sideinfo_BSC) + b.pcrossover[i]*sideinfo_BSC;
-                b.LLRs[k] = log( pCond/(1-pCond) );
-            }
+//            for(int k = 0 ; k < p.N ; k++)
+//            {
+//                int sideinfo_BSC = ((int) (b.src_bits[k] + (((((double)rand() / (double)RAND_MAX) < b.pcrossover[i])) ? 1.0 : 0.0))) % 2;
+//                double pCond = (1-b.pcrossover[i])*(1-sideinfo_BSC) + b.pcrossover[i]*sideinfo_BSC;
+//                b.LLRs[k] = log( pCond/(1-pCond) );
+//            }
+
+            imt_tools.source = b.src_bits;
+            llrProvider.initLLR(b.pcrossover[i], b.src_bits);
 
 
             numcode = 0;
-            end_code = n/2 - n/8;
+            end_code = n - n/8;
 
             auto start = std::chrono::steady_clock::now();
 
-            int numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, b.LLRs, end_code+1, 100, imt_stored, imt_deacc);
+            int numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, b.LLRs, end_code+1, p.n_ite, imt_stored, imt_deacc);
 
             auto end = std::chrono::steady_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;

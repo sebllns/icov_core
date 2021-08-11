@@ -45,7 +45,7 @@ protected:
     void _decode_siho   (const R *Y_N,  B *V_K,  const int frame_id);
     void _decode(const R *Y_N, const int frame_id);
 
-    void initialize_var_to_chk(const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &msg_var_to_chk);
+    void _initialize_var_to_chk(const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &msg_var_to_chk);
 
 
 
