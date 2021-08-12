@@ -22,8 +22,8 @@ using namespace icov;
 struct params
 {
     std::string filename = "./data/imt/";
-    int   K         =   256;     // number of information bits
-    int   N         =   256;     // codeword size
+    int   K         =   4096;     // number of information bits
+    int   N         =   K;     // codeword size
     int   n_ite	=   100;
     int n_ite_crossover = 100;
 
