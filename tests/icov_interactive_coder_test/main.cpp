@@ -262,19 +262,13 @@ int main(int argc, char** argv)
         for(int i = 0; i < b.pcrossover.size(); i++)
         {
             std::cout << "pcrossover=" << b.pcrossover[i] << std::endl;
-//            for(int k = 0 ; k < p.N ; k++)
-//            {
-//                int sideinfo_BSC = ((int) (b.src_bits[k] + (((((double)rand() / (double)RAND_MAX) < b.pcrossover[i])) ? 1.0 : 0.0))) % 2;
-//                double pCond = (1-b.pcrossover[i])*(1-sideinfo_BSC) + b.pcrossover[i]*sideinfo_BSC;
-//                b.LLRs[k] = log( pCond/(1-pCond) );
-//            }
 
             imt_tools.source = b.src_bits;
             llrProvider.initLLR(b.pcrossover[i], b.src_bits);
 
 
             numcode = 0;
-            end_code = n - n/8;
+            end_code = 2*n - n/8;
 
             auto start = std::chrono::steady_clock::now();
 
