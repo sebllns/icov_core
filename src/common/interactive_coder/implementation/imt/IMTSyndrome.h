@@ -158,7 +158,7 @@ public:
             if (!alist_file.is_open())
             {
                 std::stringstream message;
-                //message << "'G_save_path' could not be opened ('G_save_path' = \"" << G_save_path << "\").";
+                message << "'G_save_path' could not be opened ('alist_file' = \"" << get_alist_file(m) << "\").";
                 throw tools::invalid_argument(__FILE__, __LINE__, __func__, message.str());
             }
 
@@ -184,16 +184,19 @@ private:
 
                 if(first)
                 {
+                   // std::cout << "first" << std::endl;
                     ord.add_connection(j, i);
                 }
 
                 if(last)
                 {
+                   // std::cout << "last" << std::endl;
                     ord.add_connection(j, src.rows() - 1 - i);
                 }
 
                 if(first ^ last)
                 {
+                   // std::cout << "first ^last" << std::endl;
                     cmb.add_connection(j,i);
                 }
             }

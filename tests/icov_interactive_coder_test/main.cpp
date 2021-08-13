@@ -22,7 +22,7 @@ using namespace icov;
 struct params
 {
     std::string filename = "./data/imt/";
-    int   K         =   4096;     // number of information bits
+    int   K         =   256;     // number of information bits
     int   N         =   K;     // codeword size
     int   n_ite	=   100;
     int n_ite_crossover = 100;
@@ -41,7 +41,7 @@ void init_modules(const params &p, modules &m);
 
 struct buffers
 {
-    std::vector<int  > src_bits;
+    std::vector<CodedVal> src_bits;
     std::vector<uint32_t > acc_bits;
     std::vector<float> LLRs;
     std::vector<int  > dec_bits;
