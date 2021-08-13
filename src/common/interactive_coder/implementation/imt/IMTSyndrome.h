@@ -4,7 +4,6 @@
 #include "interactive_coder/interface/ISyndrome.h"
 #include <fstream>
 #include <sstream>
-#include <filesystem>
 
 #include <aff3ct.hpp>
 
@@ -35,7 +34,7 @@ public:
 
     FastMatrix<uint32_t> *c18;
 
-    std::filesystem::path root_dir;
+    std::string root_dir;
 
 
     IMTTools(int _n):c18(nullptr)
@@ -67,9 +66,9 @@ public:
         return c18->at(m,0) - 1;
     }
 
-    std::filesystem::path get_alist_file(int m) const
+    std::string get_alist_file(int m) const
     {
-        return root_dir / std::to_string(get_n()) / "alist" / ("H_" + std::to_string(m) + ".alist");
+        return root_dir + "/" + std::to_string(get_n()) + "/alist/" + ("H_" + std::to_string(m) + ".alist");
     }
 
 
@@ -110,11 +109,11 @@ public:
 
     void read_mat_imt_format()
     {
-        std::filesystem::path dirpath(root_dir / std::to_string(get_n()));
+        std::string dirpath(root_dir + "/" + std::to_string(get_n()));
 
-        auto h12_imt = read_mat_IMT_format<bool>(dirpath / "H.txt");
-        auto c14_imt = read_mat_IMT_format<uint32_t>(dirpath / "C14.txt");
-        auto c18_imt = read_mat_IMT_format<uint32_t>(dirpath / "C18.txt");
+        auto h12_imt = read_mat_IMT_format<bool>(dirpath + "/H.txt");
+        auto c14_imt = read_mat_IMT_format<uint32_t>(dirpath + "/C14.txt");
+        auto c18_imt = read_mat_IMT_format<uint32_t>(dirpath + "/C18.txt");
 
         AffMatrix h12_ord, h14, h14_ord, h18;
 
