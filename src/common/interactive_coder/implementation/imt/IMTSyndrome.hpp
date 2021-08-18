@@ -37,7 +37,7 @@ void icov::IMTAccumulation::compute(const std::vector<CodedVal> &source_x, IMTTo
     }
 }
 
-void icov::IMTDeaccumulation::compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, const IMTTools &tool, LLRProvider& llr_provider) const
+void icov::IMTDeaccumulation::compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, IMTTools &tool, LLRProvider& llr_provider) const
 {
     int m = tool.get_m(numcode);
     int n = tool.get_n();
@@ -63,6 +63,11 @@ void icov::IMTDeaccumulation::compute(Syndrome &o_syndrome, const Syndrome &acc_
         else
         {
             o_syndrome[k] = acc_syndrome[i];
+        }       
+
+        if(m > m_12 && k < m_12)
+        {
+            //tool.syndrome12[k] =  o_syndrome[k];
         }
     }
 
@@ -70,23 +75,25 @@ void icov::IMTDeaccumulation::compute(Syndrome &o_syndrome, const Syndrome &acc_
     {
         int ind = (m_12 - 1) - i;
         o_syndrome[ind] ^= o_syndrome[i];
-    }
 
+        if(m > m_12 && ind < m_12)
+        {
+            //tool.syndrome12[ind] =  o_syndrome[ind];
+        }
+    }
 
     if(m > m_12)
     {
-
-        uint32_t llr_min = llr_provider.index_min();
-
-        //std::cout << llr_min << std::endl;
-
-        SIVal llr_val = (o_syndrome[m-1] ? -1.0 : 1.0) * llr_provider.limit_max();
-        llr_provider[llr_min] = llr_val;
-       // std::cout << m << ", " << llr_min << ", " << llr_val << std::endl;
+        //tool.compute_doping_order(llr_provider);
+        for(int i = m_12; i < m; i++)
+        {
+            SIVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) * llr_provider.limit_max();
+            llr_provider[tool.doping_idx[i-m_12]] = llr_val;
+        }
     }
 }
 
-void icov::IMTStoredSyndrome::compute(Syndrome &o_stored_syndrome, int numcode, const IMTTools &tool, const LLRProvider& llr_provider) const
+void icov::IMTStoredSyndrome::compute(Syndrome &o_stored_syndrome, int numcode, IMTTools &tool, const LLRProvider& llr_provider) const
 {
     int m = tool.get_m(numcode);
     o_stored_syndrome.resize(m);
@@ -106,7 +113,7 @@ void icov::IMTStoredSyndrome::compute(Syndrome &o_stored_syndrome, int numcode, 
     }
     else
     {
-        //std::cout << "compute stored for m=" << m << std::endl;
-        o_stored_syndrome[m-1] = tool.source[llr_provider.index_min()];
+        tool.compute_doping_order(llr_provider);
+        o_stored_syndrome[m-1] = tool.source[tool.doping_idx[m-m_12-1]];
     }
 }

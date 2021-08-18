@@ -2,7 +2,7 @@ src/build*/
 /build*/
 doc/html/
 doc/latex
-
+data/imt/*/alist/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/vscode

@@ -6,6 +6,9 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <numeric>
+#include <algorithm>
+#include <cmath>
 
 namespace icov
 {
@@ -300,6 +303,40 @@ typedef bit SyndVal;
 //FastArray is faster
 using Syndrome = FastArray<bool>;
 using CodedVector = std::vector<CodedVal>;
+
+template <typename T>
+std::vector<size_t> sort_indexes(const std::vector<T> &v,  std::vector<size_t>& idx)
+{
+  // initialize original index locations
+  //std::vector<size_t> idx(v.size());
+  //std::iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  // using std::stable_sort instead of std::sort
+  // to avoid unnecessary index re-orderings
+  // when v contains elements of equal values
+  std::stable_sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
+template <typename T>
+std::vector<size_t> sort_indexes_abs(const std::vector<T> &v,  std::vector<size_t>& idx)
+{
+  // initialize original index locations
+  //std::vector<size_t> idx(v.size());
+  //std::iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  // using std::stable_sort instead of std::sort
+  // to avoid unnecessary index re-orderings
+  // when v contains elements of equal values
+  std::stable_sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return std::fabs(v[i1]) < std::fabs(v[i2]);});
+
+  return idx;
+}
 
 }
 

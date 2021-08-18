@@ -20,7 +20,8 @@ public:
     override;
 
 
-
+    void decode_doping(std::vector<CodedVal>& o_decoded, std::vector<size_t> &o_doping_idx, int n, int numcode,  int n_ite, const std::vector<SIVal>& llr, Syndrome& syndrome, const AffMatrix& matrix);
 };
+
 }
 #endif // AFF3CTDECODER_H

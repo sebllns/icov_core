@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <aff3ct.hpp>
+#include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
 
 using namespace aff3ct;
 
@@ -24,22 +25,22 @@ public:
     AffMatrix *h14_ord;
     AffMatrix *h18;
 
-    FastArray<bool> syndrome12;
-    FastArray<bool> syndrome14;
-    FastArray<bool> syndrome18;
+    Syndrome syndrome12;
+    Syndrome syndrome14;
+    Syndrome syndrome18;
 
-     std::vector<CodedVal> source;
-
-
+    std::vector<CodedVal> source;
+    std::vector<size_t> doping_idx;
 
     FastMatrix<uint32_t> *c18;
 
     std::string root_dir;
 
 
-    IMTTools(int _n):c18(nullptr)
+    IMTTools(int _n):c18(nullptr), doping_idx(_n), init_rateless(true)
     {
         this->n = _n;
+        std::iota(doping_idx.begin(), doping_idx.end(), 0);
     }
 
     virtual int get_m(int numcode) const override
@@ -56,6 +57,8 @@ public:
         return this->n;
    }
 
+    void reset_doping() { init_rateless = true;}
+
     u_int32_t get_c18(int m) const
     {
         if(m >= get_n()/8)
@@ -64,6 +67,16 @@ public:
         }
 
         return c18->at(m,0) - 1;
+    }
+
+    void compute_doping_order(const LLRProvider& llr_provider)
+    {
+        if(!init_rateless) return;
+        Aff3ctDecoder dec;
+        std::vector<CodedVal> o_decoded(this->get_n());
+        int numcode = this->get_n()/2;
+        dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome12, *h12_ord);
+        init_rateless = false;
     }
 
     std::string get_alist_file(int m) const
@@ -125,7 +138,6 @@ public:
         //h14_ord.print(true);      //OK
         //h18.print(true);          //OK
 
-
         int n = h12_ord.get_n_rows();
         int m_12 = h12_ord.get_n_cols();
         int m_14 = h14.get_n_cols();
@@ -152,7 +164,6 @@ public:
                 }
             }
 
-
             std::ofstream alist_file(get_alist_file(m));
             if (!alist_file.is_open())
             {
@@ -167,6 +178,8 @@ public:
 
 
 private:
+    bool init_rateless;
+
     void order_combine(const FastMatrix<bool>& src, const FastMatrix<uint32_t>& cmb_idx, AffMatrix& ord, AffMatrix& cmb)
     {
         ord = AffMatrix::zero(src.cols(), src.rows());
@@ -256,7 +269,7 @@ public:
 
     // ISyndromeEncodage interface
 public:
-    virtual void compute(Syndrome &o_stored_syndrome, int numcode, const IMTTools &tool, const LLRProvider& llr_provider) const override;
+    virtual void compute(Syndrome &o_stored_syndrome, int numcode, IMTTools &tool, const LLRProvider& llr_provider) const override;
 };
 
 
@@ -269,7 +282,7 @@ public:
 
     // ISyndromeDeaccumulation interface
 public:
-    virtual void compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, const IMTTools &tool, LLRProvider& llr_provider) const override;
+    virtual void compute(Syndrome &o_syndrome, const Syndrome &acc_syndrome, int numcode, IMTTools &tool, LLRProvider& llr_provider) const override;
 };
 
 

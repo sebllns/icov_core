@@ -33,12 +33,9 @@ public:
 
     virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
 
-//    int get_m(int code) const {return tools()->get_m(code);}
-//    int get_n() const {return tools()->get_n();}
+    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t n_ite, const ISyndromeEncodage<SyndromeTools>& synd_enc, const ISyndromeDecodage<SyndromeTools>& synd_dec);
 
-    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, const std::vector<SIVal> &side_info, uint32_t numcodeMax, uint32_t n_ite, const ISyndromeEncodage<SyndromeTools>& synd_enc, const ISyndromeDecodage<SyndromeTools>& synd_dec);
-
-    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const std::vector<SIVal>& side_info, const Syndrome& syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec);
+    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome, const ISyndromeDecodage<SyndromeTools>& synd_dec);
 
 
 protected:

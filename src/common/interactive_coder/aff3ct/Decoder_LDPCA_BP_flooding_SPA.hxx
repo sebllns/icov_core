@@ -62,6 +62,7 @@ void Decoder_LDPCA_BP_flooding_SPA<B,R>
     // take the hard decision
     for (auto v = 0; v < this->K; v++)
     {
+        //At 0.5 save the order
         //const auto k = this->info_bits_pos[v];
         const auto k = v;
         V_K[v] = !(this->post[k] >= 0);
@@ -72,12 +73,6 @@ void Decoder_LDPCA_BP_flooding_SPA<B,R>
 //	(*this)[dec::tsk::decode_siho].update_timer(dec::tm::decode_siho::decode, d_decod);
 //	(*this)[dec::tsk::decode_siho].update_timer(dec::tm::decode_siho::store,  d_store);
 }
-
-
-
-
-
-
 
 
 template <typename B, typename R>
@@ -209,7 +204,11 @@ void Decoder_LDPCA_BP_flooding_SPA<B,R>
 }
 
 
-
+template<typename B, typename R>
+std::vector<size_t> Decoder_LDPCA_BP_flooding_SPA<B, R>::get_llr_order(std::vector<size_t> &idx) const
+{
+    return icov::sort_indexes_abs(this->post, idx);
+}
 
 template <typename B, typename R>
 void Decoder_LDPCA_BP_flooding_SPA<B,R>

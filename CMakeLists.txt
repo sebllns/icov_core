@@ -10,8 +10,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 set(ICOV_CORE_VERSION_MAJOR "0")
-set(ICOV_CORE_VERSION_MINOR "3")
-set(ICOV_CORE_VERSION_PATCH "1")
+set(ICOV_CORE_VERSION_MINOR "5")
+set(ICOV_CORE_VERSION_PATCH "0")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
@@ -37,17 +37,19 @@ message("AFF3CT_DIR=${AFF3CT_DIR}")
 
 add_subdirectory(src)
 
+if(ICOV_EXTENSIONS_ENABLED)
+    add_subdirectory(extensions)
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/icov_interactive_coder_test)
 endif()
 
-if(ICOV_EXTENSIONS_ENABLED)
-    add_subdirectory(extensions)
-endif()
 
-
+message(STATUS "[INFO] Building ICOV core apps")
+add_subdirectory(app/icov_imt_alist_generator)
 
 #set(INSTALL_DEMO 1)
 

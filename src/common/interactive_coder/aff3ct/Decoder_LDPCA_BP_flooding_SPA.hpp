@@ -34,11 +34,7 @@ public:
                                   const int n_frames = 1);
 	virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
 
-//    void setSyndrome(const icov::Syndrome& syndrome)
-//    {
-//        m_syndrome = syndrome;
-//    }
-
+    std::vector<size_t> get_llr_order(std::vector<size_t> &idx) const;
 
 protected:
 	void _decode_single_ite(const std::vector<R> &msg_var_to_chk, std::vector<R> &msg_chk_to_var);

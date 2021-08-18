@@ -1,7 +1,3 @@
-# Created by Octave 5.2.0, Thu Aug 12 16:05:56 2021 CEST <sbelleno@naye.irisa.fr>
-# name: C14
-# type: int64 matrix
-# ndims: 2
  1024 2
  449
  1185
