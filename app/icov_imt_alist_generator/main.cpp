@@ -49,7 +49,8 @@ int main(int argc,  char* argv[])
 
     std::cout<<"start IMT alist generation\n";
 
-    IMTTools imt_tools(p.N);
+    IMTSyndromeManager imt_tools(p.N);
+    IMTMatrixBuilder imt_builder(&imt_tools, p.database);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -57,8 +58,7 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
     std::cout<<"build matrices\n";
 
-    imt_tools.root_dir = p.database;
-    imt_tools.read_mat_imt_format();
+    imt_builder.read_mat_imt_format();
 
     std::cout << "*************************************************************************" << std::endl;
     std::cout << "END OF GENERATION\n";

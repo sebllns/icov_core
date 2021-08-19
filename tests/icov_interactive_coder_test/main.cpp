@@ -25,6 +25,7 @@ struct params
     int   N         =   1000;     // codeword size
     int   n_ite	=   100;
     int n_ite_crossover = 10;
+    int coder_type = 0;
 };
 
 struct buffers
@@ -32,6 +33,7 @@ struct buffers
     std::vector<CodedVal> src_bits;
     std::vector<CodedVal  > dec_bits;
     std::vector<double> time;
+    std::vector<double> decoding_time;
     std::vector<double> numerrors;
     std::vector<double> rate;
     std::vector<double> pcrossover;
@@ -56,27 +58,17 @@ void init_buffers(const params &p, buffers &b)
     b.rate = std::vector<double>(b.pcrossover.size(), 0);
     b.numerrors = std::vector<double>(b.pcrossover.size(), 0);
     b.time = std::vector<double>(b.pcrossover.size(), 0);
+    b.decoding_time = std::vector<double>(b.pcrossover.size(), 0);
 
+    b.src_bits = std::vector<CodedVal>(p.N, 0);
+    std::generate(b.src_bits.begin(), b.src_bits.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
 
-  b.src_bits      = {0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0};
-
-  if(b.src_bits.size() != (ulong)p.N)
-  {
-      b.src_bits.resize(p.N);
-  }
-
-  b.dec_bits      = std::vector<int  >(p.N);
-}
-
-template<typename T> void printVector(std::vector<T> v)
-{
-    std::cout << "[";
-    for(int i = 0; i < v.size() ; i++)
+    if(b.src_bits.size() != (ulong)p.N)
     {
-        std::cout << v[i] << ", ";
+        b.src_bits.resize(p.N);
     }
 
-    std::cout << v[v.size()-1] << "]" << std::endl;
+    b.dec_bits      = std::vector<int  >(p.N);
 }
 
 /****************************************************************************************/
@@ -84,6 +76,8 @@ template<typename T> void printVector(std::vector<T> v)
 /****************************************************************************************/
 int main(int argc,  char* argv[])
 {
+    auto start_main = std::chrono::steady_clock::now();
+
     srand((unsigned)time(NULL));
 
     /****************************************************************************************/
@@ -99,13 +93,15 @@ int main(int argc,  char* argv[])
 
     std::cout<<"start interactive IMT coder\n";
 
+    //common part
+    LLRProvider llrProvider(p.N);
+    Aff3ctDecoder ldpca_dec;
 
     std::cout<<"init coder\n";
 
-    IMTTools imt_tools(p.N);
-    LLRProvider llrProvider(p.N);
-    Aff3ctDecoder ldpca_dec;
-    auto interactive_coder = new InteractiveCoder<AffMatrix, IMTTools>(&ldpca_dec, &imt_tools, &llrProvider);
+    IMTSyndromeManager imt_tools(p.N);
+
+    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, &imt_tools, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -113,23 +109,20 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
     std::cout<<"build matrices\n";
 
-    imt_tools.root_dir = p.database;
     int n = imt_tools.get_n();
 
     uint32_t numcode = 0;
     uint32_t end_code = n/2 - n/8;
 
 
-    IMTMatrixBuilder mb(&imt_tools);
+    IMTMatrixBuilder mb(&imt_tools, p.database);
     interactive_coder->buildMatrices(mb, numcode, end_code+1);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
     // 3 - SYNDROME ACCUMULATION
     /****************************************************************************************/
-    std::cout<<"compute acc\n";
-    IMTAccumulation imt_acc;
-    imt_acc.compute(b.src_bits, imt_tools);
+    imt_tools.init_accumulation(b.src_bits);
 
     //OK std::cout<< "s12 " << imt_tools.syndrome12.to_string() << std::endl;
     //OK std::cout<< "s14 " << imt_tools.syndrome14.to_string() << std::endl;
@@ -143,22 +136,20 @@ int main(int argc,  char* argv[])
     std::cout<<"encode\n";
     Syndrome stored_synd(imt_tools.get_n());
 
-    IMTStoredSyndrome imt_stored;
-    IMTDeaccumulation imt_deacc;
-
-
-
     for (int ite = 0; ite < p.n_ite_crossover ; ite++)
     {
         for(int i = 0; i < b.pcrossover.size(); i++)
         {
             float progress = 100.0 * (ite*b.pcrossover.size()+i) / (b.pcrossover.size()*p.n_ite_crossover);
 
-            std::cout << "    " << progress << "%                 \r" << std::flush ;
+           // std::cout << "    " << progress << "%                 \r" << std::flush ;
+
+            //std::generate(b.src_bits.begin(), b.src_bits.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
 
             imt_tools.source = b.src_bits;
             imt_tools.reset_doping();
             llrProvider.initLLR(b.pcrossover[i], b.src_bits);
+            //imt_acc.compute(b.src_bits, imt_tools);
 
 
             numcode = 0;
@@ -166,7 +157,7 @@ int main(int argc,  char* argv[])
 
             auto start = std::chrono::steady_clock::now();
 
-            int numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, end_code+1, p.n_ite, imt_stored, imt_deacc);
+            int numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, end_code+1, p.n_ite);
 
             auto end = std::chrono::steady_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
@@ -175,21 +166,40 @@ int main(int argc,  char* argv[])
             if(numerrors != 0)
             {
                 std::cout<<"ERROR: No convergence. Pcrossover="<< b.pcrossover[i]<<std::endl;
+                 throw "fatal: no convergence";
             }
+
+            std::cout << numcode << std::endl;
 
 
             b.rate[i]  +=( ((double)imt_tools.get_m(numcode)) / ((double)p.n_ite_crossover * n));
             b.time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
             b.numerrors[i] += (1.0*numerrors)/(p.n_ite_crossover * n);
 
-            //std::cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
+
+            imt_tools.reset_doping();
+            start = std::chrono::steady_clock::now();
+            interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+            if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits))
+            {
+                throw "fatal: error decoding";
+            }
+
+            end = std::chrono::steady_clock::now();
+            elapsed_seconds = end-start;
+            b.decoding_time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
+
         }
     }
 
-    std::cout << "100%" <<  std::endl;
+    std::cout << "    100%" <<  std::endl;
+
+    auto end_main = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end_main-start_main;
 
     std::cout << "*************************************************************************" << std::endl;
     std::cout << "END OF SIMULATION\n";
+    std::cout << "Duration:\t" << elapsed_seconds.count()/60 << " mins"<<  std::endl;
     std::cout << "Database:\t" << p.database<<  std::endl;
     std::cout << "Code size:\t" << p.N<<  std::endl;
     std::cout << "BP iterations:\t" << p.n_ite<<  std::endl;
@@ -203,8 +213,9 @@ int main(int argc,  char* argv[])
     std::cout<<"Write results"<<std::endl;
     icov::DebugTools::write_vector("pcrossover", b.pcrossover,  '\n');
     icov::DebugTools::write_vector("rate", b.rate, '\n');
-    icov::DebugTools::write_vector("nummerrors", b.numerrors, '\n');
-    icov::DebugTools::write_vector("time", b.time, '\n');
+    icov::DebugTools::write_vector("numerrors", b.numerrors, '\n');
+    icov::DebugTools::write_vector("encode_time", b.time, '\n');
+    icov::DebugTools::write_vector("decode_time", b.decoding_time, '\n');
 
 
     return 0;

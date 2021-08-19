@@ -7,11 +7,16 @@
 namespace icov
 {
 
-struct DefaultSyndromeTools
+class ISyndromeManager
 {
 public:
-    DefaultSyndromeTools() = default;
-    virtual ~DefaultSyndromeTools() = default;
+    ISyndromeManager(int _n) : n(_n){};
+    virtual ~ISyndromeManager() = default;
+
+    virtual void init_accumulation(const std::vector<CodedVal>& source_x) = 0;
+    virtual void compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider) = 0;
+
+    virtual void compute_deacc(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, LLRProvider& llr_provider) = 0;
 
     virtual int get_m(int numcode) const
     {
@@ -26,37 +31,6 @@ public:
 protected:
     uint32_t n;
 };
-
-template <class SyndromeTools = DefaultSyndromeTools>
-class ISyndromeAccumulation
-{
-public:
-    ISyndromeAccumulation() = default;
-    virtual ~ISyndromeAccumulation() = default;
-
-    virtual void compute(const std::vector<CodedVal>& source_x, SyndromeTools& tool) const = 0;
-};
-
-template <class SyndromeTools = DefaultSyndromeTools>
-class ISyndromeEncodage
-{
-public:
-    ISyndromeEncodage() = default;
-    virtual ~ISyndromeEncodage() = default;
-
-    virtual void compute(Syndrome& o_stored_syndrome, int numcode, SyndromeTools& tool, const LLRProvider& llr_provider) const = 0;
-};
-
-
-template <class SyndromeTools = DefaultSyndromeTools>
-class ISyndromeDecodage
-{
-public:
-    ISyndromeDecodage() = default;
-    virtual ~ISyndromeDecodage() = default;
-    virtual void compute(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, SyndromeTools& tool, LLRProvider& llr_provider) const = 0;
-};
-
 }
 
 #endif // ISYNDROME_H
