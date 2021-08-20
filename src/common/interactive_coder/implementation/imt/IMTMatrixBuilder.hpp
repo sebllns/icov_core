@@ -1,7 +1,10 @@
 #include "IMTMatrixBuilder.h"
-using namespace icov;
 
 #include <cstdint>
+#include <fstream>
+#include <sstream>
+
+using namespace icov;
 
 AffMatrix *IMTMatrixBuilder::buildMatrix(int numcode) const
 {

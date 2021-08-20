@@ -1,14 +1,14 @@
 #ifndef VARODAYANMATRIXBUILDER_H
 #define VARODAYANMATRIXBUILDER_H
 
-#include <IAff3ctMatrixBuilder.h>
+#include "interactive_coder/aff3ct/IAff3ctMatrixBuilder.h"
 #include "VarodayanSyndrome.h"
 
 namespace icov {
 class VarodayanMatrixBuilder : public IAff3ctMatrixBuilder
 {
 public:
-    VarodayanMatrixBuilder(const VarodayanTools& tools):
+    VarodayanMatrixBuilder(VarodayanSyndromeManager* tools):
         m_tools(tools)
     {
 
@@ -21,7 +21,7 @@ public:
     AffMatrix *buildMatrix(int numcode) const override;
 
 private:
-    const VarodayanTools& m_tools;
+    std::shared_ptr<VarodayanSyndromeManager> m_tools;
 };
 }
 #endif // VARODAYANMATRIXBUILDER_H

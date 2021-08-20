@@ -2,8 +2,7 @@
 #define IMTSYNDROME_H
 
 #include "interactive_coder/interface/ISyndrome.h"
-#include <fstream>
-#include <sstream>
+
 
 #include <aff3ct.hpp>
 #include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
@@ -28,7 +27,6 @@ public:
     Syndrome syndrome14;
     Syndrome syndrome18;
 
-    std::vector<CodedVal> source;
     std::vector<size_t> doping_idx;
 
     FastMatrix<uint32_t> *c18;

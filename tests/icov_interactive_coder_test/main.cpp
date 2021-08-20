@@ -5,13 +5,19 @@
 #include <chrono>
 
 #include <aff3ct.hpp>
+//#include <boost/filesystem.hpp>
 
 #include "tools/DebugTools.h"
 #include "interactive_coder/InteractiveCoder.hpp"
-#include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
 #include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
 #include "interactive_coder/LLRProvider.h"
+
+#include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
+#include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
+
+#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
+#include "interactive_coder/implementation/varodayan/VarodayanMatrixBuilder.hpp"
+
 
 using namespace aff3ct;
 using namespace icov;
@@ -25,13 +31,14 @@ struct params
     int   N         =   1000;     // codeword size
     int   n_ite	=   100;
     int n_ite_crossover = 10;
-    int coder_type = 0;
+    std::string coder_type = "null";
 };
 
 struct buffers
 {
     std::vector<CodedVal> src_bits;
     std::vector<CodedVal  > dec_bits;
+    std::vector<SIVal> llr;
     std::vector<double> time;
     std::vector<double> decoding_time;
     std::vector<double> numerrors;
@@ -41,11 +48,12 @@ struct buffers
 
 void init_params(params &p, int argc, char* argv[])
 {
-    if(argc < 5) throw "bad arguments";
-    p.database = std::string(argv[1]);
-    p.N = atoi(argv[2]);
-    p.n_ite = atoi(argv[3]);
-    p.n_ite_crossover = atoi(argv[4]);
+    if(argc < 6) throw "bad arguments";
+    p.coder_type = argv[1];
+    p.database = argv[2];
+    p.N = atoi(argv[3]);
+    p.n_ite = atoi(argv[4]);
+    p.n_ite_crossover = atoi(argv[5]);
 }
 
 void init_buffers(const params &p, buffers &b);
@@ -91,17 +99,44 @@ int main(int argc,  char* argv[])
     init_buffers(p, b); // create and initialize the buffers required by the modules
 
 
-    std::cout<<"start interactive IMT coder\n";
+    std::cout<<"start interactive coder\n";
 
     //common part
     LLRProvider llrProvider(p.N);
     Aff3ctDecoder ldpca_dec;
+    ISyndromeManager* syndromeMgr = nullptr;
+    IMatrixBuilder<AffMatrix>* mb = nullptr;
 
-    std::cout<<"init coder\n";
+    std::cout<<"type of coder = "<<p.coder_type<<std::endl;
 
-    IMTSyndromeManager imt_tools(p.N);
+    int start_matrix, end_matrix, start_encode, end_encode;
 
-    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, &imt_tools, &llrProvider);
+    if(p.coder_type == "imt")
+    {
+        IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
+        syndromeMgr = imt_synd;
+        mb = new IMTMatrixBuilder(imt_synd, p.database);
+        start_matrix = 0;
+        end_matrix = imt_synd->get_n()/2 - imt_synd->get_n()/8;
+
+        start_encode = 0;
+        end_encode = 3*imt_synd->get_n()/2 - imt_synd->get_n()/8;
+    }
+    else if(p.coder_type == "varodayan")
+    {
+        VarodayanSyndromeManager* varo_synd = new VarodayanSyndromeManager(p.N);
+        varo_synd->read_mat(p.database);
+        syndromeMgr = varo_synd;
+        mb = new VarodayanMatrixBuilder(varo_synd);
+
+        start_matrix = 0;
+        end_matrix = varo_synd->numCodes - 1;
+
+        start_encode = 0;
+        end_encode = varo_synd->numCodes - 1;
+    }
+
+    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, syndromeMgr, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -109,24 +144,18 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
     std::cout<<"build matrices\n";
 
-    int n = imt_tools.get_n();
+    int n = syndromeMgr->get_n();
 
-    uint32_t numcode = 0;
-    uint32_t end_code = n/2 - n/8;
+    uint32_t numcode = start_matrix;
+    uint32_t end_code = end_matrix;
 
-
-    IMTMatrixBuilder mb(&imt_tools, p.database);
-    interactive_coder->buildMatrices(mb, numcode, end_code+1);
+    interactive_coder->buildMatrices(*mb, numcode, end_code+1);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
     // 3 - SYNDROME ACCUMULATION
     /****************************************************************************************/
-    imt_tools.init_accumulation(b.src_bits);
-
-    //OK std::cout<< "s12 " << imt_tools.syndrome12.to_string() << std::endl;
-    //OK std::cout<< "s14 " << imt_tools.syndrome14.to_string() << std::endl;
-    //OK std::cout<< "s18 " << imt_tools.syndrome18.to_string() << std::endl;
+    syndromeMgr->init_accumulation(b.src_bits);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -134,7 +163,7 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
 
     std::cout<<"encode\n";
-    Syndrome stored_synd(imt_tools.get_n());
+    Syndrome stored_synd(syndromeMgr->get_n());
 
     for (int ite = 0; ite < p.n_ite_crossover ; ite++)
     {
@@ -142,18 +171,18 @@ int main(int argc,  char* argv[])
         {
             float progress = 100.0 * (ite*b.pcrossover.size()+i) / (b.pcrossover.size()*p.n_ite_crossover);
 
-           // std::cout << "    " << progress << "%                 \r" << std::flush ;
+            std::cout << "    " << progress << "%                 \r" << std::flush ;
 
             //std::generate(b.src_bits.begin(), b.src_bits.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
 
-            imt_tools.source = b.src_bits;
-            imt_tools.reset_doping();
+            syndromeMgr->reset_doping();
             llrProvider.initLLR(b.pcrossover[i], b.src_bits);
             //imt_acc.compute(b.src_bits, imt_tools);
 
+            b.llr = llrProvider.llr();
 
-            numcode = 0;
-            end_code = 2*n - n/8;
+            numcode = start_encode;
+            end_code = end_encode;
 
             auto start = std::chrono::steady_clock::now();
 
@@ -163,32 +192,34 @@ int main(int argc,  char* argv[])
             std::chrono::duration<double> elapsed_seconds = end-start;
 
 
-            if(numerrors != 0)
-            {
-                std::cout<<"ERROR: No convergence. Pcrossover="<< b.pcrossover[i]<<std::endl;
-                 throw "fatal: no convergence";
-            }
-
-            std::cout << numcode << std::endl;
-
-
-            b.rate[i]  +=( ((double)imt_tools.get_m(numcode)) / ((double)p.n_ite_crossover * n));
+            b.rate[i]  +=( ((double)syndromeMgr->get_m(numcode)) / ((double)p.n_ite_crossover * n));
             b.time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
             b.numerrors[i] += (1.0*numerrors)/(p.n_ite_crossover * n);
 
 
-            imt_tools.reset_doping();
-            start = std::chrono::steady_clock::now();
-            interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
-            if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits))
+            if(numerrors != 0)
             {
-                throw "fatal: error decoding";
+                std::cerr<<"ERROR: No convergence. Pcrossover="<< b.pcrossover[i]<<std::endl;
             }
+            else
+            {
+                syndromeMgr->reset_doping();
+                for(int l = 0; l < n ; l++)
+                {
+                    llrProvider[l] = b.llr[l];
+                }
 
-            end = std::chrono::steady_clock::now();
-            elapsed_seconds = end-start;
-            b.decoding_time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
+                start = std::chrono::steady_clock::now();
+                interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+                if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits))
+                {
+                    throw "fatal: error decoding";
+                }
 
+                end = std::chrono::steady_clock::now();
+                elapsed_seconds = end-start;
+                b.decoding_time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
+            }
         }
     }
 
@@ -211,6 +242,7 @@ int main(int argc,  char* argv[])
     // 5 - WRITE RESULTS
     /****************************************************************************************/
     std::cout<<"Write results"<<std::endl;
+
     icov::DebugTools::write_vector("pcrossover", b.pcrossover,  '\n');
     icov::DebugTools::write_vector("rate", b.rate, '\n');
     icov::DebugTools::write_vector("numerrors", b.numerrors, '\n');

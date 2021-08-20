@@ -7,19 +7,20 @@
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0)
 {
-
+    std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
 icov::LLRProvider::LLRProvider(const std::vector<SIVal> &llr):
     m_llr(llr)
 {
-
+    std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
 void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "LLRProvider::buildLLR length of arrays are not equal";
 
+    m_src = src_bits;
 
     for(int k = 0 ; k < (int)src_bits.size() ; k++)
     {
