@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
+#include <algorithm>    // std::shuffle
+
 
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0)
@@ -18,7 +20,7 @@ icov::LLRProvider::LLRProvider(const std::vector<SIVal> &llr):
 
 void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &src_bits)
 {
-    if(m_llr.size() != src_bits.size()) throw "LLRProvider::buildLLR length of arrays are not equal";
+    if(m_llr.size() != src_bits.size()) throw "LLRProvider::initLLR: length of arrays are not equal";
 
     m_src = src_bits;
 
@@ -29,6 +31,32 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
         m_llr[k] = log( pCond/(1-pCond) );
     }
 
+}
+
+void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<CodedVal> &src_bits)
+{
+    if(m_llr.size() != src_bits.size()) throw "LLRProvider::initLLRUniform length of arrays are not equal";
+
+    m_src = src_bits;
+
+    float one_count = pcrossover * m_llr.size();
+    one_count = m_floor_type ? std::ceil(one_count) : std::floor(one_count);
+
+    for(int k = 0 ; k < (int)src_bits.size() ; k++)
+    {
+        m_llr[k] = k < one_count ? 1 : 0;
+    }
+
+    std::random_shuffle(m_llr.begin(), m_llr.end());
+
+    for(int k = 0 ; k < (int)src_bits.size() ; k++)
+    {
+        m_llr[k] = (int)(m_llr[k] + src_bits[k]) % 2;
+        double pCond = (1-pcrossover)*(1-m_llr[k]) + pcrossover*m_llr[k];
+        m_llr[k] = log( pCond/(1-pCond) );
+    }
+
+    m_floor_type = !m_floor_type;
 }
 
 uint32_t icov::LLRProvider::index_min() const

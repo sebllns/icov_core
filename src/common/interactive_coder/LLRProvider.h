@@ -17,6 +17,8 @@ public:
     inline const CodedVal& src(int i) const {return m_src[i];}
 
     void initLLR(float pCrossover, const std::vector<CodedVal>& src);
+    void initLLRUniform(float pCrossover, const std::vector<CodedVal>& src);
+
     uint32_t index_min() const;
     static SIVal limit_max();
 
@@ -24,6 +26,7 @@ protected:
     std::vector<SIVal> m_llr;
     std::vector<CodedVal> m_src;
     std::vector<size_t> doping_order;
+    bool m_floor_type;
 };
 
 }

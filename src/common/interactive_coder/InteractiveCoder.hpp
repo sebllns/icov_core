@@ -39,24 +39,31 @@ int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, c
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t n_ite)
+int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite)
 {
     int n = source.size();
 
     std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());
 
-    for( ; io_numcode < numcodeMax ; io_numcode++)
+    uint32_t next_test_code = io_numcode;
+
+    for(io_numcode = 0 ; io_numcode < numcodeMax ; io_numcode++)
     {
         m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *llrProvider());
-         this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
 
-        if(testConvergence(decoded, source))
+        if(io_numcode == next_test_code)
         {
-            return 0;
+            this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
+            if(testConvergence(decoded, source))
+            {
+                return 0;
+            }
+
+            next_test_code = std::min(next_test_code+step, numcodeMax-1);
         }
     }
 
-    std::cout << io_numcode << std::endl;
+    //std::cout << io_numcode << std::endl;
     io_numcode = numcodeMax - 1;
     return errorCount(decoded, source);
 }

@@ -33,7 +33,7 @@ public:
 
     virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
 
-    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t n_ite);
+    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite);
 
     void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome);
 

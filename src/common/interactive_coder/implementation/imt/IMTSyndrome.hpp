@@ -33,7 +33,7 @@ inline void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_prov
 {
     if(!init_rateless) return;
     //std::cout << "compute doping" << std::endl;
-    Aff3ctDecoder dec;
+    Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
     int numcode = this->get_n()/2;
     dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome12, *h12_ord);
@@ -154,11 +154,12 @@ void IMTSyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numcode
     o_stored_syndrome.resize(m);
 
     int m_12 = get_n()/2;
+    int m_18 = get_n()/8;
 
     //intial syndrome is syndrome18
-    if(m == get_n()/8)
+    if(m == m_18)
     {
-        for(int i = 0; i < m ; i++)
+        for(int i = 0; i < m_18 ; i++)
         {
             o_stored_syndrome[i] = syndrome18[i];
         }

@@ -21,20 +21,17 @@ class Decoder_LDPCA_BP_flooding_SPA : public Decoder_LDPC_BP_flooding<B,R,tools:
 protected:
 	std::vector<R> values;
     std::vector<R> LLR_overall;
-    const icov::Syndrome *m_syndrome;
+    icov::Syndrome *m_syndrome;
 
 
 public:
-	Decoder_LDPCA_BP_flooding_SPA(const int K, const int N, const int n_ite,
-                                  const tools::Sparse_matrix &H,
-                                  const std::vector<uint32_t> &info_bits_pos,
-                                  const icov::Syndrome *synd,
-                                  const bool enable_syndrome = true,
-                                  const int syndrome_depth = 1,
-                                  const int n_frames = 1);
+    Decoder_LDPCA_BP_flooding_SPA(const int N, const int n_ite,
+                                  const tools::Sparse_matrix &H);
 	virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
 
     std::vector<size_t> get_llr_order(std::vector<size_t> &idx) const;
+
+    void setSyndrome(icov::Syndrome *synd) {m_syndrome = synd;}
 
 protected:
 	void _decode_single_ite(const std::vector<R> &msg_var_to_chk, std::vector<R> &msg_chk_to_var);
