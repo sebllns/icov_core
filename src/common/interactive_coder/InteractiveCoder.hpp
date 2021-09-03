@@ -1,5 +1,5 @@
 #include "InteractiveCoder.h"
-#include "common_types.h"
+#include "common.h"
 
 using namespace icov;
 

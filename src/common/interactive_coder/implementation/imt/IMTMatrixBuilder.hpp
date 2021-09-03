@@ -18,7 +18,7 @@ AffMatrix *IMTMatrixBuilder::buildMatrix(int numcode) const
     {
         std::stringstream message;
         message << "'filename' couldn't be opened ('filename' = " << filename << ").";
-        throw invalid_argument(__FILE__, __LINE__, __func__, message.str());
+        throw aff3ct::tools::invalid_argument(__FILE__, __LINE__, __func__, message.str());
     }
 
     AffMatrix *H = new AffMatrix(tools::AList

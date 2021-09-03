@@ -2,7 +2,7 @@
 #define IMATRIXBUILDER_H
 
 
-#include "common_types.h"
+#include "common.h"
 
 namespace icov {
 

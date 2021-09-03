@@ -49,7 +49,7 @@
 #ifndef ISYNDROME_H
 #define ISYNDROME_H
 
-#include "common_types.h"
+#include "common.h"
 #include "interactive_coder/LLRProvider.h"
 
 namespace icov

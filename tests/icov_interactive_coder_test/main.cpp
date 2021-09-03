@@ -157,7 +157,7 @@ int main(int argc,  char* argv[])
         start_matrix = 0;
         end_matrix = varo_synd->numCodes - 1;
 
-        encode_params.resize(0);
+        encode_params.resize(1);
         encode_params[0].start_code = 0;
         encode_params[0].stop_code = varo_synd->numCodes;
         encode_params[0].step = 1;
@@ -204,7 +204,6 @@ int main(int argc,  char* argv[])
         numcode = 0;
         for(int i = 0; i < b.pcrossover.size(); i++)
         {
-
             float progress = 100.0 * (ite*b.pcrossover.size()+i) / (b.pcrossover.size()*p.n_ite_crossover);
 
             std::cout << "    " << progress << "%                 \r" << std::flush ;
@@ -253,7 +252,7 @@ int main(int argc,  char* argv[])
 
 
             b.rate[i]  +=( ((double)syndromeMgr->get_m(numcode)) / ((double)p.n_ite_crossover * n));
-            b.time[i] += elapsed_seconds.count()/ p.n_ite_crossover + (i > 0 ? b.time[i-1] : 0.0);
+            b.time[i] += elapsed_seconds.count(); /// p.n_ite_crossover;// + (i > 0 ? b.time[i-1] : 0.0);
             b.numerrors[i] += (1.0*numerrors)/(p.n_ite_crossover * n);
 
 
@@ -278,7 +277,7 @@ int main(int argc,  char* argv[])
 
                 end = std::chrono::steady_clock::now();
                 elapsed_seconds = end-start;
-                b.decoding_time[i] += elapsed_seconds.count()/ p.n_ite_crossover;
+                b.decoding_time[i] += elapsed_seconds.count();
             }
         }
     }
@@ -302,6 +301,16 @@ int main(int argc,  char* argv[])
     // 5 - WRITE RESULTS
     /****************************************************************************************/
     std::cout<<"Write results"<<std::endl;
+
+    for(int i = 1; i < b.pcrossover.size(); i++)
+    {
+        b.time[i] += b.time[i-1];
+    }
+
+    for(int i = 0; i < b.pcrossover.size(); i++)
+    {
+        b.time[i] /= p.n_ite_crossover;
+    }
 
     icov::DebugTools::write_vector("pcrossover", b.pcrossover,  '\n');
     icov::DebugTools::write_vector("rate", b.rate, '\n');

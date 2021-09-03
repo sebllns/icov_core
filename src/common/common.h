@@ -67,9 +67,11 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
+#include <stdexcept>
 
 using namespace std;
 
+#include "common_types.h"
 #include "typedef.h"
 #include "version.h"
 

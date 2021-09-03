@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "common_types.h"
+#include "common.h"
 #include "interface/IMatrixBuilder.h"
 #include "interface/IDecoder.h"
 #include "interface/ISyndrome.h"

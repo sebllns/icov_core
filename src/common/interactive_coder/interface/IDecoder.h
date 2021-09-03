@@ -1,7 +1,7 @@
 #ifndef IDECODER_H
 #define IDECODER_H
 
-#include "common_types.h"
+#include "common.h"
 
 namespace icov
 {

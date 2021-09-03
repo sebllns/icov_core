@@ -9,7 +9,7 @@
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 #include "Module/Decoder/LDPC/BP/Flooding/Decoder_LDPC_BP_flooding.hpp"
 
-#include "common_types.h"
+#include "common.h"
 
 namespace aff3ct
 {

@@ -45,6 +45,8 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/icov_interactive_coder_test)
+    add_subdirectory(tests/icov_bit_symbol)
+    add_subdirectory(tests/benchmarks)
 endif()
 
 

@@ -3,7 +3,7 @@
 
 #include "interactive_coder/aff3ct/IAff3ctMatrixBuilder.h"
 #include "IMTSyndrome.h"
-#include "common_types.h"
+#include "common.h"
 
 namespace icov {
 class IMTMatrixBuilder : public IAff3ctMatrixBuilder

@@ -1,6 +1,10 @@
 #ifndef COMMON_TYPES_H
 #define COMMON_TYPES_H
 
+#ifndef COMMON_H
+#error Include common.h not common_types.h
+#endif
+
 #include <vector>
 #include <cstdint>
 #include <cstring>
