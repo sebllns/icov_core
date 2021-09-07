@@ -22,6 +22,8 @@ include_directories(src third-party/aff3ct/src third-party/aff3ct/include)
 
 set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
+set(AFF3CT_POLAR_BIT_PACKING OFF)
+set(AFF3CT_COLORS OFF)
 add_subdirectory(third-party/aff3ct)
 
 # Link with the "Threads library (required to link with AFF3CT after)
