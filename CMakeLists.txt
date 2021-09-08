@@ -34,8 +34,9 @@ find_package(Threads REQUIRED)
 
 # Link with AFF3CT
 set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-2.3.5/")
+message("SEARCHING AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED)
-message("FOUND AFF3CT_DIR=${AFF3CT_DIR}")
+message("FOUND AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
 
 add_subdirectory(src)
 
