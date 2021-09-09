@@ -3,8 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
-#include <algorithm>    // std::shuffle
-
+#include <algorithm>
+#include <random>
 
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0)
@@ -47,7 +47,10 @@ void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<Coded
         m_llr[k] = k < one_count ? 1 : 0;
     }
 
-    std::random_shuffle(m_llr.begin(), m_llr.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    std::shuffle(m_llr.begin(), m_llr.end(), g);
 
     for(int k = 0 ; k < (int)src_bits.size() ; k++)
     {
