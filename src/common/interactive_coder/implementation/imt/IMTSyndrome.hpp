@@ -3,20 +3,20 @@
 using namespace icov;
 
 
-inline IMTSyndromeManager::IMTSyndromeManager(int n): ISyndromeManager(n), doping_idx(n), init_rateless(true)
+IMTSyndromeManager::IMTSyndromeManager(int n): ISyndromeManager(n), doping_idx(n), init_rateless(true)
 {
     std::iota(doping_idx.begin(), doping_idx.end(), 0);
 }
 
-inline int IMTSyndromeManager::get_m(int numcode) const
+int IMTSyndromeManager::get_m(int numcode) const
 {
     //m is given by the numcode with an offset of n/8 (minimum rate)
     return  this->get_n()/8 + numcode;
 }
 
-inline void IMTSyndromeManager::reset_doping() { init_rateless = true;}
+void IMTSyndromeManager::reset_doping() { init_rateless = true;}
 
-inline u_int32_t IMTSyndromeManager::get_c18(int m) const
+uint32_t IMTSyndromeManager::get_c18(int m) const
 {
     //Matrix c18 is given by the IMT mapping file of size n/4 x 2
     //the row in the second half of the matrix matches the second column of the c18 mapping file but in reverse order
@@ -29,7 +29,7 @@ inline u_int32_t IMTSyndromeManager::get_c18(int m) const
     return c18->at(m,0) - 1;
 }
 
-inline void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider)
+void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider)
 {
     if(!init_rateless) return;
     //std::cout << "compute doping" << std::endl;

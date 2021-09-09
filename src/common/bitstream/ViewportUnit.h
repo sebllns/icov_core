@@ -8,7 +8,7 @@
  */
 
 /** @file ViewportUnit.h
- *  @brief ViewportUnit for VCL data
+ *  @brief ViewportUnit (VPU) for VCL data
  *  @ingroup common
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1

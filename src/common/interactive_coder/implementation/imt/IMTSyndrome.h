@@ -45,9 +45,9 @@ public:
 
     virtual int get_m(int numcode) const override;
 
-    void reset_doping();
+    void reset_doping() override;
 
-    u_int32_t get_c18(int m) const;
+    uint32_t get_c18(int m) const;
 
     void compute_doping_order(const LLRProvider& llr_provider);
 
