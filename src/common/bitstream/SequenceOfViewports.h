@@ -1,6 +1,3 @@
-#ifndef SEQUENCEOFVIEWPORTS_H
-#define SEQUENCEOFVIEWPORTS_H
-
 /****************************************************************************/
 /** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
@@ -48,6 +45,14 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
+#pragma once
+
+
+/** @class SequenceOfViewports
+ *  @brief SequenceOfViewports
+ *
+ *  A SequenceOfViewports is a part of ICOV bitstream that is conveying a set of Viewport Units (VPU).
+ */
 class SequenceOfViewports
 {
 private:
@@ -55,5 +60,3 @@ private:
 public:
   SequenceOfViewports();
 };
-
-#endif // SEQUENCEOFVIEWPORTS_H

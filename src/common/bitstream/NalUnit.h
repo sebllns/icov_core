@@ -50,10 +50,7 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
-
-#ifndef __NAL_H__
-#define __NAL_H__
-
+#pragma once
 #include "common.h"
 
 class NalUnit
@@ -110,5 +107,3 @@ private:
   icov::byte *m_rbsp;
   int m_rbsp_length;
 };
-
-#endif // __NAL_H__

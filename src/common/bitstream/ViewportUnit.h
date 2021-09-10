@@ -45,14 +45,17 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
-
-#ifndef VIEWPORTUNIT_H
-#define VIEWPORTUNIT_H
+#pragma once
 
 #include "NalUnit.h"
 #include "InteractiveCodedUnit.h"
 #include <fstream>
 
+/** @class ViewportUnit
+ *  @brief ViewportUnit
+ *
+ *  A ViewportUnit is a part of ICOV bitstream that is conveying a set of Interactive Coded Units (ICUs) as Video Coding Layer data.
+ */
 class ViewportUnit
 {
 
@@ -68,5 +71,3 @@ public:
 private:
   std::vector<InteractiveCodedUnit> m_icus;
 };
-
-#endif // VIEWPORTUNIT_H
