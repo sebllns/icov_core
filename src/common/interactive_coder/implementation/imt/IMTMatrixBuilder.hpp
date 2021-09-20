@@ -31,13 +31,11 @@ AffMatrix *IMTMatrixBuilder::buildMatrix(int numcode) const
         m_tools->syndrome18.resize(m);
         m_tools->c18 = new FastMatrix<uint32_t>(read_mat_IMT_format<uint32_t>(root_dir + "/" + std::to_string(n) + "/C18.txt"));
     }
-
     else if(m == n/4)
     {
         m_tools->h14_ord = H;
         m_tools->syndrome14.resize(m);
     }
-
     else if(m == n/2)
     {
         m_tools->h12_ord = H;

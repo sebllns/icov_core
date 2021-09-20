@@ -300,8 +300,9 @@ protected:
 };
 
 typedef bool bit;
-typedef float SIVal;
+typedef float LLRVal;
 typedef int CodedVal;
+typedef int SIVal;
 typedef bit SyndVal;
 
 //FastArray is faster

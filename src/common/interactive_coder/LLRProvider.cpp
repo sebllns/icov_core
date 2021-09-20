@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
-#include <random>
+#include <random>111
 
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0)
@@ -12,10 +12,22 @@ icov::LLRProvider::LLRProvider(int n):
     std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
-icov::LLRProvider::LLRProvider(const std::vector<SIVal> &llr):
+icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr):
     m_llr(llr)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
+}
+
+void icov::LLRProvider::initLLR(int b, BitSymbolProvider& bsp, const std::vector<SIVal> &side_info, const std::vector<int> &predec)
+{
+    int l = bsp.z_binary_length();
+    float p = 0.0, p0 = 0.0, p1 = 0.0;
+
+    for(int i = 0; i < side_info.size() ; i++)
+    {
+        m_llr[i] = b == 0 ? p = bsp.pqks(side_info[i]) : bsp.pqkb(predec[i] < 0, b > 1 ? std::abs(predec[i]) : 0, l, b, side_info[i], p0, p1, p);
+        m_llr[i] = std::log(m_llr[i] / (1 - m_llr[i]));
+    }
 }
 
 void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &src_bits)
@@ -28,7 +40,7 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
     {
         int sideinfo_BSC = ((int) (src_bits[k] + (((((double)rand() / (double)RAND_MAX) < pcrossover)) ? 1.0 : 0.0))) % 2;
         double pCond = (1-pcrossover)*(1-sideinfo_BSC) + pcrossover*sideinfo_BSC;
-        m_llr[k] = log( pCond/(1-pCond) );
+        m_llr[k] = std::log( pCond/(1-pCond) );
     }
 
 }
@@ -79,7 +91,7 @@ uint32_t icov::LLRProvider::index_min() const
     return idx;
 }
 
-icov::SIVal icov::LLRProvider::limit_max()
+icov::LLRVal icov::LLRProvider::limit_max()
 {
-    return std::numeric_limits<SIVal>::max();
+    return std::numeric_limits<LLRVal>::max();
 }

@@ -24,6 +24,9 @@ set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
 set(AFF3CT_POLAR_BIT_PACKING OFF)
 set(AFF3CT_COLORS OFF)
+
+set(AFF3CT_VERSION_FULL CACHE STRING "aaa" FORCE)
+mark_as_advanced(AFF3CT_VERSION_FULL)
 add_subdirectory(third-party/aff3ct)
 
 # Link with the "Threads library (required to link with AFF3CT after)
@@ -33,10 +36,17 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # Link with AFF3CT
-set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-2.3.5/")
+
+message("build ${AFF3CT_VERSION_FULL}")
+set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/")
 message("SEARCHING AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
-find_package(AFF3CT CONFIG 2.3.5 REQUIRED)
-message("FOUND AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
+
+
+SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
+SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
+
+find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/" NO_DEFAULT_PATH)
+message("FOUND AFF3CT IN AFF3CT_CONFIG=${AFF3CT_CONFIG}")
 
 add_subdirectory(src)
 
@@ -47,11 +57,13 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
-    add_subdirectory(tests/icov_interactive_coder_test)
+    #add_subdirectory(tests/icov_interactive_coder_test)
     add_subdirectory(tests/icov_bit_symbol)
     add_subdirectory(tests/benchmarks)
 endif()
 
+add_subdirectory(tests/icov_interactive_coder_test)
+add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 
 message(STATUS "[INFO] Building ICOV core apps")
 add_subdirectory(app/icov_imt_alist_generator)

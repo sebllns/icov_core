@@ -13,7 +13,7 @@ public:
     IDecoder() = default;
     virtual ~IDecoder() = default;
 
-    virtual void decode(std::vector<CodedVal>& o_decoded, int n, int numcode,  int n_ite, const std::vector<SIVal>& side_info, Syndrome& syndrome, const M& matrix) = 0;
+    virtual void decode(std::vector<CodedVal>& o_decoded, int n, int numcode,  int n_ite, const std::vector<LLRVal>& side_info, Syndrome& syndrome, const M& matrix) = 0;
 };
 }
 #endif // IDECODER_H

@@ -38,7 +38,7 @@ struct buffers
 {
     std::vector<CodedVal> src_bits;
     std::vector<CodedVal  > dec_bits;
-    std::vector<SIVal> llr;
+    std::vector<LLRVal> llr;
     std::vector<double> time;
     std::vector<double> decoding_time;
     std::vector<double> numerrors;
@@ -270,14 +270,13 @@ int main(int argc,  char* argv[])
 
                 start = std::chrono::steady_clock::now();
                 interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+                end = std::chrono::steady_clock::now();
+                elapsed_seconds = end-start;
+                b.decoding_time[i] += elapsed_seconds.count() / p.n_ite_crossover;
                 if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits))
                 {
                     throw "fatal: error decoding";
                 }
-
-                end = std::chrono::steady_clock::now();
-                elapsed_seconds = end-start;
-                b.decoding_time[i] += elapsed_seconds.count();
             }
         }
     }

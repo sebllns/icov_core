@@ -27,28 +27,6 @@ void init_params(params &p, int argc, char* argv[])
 
 }
 
-struct node
-{
-    //val (0/1)
-    //child 0
-    //child 1
-
-    node(node* pchild_0, node* pchild_1):
-        child_0(pchild_0), child_1(pchild_1)
-    {
-
-    };
-
-    bool is_leaf()
-    {
-        return child_0 != nullptr || child_1 != nullptr;
-    }
-
-    node* child_0;
-    node* child_1;
-};
-
-
 struct bitsymbol
 {
     int z_min, z_max;
@@ -92,6 +70,8 @@ struct bitsymbol
 //        }
 
 //        p += n * q1();
+
+        return p;
     }
 
     //L
@@ -133,6 +113,124 @@ struct bitsymbol
 //    }
 
     //pqk = 0
+    bool pqk(int predec, int l, int b, int yk, float &p0, float &p1, float &p)
+    {
+        int zkmin = this->z_min  - yk;
+        int zkmax = this->z_max  - yk;
+
+        bool negative = predec < 0;
+        int abs_predec = std::abs(predec);
+
+        int zk0 = abs_predec << (l-b);
+
+        p0 = 0.0;
+        p1 = 0.0;
+        p = 0.0f;
+
+//            if((zk0 * (negative ? -1 : 1)) > zkmax)
+//            {
+//                continue;
+//            }
+
+
+        int zk1 =  zk0 + (1<<(l-b-1)) - 1;
+        int zk2 =  zk0 + (1<<(l-b)) - 1;
+
+        bool intersect = negative ?  (-zk1 <= zkmax && -zk0 >= zkmin) : (zk0 <= zkmax && zk1 >= zkmin);
+
+
+        if(!intersect)
+        {
+            return false;
+        }
+
+
+
+//            tmp = boost::dynamic_bitset<> (l, zk0);
+//            std::cout << "zk0=" <<  tmp << std::endl;
+
+//            tmp = boost::dynamic_bitset<> (l, zk1);
+//            std::cout << "zk1=" <<  tmp << std::endl;
+
+//            tmp = boost::dynamic_bitset<> (l, zk2);
+//            std::cout << "zk2=" <<  tmp << std::endl;
+
+//            std::cout << k << ": "  << zk0 << ", " << zk1 << ", " << zk2 << std::endl;
+
+        if(negative && (zk0+zk1)==0)
+        {
+            zk0 = 1;
+            zk1 = 0;
+            zk2 = 1;
+        }
+        else
+        {
+            zk0 = std::abs(std::clamp(negative ? std::min(-zk0, -1) : zk0, zkmin, zkmax));
+            zk1 = std::abs(std::clamp(negative ? std::min(-zk1, -1) : zk1, zkmin, zkmax));
+            zk2 = std::abs(std::clamp(negative ? std::min(-zk2, -1) : zk2, zkmin, zkmax));
+        }
+
+//                        tmp = boost::dynamic_bitset<> (l, zk0);
+//                        std::cout << "zk0=" <<  tmp << std::endl;
+
+//                        tmp = boost::dynamic_bitset<> (l, zk1);
+//                        std::cout << "zk1=" <<  tmp << std::endl;
+
+//                        tmp = boost::dynamic_bitset<> (l, zk2);
+//                        std::cout << "zk2=" <<  tmp << std::endl;
+
+//            std::cout << k << ": "  << zk0 << ", " << zk1 << ", " << zk2 << std::endl;
+
+        int z0 = this->z0() -  yk;
+        int abs_z0 = std::abs(z0);
+
+        p0 = (zk1 - zk0 + 1)*this->q1();
+        p1 = (zk2 - zk0 + 1)*this->q1();
+
+        if((negative == (z0 < 0)) && (abs_z0 >= zk0) && (abs_z0 <= zk2))
+        {
+            p1 += this->q0 - this->q1();
+            if(abs_z0 <= zk1)
+            {
+                p0 += this->q0 - this->q1();
+            }
+        }
+
+
+//            for(int z = zk0 ; z <= zk2 ; z++)
+//            {
+//                if(!(negative && z == 0))
+//                {
+
+//                    p1 += pz((negative ? -1 : 1)*z-yk);
+//                    if(z <= zk1)
+//                    {
+//                        p0 += pz((negative ? -1 : 1)*z-yk);
+//                    }
+//                }
+//            }
+
+        //std::cout << boost::dynamic_bitset<> (b, z0_mask) << std::endl;
+
+        /*int z0_mask = z0 >> (l-b);
+        if(abs_predec == z0_mask)
+        {
+            p1 += this->q0 - this->q1();
+
+            //bool bit_b = ((z0 >> (l-b)) & 1U) == 0;
+
+            if( (z0 >> (l-b-1)) == (abs_predec << 1))
+            {
+                p0 += this->q0 - this->q1();
+            }
+        }*/
+
+
+        p = p1 == 0 ? 0 : p0/p1;
+
+        return true;
+    }
+
     float pqk0(int b, int yk)
     {
 
@@ -161,124 +259,16 @@ struct bitsymbol
 
             boost::dynamic_bitset<>  bin_predec = boost::dynamic_bitset<> (b+1, abs_predec);
 
-
             bin_predec.set(b, 0);
             abs_predec = (int) bin_predec.to_ulong();
-
 
             if(negative) bin_predec.set(b);
 //            std::cout << "dec=" <<  bin_predec << std::endl;
 
 
+            float p0 = 0.0, p1 = 0.0, p = 0.0;
 
-
-            float p0 = 0.0f, p1 = 0.0f, p = 0.0f;
-
-
-            int zk0 = abs_predec << (l-b);
-
-//            if((zk0 * (negative ? -1 : 1)) > zkmax)
-//            {
-//                continue;
-//            }
-
-
-            int zk1 =  zk0 + (1<<(l-b-1)) - 1;
-            int zk2 =  zk0 + (1<<(l-b)) - 1;
-
-            bool intersect = negative ?  (-zk1 <= zkmax && -zk0 >= zkmin) : (zk0 <= zkmax && zk1 >= zkmin);
-
-
-            if(!intersect)
-            {
-
-//                std::cout << "***IMPOSSIBLE***" << std::endl;
-                continue;
-            }
-
-
-
-//            tmp = boost::dynamic_bitset<> (l, zk0);
-//            std::cout << "zk0=" <<  tmp << std::endl;
-
-//            tmp = boost::dynamic_bitset<> (l, zk1);
-//            std::cout << "zk1=" <<  tmp << std::endl;
-
-//            tmp = boost::dynamic_bitset<> (l, zk2);
-//            std::cout << "zk2=" <<  tmp << std::endl;
-
-//            std::cout << k << ": "  << zk0 << ", " << zk1 << ", " << zk2 << std::endl;
-
-            if(negative && (zk0+zk1)==0)
-            {
-                zk0 = 1;
-                zk1 = 0;
-                zk2 = 1;
-            }
-            else
-            {
-                zk0 = std::abs(std::clamp(negative ? std::min(-zk0, -1) : zk0, zkmin, zkmax));
-                zk1 = std::abs(std::clamp(negative ? std::min(-zk1, -1) : zk1, zkmin, zkmax));
-                zk2 = std::abs(std::clamp(negative ? std::min(-zk2, -1) : zk2, zkmin, zkmax));
-            }
-
-//                        tmp = boost::dynamic_bitset<> (l, zk0);
-//                        std::cout << "zk0=" <<  tmp << std::endl;
-
-//                        tmp = boost::dynamic_bitset<> (l, zk1);
-//                        std::cout << "zk1=" <<  tmp << std::endl;
-
-//                        tmp = boost::dynamic_bitset<> (l, zk2);
-//                        std::cout << "zk2=" <<  tmp << std::endl;
-
-//            std::cout << k << ": "  << zk0 << ", " << zk1 << ", " << zk2 << std::endl;
-
-            int z0 = this->z0() -  yk;
-            int abs_z0 = std::abs(z0);
-
-            p0 = (zk1 - zk0 + 1)*this->q1();
-            p1 = (zk2 - zk0 + 1)*this->q1();
-
-            if((negative == (z0 < 0)) && (abs_z0 >= zk0) && (abs_z0 <= zk2))
-            {
-                p1 += this->q0 - this->q1();
-                if(abs_z0 <= zk1)
-                {
-                    p0 += this->q0 - this->q1();
-                }
-            }
-
-
-//            for(int z = zk0 ; z <= zk2 ; z++)
-//            {
-//                if(!(negative && z == 0))
-//                {
-
-//                    p1 += pz((negative ? -1 : 1)*z-yk);
-//                    if(z <= zk1)
-//                    {
-//                        p0 += pz((negative ? -1 : 1)*z-yk);
-//                    }
-//                }
-//            }
-
-            //std::cout << boost::dynamic_bitset<> (b, z0_mask) << std::endl;
-
-            /*int z0_mask = z0 >> (l-b);
-            if(abs_predec == z0_mask)
-            {
-                p1 += this->q0 - this->q1();
-
-                //bool bit_b = ((z0 >> (l-b)) & 1U) == 0;
-
-                if( (z0 >> (l-b-1)) == (abs_predec << 1))
-                {
-                    p0 += this->q0 - this->q1();
-                }
-            }*/
-
-
-            p = p1 == 0 ? 0 : p0/p1;
+            pqk((negative ? -abs_predec : abs_predec), l, b, yk, p0, p1, p);
             //std::cout << "-- p1=" << p1 << std::endl;
             pb += p1;
 

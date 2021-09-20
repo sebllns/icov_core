@@ -14,7 +14,7 @@ icov::Aff3ctDecoder::Aff3ctDecoder(int n_dec) : IDecoder()
 
 }
 
-void icov::Aff3ctDecoder::decode(std::vector<CodedVal> &o_decoded, int n, int numcode, int n_ite, const std::vector<SIVal> &llr, Syndrome &syndrome, const AffMatrix &matrix)
+void icov::Aff3ctDecoder::decode(std::vector<CodedVal> &o_decoded, int n, int numcode, int n_ite, const std::vector<LLRVal> &llr, Syndrome &syndrome, const AffMatrix &matrix)
 {
     int d = std::min(numcode, (int)m_decvector.size()-1);
     m_decvector[d]-> reset();
@@ -23,7 +23,7 @@ void icov::Aff3ctDecoder::decode(std::vector<CodedVal> &o_decoded, int n, int nu
 }
 
 
-void icov::Aff3ctDecoder::decode_doping(std::vector<CodedVal> &o_decoded, std::vector<size_t> &o_doping_idx, int n, int numcode, int n_ite, const std::vector<SIVal> &llr, Syndrome &syndrome, const AffMatrix &matrix)
+void icov::Aff3ctDecoder::decode_doping(std::vector<CodedVal> &o_decoded, std::vector<size_t> &o_doping_idx, int n, int numcode, int n_ite, const std::vector<LLRVal> &llr, Syndrome &syndrome, const AffMatrix &matrix)
 {
      auto affdec = AffLDPCA(n, n_ite, matrix);
      affdec.setSyndrome(&syndrome);
