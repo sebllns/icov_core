@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
-#include <random>111
+#include <random>
 
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0)
@@ -16,17 +16,38 @@ icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr):
     m_llr(llr)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
+
+
 }
 
-void icov::LLRProvider::initLLR(int b, BitSymbolProvider& bsp, const std::vector<SIVal> &side_info, const std::vector<int> &predec)
+void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<CodedVal> &src_bits)
 {
+    m_src = src_bits;
+    for(int i = 0; i < side_info.size() ; i++)
+    {
+        float p = bsp.pqks(side_info[i]);
+
+        if(p == 0) std::cerr << "initLLR_s: p cannot be 0";
+        m_llr[i] = std::log(p / (1.0 - p));
+    }
+}
+
+void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)
+{
+    m_src = src_bits;
+
     int l = bsp.z_binary_length();
     float p = 0.0, p0 = 0.0, p1 = 0.0;
 
     for(int i = 0; i < side_info.size() ; i++)
     {
-        m_llr[i] = b == 0 ? p = bsp.pqks(side_info[i]) : bsp.pqkb(predec[i] < 0, b > 1 ? std::abs(predec[i]) : 0, l, b, side_info[i], p0, p1, p);
-        m_llr[i] = std::log(m_llr[i] / (1 - m_llr[i]));
+       bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);
+       p = std::clamp(p, (float)0.000001, (float)(1.0 - 0.000001));
+       m_llr[i] = std::log(p / (1.0 - p));
+       /*if(p == 0 || p == 1)
+       {
+           std::cerr << "initLLR_b: p cannot be 0 or 1";
+       }*/
     }
 }
 
@@ -95,3 +116,5 @@ icov::LLRVal icov::LLRProvider::limit_max()
 {
     return std::numeric_limits<LLRVal>::max();
 }
+
+

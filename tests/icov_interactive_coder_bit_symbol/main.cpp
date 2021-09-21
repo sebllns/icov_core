@@ -18,6 +18,8 @@
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 #include "interactive_coder/implementation/varodayan/VarodayanMatrixBuilder.hpp"
 
+#include "TestSequenceInput.h"
+#include "TestSequenceResult.h"
 
 using namespace aff3ct;
 using namespace icov;
@@ -39,13 +41,8 @@ struct buffers
     std::vector<CodedVal> src_symbols;
     std::vector<std::vector<CodedVal>> src_bits;
     std::vector<CodedVal> side_info;
-    std::vector<CodedVal  > dec_bits;
     std::vector<LLRVal> llr;
-    std::vector<double> time;
-    std::vector<double> decoding_time;
-    std::vector<double> numerrors;
-    std::vector<double> rate;
-    std::vector<double> pcrossover;
+    std::vector<CodedVal  > dec_bits;
 };
 
 struct encode_parameters
@@ -75,13 +72,6 @@ void init_buffers(const params &p, buffers &b)
     int y_min = -64;
     int y_max = 63;
 
-    b.pcrossover = {0.005607170053021, 0.012986862055522, 0.021539631929892, 0.031124460304790, 0.041692690273656, 0.053239040776806, 0.065786706354577, 0.079382600480655, 0.094097243346146, 0.110027864438359, 0.127304805975877, 0.146102403411897, 0.166657010396903, 0.189297705370615, 0.214501744859832, 0.243003853808948, 0.276040891839788, 0.316019346323608, 0.369127748984521, 0.500000000000000};
-
-    b.rate = std::vector<double>(b.pcrossover.size(), 0);
-    b.numerrors = std::vector<double>(b.pcrossover.size(), 0);
-    b.time = std::vector<double>(b.pcrossover.size(), 0);
-    b.decoding_time = std::vector<double>(b.pcrossover.size(), 0);
-
     b.src_symbols = std::vector<CodedVal>(p.N, 0);
     std::generate(b.src_symbols.begin(), b.src_symbols.end(), [x_min, x_max](){ return (CodedVal)(rand()%(x_max-x_min+1) + x_min); });
 
@@ -97,6 +87,23 @@ void init_buffers(const params &p, buffers &b)
 /****************************************************************************************/
 int main(int argc,  char* argv[])
 {
+    TestSequenceInput tsi(1024);
+    tsi.read_from_file("/home/sbelleno/_ICOV/sequences_for_fangping_v02/pano_aaaaajndugdzeh_qp_22_0000__icu_018612_bandGroup_0000.txt");
+
+
+    TestSequenceResult tsr;
+    tsr.read_from_file("/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/pano_aaaaajndugdzeh_qp_27_0000__icu_019748_bandGroup_0000.mat");
+
+    result_data rs;
+    rs.name = "Lsign";
+    rs.type = result_data_type::SCALAR;
+    rs.n_cols = 1;
+    rs.n_rows = 1;
+    rs.data.push_back(10);
+
+    bool eq = (rs == tsr["Lsign"]);
+
+
     auto start_main = std::chrono::steady_clock::now();
 
     srand((unsigned)time(NULL));
@@ -198,6 +205,11 @@ int main(int argc,  char* argv[])
         encode_params[0].stop_code = varo_synd->numCodes;
         encode_params[0].step = 1;
     }
+    else
+    {
+        //error
+        return 1;
+    }
 
     auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, syndromeMgr, &llrProvider);
 
@@ -230,10 +242,11 @@ int main(int argc,  char* argv[])
     std::cout<<"encode\n";
     Syndrome stored_synd(syndromeMgr->get_n());
 
-    std::vector<int> predec(p.N);
+    std::vector<int> predec(p.N, 0);
 
     for(int i = 0; i < lx; i++)
     {
+        int bitplane = (lx - i - 1);
         /****************************************************************************************/
         // SYNDROME ACCUMULATION
         /****************************************************************************************/
@@ -243,12 +256,19 @@ int main(int argc,  char* argv[])
 
         float progress = 100.0 * i / lx;
 
-        std::cout << "    " << progress << "%                 \r" << std::flush ;
+        //std::cout << "    " << progress << "%                 \r" << std::flush ;
 
         //std::cout <<  b.pcrossover[i]<<std::endl;
         syndromeMgr->reset_doping();
 
-        llrProvider.initLLR(0, bsp, b.side_info, predec);
+        if(i == 0)
+        {
+            llrProvider.initLLR_s(bsp, b.side_info, b.src_bits[i]);
+        }
+        else
+        {
+            llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
+        }
 
         b.llr = llrProvider.llr();
 
@@ -280,29 +300,27 @@ int main(int argc,  char* argv[])
 
         for(int k = 0 ; k < p.N ; k++)
         {
-            predec[k] = i > 0 ? std::abs(b.src_symbols[k]) >> (lx - i - 1) : 1;
-            if(b.src_symbols[k] < 0) predec[k] *= -1;
+            predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
+            std::cout << predec[k] <<"(" << b.src_symbols[k] <<  ") ";
         }
 
 
-        // std::cerr<<"code="<<numcode<<std::endl;
+         std::cout<<"code="<<numcode<<std::endl;
 
         auto end = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
 
 
-        b.rate[i]  +=( ((double)syndromeMgr->get_m(numcode)) / ((double)p.n_ite_crossover * n));
-        b.time[i] += elapsed_seconds.count(); /// p.n_ite_crossover;// + (i > 0 ? b.time[i-1] : 0.0);
-        b.numerrors[i] += (1.0*numerrors)/(p.n_ite_crossover * n);
 
 
         if(numerrors != 0)
         {
-            std::cerr<<"ERROR: No convergence. Pcrossover="<< b.pcrossover[i]<<std::endl;
+            std::cerr<<"ERROR: No convergence. bitplane="<< lx-i-1 <<std::endl;
         }
         else
         {
             syndromeMgr->reset_doping();
+
             for(int l = 0; l < n ; l++)
             {
                 llrProvider[l] = b.llr[l];
@@ -312,10 +330,10 @@ int main(int argc,  char* argv[])
             interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
             end = std::chrono::steady_clock::now();
             elapsed_seconds = end-start;
-            b.decoding_time[i] += elapsed_seconds.count() / p.n_ite_crossover;
             if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
             {
-                throw "fatal: error decoding";
+                std::cerr<<"err no decoding "<< lx-i <<std::endl;
+                //throw "fatal: error decoding";
             }
         }
     }
@@ -334,29 +352,6 @@ int main(int argc,  char* argv[])
     std::cout << "BP iterations:\t" << p.n_ite<<  std::endl;
     std::cout << "Simulation iterations:\t" << p.n_ite_crossover<<  std::endl;
     std::cout << "*************************************************************************" << std::endl;
-
-
-    /****************************************************************************************/
-    // 5 - WRITE RESULTS
-    /****************************************************************************************/
-    std::cout<<"Write results"<<std::endl;
-
-    for(int i = 1; i < b.pcrossover.size(); i++)
-    {
-        b.time[i] += b.time[i-1];
-    }
-
-    for(int i = 0; i < b.pcrossover.size(); i++)
-    {
-        b.time[i] /= p.n_ite_crossover;
-    }
-
-    icov::DebugTools::write_vector("pcrossover", b.pcrossover,  '\n');
-    icov::DebugTools::write_vector("rate", b.rate, '\n');
-    icov::DebugTools::write_vector("numerrors", b.numerrors, '\n');
-    icov::DebugTools::write_vector("encode_time", b.time, '\n');
-    icov::DebugTools::write_vector("decode_time", b.decoding_time, '\n');
-
 
     return 0;
 }
