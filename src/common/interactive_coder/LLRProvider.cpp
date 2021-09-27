@@ -26,8 +26,9 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVa
     for(int i = 0; i < side_info.size() ; i++)
     {
         float p = bsp.pqks(side_info[i]);
+        p = std::clamp(p, (float)0.000001, (float)(1.0 - 0.000001));
 
-        if(p == 0) std::cerr << "initLLR_s: p cannot be 0";
+        if(p == 0 || p == 1) std::cerr << "initLLR_s: p cannot be 0 or 1";
         m_llr[i] = std::log(p / (1.0 - p));
     }
 }
@@ -36,7 +37,7 @@ void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vect
 {
     m_src = src_bits;
 
-    int l = bsp.z_binary_length();
+    int l = bsp.x_binary_length();
     float p = 0.0, p0 = 0.0, p1 = 0.0;
 
     for(int i = 0; i < side_info.size() ; i++)

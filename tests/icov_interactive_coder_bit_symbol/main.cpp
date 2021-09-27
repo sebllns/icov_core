@@ -31,8 +31,8 @@ struct params
 {
     std::string database = "database_path";
     int   N         =   1000;     // codeword size
-    int   n_ite	=   100;
-    int n_ite_crossover = 10;
+    int   enable_nocoding = true;
+    int   n_ite     =   100;
     std::string coder_type = "null";
 };
 
@@ -40,6 +40,7 @@ struct buffers
 {
     std::vector<CodedVal> src_symbols;
     std::vector<std::vector<CodedVal>> src_bits;
+    std::vector<std::vector<CodedVal>> llr_bits;
     std::vector<CodedVal> side_info;
     std::vector<LLRVal> llr;
     std::vector<CodedVal  > dec_bits;
@@ -54,12 +55,11 @@ struct encode_parameters
 
 void init_params(params &p, int argc, char* argv[])
 {
-    if(argc < 6) throw "bad arguments";
+    if(argc < 5) throw "bad arguments";
     p.coder_type = argv[1];
     p.database = argv[2];
     p.N = atoi(argv[3]);
     p.n_ite = atoi(argv[4]);
-    p.n_ite_crossover = atoi(argv[5]);
 }
 
 void init_buffers(const params &p, buffers &b);
@@ -87,12 +87,18 @@ void init_buffers(const params &p, buffers &b)
 /****************************************************************************************/
 int main(int argc,  char* argv[])
 {
-    TestSequenceInput tsi(1024);
-    tsi.read_from_file("/home/sbelleno/_ICOV/sequences_for_fangping_v02/pano_aaaaajndugdzeh_qp_22_0000__icu_018612_bandGroup_0000.txt");
+    //pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000
+    //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000";
 
+    std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
+    std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
+
+    TestSequenceInput tsi(1024);
+    tsi.read_from_file(input_dir + sequence_file + ".txt");
 
     TestSequenceResult tsr;
-    tsr.read_from_file("/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/pano_aaaaajndugdzeh_qp_27_0000__icu_019748_bandGroup_0000.mat");
+    tsr.read_from_file(result_dir + sequence_file + ".mat");
 
     result_data rs;
     rs.name = "Lsign";
@@ -102,7 +108,6 @@ int main(int argc,  char* argv[])
     rs.data.push_back(10);
 
     bool eq = (rs == tsr["Lsign"]);
-
 
     auto start_main = std::chrono::steady_clock::now();
 
@@ -118,30 +123,14 @@ int main(int argc,  char* argv[])
     buffers b;
     init_buffers(p, b); // create and initialize the buffers required by the modules
 
-    std::vector<encode_parameters> encode_params;
-
-    std::cout<<"start interactive coder\n";
-
-    //common part
-    LLRProvider llrProvider(p.N);
-    Aff3ctDecoder ldpca_dec(p.N);
-    ISyndromeManager* syndromeMgr = nullptr;
-    IMatrixBuilder<AffMatrix>* mb = nullptr;
+    b.src_symbols = tsi.get_source();
 
 
-    float q = 0.5;
     int x_min = *std::min_element(b.src_symbols.begin(), b.src_symbols.end());
     int x_max = *std::max_element(b.src_symbols.begin(), b.src_symbols.end());
 
-    int y_min = *std::min_element(b.side_info.begin(), b.side_info.end());
-    int y_max = *std::max_element(b.side_info.begin(), b.side_info.end());
+    int lx =  std::floor(std::log2f(std::max(std::abs(x_min), std::abs(x_max)))) + 2;
 
-    int z_min = x_min-y_max;
-    int z_max = x_max-y_min;
-
-    BitSymbolProvider bsp(z_min, z_max, y_min, y_max, q);
-
-    int lx = bsp.x_binary_length()+1;
     b.src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(p.N, 0));
 
     for(int i = 0 ; i < p.N ; i++)
@@ -153,6 +142,19 @@ int main(int argc,  char* argv[])
             b.src_bits[j][i] = (b.src_symbols[i] >> (j-1)) & 1U;
         }
     }
+
+
+
+    std::vector<encode_parameters> encode_params;
+
+    std::cout<<"start interactive coder\n";
+
+    //common part
+    LLRProvider llrProvider(p.N);
+    Aff3ctDecoder ldpca_dec(p.N);
+    ISyndromeManager* syndromeMgr = nullptr;
+    IMatrixBuilder<AffMatrix>* mb = nullptr;
+
 
     std::cout<<"type of coder = "<<p.coder_type<<std::endl;
 
@@ -242,115 +244,179 @@ int main(int argc,  char* argv[])
     std::cout<<"encode\n";
     Syndrome stored_synd(syndromeMgr->get_n());
 
-    std::vector<int> predec(p.N, 0);
+    std::vector<double> vdiff(tsi.get_side_info_count());
 
-    for(int i = 0; i < lx; i++)
+    for(int si = 0 ; si < tsi.get_side_info_count(); si++)
     {
-        int bitplane = (lx - i - 1);
-        /****************************************************************************************/
-        // SYNDROME ACCUMULATION
-        /****************************************************************************************/
-        syndromeMgr->init_accumulation(b.src_bits[i]);
+        std::cout << "*************************************************************************" << std::endl;
 
-        numcode = 0;
+        std::cout << "si=" << si+1 << "/" << tsi.get_side_info_count() << std::endl;
 
-        float progress = 100.0 * i / lx;
+        b.side_info = tsi.get_side_info(si);
 
-        //std::cout << "    " << progress << "%                 \r" << std::flush ;
+        float q = 0.0;
+        int z_min = 999999;
+        int z_max = -999999;
 
-        //std::cout <<  b.pcrossover[i]<<std::endl;
-        syndromeMgr->reset_doping();
-
-        if(i == 0)
+        for(int i = 0 ; i < p.N ; i++)
         {
-            llrProvider.initLLR_s(bsp, b.side_info, b.src_bits[i]);
-        }
-        else
-        {
-            llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
-        }
-
-        b.llr = llrProvider.llr();
-
-        auto start = std::chrono::steady_clock::now();
-
-        int numerrors = -1;
-
-        if(numcode  >= (uint32_t) encode_params.back().stop_code)
-        {
-            numcode =  encode_params.back().start_code;
-        }
-
-        for(auto &param: encode_params)
-        {
-            numcode = std::max(numcode, (uint32_t) param.start_code);
-            end_code = param.stop_code;
-
-            if(end_code <= numcode)
+            int z = b.src_symbols[i] - b.side_info[i];
+            if(z == 0)
             {
-                continue;
+                q += 1.0/p.N;
             }
 
-            //std::cout << "test code in [" << numcode << ", " << end_code << "[" << std::endl;
-
-            numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite);
-
-            if(numerrors == 0) break;
-        }
-
-        for(int k = 0 ; k < p.N ; k++)
-        {
-            predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
-            std::cout << predec[k] <<"(" << b.src_symbols[k] <<  ") ";
+            if(z < z_min) z_min = z;
+            if(z > z_max) z_max = z;
         }
 
 
-         std::cout<<"code="<<numcode<<std::endl;
 
-        auto end = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end-start;
-
+        int y_min = *std::min_element(b.side_info.begin(), b.side_info.end());
+        int y_max = *std::max_element(b.side_info.begin(), b.side_info.end());
 
 
+        int ly =  std::floor(std::log2f(std::max(std::abs(y_min), std::abs(y_max)))) + 2;
 
-        if(numerrors != 0)
+        b.llr_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(p.N, 0));
+
+        for(int i = 0 ; i < p.N ; i++)
         {
-            std::cerr<<"ERROR: No convergence. bitplane="<< lx-i-1 <<std::endl;
-        }
-        else
-        {
-            syndromeMgr->reset_doping();
+            b.llr_bits[0][i] = (b.side_info[i] < 0);
 
-            for(int l = 0; l < n ; l++)
+            for(int j = 1 ; j < ly ; j++)
             {
-                llrProvider[l] = b.llr[l];
-            }
-
-            start = std::chrono::steady_clock::now();
-            interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
-            end = std::chrono::steady_clock::now();
-            elapsed_seconds = end-start;
-            if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
-            {
-                std::cerr<<"err no decoding "<< lx-i <<std::endl;
-                //throw "fatal: error decoding";
+                b.llr_bits[j][i] = (b.side_info[i] >> (j-1)) & 1U;
             }
         }
+
+        BitSymbolProvider bsp(z_min, z_max, y_min, y_max, q);
+
+        std::vector<int> predec(p.N, 0);
+
+        for(int i = 0; i < lx; i++)
+        {
+
+            int bitplane = (lx - i - 1);
+            /****************************************************************************************/
+            // SYNDROME ACCUMULATION
+            /****************************************************************************************/
+            syndromeMgr->init_accumulation(b.src_bits[i]);
+
+            numcode = 0;
+
+            bool code_enabled = true;
+
+
+            if(p.enable_nocoding && ((z_min == 0 && z_max == 0) || (i < ly && (b.llr_bits[i] == b.src_bits[i]))))
+            {
+                code_enabled = false;
+                std::cout << "no coding" << std::endl;
+            }
+
+
+            if(code_enabled)
+            {
+                //std::cout <<  b.pcrossover[i]<<std::endl;
+                syndromeMgr->reset_doping();
+
+                if(i == 0)
+                {
+                    llrProvider.initLLR_s(bsp, b.side_info, b.src_bits[i]);
+                }
+                else
+                {
+                    llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
+                }
+
+                b.llr = llrProvider.llr();
+
+                auto start = std::chrono::steady_clock::now();
+
+                int numerrors = -1;
+
+                if(numcode  >= (uint32_t) encode_params.back().stop_code)
+                {
+                    numcode =  encode_params.back().start_code;
+                }
+
+                for(auto &param: encode_params)
+                {
+                    numcode = std::max(numcode, (uint32_t) param.start_code);
+                    end_code = param.stop_code;
+
+                    if(end_code <= numcode)
+                    {
+                        continue;
+                    }
+
+                    //std::cout << "test code in [" << numcode << ", " << end_code << "[" << std::endl;
+
+                    numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite);
+
+                    if(numerrors == 0) break;
+                }
+
+                double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
+
+                double vtruth = tsr["R"].get_data(si, i);
+
+                std::cout << "b=" << bitplane <<" rate="<<rate<<std::endl;
+
+                if(i > 0)
+                {
+                    for(int k = 0 ; k < p.N ; k++)
+                    {
+                        predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
+                        // std::cout << predec[k] <<"(" << b.src_symbols[k] <<  ") ";
+                    }
+                }
+
+                auto end = std::chrono::steady_clock::now();
+                std::chrono::duration<double> elapsed_seconds = end-start;
+
+                if(numerrors != 0)
+                {
+                    std::cerr<<"ERROR: No convergence. bitplane="<< lx-i-1 <<std::endl;
+                }
+                else
+                {
+                    syndromeMgr->reset_doping();
+
+                    for(int l = 0; l < n ; l++)
+                    {
+                        llrProvider[l] = b.llr[l];
+                    }
+
+                    start = std::chrono::steady_clock::now();
+                    interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+                    end = std::chrono::steady_clock::now();
+                    elapsed_seconds = end-start;
+                    if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
+                    {
+                        std::cerr<<"err no decoding "<< lx-i <<std::endl;
+                        //throw "fatal: error decoding";
+                    }
+                }
+            }
+        }
+        auto end_main = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end_main-start_main;
+
+        std::cout << "Duration:\t" << elapsed_seconds.count()/60 << " mins"<<  std::endl;
+        std::cout << "q:\t" << bsp.q0()<<  std::endl;
+        std::cout << "z_min:\t" << bsp.z_min()<<  std::endl;
+        std::cout << "z_max:\t" << bsp.z_max()<<  std::endl;
+        std::cout << "n_bitplane:\t" << lx<<  std::endl;
+
     }
 
 
-    std::cout << "    100%" <<  std::endl;
-
-    auto end_main = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end_main-start_main;
-
     std::cout << "*************************************************************************" << std::endl;
     std::cout << "END OF SIMULATION\n";
-    std::cout << "Duration:\t" << elapsed_seconds.count()/60 << " mins"<<  std::endl;
     std::cout << "Database:\t" << p.database<<  std::endl;
     std::cout << "Code size:\t" << p.N<<  std::endl;
     std::cout << "BP iterations:\t" << p.n_ite<<  std::endl;
-    std::cout << "Simulation iterations:\t" << p.n_ite_crossover<<  std::endl;
     std::cout << "*************************************************************************" << std::endl;
 
     return 0;

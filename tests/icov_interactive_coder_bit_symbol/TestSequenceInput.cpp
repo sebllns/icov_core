@@ -28,11 +28,12 @@ bool TestSequenceInput::read_from_file(string filename)
         std::vector<data_type> data(m_size, 0);
 
         data_type val;
-        std::stringstream line_stream(line);
+        std::istringstream line_stream(line);
         for(size_t i = 0; i < data.size(); i++)
         {
             line_stream  >> val;
             data[i] = val;
+            if (line_stream.peek() == ',') line_stream.ignore();
         }
 
         m_data.push_back(data);
@@ -48,7 +49,7 @@ const std::vector<TestSequenceInput::data_type> &TestSequenceInput::get_source()
 
 const std::vector<TestSequenceInput::data_type> &TestSequenceInput::get_side_info(int idx) const
 {
-    return m_data[idx-1];
+    return m_data[idx+1];
 }
 
 int TestSequenceInput::get_side_info_count() const

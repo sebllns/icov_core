@@ -34,7 +34,6 @@ bool TestSequenceResult::read_from_file(string filename)
                 result.n_rows = 1;
                 result.n_cols = 1;
                 read_data = false;
-                std::cout << result.name << std::endl;
             }
 
             found = line.rfind("type:");

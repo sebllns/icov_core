@@ -9,6 +9,15 @@ class BitSymbolProvider
 public:
     BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q);
 
+    float z_min();
+    float z_max();
+
+    float y_min();
+    float y_max();
+
+    //q
+    float q0();
+
     //q'
     float q1();
 
@@ -33,10 +42,10 @@ public:
     float pqks(int yk);
 
 private:
-    int z_min, z_max;
-    int y_min, y_max;
+    int m_z_min, m_z_max;
+    int m_y_min, m_y_max;
     //q
-    float q0;
+    float m_q0;
 
 
 };
