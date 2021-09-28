@@ -25,12 +25,20 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVa
     m_src = src_bits;
     for(int i = 0; i < side_info.size() ; i++)
     {
-        float p = bsp.pqks(side_info[i]);
-        p = std::clamp(p, (float)0.000001, (float)(1.0 - 0.000001));
+        double p = bsp.pqks(side_info[i]);
+
+        p = std::clamp(p, (double)0.000000001, (double)(1.0 - 0.000000001));
+
+        //std::cout << p << std::endl;
 
         if(p == 0 || p == 1) std::cerr << "initLLR_s: p cannot be 0 or 1";
         m_llr[i] = std::log(p / (1.0 - p));
+
+       std::cout << m_llr[i] << " ";
+
     }
+
+    std::cout<<std::endl;
 }
 
 void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)

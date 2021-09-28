@@ -77,7 +77,7 @@ int BitSymbolProvider::x_max_estimated()
 
 int BitSymbolProvider::x_binary_length()
 {
-    return std::floor(std::log2f(std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated())))) + 1;
+    return std::floor(std::log2f(std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated())))) + 2;
 }
 
 bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0, float &p1, float &p)
@@ -136,12 +136,16 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
 
 float BitSymbolProvider::pqks(int yk)
 {
-    int imax = std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
+
+    int imax = 1 << x_binary_length(); //std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
     float p0 = 0.0f;
     for(int i = 0 ; i < imax ; i++)
     {
         p0 += this->pz(i - yk);
+        //std::cout << "i="<<i << " p=" << this->pz(i - yk) << std::endl;
     }
+
+    //std::cout << "yk=" << yk << " p=" << p0 << std::endl;
 
     return p0;
 }

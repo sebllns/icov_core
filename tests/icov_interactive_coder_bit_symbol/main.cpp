@@ -31,7 +31,7 @@ struct params
 {
     std::string database = "database_path";
     int   N         =   1000;     // codeword size
-    int   enable_nocoding = true;
+    int   enable_nocoding = false;
     int   n_ite     =   100;
     std::string coder_type = "null";
 };
@@ -40,7 +40,7 @@ struct buffers
 {
     std::vector<CodedVal> src_symbols;
     std::vector<std::vector<CodedVal>> src_bits;
-    std::vector<std::vector<CodedVal>> llr_bits;
+    std::vector<std::vector<CodedVal>> si_bits;
     std::vector<CodedVal> side_info;
     std::vector<LLRVal> llr;
     std::vector<CodedVal  > dec_bits;
@@ -88,8 +88,9 @@ void init_buffers(const params &p, buffers &b)
 int main(int argc,  char* argv[])
 {
     //pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000
+    //pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
-    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000";
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000";
 
     std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
     std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
@@ -113,26 +114,27 @@ int main(int argc,  char* argv[])
 
     srand((unsigned)time(NULL));
 
-    /****************************************************************************************/
-    // 1 - INIT
-    /****************************************************************************************/
-
     params p;
     init_params(p, argc, argv);
 
     buffers b;
     init_buffers(p, b); // create and initialize the buffers required by the modules
 
+    /****************************************************************************************/
+    // 1 - INIT SOURCE X
+    /****************************************************************************************/
+
     b.src_symbols = tsi.get_source();
 
-
+    //find x_min and x_max values in source X
     int x_min = *std::min_element(b.src_symbols.begin(), b.src_symbols.end());
     int x_max = *std::max_element(b.src_symbols.begin(), b.src_symbols.end());
 
+    //get length for binary representation of X
     int lx =  std::floor(std::log2f(std::max(std::abs(x_min), std::abs(x_max)))) + 2;
 
+    //init bit planes of X
     b.src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(p.N, 0));
-
     for(int i = 0 ; i < p.N ; i++)
     {
         b.src_bits[0][i] = (b.src_symbols[i] < 0);
@@ -143,7 +145,9 @@ int main(int argc,  char* argv[])
         }
     }
 
-
+    /****************************************************************************************/
+    // 2 - INIT ENCODER WITH PARAMS
+    /****************************************************************************************/
 
     std::vector<encode_parameters> encode_params;
 
@@ -217,7 +221,7 @@ int main(int argc,  char* argv[])
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
-    // 2 - BUILD MATRICES
+    // 3 - BUILD MATRICES
     /****************************************************************************************/
     std::cout<<"build matrices\n";
 
@@ -242,11 +246,12 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
 
     std::cout<<"encode\n";
+
+    //stored syndrome max size n
     Syndrome stored_synd(syndromeMgr->get_n());
 
-    std::vector<double> vdiff(tsi.get_side_info_count());
-
-    for(int si = 0 ; si < tsi.get_side_info_count(); si++)
+    //encode for each SI
+    for(int si = 0 ; si < 1 ; si++) //FIXME  tsi.get_side_info_count()
     {
         std::cout << "*************************************************************************" << std::endl;
 
@@ -254,39 +259,47 @@ int main(int argc,  char* argv[])
 
         b.side_info = tsi.get_side_info(si);
 
+        //init intrinsic SI parameters
         float q = 0.0;
         int z_min = 999999;
         int z_max = -999999;
 
+
         for(int i = 0 ; i < p.N ; i++)
         {
             int z = b.src_symbols[i] - b.side_info[i];
+
+            //q = N0/N
             if(z == 0)
             {
                 q += 1.0/p.N;
             }
 
+            //z_min = min(Z[k], 0<=k<N)
             if(z < z_min) z_min = z;
+
+            //z_max = max(Z[k], 0<=k<N)
             if(z > z_max) z_max = z;
         }
 
-
-
+        //y_min = min(Y[k], 0<=k<N)
         int y_min = *std::min_element(b.side_info.begin(), b.side_info.end());
+
+        //y_max = max(Y[k], 0<=k<N)
         int y_max = *std::max_element(b.side_info.begin(), b.side_info.end());
 
-
+        //get length for binary representation of Y
         int ly =  std::floor(std::log2f(std::max(std::abs(y_min), std::abs(y_max)))) + 2;
 
-        b.llr_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(p.N, 0));
-
+        //init bit planes of Y
+        b.si_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(p.N, 0));
         for(int i = 0 ; i < p.N ; i++)
         {
-            b.llr_bits[0][i] = (b.side_info[i] < 0);
+            b.si_bits[0][i] = (b.side_info[i] < 0);
 
             for(int j = 1 ; j < ly ; j++)
             {
-                b.llr_bits[j][i] = (b.side_info[i] >> (j-1)) & 1U;
+                b.si_bits[j][i] = (b.side_info[i] >> (j-1)) & 1U;
             }
         }
 
@@ -296,24 +309,15 @@ int main(int argc,  char* argv[])
 
         for(int i = 0; i < lx; i++)
         {
-
             int bitplane = (lx - i - 1);
-            /****************************************************************************************/
-            // SYNDROME ACCUMULATION
-            /****************************************************************************************/
-            syndromeMgr->init_accumulation(b.src_bits[i]);
 
-            numcode = 0;
-
+            //check coding/no-coding when option is enabled
             bool code_enabled = true;
-
-
-            if(p.enable_nocoding && ((z_min == 0 && z_max == 0) || (i < ly && (b.llr_bits[i] == b.src_bits[i]))))
+            if(p.enable_nocoding && ((z_min == 0 && z_max == 0) || (i < ly && (b.si_bits[i] == b.src_bits[i]))))
             {
                 code_enabled = false;
                 std::cout << "no coding" << std::endl;
             }
-
 
             if(code_enabled)
             {
@@ -322,23 +326,29 @@ int main(int argc,  char* argv[])
 
                 if(i == 0)
                 {
+                    //get LLR for first bitplane level i.e. sign
                     llrProvider.initLLR_s(bsp, b.side_info, b.src_bits[i]);
                 }
                 else
                 {
+                    //get LLR for bitplane
                     llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
                 }
 
+                //save LLR (in case of doping)
                 b.llr = llrProvider.llr();
 
-                auto start = std::chrono::steady_clock::now();
+                //reset rate to 0
+                numcode = 0;
 
+                //reset error couny
                 int numerrors = -1;
 
-                if(numcode  >= (uint32_t) encode_params.back().stop_code)
-                {
-                    numcode =  encode_params.back().start_code;
-                }
+                //syndrome accumulation
+                syndromeMgr->init_accumulation(b.src_bits[i]);
+
+                //start encoding
+                auto start = std::chrono::steady_clock::now();
 
                 for(auto &param: encode_params)
                 {
@@ -354,17 +364,20 @@ int main(int argc,  char* argv[])
 
                     numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite);
 
+                    //encoding done (no error)
                     if(numerrors == 0) break;
                 }
 
+                //get actual rate from numcode
                 double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
 
-                double vtruth = tsr["R"].get_data(si, i);
+                //double vtruth = tsr["R"].get_data(si, i);
 
-                std::cout << "b=" << bitplane <<" rate="<<rate<<std::endl;
+                std::cout << "b=" << i <<" rate="<<rate<<std::endl;
 
                 if(i > 0)
                 {
+                    //fill predecoded bit values
                     for(int k = 0 ; k < p.N ; k++)
                     {
                         predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
@@ -381,8 +394,8 @@ int main(int argc,  char* argv[])
                 }
                 else
                 {
+                    //reset doping state and LLR
                     syndromeMgr->reset_doping();
-
                     for(int l = 0; l < n ; l++)
                     {
                         llrProvider[l] = b.llr[l];

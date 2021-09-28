@@ -1,6 +1,8 @@
 #include "InteractiveCoder.h"
 #include "common.h"
 
+//#define TEST_SYNDROME
+
 using namespace icov;
 
 
@@ -54,10 +56,38 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
         if(io_numcode == next_test_code)
         {
             this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
+
+            bool synd_test;
+
+#ifdef TEST_SYNDROME
+            if(m_decodage_syndrome->size() != m_psyndromeMgr->get_m(io_numcode))
+            {
+                std::cout << "error" << std::endl;
+            }
+
+            //not working for m > n/2
+            for(int i = 0 ; i < m_decodage_syndrome->size(); i++)
+            {
+                synd_test = 0;
+                for(const auto& vn: getMatrix(io_numcode).get_rows_from_col(i))
+                {
+                    synd_test ^= source[vn];
+                }
+
+
+                if(synd_test != m_decodage_syndrome->at(i))
+                {
+                    std::cout << "error" << std::endl;
+                }
+            }
+#endif
+
             if(testConvergence(decoded, source))
             {
                 return 0;
             }
+
+            std::cout << (1.0* this->m_psyndromeMgr->get_m(io_numcode)) / this->m_psyndromeMgr->get_n() << " " <<  errorCount(decoded, source) << std::endl;
 
             next_test_code = std::min(next_test_code+step, numcodeMax-1);
         }
