@@ -6,6 +6,23 @@ TestSequenceResult::TestSequenceResult()
 
 }
 
+//bool TestSequenceResult::write_file(std::string filename) const
+//{
+//    std::ifstream file(filename);
+//    std::string line;
+
+//    if(!file.is_open())
+//    {
+//        std::cerr << "cannot open file " + filename;
+//        return false;
+//    }
+
+//    for(auto &p: m_data)
+//    {
+
+//    }
+//}
+
 bool TestSequenceResult::read_from_file(string filename)
 {
     m_data.clear();
@@ -13,7 +30,11 @@ bool TestSequenceResult::read_from_file(string filename)
     std::ifstream file(filename);
     std::string line;
 
-    if(!file.is_open()) throw std::runtime_error("cannot open file " + filename);
+    if(!file.is_open())
+    {
+        std::cerr << "cannot open file " + filename;
+        return false;
+    }
 
     result_data result;
 
