@@ -44,6 +44,7 @@ struct buffers
     std::vector<CodedVal> side_info;
     std::vector<LLRVal> llr;
     std::vector<CodedVal  > dec_bits;
+    std::vector<std::pair<float,float>> sim_result;
 };
 
 struct encode_parameters
@@ -80,6 +81,32 @@ void init_buffers(const params &p, buffers &b)
 
 
     b.dec_bits      = std::vector<int  >(p.N);
+}
+
+float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
+{
+    float r = 0.0;
+    float p = 0.0;
+    for(int i = 0 ; i < (int)src.size() ; i++)
+    {
+        if(src[i] != si[i])
+        {
+            p++;
+        }
+    }
+
+    p /= src.size();
+
+    int i = 0;
+    while(i < (int)sim_result.size() && sim_result[i].first < p)
+    {
+        i++;
+    }
+
+    //todo interpolation
+    r = sim_result[i].second;
+
+    return r;
 }
 
 /****************************************************************************************/
@@ -309,6 +336,9 @@ int main(int argc,  char* argv[])
 
         for(int i = 0; i < lx; i++)
         {
+
+            float estimated_rate = estimate_rate(b.src_bits[i], b.si_bits[i], b.sim_result);
+
             int bitplane = (lx - i - 1);
 
             //check coding/no-coding when option is enabled
