@@ -81,13 +81,33 @@ void init_buffers(const params &p, buffers &b)
 
 
     b.dec_bits      = std::vector<int  >(p.N);
+
+
+    std::vector<float> pcrossover;
+    DebugTools::read_vector("./data/sim_results/pcrossover", pcrossover);
+
+    std::vector<float> rate;
+    DebugTools::read_vector("./data/sim_results/rate", rate);
+
+    b.sim_result.resize(rate.size());
+
+    for(int i = 0 ; i < rate.size() ; i++)
+    {
+        b.sim_result[i] = std::pair<float,float>(pcrossover[i], rate[i]);
+    }
 }
 
 float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
 {
     float r = 0.0;
     float p = 0.0;
-    for(int i = 0 ; i < (int)src.size() ; i++)
+
+    int lx = src.size();
+    int ly = si.size();
+
+    p = std::abs(lx-ly);
+
+    for(int i = 0 ; i < std::min(lx,ly) ; i++)
     {
         if(src[i] != si[i])
         {
@@ -106,6 +126,8 @@ float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal
     //todo interpolation
     r = sim_result[i].second;
 
+    std::cout << "estimated rate=" << r << std::endl;
+
     return r;
 }
 
@@ -117,7 +139,7 @@ int main(int argc,  char* argv[])
     //pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
-    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000";
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000";
 
     std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
     std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
@@ -277,6 +299,8 @@ int main(int argc,  char* argv[])
     //stored syndrome max size n
     Syndrome stored_synd(syndromeMgr->get_n());
 
+    std::vector<CodedVal> zero_vec(p.N, 0);
+
     //encode for each SI
     for(int si = 0 ; si < 1 ; si++) //FIXME  tsi.get_side_info_count()
     {
@@ -337,7 +361,7 @@ int main(int argc,  char* argv[])
         for(int i = 0; i < lx; i++)
         {
 
-            float estimated_rate = estimate_rate(b.src_bits[i], b.si_bits[i], b.sim_result);
+            float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
 
             int bitplane = (lx - i - 1);
 

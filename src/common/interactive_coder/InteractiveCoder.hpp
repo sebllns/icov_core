@@ -87,7 +87,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
                 return 0;
             }
 
-            std::cout << (1.0* this->m_psyndromeMgr->get_m(io_numcode)) / this->m_psyndromeMgr->get_n() << " " <<  errorCount(decoded, source) << std::endl;
+//            std::cout << (1.0* this->m_psyndromeMgr->get_m(io_numcode)) / this->m_psyndromeMgr->get_n() << " " <<  errorCount(decoded, source) << std::endl;
 
             next_test_code = std::min(next_test_code+step, numcodeMax-1);
         }
