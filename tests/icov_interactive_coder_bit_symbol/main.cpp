@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <iomanip>
 
 #include <aff3ct.hpp>
 //#include <boost/filesystem.hpp>
@@ -139,7 +140,9 @@ int main(int argc,  char* argv[])
     //pano_aaaaajndugdzeh_qp_22_0000__icu_015250_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
-    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000";
+    //pano_aaaaajndugdzeh_qp_37_0000__icu_021719_bandGroup_0000
+    //TEST_pano_aaaaajndugdzeh_qp_27_0000__icu_021719_bandGroup_0000
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000";
 
     std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
     std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
@@ -186,11 +189,14 @@ int main(int argc,  char* argv[])
     b.src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(p.N, 0));
     for(int i = 0 ; i < p.N ; i++)
     {
+
         b.src_bits[0][i] = (b.src_symbols[i] < 0);
+
+        std::cout << b.src_symbols[i] << ": " << b.src_bits[0][i];
 
         for(int j = 1 ; j < lx ; j++)
         {
-            b.src_bits[j][i] = (b.src_symbols[i] >> (j-1)) & 1U;
+            b.src_bits[lx-j][i] = (std::abs(b.src_symbols[i]) >> (j-1)) & 1U;
         }
     }
 
@@ -301,9 +307,14 @@ int main(int argc,  char* argv[])
 
     std::vector<CodedVal> zero_vec(p.N, 0);
 
+    std::vector<std::vector<std::vector<float>>> rate_results;
+
+    int si_count = std::min(tsi.get_side_info_count(), 8);
+
     //encode for each SI
-    for(int si = 0 ; si < 1 ; si++) //FIXME  tsi.get_side_info_count()
+    for(int si = 0 ; si < si_count ; si++)
     {
+        rate_results.push_back(std::vector<std::vector<float>>(lx, std::vector<float>(2, 0.0)));
         std::cout << "*************************************************************************" << std::endl;
 
         std::cout << "si=" << si+1 << "/" << tsi.get_side_info_count() << std::endl;
@@ -341,6 +352,7 @@ int main(int argc,  char* argv[])
 
         //get length for binary representation of Y
         int ly =  std::floor(std::log2f(std::max(std::abs(y_min), std::abs(y_max)))) + 2;
+        ly = lx;
 
         //init bit planes of Y
         b.si_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(p.N, 0));
@@ -350,7 +362,7 @@ int main(int argc,  char* argv[])
 
             for(int j = 1 ; j < ly ; j++)
             {
-                b.si_bits[j][i] = (b.side_info[i] >> (j-1)) & 1U;
+                b.si_bits[ly-j][i] = (std::abs(b.side_info[i]) >> (j-1)) & 1U;
             }
         }
 
@@ -362,6 +374,7 @@ int main(int argc,  char* argv[])
         {
 
             float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+            rate_results[si][i][0] = estimated_rate;
 
             int bitplane = (lx - i - 1);
 
@@ -424,6 +437,8 @@ int main(int argc,  char* argv[])
 
                 //get actual rate from numcode
                 double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
+                rate_results[si][i][1] = rate;
+
 
                 //double vtruth = tsr["R"].get_data(si, i);
 
@@ -477,6 +492,54 @@ int main(int argc,  char* argv[])
         std::cout << "n_bitplane:\t" << lx<<  std::endl;
 
     }
+
+    std::ofstream result_file("./results_bit_symbol/" + sequence_file + ".txt");
+
+
+    int sid = 0;
+
+    for(int i = 0; i < 2; i++)
+    {
+        result_file << ((i == 0) ? "# estimated rate" : "# actual rate") << std::endl;
+        for(auto &si : rate_results)
+        {
+            for(auto &bp : si)
+            {
+                result_file<< std::fixed << std::setw( 7 ) << std::setprecision( 6 )
+                           << std::setfill( '0' ) << bp[i] << " ";
+            }
+            result_file << std::endl;
+        }
+        result_file << std::endl;
+    }
+
+    result_file <<"# Fangping's rate"  << std::endl;
+    auto &frangping_rate = tsr["R"];
+    for(int i = 0; i < std::min(si_count, frangping_rate.n_rows); i++)
+    {
+        for(int j = 0; j < frangping_rate.n_cols ; j++)
+        {
+            result_file<< std::fixed << std::setw( 7 ) << std::setprecision( 6 )
+                       << std::setfill( '0' ) << frangping_rate.get_data(i,frangping_rate.n_cols - 1 - j) << " ";
+        }
+         result_file << std::endl;
+    }
+
+    result_file << std::endl;
+
+    result_file << "# X binarization" << std::endl;
+
+    for(int i = 0 ; i < p.N ; i++)
+    {
+        result_file << b.src_symbols[i] << "\t   ";
+        for(int j = 0 ; j < lx ; j++)
+        {
+            result_file << b.src_bits[j][i] << " ";
+        }
+        result_file << std::endl;
+    }
+
+    result_file.close();
 
 
     std::cout << "*************************************************************************" << std::endl;

@@ -8,7 +8,7 @@ TestSequenceResult::TestSequenceResult()
 
 //bool TestSequenceResult::write_file(std::string filename) const
 //{
-//    std::ifstream file(filename);
+//    std::ofstream file(filename);
 //    std::string line;
 
 //    if(!file.is_open())

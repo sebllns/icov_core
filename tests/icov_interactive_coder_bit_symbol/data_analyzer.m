@@ -108,3 +108,5 @@ disp(z_ampl_max);
 
 disp("MEAN Z_MAX-Z_MIN");
 disp(z_ampl_mean);
+
+%%[transpose(X<0), de2bi(abs(X), 'left-msb')]
