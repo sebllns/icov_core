@@ -82,17 +82,35 @@ int BitSymbolProvider::x_binary_length()
 
 bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0, float &p1, float &p)
 {
-    int zkmin = this->m_z_min;
-    int zkmax = this->m_z_max;
-
-    int zk0 = (abs_predec << (l-b)) - yk;
 
     p0 = 0.0;
     p1 = 0.0;
     p = 0.0f;
 
-    int zk1 =  zk0 + (1<<(l-b-1)) - 1;
-    int zk2 =  zk0 + (1<<(l-b)) - 1;
+    int zk0 = (1-2*negative) * (abs_predec << (l-b))  - yk;
+    int zk1 =  (1<<(l-b-1));
+    int zk2 =  (1<<(l-b));
+
+    //std::cout << b << ", " << imax << ", " << zk0 << std::endl;
+
+    for(int i = 0 ; i < zk2 ; i++)
+    {
+        float pi = this->pz(zk0 + i);
+        p1 += pi;
+        if(i < zk1) p0 += pi;
+        //std::cout << "i="<<i << " p=" << this->pz(i - yk) << std::endl;
+    }
+
+    p = p1 == 0 ? 0 : p0/p1;
+
+    return true;
+    int zkmin = this->m_z_min;
+    int zkmax = this->m_z_max;
+
+   // int zk0 =  (abs_predec << (l-b));
+
+    //int zk1 =  zk0 + (1<<(l-b-1)) - 1;
+    //int zk2 =  zk0 + (1<<(l-b)) - 1;
 
     bool intersect = negative ?  (-zk1 <= zkmax && -zk0 >= zkmin) : (zk0 <= zkmax && zk1 >= zkmin);
 
@@ -114,7 +132,7 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
         zk2 = std::abs(std::clamp(negative ? std::min(-zk2, -1) : zk2, zkmin, zkmax));
     }
 
-    int z0 = this->z0();
+    int z0 = this->z0() - yk;
     int abs_z0 = std::abs(z0);
 
     p0 = (zk1 - zk0 + 1)*this->q1();

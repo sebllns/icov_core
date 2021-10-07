@@ -20,11 +20,21 @@ p_sign_mean = 0;
 x_count = 0;
 y_count = 0;
 
-for f = 1:1000
+file_analyse = cell(length(dirList), 5);
+
+z_ampl_max_file = "";
+
+max_file = length(dirList);
+
+for f = 1:max_file
   
   
   disp(f)
   filename = dirList{f,1};
+  
+  [f1,f2,f3] = fileparts(filename);
+  
+  file_analyse{f, 1} = f2;
 
   disp(filename);
 
@@ -42,10 +52,16 @@ for f = 1:1000
     if i==1
       t='X';
       x = a;
-      x_min = min(x_min, min(x));
-      x_max = max(x_max, max(x));
-      x_mean += mean(x);
+      
+      file_analyse{f, 2} = min(x_min, min(x));
+      file_analyse{f, 3} = max(x_max, max(x));
+      file_analyse{f, 4} = mean(x);
+      
+      x_min = file_analyse{f, 2};
+      x_max = file_analyse{f, 3};
+      x_mean += file_analyse{f, 4};
       x_count += 1;
+
     else
       t= sprintf('Y_%d',i-1);
       %title(t);
@@ -62,6 +78,10 @@ for f = 1:1000
       z_ampl_max = max(z_ampl_max, z_ampl);
       z_ampl_min = min(z_ampl_min, z_ampl);
       z_ampl_mean += z_ampl;
+      
+      if(z_ampl==z_ampl_max) 
+        z_ampl_max_file = file_analyse{f, 1};
+      end
       
       q = sum(z==0) / length(z);
       q_mean += q;

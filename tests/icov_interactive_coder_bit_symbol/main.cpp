@@ -142,7 +142,7 @@ int main(int argc,  char* argv[])
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_37_0000__icu_021719_bandGroup_0000
     //TEST_pano_aaaaajndugdzeh_qp_27_0000__icu_021719_bandGroup_0000
-    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000";
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_32_0000__icu_023400_bandGroup_0000";
 
     std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
     std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
