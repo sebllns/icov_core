@@ -32,7 +32,7 @@ struct params
 {
     std::string database = "database_path";
     int   N         =   1000;     // codeword size
-    int   enable_nocoding = false;
+    int   enable_nocoding = true;
     int   n_ite     =   100;
     std::string coder_type = "null";
 };
@@ -40,6 +40,7 @@ struct params
 struct buffers
 {
     std::vector<CodedVal> src_symbols;
+    std::vector<CodedVal> sign_mask;
     std::vector<std::vector<CodedVal>> src_bits;
     std::vector<std::vector<CodedVal>> si_bits;
     std::vector<CodedVal> side_info;
@@ -141,11 +142,17 @@ int main(int argc,  char* argv[])
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017795_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_22_0000__icu_017798_bandGroup_0000
     //pano_aaaaajndugdzeh_qp_37_0000__icu_021719_bandGroup_0000
-    //TEST_pano_aaaaajndugdzeh_qp_27_0000__icu_021719_bandGroup_0000
-    std::string sequence_file = "pano_aaaaajndugdzeh_qp_32_0000__icu_023400_bandGroup_0000";
+    //pano_aaaaajndugdzeh_qp_27_0000__icu_021719_bandGroup_0000
+    //pano_aaaaajndugdzeh_qp_22_0000__icu_021115_bandGroup_0000
+    std::string sequence_file = "pano_aaaaajndugdzeh_qp_22_0000__icu_021115_bandGroup_0000";
 
     std::string input_dir = "/home/sbelleno/_ICOV/sequences_for_fangping_v02/";
-    std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
+
+
+
+    //6000files_Qary_withoutCodingnoCoding
+    //6000files_Qary_CodingnoCoding_q3bits
+    std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_CodingnoCoding_q3bits/Results_6000files_Qary/";
 
     TestSequenceInput tsi(1024);
     tsi.read_from_file(input_dir + sequence_file + ".txt");
@@ -187,9 +194,12 @@ int main(int argc,  char* argv[])
 
     //init bit planes of X
     b.src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(p.N, 0));
+    b.sign_mask = std::vector<CodedVal>(p.N, 0);
+
     for(int i = 0 ; i < p.N ; i++)
     {
 
+        b.sign_mask[i] = b.src_symbols[i] == 0 ? 0 : 1;
         b.src_bits[0][i] = (b.src_symbols[i] < 0);
 
         std::cout << b.src_symbols[i] << ": " << b.src_bits[0][i];
@@ -429,7 +439,7 @@ int main(int argc,  char* argv[])
 
                     //std::cout << "test code in [" << numcode << ", " << end_code << "[" << std::endl;
 
-                    numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite);
+                    numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite, i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
                     //encoding done (no error)
                     if(numerrors == 0) break;
@@ -438,7 +448,6 @@ int main(int argc,  char* argv[])
                 //get actual rate from numcode
                 double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
                 rate_results[si][i][1] = rate;
-
 
                 //double vtruth = tsr["R"].get_data(si, i);
 

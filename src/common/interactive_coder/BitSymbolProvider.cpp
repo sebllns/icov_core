@@ -101,55 +101,11 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
         //std::cout << "i="<<i << " p=" << this->pz(i - yk) << std::endl;
     }
 
-    p = p1 == 0 ? 0 : p0/p1;
+    //    p1 = std::max(p1, (float)0.000001);
 
-    return true;
-    int zkmin = this->m_z_min;
-    int zkmax = this->m_z_max;
+    p = p1 == 0 ? 0.5 : p0/p1;
 
-   // int zk0 =  (abs_predec << (l-b));
-
-    //int zk1 =  zk0 + (1<<(l-b-1)) - 1;
-    //int zk2 =  zk0 + (1<<(l-b)) - 1;
-
-    bool intersect = negative ?  (-zk1 <= zkmax && -zk0 >= zkmin) : (zk0 <= zkmax && zk1 >= zkmin);
-
-    if(!intersect)
-    {
-        return false;
-    }
-
-    if(negative && (zk0+zk1)==0)
-    {
-        zk0 = 1;
-        zk1 = 0;
-        zk2 = 1;
-    }
-    else
-    {
-        zk0 = std::abs(std::clamp(negative ? std::min(-zk0, -1) : zk0, zkmin, zkmax));
-        zk1 = std::abs(std::clamp(negative ? std::min(-zk1, -1) : zk1, zkmin, zkmax));
-        zk2 = std::abs(std::clamp(negative ? std::min(-zk2, -1) : zk2, zkmin, zkmax));
-    }
-
-    int z0 = this->z0() - yk;
-    int abs_z0 = std::abs(z0);
-
-    p0 = (zk1 - zk0 + 1)*this->q1();
-    p1 = (zk2 - zk0 + 1)*this->q1();
-
-    if((negative == (z0 < 0)) && (abs_z0 >= zk0) && (abs_z0 <= zk2))
-    {
-        p1 += this->m_q0 - this->q1();
-        if(abs_z0 <= zk1)
-        {
-            p0 += this->m_q0 - this->q1();
-        }
-    }
-
-    p = p1 == 0 ? 0 : p0/p1;
-
-    return true;
+    return p1 != 0;
 }
 
 float BitSymbolProvider::pqks(int yk)

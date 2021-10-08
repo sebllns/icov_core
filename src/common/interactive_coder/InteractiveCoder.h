@@ -28,12 +28,15 @@ public:
 
     virtual const Matrix& getMatrix(int numcode) const;
 
+    bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source);
 
-    virtual bool testConvergence(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
+    virtual bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source, const std::vector<CodedVal> &mask);
 
-    virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
+    virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source, const std::vector<CodedVal> &mask);
 
     int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite);
+
+    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask);
 
     void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome);
 
