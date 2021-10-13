@@ -80,12 +80,12 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 
         if(io_numcode == next_test_code)
         {
-//            std::cout << "io_numcode=" << io_numcode << std::endl;
             this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
 
-            bool synd_test;
 
 #ifdef TEST_SYNDROME
+            bool synd_test;
+
             if(m_decodage_syndrome->size() != m_psyndromeMgr->get_m(io_numcode))
             {
                 std::cout << "error" << std::endl;

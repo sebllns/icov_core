@@ -113,10 +113,7 @@ int main(int argc,  char* argv[])
       elapsed_seconds = end-start;
       std::cout<<"FastArray="<<elapsed_seconds.count()/1000<<std::endl;
 
-
       getchar();
-
-
 
       start = std::chrono::steady_clock::now();
       boost::dynamic_bitset<> vec4(nv);

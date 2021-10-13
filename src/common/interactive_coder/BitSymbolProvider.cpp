@@ -108,18 +108,35 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
     return p1 != 0;
 }
 
-float BitSymbolProvider::pqks(int yk)
+float BitSymbolProvider::pqks(bool negative, int yk)
 {
 
-    int imax = 1 << x_binary_length(); //std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
+    int imax = (1 << x_binary_length()) - 1; //std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
     float p0 = 0.0f;
+    float p1 = 0.0f;
+
     for(int i = 0 ; i < imax ; i++)
     {
-        p0 += this->pz(i - yk);
+
+        if((i-yk) != 0 && (-i-yk) != 0)
+        {
+            p0 += this->pz(i-yk);
+            if(i != 0) p1 += this->pz(-i-yk);
+        }
+        else if(negative)
+        {
+            p1 += this->pz(0);
+        }
+        else
+        {
+            p0 += this->pz(0);
+        }
+
+
         //std::cout << "i="<<i << " p=" << this->pz(i - yk) << std::endl;
     }
 
     //std::cout << "yk=" << yk << " p=" << p0 << std::endl;
 
-    return p0;
+    return p0/(p0+p1);
 }

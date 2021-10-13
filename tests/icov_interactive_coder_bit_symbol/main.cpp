@@ -32,8 +32,12 @@ struct params
 {
     std::string database = "database_path";
     int   N         =   1000;     // codeword size
-    int   enable_nocoding = true;
-    int   n_ite     =   100;
+    bool enable_nocoding = true;
+    bool enable_z_quantization = false;
+    bool enable_binarization_check = false;
+    bool enable_q_quantization = true;
+    int  n_ite     =   100;
+    int si_count = 1;
     std::string coder_type = "null";
 };
 
@@ -47,6 +51,7 @@ struct buffers
     std::vector<LLRVal> llr;
     std::vector<CodedVal  > dec_bits;
     std::vector<std::pair<float,float>> sim_result;
+    std::vector<float> q_values;
 };
 
 struct encode_parameters
@@ -97,6 +102,8 @@ void init_buffers(const params &p, buffers &b)
     {
         b.sim_result[i] = std::pair<float,float>(pcrossover[i], rate[i]);
     }
+
+    b.q_values = {0.125, 0.375, 0.5625, 0.6875, 0.78125, 0.84375, 0.90625, 0.96875};
 }
 
 float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
@@ -119,18 +126,38 @@ float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal
 
     p /= src.size();
 
+    //std::cout << "p error = " << p << std::endl;
+
     int i = 0;
     while(i < (int)sim_result.size() && sim_result[i].first < p)
     {
         i++;
     }
 
-    //todo interpolation
+    //todo interpolation ?
     r = sim_result[i].second;
 
-    std::cout << "estimated rate=" << r << std::endl;
+    //std::cout << "estimated rate=" << r << std::endl;
 
     return r;
+}
+
+int quantize(int value, int step, int min, int max)
+{
+    return value == 0 ? 0 : std::clamp((int)((std::abs(value)/value) * step * std::ceil((1.0 * std::abs(value)) / step)), min, max);
+}
+
+int quantize(float value, const std::vector<float>& v)
+{
+    int idx = std::upper_bound(v.begin(), v.end(), value) - v.begin();
+    idx = std::clamp(idx, 0, (int)v.size()-1);
+    int idx_prev = std::clamp(idx-1, 0, (int)v.size()-1);
+
+    if(std::abs(value - v[idx_prev]) <  std::abs(value - v[idx]))
+    {
+        idx = idx_prev;
+    }
+    return idx;
 }
 
 /****************************************************************************************/
@@ -179,6 +206,7 @@ int main(int argc,  char* argv[])
     buffers b;
     init_buffers(p, b); // create and initialize the buffers required by the modules
 
+
     /****************************************************************************************/
     // 1 - INIT SOURCE X
     /****************************************************************************************/
@@ -200,14 +228,19 @@ int main(int argc,  char* argv[])
     {
 
         b.sign_mask[i] = b.src_symbols[i] == 0 ? 0 : 1;
-        b.src_bits[0][i] = (b.src_symbols[i] < 0);
 
-        std::cout << b.src_symbols[i] << ": " << b.src_bits[0][i];
+        int x_reconstruction = 0;
+        b.src_bits[0][i] = (b.src_symbols[i] < 0);
 
         for(int j = 1 ; j < lx ; j++)
         {
             b.src_bits[lx-j][i] = (std::abs(b.src_symbols[i]) >> (j-1)) & 1U;
+            x_reconstruction |= b.src_bits[lx-j][i] << (j-1);
         }
+
+        //sanity check for X binarization
+        x_reconstruction *= (1 - 2*b.src_bits[0][i]);
+        if(x_reconstruction != b.src_symbols[i]) throw std::runtime_error("ERROR: Binarization failed: " + std::to_string(x_reconstruction) + " != " + std::to_string(b.src_symbols[i]));
     }
 
     /****************************************************************************************/
@@ -248,7 +281,7 @@ int main(int argc,  char* argv[])
         encode_params.resize(3);
         encode_params[0].start_code = 0;
         encode_params[0].stop_code = n_2 - n_8;
-        //encode_params[0].step = std::floor(4*pow/8);
+        // encode_params[0].step = std::floor(4*pow/8);
         encode_params[0].step = std::ceil(pow/8) * 4;
 
         encode_params[1].start_code = encode_params[0].stop_code;
@@ -279,6 +312,7 @@ int main(int argc,  char* argv[])
     else
     {
         //error
+        throw std::runtime_error("ERROR: Coder type could not be recognized: " + p.coder_type);
         return 1;
     }
 
@@ -319,7 +353,7 @@ int main(int argc,  char* argv[])
 
     std::vector<std::vector<std::vector<float>>> rate_results;
 
-    int si_count = std::min(tsi.get_side_info_count(), 8);
+    int si_count = std::min(tsi.get_side_info_count(), p.si_count);
 
     //encode for each SI
     for(int si = 0 ; si < si_count ; si++)
@@ -327,7 +361,7 @@ int main(int argc,  char* argv[])
         rate_results.push_back(std::vector<std::vector<float>>(lx, std::vector<float>(2, 0.0)));
         std::cout << "*************************************************************************" << std::endl;
 
-        std::cout << "si=" << si+1 << "/" << tsi.get_side_info_count() << std::endl;
+        std::cout << "si=" << si+1 << "/" << si_count << std::endl;
 
         b.side_info = tsi.get_side_info(si);
 
@@ -352,6 +386,17 @@ int main(int argc,  char* argv[])
 
             //z_max = max(Z[k], 0<=k<N)
             if(z > z_max) z_max = z;
+        }
+
+        if(p.enable_z_quantization)
+        {
+            z_min = quantize(z_min, 16, -256, 256);
+            z_max = quantize(z_max, 16, -256, 256);
+        }
+
+        if(p.enable_q_quantization)
+        {
+            q = b.q_values[quantize(q, b.q_values)];
         }
 
         //y_min = min(Y[k], 0<=k<N)
@@ -383,9 +428,6 @@ int main(int argc,  char* argv[])
         for(int i = 0; i < lx; i++)
         {
 
-            float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
-            rate_results[si][i][0] = estimated_rate;
-
             int bitplane = (lx - i - 1);
 
             //check coding/no-coding when option is enabled
@@ -393,12 +435,11 @@ int main(int argc,  char* argv[])
             if(p.enable_nocoding && ((z_min == 0 && z_max == 0) || (i < ly && (b.si_bits[i] == b.src_bits[i]))))
             {
                 code_enabled = false;
-                std::cout << "no coding" << std::endl;
+                std::cout << "b=" << i <<" rate="<<0<<std::endl;
             }
 
             if(code_enabled)
             {
-                //std::cout <<  b.pcrossover[i]<<std::endl;
                 syndromeMgr->reset_doping();
 
                 if(i == 0)
@@ -418,7 +459,7 @@ int main(int argc,  char* argv[])
                 //reset rate to 0
                 numcode = 0;
 
-                //reset error couny
+                //reset error count
                 int numerrors = -1;
 
                 //syndrome accumulation
@@ -437,15 +478,18 @@ int main(int argc,  char* argv[])
                         continue;
                     }
 
-                    //std::cout << "test code in [" << numcode << ", " << end_code << "[" << std::endl;
-
                     numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite, i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
                     //encoding done (no error)
                     if(numerrors == 0) break;
                 }
 
+
+                //estimate probability and rate
+                float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+
                 //get actual rate from numcode
+                rate_results[si][i][0] = estimated_rate;
                 double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
                 rate_results[si][i][1] = rate;
 
@@ -468,7 +512,7 @@ int main(int argc,  char* argv[])
 
                 if(numerrors != 0)
                 {
-                    std::cerr<<"ERROR: No convergence. bitplane="<< lx-i-1 <<std::endl;
+                    std::cerr<<"ERROR: No convergence for bitplane="<< lx-i-1 <<std::endl;
                 }
                 else
                 {
@@ -485,8 +529,13 @@ int main(int argc,  char* argv[])
                     elapsed_seconds = end-start;
                     if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
                     {
-                        std::cerr<<"err no decoding "<< lx-i <<std::endl;
-                        //throw "fatal: error decoding";
+                        std::cerr<<"ERROR: Decoding check failed for bitplane "<< i <<std::endl;
+                        std::cerr<<"dec_bits - src_bits = ";
+                        for(size_t di = 0 ; di < b.dec_bits.size() ; di++)
+                        {
+                            std::cerr << b.dec_bits[di] -  b.src_bits[i][di] << " ";
+                        }
+                        std::cerr<<std::endl;
                     }
                 }
             }
@@ -536,18 +585,20 @@ int main(int argc,  char* argv[])
 
     result_file << std::endl;
 
-    result_file << "# X binarization" << std::endl;
-
-    for(int i = 0 ; i < p.N ; i++)
+    if(p.enable_binarization_check)
     {
-        result_file << b.src_symbols[i] << "\t   ";
-        for(int j = 0 ; j < lx ; j++)
-        {
-            result_file << b.src_bits[j][i] << " ";
-        }
-        result_file << std::endl;
-    }
+        result_file << "# X binarization" << std::endl;
 
+        for(int i = 0 ; i < p.N ; i++)
+        {
+            result_file << b.src_symbols[i] << "\t   ";
+            for(int j = 0 ; j < lx ; j++)
+            {
+                result_file << b.src_bits[j][i] << " ";
+            }
+            result_file << std::endl;
+        }
+    }
     result_file.close();
 
 

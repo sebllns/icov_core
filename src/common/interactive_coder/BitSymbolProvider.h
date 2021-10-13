@@ -39,7 +39,7 @@ public:
 
 
     bool pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0, float &p1, float &p);
-    float pqks(int yk);
+    float pqks(bool negative, int yk);
 
 private:
     int m_z_min, m_z_max;

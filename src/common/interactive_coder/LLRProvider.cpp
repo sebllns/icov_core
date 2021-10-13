@@ -16,8 +16,6 @@ icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr):
     m_llr(llr)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
-
-
 }
 
 void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<CodedVal> &src_bits)
@@ -25,20 +23,13 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVa
     m_src = src_bits;
     for(int i = 0; i < side_info.size() ; i++)
     {
-        double p = bsp.pqks(side_info[i]);
+        double p = bsp.pqks(src_bits[i] > 0, side_info[i]);
 
         p = std::clamp(p, (double)0.000000001, (double)(1.0 - 0.000000001));
 
-        //std::cout << p << std::endl;
-
         if(p == 0 || p == 1) std::cerr << "initLLR_s: p cannot be 0 or 1";
         m_llr[i] = std::log(p / (1.0 - p));
-
-      // std::cout << m_llr[i] << " ";
-
     }
-
-//    std::cout<<std::endl;
 }
 
 void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)
@@ -77,7 +68,6 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
         double pCond = (1-pcrossover)*(1-sideinfo_BSC) + pcrossover*sideinfo_BSC;
         m_llr[k] = std::log( pCond/(1-pCond) );
     }
-
 }
 
 void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<CodedVal> &src_bits)
@@ -120,9 +110,6 @@ uint32_t icov::LLRProvider::index_min() const
             idx = i;
         }
     }
-
-    //std::cout << idx << ", ";
-
     return idx;
 }
 
