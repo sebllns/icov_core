@@ -111,7 +111,7 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
 float BitSymbolProvider::pqks(bool negative, int yk)
 {
 
-    int imax = (1 << x_binary_length()) - 1; //std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
+    int imax = (1 << x_binary_length()); //std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated()));
     float p0 = 0.0f;
     float p1 = 0.0f;
 

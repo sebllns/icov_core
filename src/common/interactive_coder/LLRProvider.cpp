@@ -36,7 +36,7 @@ void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vect
 {
     m_src = src_bits;
 
-    int l = bsp.x_binary_length();
+    int l = bsp.x_binary_length()-1;
     float p = 0.0, p0 = 0.0, p1 = 0.0;
 
     for(int i = 0; i < side_info.size() ; i++)
@@ -53,7 +53,20 @@ void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vect
        }*/
     }
 
-      //std::cout << std::endl;
+    //std::cout << std::endl;
+}
+
+bool icov::LLRProvider::no_coding() const
+{
+    bool nocoding = true;
+    int i = -1;
+
+    while(nocoding && ++i < (int)this->m_llr.size())
+    {
+        nocoding = ((this->m_llr[i] < 0) == this->m_src[i]);
+    }
+
+    return nocoding;
 }
 
 void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &src_bits)

@@ -37,7 +37,7 @@ struct params
     bool enable_binarization_check = false;
     bool enable_q_quantization = true;
     int  n_ite     =   100;
-    int si_count = 1;
+    int si_count = 2;
     std::string coder_type = "null";
 };
 
@@ -49,7 +49,9 @@ struct buffers
     std::vector<std::vector<CodedVal>> si_bits;
     std::vector<CodedVal> side_info;
     std::vector<LLRVal> llr;
-    std::vector<CodedVal  > dec_bits;
+    std::vector<CodedVal> dec_bits;
+    std::vector<CodedVal> dec_signs;
+    std::vector<CodedVal> dec_symbols;
     std::vector<std::pair<float,float>> sim_result;
     std::vector<float> q_values;
 };
@@ -87,8 +89,9 @@ void init_buffers(const params &p, buffers &b)
     std::generate(b.side_info.begin(), b.side_info.end(), [y_min, y_max](){ return (CodedVal)(rand()%(y_max-y_min+1) + y_min); });
 
 
-    b.dec_bits      = std::vector<int  >(p.N);
-
+    b.dec_bits      = std::vector<CodedVal  >(p.N, 0);
+    b.dec_symbols   = std::vector<CodedVal  >(p.N, 0);
+    b.dec_signs =  std::vector<CodedVal  >(p.N, 0);
 
     std::vector<float> pcrossover;
     DebugTools::read_vector("./data/sim_results/pcrossover", pcrossover);
@@ -227,7 +230,8 @@ int main(int argc,  char* argv[])
     for(int i = 0 ; i < p.N ; i++)
     {
 
-        b.sign_mask[i] = b.src_symbols[i] == 0 ? 0 : 1;
+        b.sign_mask[i] = b.src_symbols[i] == 0 ? 0 : 1;                    //start encoding
+
 
         int x_reconstruction = 0;
         b.src_bits[0][i] = (b.src_symbols[i] < 0);
@@ -413,6 +417,7 @@ int main(int argc,  char* argv[])
         b.si_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(p.N, 0));
         for(int i = 0 ; i < p.N ; i++)
         {
+
             b.si_bits[0][i] = (b.side_info[i] < 0);
 
             for(int j = 1 ; j < ly ; j++)
@@ -453,93 +458,126 @@ int main(int argc,  char* argv[])
                     llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
                 }
 
-                //save LLR (in case of doping)
-                b.llr = llrProvider.llr();
-
-                //reset rate to 0
-                numcode = 0;
-
-                //reset error count
-                int numerrors = -1;
-
-                //syndrome accumulation
-                syndromeMgr->init_accumulation(b.src_bits[i]);
-
-                //start encoding
-                auto start = std::chrono::steady_clock::now();
-
-                for(auto &param: encode_params)
+                if(p.enable_nocoding && llrProvider.no_coding())
                 {
-                    numcode = std::max(numcode, (uint32_t) param.start_code);
-                    end_code = param.stop_code;
-
-                    if(end_code <= numcode)
-                    {
-                        continue;
-                    }
-
-                    numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite, i == 0 ? b.sign_mask : std::vector<CodedVal>());
-
-                    //encoding done (no error)
-                    if(numerrors == 0) break;
-                }
-
-
-                //estimate probability and rate
-                float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
-
-                //get actual rate from numcode
-                rate_results[si][i][0] = estimated_rate;
-                double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
-                rate_results[si][i][1] = rate;
-
-                //double vtruth = tsr["R"].get_data(si, i);
-
-                std::cout << "b=" << i <<" rate="<<rate<<std::endl;
-
-                if(i > 0)
-                {
-                    //fill predecoded bit values
-                    for(int k = 0 ; k < p.N ; k++)
-                    {
-                        predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
-                        // std::cout << predec[k] <<"(" << b.src_symbols[k] <<  ") ";
-                    }
-                }
-
-                auto end = std::chrono::steady_clock::now();
-                std::chrono::duration<double> elapsed_seconds = end-start;
-
-                if(numerrors != 0)
-                {
-                    std::cerr<<"ERROR: No convergence for bitplane="<< lx-i-1 <<std::endl;
+                    code_enabled = false;
+                    std::cout << "b=" << i <<" rate="<<0<<std::endl;
                 }
                 else
                 {
-                    //reset doping state and LLR
-                    syndromeMgr->reset_doping();
-                    for(int l = 0; l < n ; l++)
+                    //save LLR (in case of doping)
+                    b.llr = llrProvider.llr();
+
+                    //reset rate to 0
+                    numcode = 0;
+
+                    //reset error count
+                    int numerrors = -1;
+
+                    //syndrome accumulation
+                    syndromeMgr->init_accumulation(b.src_bits[i]);
+
+                    //start encoding
+                    auto start = std::chrono::steady_clock::now();
+
+                    for(auto &param: encode_params)
                     {
-                        llrProvider[l] = b.llr[l];
+                        numcode = std::max(numcode, (uint32_t) param.start_code);
+                        end_code = param.stop_code;
+
+                        if(end_code <= numcode)
+                        {
+                            continue;
+                        }
+
+                        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite, i == 0 ? b.sign_mask : std::vector<CodedVal>());
+
+                        //encoding done (no error)
+                        if(numerrors == 0) break;
                     }
 
-                    start = std::chrono::steady_clock::now();
-                    interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
-                    end = std::chrono::steady_clock::now();
-                    elapsed_seconds = end-start;
-                    if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
+
+                    //estimate probability and rate
+                    float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+
+                    //get actual rate from numcode
+                    rate_results[si][i][0] = estimated_rate;
+                    double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
+                    rate_results[si][i][1] = rate;
+
+                    //double vtruth = tsr["R"].get_data(si, i);
+
+                    std::cout << "b=" << i <<" rate="<<rate<<std::endl;
+
+                    if(i > 0)
                     {
-                        std::cerr<<"ERROR: Decoding check failed for bitplane "<< i <<std::endl;
-                        std::cerr<<"dec_bits - src_bits = ";
-                        for(size_t di = 0 ; di < b.dec_bits.size() ; di++)
+                        //fill predecoded bit values
+                        for(int k = 0 ; k < p.N ; k++)
                         {
-                            std::cerr << b.dec_bits[di] -  b.src_bits[i][di] << " ";
+                            predec[k] = std::abs(b.src_symbols[k]) >> bitplane;
+                            if(i == (lx - 1))
+                            {
+                                int x_reconstructed = (1-2*b.src_bits[0][k]) * predec[k];
+                                if(x_reconstructed != b.src_symbols[k]) std::cerr<<"ERROR: X could not be reconstructed: " << x_reconstructed << " != " << b.src_symbols[k] <<std::endl;
+                            }
                         }
-                        std::cerr<<std::endl;
+                    }
+
+                    auto end = std::chrono::steady_clock::now();
+                    std::chrono::duration<double> elapsed_seconds = end-start;
+
+                    if(numerrors != 0)
+                    {
+                        std::cerr<<"ERROR: No convergence for bitplane="<< lx-i-1 <<std::endl;
+                    }
+                    else
+                    {
+                        //reset doping state and LLR
+                        syndromeMgr->reset_doping();
+                        for(int l = 0; l < n ; l++)
+                        {
+                            llrProvider[l] = b.llr[l];
+                        }
+
+                        start = std::chrono::steady_clock::now();
+                        interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+                        end = std::chrono::steady_clock::now();
+                        elapsed_seconds = end-start;
+                        if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))
+                        {
+                            std::cerr<<"ERROR: Decoding check failed for bitplane "<< i <<std::endl;
+                            std::cerr<<"dec_bits - src_bits = ";
+                            for(size_t di = 0 ; di < b.dec_bits.size() ; di++)
+                            {
+                                std::cerr << b.dec_bits[di] -  b.src_bits[i][di] << " ";
+                            }
+                            std::cerr<<std::endl;
+                        }
                     }
                 }
             }
+
+            for(int l = 0; l < n ; l++)
+            {
+                if(i == 0)
+                {
+                    b.dec_symbols[l] = 0;
+                    b.dec_signs[l] = code_enabled ? b.dec_bits[l] : b.si_bits[0][l];
+                }
+                else
+                {
+                    b.dec_symbols[l] += code_enabled ? b.dec_bits[l] << bitplane : b.si_bits[i][l] << bitplane;
+                }
+
+                if(bitplane == 0)
+                {
+                    b.dec_symbols[l] *= (1 - 2 * b.dec_signs[l]);
+                    if(b.dec_symbols[l] != b.src_symbols[l]) std::cerr<<"ERROR: X["<<l<<"] could not be reconstructed: " << b.dec_symbols[l] << " != " << b.src_symbols[l] <<std::endl;
+                }
+            }
+
         }
+
         auto end_main = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = end_main-start_main;
 
@@ -553,8 +591,6 @@ int main(int argc,  char* argv[])
 
     std::ofstream result_file("./results_bit_symbol/" + sequence_file + ".txt");
 
-
-    int sid = 0;
 
     for(int i = 0; i < 2; i++)
     {
@@ -580,7 +616,7 @@ int main(int argc,  char* argv[])
             result_file<< std::fixed << std::setw( 7 ) << std::setprecision( 6 )
                        << std::setfill( '0' ) << frangping_rate.get_data(i,frangping_rate.n_cols - 1 - j) << " ";
         }
-         result_file << std::endl;
+        result_file << std::endl;
     }
 
     result_file << std::endl;

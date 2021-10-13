@@ -24,8 +24,10 @@ public:
     static LLRVal limit_max();
 
      void initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<CodedVal> &src_bits);
+     void initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits);
 
-    void initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits);
+     bool no_coding() const;
+
 protected:
     std::vector<LLRVal> m_llr;
     std::vector<CodedVal> m_src;
