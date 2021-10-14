@@ -1,5 +1,7 @@
 #include "BitSymbolProvider.h"
 
+namespace icov
+{
 BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q):
     m_z_min(z_min), m_z_max(z_max), m_y_min(y_min), m_y_max(y_max), m_q0(q)
 {
@@ -131,12 +133,7 @@ float BitSymbolProvider::pqks(bool negative, int yk)
         {
             p0 += this->pz(0);
         }
-
-
-        //std::cout << "i="<<i << " p=" << this->pz(i - yk) << std::endl;
     }
-
-    //std::cout << "yk=" << yk << " p=" << p0 << std::endl;
-
     return p0/(p0+p1);
+}
 }

@@ -3,7 +3,8 @@
 
 #include "common.h"
 
-
+namespace icov
+{
 class BitSymbolProvider
 {
 public:
@@ -49,5 +50,5 @@ private:
 
 
 };
-
+}
 #endif // BITSYMBOLPROVIDER_H

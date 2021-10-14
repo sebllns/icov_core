@@ -458,12 +458,12 @@ int main(int argc,  char* argv[])
                     llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
                 }
 
-                if(p.enable_nocoding && llrProvider.no_coding())
-                {
-                    code_enabled = false;
-                    std::cout << "b=" << i <<" rate="<<0<<std::endl;
-                }
-                else
+//                if(p.enable_nocoding && llrProvider.no_coding())
+//                {
+//                    code_enabled = false;
+//                    std::cout << "b=" << i <<" rate="<<0<<std::endl;
+//                }
+//                else
                 {
                     //save LLR (in case of doping)
                     b.llr = llrProvider.llr();
@@ -575,7 +575,6 @@ int main(int argc,  char* argv[])
                     if(b.dec_symbols[l] != b.src_symbols[l]) std::cerr<<"ERROR: X["<<l<<"] could not be reconstructed: " << b.dec_symbols[l] << " != " << b.src_symbols[l] <<std::endl;
                 }
             }
-
         }
 
         auto end_main = std::chrono::steady_clock::now();

@@ -75,6 +75,6 @@ using namespace std;
 #include "common_types.h"
 #include "typedef.h"
 #include "version.h"
-#include "helpers.hpp"
+#include "helpers.h"
 
 #endif // COMMON_H
