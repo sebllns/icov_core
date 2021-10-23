@@ -306,7 +306,7 @@ typedef int SIVal;
 typedef bit SyndVal;
 
 //FastArray is faster
-using Syndrome = FastArray<bool>;
+using Syndrome = FastArray<bit>;
 using CodedVector = std::vector<CodedVal>;
 
 template <typename T>

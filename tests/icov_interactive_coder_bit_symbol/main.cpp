@@ -16,6 +16,9 @@
 #include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
 #include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
 
+#include "interactive_coder/implementation/imt_164/IMT164Syndrome.hpp"
+#include "interactive_coder/implementation/imt_164/IMT164MatrixBuilder.hpp"
+
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 #include "interactive_coder/implementation/varodayan/VarodayanMatrixBuilder.hpp"
 
@@ -140,7 +143,7 @@ float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal
     //todo interpolation ?
     r = sim_result[i].second;
 
-    //std::cout << "estimated rate=" << r << std::endl;
+    std::cout << "estimated rate=" << r << std::endl;
 
     return r;
 }
@@ -267,6 +270,8 @@ int main(int argc,  char* argv[])
     int start_matrix, end_matrix;
     int n = 0;
 
+    int inverse_matrix_build = false;
+
     if(p.coder_type == "imt")
     {
         IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
@@ -297,6 +302,39 @@ int main(int argc,  char* argv[])
         encode_params[2].stop_code = 3*n_2 - n_8 + 1;
         // encode_params[2].step =  std::floor(9*pow/8);
         encode_params[2].step = 2 * encode_params[1].step;
+    }
+    if(p.coder_type == "imt164")
+    {
+        IMT164SyndromeManager* imt_synd = new IMT164SyndromeManager(p.N, 2, 64);
+        syndromeMgr = imt_synd;
+        mb = new IMT164MatrixBuilder(imt_synd, p.database);
+
+        int n_64 = imt_synd->get_n()/64;
+        int n_2 = imt_synd->get_n()/2;
+        n = imt_synd->get_n();
+
+        start_matrix = 0;
+        end_matrix = n_2 - n_64;
+
+        int pow = std::log2f(p.N);
+
+        encode_params.resize(3);
+        encode_params[0].start_code = 0;
+        encode_params[0].stop_code = n_2 - n_64;
+        // encode_params[0].step = std::floor(4*pow/8);
+        encode_params[0].step = std::ceil(pow/8) * 4;
+
+        encode_params[1].start_code = encode_params[0].stop_code;
+        encode_params[1].stop_code = n - n_64;
+        // encode_params[1].step =  std::floor(5*pow/8);
+        encode_params[1].step = encode_params[0].step;
+
+        encode_params[2].start_code = encode_params[1].stop_code;
+        encode_params[2].stop_code = 3*n_2 - n_64 + 1;
+        // encode_params[2].step =  std::floor(9*pow/8);
+        encode_params[2].step = 2 * encode_params[1].step;
+
+        inverse_matrix_build = true;
     }
     else if(p.coder_type == "varodayan")
     {
@@ -333,12 +371,15 @@ int main(int argc,  char* argv[])
     uint32_t numcode = start_matrix;
     uint32_t end_code = end_matrix + 1;
 
-    interactive_coder->buildMatrices(*mb, numcode, end_code);
+    interactive_coder->buildMatrices(*mb, numcode, end_code, inverse_matrix_build);
 
     std::cout<<"init coder\n";
     for(int c = start_matrix; c < end_code; c++)
     {
-        std::cout << c <<std::endl;
+        //std::cout << c <<std::endl;
+
+        //std::cout << interactive_coder->getMatrix(c).get_n_rows() << "x" << interactive_coder->getMatrix(c).get_n_cols() << ": " << interactive_coder->getMatrix(c).get_cols_max_degree() << ", " << interactive_coder->getMatrix(c).get_rows_max_degree()<<std::endl;
+
         ldpca_dec.init_decoder(c, p.N, p.n_ite, interactive_coder->getMatrix(c));
     }
 
@@ -445,6 +486,9 @@ int main(int argc,  char* argv[])
 
             if(code_enabled)
             {
+                //estimate probability and rate
+                float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+
                 syndromeMgr->reset_doping();
 
                 if(i == 0)
@@ -497,8 +541,7 @@ int main(int argc,  char* argv[])
                     }
 
 
-                    //estimate probability and rate
-                    float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+
 
                     //get actual rate from numcode
                     rate_results[si][i][0] = estimated_rate;

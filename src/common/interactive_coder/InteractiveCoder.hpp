@@ -1,18 +1,26 @@
 #include "InteractiveCoder.h"
 #include "common.h"
 
-//#define TEST_SYNDROME
-
 using namespace icov;
 
 
 // m = m_12 -> ordonner tous les LLR
 template <class Matrix>
-void InteractiveCoder<Matrix>::buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end)
+void InteractiveCoder<Matrix>::buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end, bool inverse)
 {
-    for(int m = m_start ; m < m_end ; m++)
+    if(inverse)
     {
-        this->m_matrices.push_back(std::unique_ptr<Matrix>(mb.buildMatrix(m)));
+        for(int m = m_end-1 ; m >= m_start ; m--)
+        {
+            this->m_matrices.insert(m_matrices.begin(), std::unique_ptr<Matrix>(mb.buildMatrix(m)));
+        }
+    }
+    else
+    {
+        for(int m = m_start ; m < m_end ; m++)
+        {
+            this->m_matrices.push_back(std::unique_ptr<Matrix>(mb.buildMatrix(m)));
+        }
     }
 }
 
@@ -60,6 +68,36 @@ int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, c
 }
 
 template<class Matrix>
+bool InteractiveCoder<Matrix>::checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const
+{
+    bool synd_test;
+
+    if(syndrome.size() != m_psyndromeMgr->get_m(numcode))
+    {
+        std::cout << "error" << std::endl;
+        return false;
+    }
+
+    //not working for m > n/2
+    for(int i = 0 ; i < syndrome.size(); i++)
+    {
+        synd_test = 0;
+        for(const auto& vn: getMatrix(numcode).get_rows_from_col(i))
+        {
+            synd_test ^= source[vn];
+        }
+
+        if(synd_test != syndrome.at(i))
+        {
+            std::cout << "error " << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template<class Matrix>
 int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite)
 {
     return this->encode(io_numcode,  o_stored_syndrome, source, numcodeMax, step, n_ite, std::vector<CodedVal>());
@@ -76,50 +114,23 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 
     for(io_numcode = 0 ; io_numcode < numcodeMax ; io_numcode++)
     {
+        //std::cout << io_numcode << std::endl;
+
         m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *llrProvider());
 
         if(io_numcode == next_test_code)
         {
             this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
 
-
-#ifdef TEST_SYNDROME
-            bool synd_test;
-
-            if(m_decodage_syndrome->size() != m_psyndromeMgr->get_m(io_numcode))
-            {
-                std::cout << "error" << std::endl;
-            }
-
-            //not working for m > n/2
-            for(int i = 0 ; i < m_decodage_syndrome->size(); i++)
-            {
-                synd_test = 0;
-                for(const auto& vn: getMatrix(io_numcode).get_rows_from_col(i))
-                {
-                    synd_test ^= source[vn];
-                }
-
-
-                if(synd_test != m_decodage_syndrome->at(i))
-                {
-                    std::cout << "error" << std::endl;
-                }
-            }
-#endif
-
             if(testConvergence(decoded, source, mask))
             {
                 return 0;
             }
 
-//            std::cout << (1.0* this->m_psyndromeMgr->get_m(io_numcode)) / this->m_psyndromeMgr->get_n() << " " <<  errorCount(decoded, source) << std::endl;
-
             next_test_code = std::min(next_test_code+step, numcodeMax-1);
         }
     }
 
-    //std::cout << io_numcode << std::endl;
     io_numcode = numcodeMax - 1;
     return errorCount(decoded, source, mask);
 }

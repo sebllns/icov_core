@@ -16,6 +16,8 @@ icov::Aff3ctDecoder::Aff3ctDecoder(int n_dec) : IDecoder()
 
 void icov::Aff3ctDecoder::decode(std::vector<CodedVal> &o_decoded, int n, int numcode, int n_ite, const std::vector<LLRVal> &llr, Syndrome &syndrome, const AffMatrix &matrix)
 {
+    //std::cout << "decode" << std::endl;
+
     int d = std::min(numcode, (int)m_decvector.size()-1);
     m_decvector[d]-> reset();
     m_decvector[d]-> setSyndrome(&syndrome);

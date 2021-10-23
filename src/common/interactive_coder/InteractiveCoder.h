@@ -23,7 +23,7 @@ public:
 
     virtual ~InteractiveCoder() = default;
 
-    void buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end);
+    void buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end, bool inverse = false);
 
 
     virtual const Matrix& getMatrix(int numcode) const;
@@ -39,6 +39,8 @@ public:
     int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask);
 
     void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome);
+
+    bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
 
 
 protected:
