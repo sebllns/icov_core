@@ -17,6 +17,7 @@ public:
     inline const std::vector<LLRVal>& llr() const {return m_llr;}
     inline const CodedVal& src(int i) const {return m_src[i];}
 
+    void initLLR(const std::vector<CodedVal> &side_info , const std::vector<CodedVal> &src_bits);
     void initLLR(float pCrossover, const std::vector<CodedVal>& src);
     void initLLRUniform(float pCrossover, const std::vector<CodedVal>& src);
 

@@ -133,6 +133,7 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
        doping_synd[i] = val;
     }
 
+    //h*x
     for(int m = get_m_min() ; m < get_m_max() ; m++)
     {
         Syndrome s(m);

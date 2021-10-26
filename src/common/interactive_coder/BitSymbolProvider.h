@@ -8,7 +8,7 @@ namespace icov
 class BitSymbolProvider
 {
 public:
-    BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q);
+    BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l);
 
     float z_min();
     float z_max();
@@ -48,7 +48,7 @@ private:
     //q
     float m_q0;
 
-
+    int m_l;
 };
 }
 #endif // BITSYMBOLPROVIDER_H

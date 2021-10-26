@@ -30,6 +30,7 @@ public:
         {
             file  << sep << data[i];
         }
+        file.close();
     }
 
 
@@ -46,6 +47,7 @@ public:
             file  >> val;
             data[i] = val;
         }
+        file.close();
     }
 
     template<typename T> static bool compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)

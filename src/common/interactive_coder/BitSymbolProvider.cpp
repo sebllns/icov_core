@@ -2,8 +2,8 @@
 
 namespace icov
 {
-BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q):
-    m_z_min(z_min), m_z_max(z_max), m_y_min(y_min), m_y_max(y_max), m_q0(q)
+BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l):
+    m_z_min(z_min), m_z_max(z_max), m_y_min(y_min), m_y_max(y_max), m_q0(q), m_l(l)
 {
 
 }
@@ -67,18 +67,19 @@ int BitSymbolProvider::z_binary_length()
     return std::ceil(std::log2f(max));
 }
 
-int BitSymbolProvider::x_min_estimated()
+int BitSymbolProvider::x_max_estimated()
 {
-    return m_z_max+ m_y_min;
+    return m_z_max + m_y_min;
 }
 
-int BitSymbolProvider::x_max_estimated()
+int BitSymbolProvider::x_min_estimated()
 {
     return m_z_min + m_y_max;
 }
 
 int BitSymbolProvider::x_binary_length()
 {
+    return m_l;
     return std::floor(std::log2f(std::max(std::abs(x_min_estimated()), std::abs(x_max_estimated())))) + 2;
 }
 
@@ -89,11 +90,28 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
     p1 = 0.0;
     p = 0.0f;
 
+    for(int i = 0 ; i < (1<<(l-b)) ; i++)
+    {
+        int z = (abs_predec + i ) * (1 - 2 * negative) - yk;
+
+        p0 += this->pz(z);
+        p1 += this->pz(z + (1<<(l-b)) * (1 - 2 * negative));
+    }
+
+    p1+= p0;
+
+    if(p1 == 0) std::cerr << "WARNING: p1 = 0" << std::endl;
+
+    p = p1 == 0 ? 0.5 : p0/p1;
+
+    return p1 != 0;
+
+
     int zk0 = (1-2*negative) * (abs_predec << (l-b))  - yk;
     int zk1 =  (1<<(l-b-1));
     int zk2 =  (1<<(l-b));
 
-    //std::cout << b << ", " << imax << ", " << zk0 << std::endl;
+    //std::cout << l <<", " << b << ", " << zk0 << ", " << zk1 << ", " << zk2 << std::endl;
 
     for(int i = 0 ; i < zk2 ; i++)
     {
@@ -104,6 +122,8 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
     }
 
     //    p1 = std::max(p1, (float)0.000001);
+
+    if(p1 == 0) std::cerr << "ERROR: p1 = 0" << std::endl;
 
     p = p1 == 0 ? 0.5 : p0/p1;
 

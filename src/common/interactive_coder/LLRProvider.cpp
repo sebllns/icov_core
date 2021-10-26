@@ -83,6 +83,32 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
     }
 }
 
+
+void icov::LLRProvider::initLLR(const std::vector<CodedVal> &side_info , const std::vector<CodedVal> &src_bits)
+{
+    if(m_llr.size() != src_bits.size()) throw "ERROR: LLRProvider::initLLR: length of arrays are not equal";
+
+    m_src = src_bits;
+
+    float pcrossover = 0;
+
+    for(int k = 0 ; k < (int)src_bits.size() ; k++)
+    {
+        if(side_info[k] != src_bits[k])
+        {
+            pcrossover++;
+        }
+    }
+
+    pcrossover /= src_bits.size();
+
+    for(int k = 0 ; k < (int)src_bits.size() ; k++)
+    {
+        double pCond = (1-pcrossover)*(1-side_info[k]) + pcrossover*side_info[k];
+        m_llr[k] = std::log( pCond/(1-pCond) );
+    }
+}
+
 void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<CodedVal> &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "LLRProvider::initLLRUniform length of arrays are not equal";
