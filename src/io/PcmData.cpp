@@ -92,8 +92,44 @@ void PcmData::read_matrix(const string &filepath, AffMatrix &h)
     }
 }
 
-void PcmData::read_matrix(const string &filepath, icov::FastMatrix<uint16_t> &m)
-{   
+void PcmData::read_matrix(const string &filepath, icov::FastMatrix<bool> &h)
+{
+    std::ifstream file(filepath);
+
+    if (!file.is_open())
+    {
+        std::stringstream message;
+        message << "'filename' couldn't be opened ('filename' = " <<  filepath << ").";
+        throw std::runtime_error(message.str());
+    }
+
+    int n_rows  = 0;
+    int n_cols = 0;
+
+    file >> n_cols;
+    file >> n_rows;
+
+    if((int)h.rows() != n_rows || (int)h.cols() != n_cols)
+    {
+        h = icov::FastMatrix<bool>(n_rows, n_cols);
+    }
+
+    for(int i = 0; i < n_cols ; i++)
+    {
+        int n_ones = 0;
+        file >> n_ones;
+
+        for(int j = 0 ; j < n_ones ; j++)
+        {
+            int one_col = 0;
+            file >> one_col;
+            h.at(one_col - 1, i) = 1;
+        }
+    }
+}
+
+void PcmData::read_mapping_vector(const string &filepath, icov::FastMatrix<uint16_t> &m)
+{
     std::ifstream file(filepath);
 
     if (!file.is_open())
@@ -115,9 +151,11 @@ void PcmData::read_matrix(const string &filepath, icov::FastMatrix<uint16_t> &m)
     {
         for(int j = 0 ; j < n_cols ; j++)
         {
-            int value = 0;
+            uint16_t value = 0;
             file >> value;
-            m.at(i, j) = value-1;
+            m.at(i, j) = value - 1;
         }
     }
 }
+
+

@@ -142,6 +142,7 @@ void IMTSyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& acc
         //put all m-m_12 lowest LLR to the max value (keeping sign)
         for(int i = m_12; i < m; i++)
         {
+
             LLRVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) * llr_provider.limit_max();
             llr_provider[doping_idx[i-m_12]] = llr_val;
         }

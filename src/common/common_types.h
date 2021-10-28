@@ -31,7 +31,7 @@ public:
         m_size(f.m_size),
         m_data(new T[f.m_capacity])
     {
-        std::cout<<"new copy " << m_size << std::endl;
+        //std::cout<<"new copy " << m_size << std::endl;
          std::memcpy(m_data, f.m_data, m_size);
     }
 
@@ -40,14 +40,14 @@ public:
         m_size(size),
         m_data(new T[size])
     {
-        std::cout<<"new size " << size << std::endl;
+        //std::cout<<"new size " << size << std::endl;
 
         //(T*)malloc(size * sizeof (T))
     }
 
-    ~FastArray()
+   virtual ~FastArray()
     {
-        std::cout<<"delete\n";
+        //std::cout<<"delete\n";
 
         if(m_data != nullptr)
         {
@@ -65,7 +65,7 @@ public:
         m_data = new T [m_capacity];
         std::memcpy(m_data, f.m_data, m_size);
 
-        std::cout<<"copy " << m_size << std::endl;
+        //std::cout<<"copy " << m_size << std::endl;
 
         return *this;
     }
@@ -127,6 +127,14 @@ template <typename T>
 class FastMatrix : public FastArray<T>
 {
 public:
+
+    FastMatrix(): FastArray<T>(0),
+        m_rows(0),
+        m_cols(0)
+    {
+
+    }
+
      FastMatrix(size_t rows, size_t cols): FastArray<T>(rows*cols),
          m_rows(rows),
          m_cols(cols)

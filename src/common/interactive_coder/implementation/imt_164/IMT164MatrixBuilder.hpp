@@ -27,45 +27,123 @@ AffMatrix *IMT164MatrixBuilder::buildMatrix(int numcode) const
         m_tools->h[level_idx] = H;
 
         PcmData::read_matrix(get_pcm(level_idx), *H);
-        PcmData::read_matrix(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
+        PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
 
 
         //std::cout << H->get_n_rows() << "x" << H->get_n_cols() << ": " << H->get_cols_max_degree() << ", " << H->get_rows_max_degree()<<std::endl;
 
         m_tools->h_dec.insert(m_tools->h_dec.begin(), H);
+
+        m_tools->h_indexes = std::vector<int>(H->get_n_cols());
+        std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
+
         return  H;
     }
 
     int row_count = m_tools->get_m_level(m_tools->get_level(m_tools->current_level)) - m_tools->get_m(numcode);
     //std::cout << m_tools->current_level << ", " << row_count << std::endl;
 
-    for(int j = 0 ; j < n ; j++)
+    int row_dst = row_count - 1;
+    auto &indexes = m_tools->h_indexes;
+
+    int row_src1 = m_tools->mapping_file[m_tools->current_level-1].at(row_dst, 0);
+    int row_src2 = m_tools->mapping_file[m_tools->current_level-1].at(row_dst, 1);
+
+    std::vector<int> indexes2;
+
+    int row1_idx = 0;
+    int row2_idx = 0;
+
+    for(int k = 0 ; k < (int)indexes.size() ; k++)
     {
-        //first part : accumulation until
-        for(int i = 0 ; i < row_count ; i++)
+        if(indexes[k] == row_src1)
+        {
+            row1_idx = k + row_dst;
+        }
+        else if(indexes[k] == row_src2)
+        {
+            row2_idx = k + row_dst;
+        }
+        else
+        {
+            indexes2.push_back(indexes[k]);
+        }
+    }
+
+
+
+    for(int j = 0; j < (int)H->get_n_rows() ; j++)
+    {
+        int offset = 0;
+
+
+        for(int i = 0; i < (int)H->get_n_cols() ; i++)
         {
 
-            int row1 = m_tools->mapping_file[m_tools->current_level-1].at(i, 0);
-            int row2 = m_tools->mapping_file[m_tools->current_level-1].at(i, 1);
-
-            if(m_tools->h[m_tools->current_level]->at(j, row1) ^ m_tools->h[m_tools->current_level]->at(j, row2))
+            if(i == row_dst)
             {
-                H->add_connection(j,i);
+
+                if(m_tools->h_dec[0]->at(j, row1_idx) ^ m_tools->h_dec[0]->at(j, row2_idx))
+                {
+                    H->add_connection(j,i);
+                }
+
+                offset--;
+            }
+            else
+            {
+
+                if(i < row_dst)
+                {
+                    offset = 0;
+                }
+                else if((i+offset) == row1_idx || (i+offset) == row2_idx)
+                {
+                    offset++;
+                }
+
+
+                if(m_tools->h_dec[0]->at(j, i + offset))
+                {
+                    H->add_connection(j,i);
+                }
+
             }
         }
+    }
 
-        //second part : copy of current matrix
-        for(int i = row_count ; i < m ; i++)
-        {
-            if(m_tools->h[m_tools->current_level]->at(j,i)) H->add_connection(j,i);
-        }
+
+    indexes = indexes2;
+
+
+
+//    for(int j = 0 ; j < n ; j++)
+//    {
+//        //first part : accumulation until
+//        for(int i = 0 ; i < row_count ; i++)
+//        {
+
+//            int row1 = m_tools->mapping_file[m_tools->current_level-1].at(i, 0);
+//            int row2 = m_tools->mapping_file[m_tools->current_level-1].at(i, 1);
+
+//            if(m_tools->h[m_tools->current_level]->at(j, row1) ^ m_tools->h[m_tools->current_level]->at(j, row2))
+//            {
+//                H->add_connection(j,i);
+//            }
+//        }
+
+//        //second part : copy of current matrix
+//        for(int i = row_count ; i < m ; i++)
+//        {
+//            if(m_tools->h[m_tools->current_level]->at(j,i)) H->add_connection(j,i);
+//        }
 
         //interactive_coder->getMatrix(c).get_cols_max_degree() << ", " << interactive_coder->getMatrix(c).get_rows_max_degree()
-    }
+  //  }
 
     if(level_idx > 0)
     {
-        PcmData::read_matrix(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
+        PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
     }
 
 
@@ -146,9 +224,28 @@ AffMatrix *IMT164MatrixBuilder::buildMatrix(int numcode) const
     {
         m_tools->current_level = level_idx;
         m_tools->h[level_idx] = H;
+
+        m_tools->h_indexes = std::vector<int>(H->get_n_cols());
+        std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
     }
 
     m_tools->h_dec.insert(m_tools->h_dec.begin(), H);
+
+//    for(int i = 0; i < (int)H->get_n_cols() ; i++)
+//    {
+//        std::cout << i+1 << ":";
+
+//        for(int j = 0; j < (int)H->get_n_rows(); j++)
+//        {
+//            if( H->at(j,i))
+//            {
+//                std::cout  << " " << j+1;
+//            }
+//        }
+//        std::cout << std::endl;
+//    }
+
+
     return  H;
 }
 

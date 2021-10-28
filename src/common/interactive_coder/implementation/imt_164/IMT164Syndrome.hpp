@@ -16,6 +16,8 @@ IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level
 
     this->h.resize(get_level_count());
     this->mapping_file.resize(get_level_count()-1, FastMatrix<index_t>(0,0));
+
+    accumulated_syndrome = nullptr;
 }
 
 int IMT164SyndromeManager::get_m_max() const
@@ -74,10 +76,10 @@ void IMT164SyndromeManager::reset_doping() { init_rateless = true;}
 void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider, Syndrome &syndrome)
 {
     if(!init_rateless) return;
-    //std::cout << "compute doping" << std::endl;
+    std::cout << "compute doping" << std::endl;
     Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
-    int numcode = this->get_n()/2;
+    int numcode = this->get_m_max();
     dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome, *h[this->get_level_count()-1]);
     init_rateless = false;
 }
@@ -87,7 +89,10 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
 {
     std::cout << "init_accumulation" << std::endl;
 
-    accumulated_syndrome = new icov::bit[this->get_m_max() + 1];
+    if(accumulated_syndrome == nullptr)
+    {
+        accumulated_syndrome = new icov::bit[this->get_m_max() + 1];
+    }
     accumulated_syndrome[0] = 0;
 
     int offset = 1;
@@ -120,21 +125,22 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
         throw new std::runtime_error("error offset != n/2");
     }
 
-    doping_synd = Syndrome(get_m_max());
-    for(int i = 0; i < get_m_max() ; i++)
-    {
-        //compute syndrome = h * x
-        icov::bit val = 0;
-        for(const auto& vn: h[get_level_count()-1]->get_rows_from_col(i))
-        {
-            val ^= source_x[vn];
-        }
+//    doping_synd = Syndrome(get_m_max());
+//    for(int i = 0; i < get_m_max() ; i++)
+//    {
+//        //compute syndrome = h * x
+//        icov::bit val = 0;
+//        for(const auto& vn: h[get_level_count()-1]->get_rows_from_col(i))
+//        {
+//            val ^= source_x[vn];
+//        }
 
-       doping_synd[i] = val;
-    }
+//       doping_synd[i] = val;
+//    }
 
     //h*x
-    for(int m = get_m_min() ; m < get_m_max() ; m++)
+    synd_dec.clear();
+    for(int m = get_m_min() ; m < get_m_max()+1 ; m++)
     {
         Syndrome s(m);
         for(int i = 0 ; i < m; i++)
@@ -151,6 +157,7 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
         synd_dec.push_back(s);
     }
 
+    doping_synd = synd_dec[synd_dec.size()-1];
 }
 
 void IMT164SyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, LLRProvider& llr_provider)
@@ -159,7 +166,7 @@ void IMT164SyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& 
     int m = get_m(numcode);
     int n = get_n();
 
-    std::cout << "compute_deacc " << m << std::endl;
+    //std::cout << "compute_deacc " << m << std::endl;
 
     o_syndrome.resize(std::min(m, get_m_max()));
 
@@ -183,16 +190,17 @@ void IMT164SyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& 
     //doping for rate > 0.5
     if(m >  get_m_max())
     {
-        std::cout << "doping" << std::endl;
+        //std::cout << "doping" << std::endl;
 
         //order the llr values for rate = 0.5
-        compute_doping_order(llr_provider, o_syndrome);
+        compute_doping_order(llr_provider, doping_synd);
 
         o_syndrome.resize(m);
 
         //put all m-m_12 lowest LLR to the max value (keeping sign)
         for(int i =  get_m_max(); i < m; i++)
         {
+            o_syndrome[i] =  acc_syndrome[i];
             LLRVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) * llr_provider.limit_max();
             llr_provider[doping_idx[i- get_m_max()]] = llr_val;
         }

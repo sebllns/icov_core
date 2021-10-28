@@ -57,6 +57,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "common.h"
+
 namespace icov::helpers {
 
 template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)
@@ -76,6 +78,20 @@ template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, c
     }
 
     return equal;
+}
+
+
+template<typename T> static FastMatrix<T> transpose(const FastMatrix<T>& m)
+{
+    FastMatrix<T> t(m.cols(), m.rows());
+    for(int i = 0; i < t.rows() ; i++)
+    {
+        for(int j = 0; j < t.cols() ; j++)
+        {
+            t.at(i,j) = m.at(j, i);
+        }
+    }
+    return t;
 }
 
 

@@ -50,6 +50,8 @@ public:
     std::vector<AffMatrix *> h;
     std::vector<FastMatrix<index_t>> mapping_file;
 
+    std::vector<int> h_indexes;
+
     icov::bit *accumulated_syndrome;//todo delete
     std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
 

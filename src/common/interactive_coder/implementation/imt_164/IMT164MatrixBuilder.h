@@ -30,7 +30,6 @@ protected:
     std::string root_dir;
     std::shared_ptr<IMT164SyndromeManager> m_tools;
 
-
 };
 }
 #endif // IMT164MATRIXBUILDER_H

@@ -65,6 +65,7 @@ endif()
 add_subdirectory(tests/icov_interactive_coder_test)
 add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 add_subdirectory(tests/icov_interactive_coder_debug)
+add_subdirectory(tests/imt_matrix_check)
 
 message(STATUS "[INFO] Building ICOV core apps")
 add_subdirectory(app/icov_imt_alist_generator)

@@ -25,6 +25,8 @@
 #include "TestSequenceInput.h"
 #include "TestSequenceResult.h"
 
+//#include <boost/filesystem.hpp>
+
 using namespace aff3ct;
 using namespace icov;
 
@@ -40,8 +42,9 @@ struct params
     bool enable_binarization_check = false;
     bool enable_q_quantization = true;
     int  n_ite     =   100;
-    int si_count = 8;
+    int si_count = 2;
     std::string coder_type = "null";
+    std::string output_dir = "./results_bit_symbol/";
 };
 
 struct buffers
@@ -68,11 +71,13 @@ struct encode_parameters
 
 void init_params(params &p, int argc, char* argv[])
 {
-    if(argc < 5) throw "bad arguments";
+    if(argc < 5) throw std::runtime_error("bad arguments");
     p.coder_type = argv[1];
     p.database = argv[2];
     p.N = atoi(argv[3]);
     p.n_ite = atoi(argv[4]);
+
+//    boost::filesystem::create_directories(p.output_dir);
 }
 
 void init_buffers(const params &p, buffers &b);
@@ -126,7 +131,7 @@ float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal
 //        std::cout << si[i] << ", ";
 //    }
 
-   // std::cout << std::endl;
+    std::cout << std::endl;
 
     float r = 0.0;
     float p = 0.0;
@@ -341,7 +346,7 @@ int main(int argc,  char* argv[])
     //6000files_Qary_CodingnoCoding_q3bits
     std::string result_dir = "/home/sbelleno/_ICOV/results/results_6000files_rates/results_6000files/6000files_Qary_withoutCodingnoCoding/Results_6000files_Qary/";
 
-    std::ofstream measure_file("./results_bit_symbol/metric.csv");
+    std::ofstream measure_file(p.output_dir + "./metric.csv");
     measure_file << "file\tsi\tabs diff\trelative diff\n";
 
     std::ifstream seq_list(input_dir + "/../files.txt");
@@ -663,7 +668,7 @@ int main(int argc,  char* argv[])
 
         }
 
-        std::ofstream result_file("./results_bit_symbol/" + sequence_file + ".txt");
+        std::ofstream result_file(p.output_dir + "./" + sequence_file + ".txt");
 
         for(int i = 0; i < 2; i++)
         {
