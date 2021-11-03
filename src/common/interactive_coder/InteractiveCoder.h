@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "common.h"
-#include "interface/IMatrixBuilder.h"
+#include "interface/IMatrixProvider.h"
 #include "interface/IDecoder.h"
 #include "interface/ISyndrome.h"
 #include "LLRProvider.h"
@@ -23,7 +23,7 @@ public:
 
     virtual ~InteractiveCoder() = default;
 
-    void buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end, bool inverse = false);
+    void buildMatrices(IMatrixProvider<Matrix>& mb, int m_start, int m_end, bool inverse = false);
 
 
     virtual const Matrix& getMatrix(int numcode) const;

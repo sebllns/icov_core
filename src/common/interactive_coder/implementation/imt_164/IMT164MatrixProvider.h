@@ -1,25 +1,25 @@
-#ifndef IMT164MATRIXBUILDER_H
-#define IMT164MATRIXBUILDER_H
+#ifndef IMT164MatrixProvider_H
+#define IMT164MatrixProvider_H
 
-#include "interactive_coder/aff3ct/IAff3ctMatrixBuilder.h"
+#include "interactive_coder/aff3ct/IAff3ctMatrixProvider.h"
 #include "IMT164Syndrome.h"
 #include "common.h"
 #include <stack>
 
 namespace icov {
-class IMT164MatrixBuilder : public IAff3ctMatrixBuilder
+class IMT164MatrixProvider : public IAff3ctMatrixProvider
 {
 public:
-    IMT164MatrixBuilder(IMT164SyndromeManager* tools, std::string root):
+    IMT164MatrixProvider(IMT164SyndromeManager* tools, std::string root):
         m_tools(tools),
         root_dir(root)
     {
 
     }
-    ~IMT164MatrixBuilder() = default;
+    ~IMT164MatrixProvider() = default;
 
 
-    // IMatrixBuilder interface
+    // IMatrixProvider interface
 public:
     AffMatrix *buildMatrix(int numcode) const override;
 
@@ -32,4 +32,4 @@ protected:
 
 };
 }
-#endif // IMT164MATRIXBUILDER_H
+#endif // IMT164MatrixProvider_H

@@ -1,24 +1,24 @@
-#ifndef IMTMATRIXBUILDER_H
-#define IMTMATRIXBUILDER_H
+#ifndef IMTMatrixProvider_H
+#define IMTMatrixProvider_H
 
-#include "interactive_coder/aff3ct/IAff3ctMatrixBuilder.h"
+#include "interactive_coder/aff3ct/IAff3ctMatrixProvider.h"
 #include "IMTSyndrome.h"
 #include "common.h"
 
 namespace icov {
-class IMTMatrixBuilder : public IAff3ctMatrixBuilder
+class IMTMatrixProvider : public IAff3ctMatrixProvider
 {
 public:
-    IMTMatrixBuilder(IMTSyndromeManager* tools, std::string root):
+    IMTMatrixProvider(IMTSyndromeManager* tools, std::string root):
         m_tools(tools),
         root_dir(root)
     {
 
     }
-    ~IMTMatrixBuilder() = default;
+    ~IMTMatrixProvider() = default;
 
 
-    // IMatrixBuilder interface
+    // IMatrixProvider interface
 public:
     AffMatrix *buildMatrix(int numcode) const override;
 
@@ -34,4 +34,4 @@ protected:
     std::shared_ptr<IMTSyndromeManager> m_tools;
 };
 }
-#endif // IMTMATRIXBUILDER_H
+#endif // IMTMatrixProvider_H

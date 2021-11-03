@@ -1,4 +1,4 @@
-#include "IMT164MatrixBuilder.h"
+#include "IMT164MatrixProvider.h"
 
 #include <cstdint>
 #include <fstream>
@@ -8,7 +8,7 @@
 
 using namespace icov;
 
-AffMatrix *IMT164MatrixBuilder::buildMatrix(int numcode) const
+AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
@@ -250,7 +250,7 @@ AffMatrix *IMT164MatrixBuilder::buildMatrix(int numcode) const
 }
 
 
-std::string IMT164MatrixBuilder::get_pcm(int level_idx) const
+std::string IMT164MatrixProvider::get_pcm(int level_idx) const
 {
     std::string filename = "H";
     if(level_idx < m_tools->get_level_count()-1)

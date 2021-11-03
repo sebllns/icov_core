@@ -9,7 +9,7 @@
 #include "tools/DebugTools.h"
 #include "interactive_coder/InteractiveCoder.hpp"
 #include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
+#include "interactive_coder/implementation/imt/IMTMatrixProvider.hpp"
 #include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
 #include "interactive_coder/LLRProvider.h"
 
@@ -50,7 +50,7 @@ int main(int argc,  char* argv[])
     std::cout<<"start IMT alist generation\n";
 
     IMTSyndromeManager imt_tools(p.N);
-    IMTMatrixBuilder imt_builder(&imt_tools, p.database);
+    IMTMatrixProvider imt_builder(&imt_tools, p.database);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/

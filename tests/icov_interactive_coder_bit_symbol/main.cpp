@@ -14,13 +14,13 @@
 #include "interactive_coder/LLRProvider.h"
 
 #include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixBuilder.hpp"
+#include "interactive_coder/implementation/imt/IMTMatrixProvider.hpp"
 
 #include "interactive_coder/implementation/imt_164/IMT164Syndrome.hpp"
-#include "interactive_coder/implementation/imt_164/IMT164MatrixBuilder.hpp"
+#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.hpp"
 
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
-#include "interactive_coder/implementation/varodayan/VarodayanMatrixBuilder.hpp"
+#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
 #include "TestSequenceInput.h"
 #include "TestSequenceResult.h"
@@ -214,7 +214,7 @@ int main(int argc,  char* argv[])
     LLRProvider llrProvider(p.N);
     Aff3ctDecoder ldpca_dec(p.N);
     ISyndromeManager* syndromeMgr = nullptr;
-    IMatrixBuilder<AffMatrix>* mb = nullptr;
+    IMatrixProvider<AffMatrix>* mb = nullptr;
 
 
     std::cout<<"type of coder = "<<p.coder_type<<std::endl;
@@ -230,7 +230,7 @@ int main(int argc,  char* argv[])
     {
         IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
         syndromeMgr = imt_synd;
-        mb = new IMTMatrixBuilder(imt_synd, p.database);
+        mb = new IMTMatrixProvider(imt_synd, p.database);
 
         min_rate = 1.0 / 8;
 
@@ -264,7 +264,7 @@ int main(int argc,  char* argv[])
 
         IMT164SyndromeManager* imt_synd = new IMT164SyndromeManager(p.N, 2, 64);
         syndromeMgr = imt_synd;
-        mb = new IMT164MatrixBuilder(imt_synd, p.database);
+        mb = new IMT164MatrixProvider(imt_synd, p.database);
 
         int n_64 = imt_synd->get_n()/64;
         int n_2 = imt_synd->get_n()/2;
@@ -300,7 +300,7 @@ int main(int argc,  char* argv[])
         VarodayanSyndromeManager* varo_synd = new VarodayanSyndromeManager(p.N);
         varo_synd->read_mat(p.database);
         syndromeMgr = varo_synd;
-        mb = new VarodayanMatrixBuilder(varo_synd);
+        mb = new VarodayanMatrixProvider(varo_synd);
 
         start_matrix = 0;
         end_matrix = varo_synd->numCodes - 1;

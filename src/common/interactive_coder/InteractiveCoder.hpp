@@ -6,7 +6,7 @@ using namespace icov;
 
 // m = m_12 -> ordonner tous les LLR
 template <class Matrix>
-void InteractiveCoder<Matrix>::buildMatrices(IMatrixBuilder<Matrix>& mb, int m_start, int m_end, bool inverse)
+void InteractiveCoder<Matrix>::buildMatrices(IMatrixProvider<Matrix>& mb, int m_start, int m_end, bool inverse)
 {
     if(inverse)
     {

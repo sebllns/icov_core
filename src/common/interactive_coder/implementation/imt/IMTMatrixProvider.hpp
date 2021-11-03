@@ -1,4 +1,4 @@
-#include "IMTMatrixBuilder.h"
+#include "IMTMatrixProvider.h"
 
 #include <cstdint>
 #include <fstream>
@@ -6,7 +6,7 @@
 
 using namespace icov;
 
-AffMatrix *IMTMatrixBuilder::buildMatrix(int numcode) const
+AffMatrix *IMTMatrixProvider::buildMatrix(int numcode) const
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
@@ -48,13 +48,13 @@ AffMatrix *IMTMatrixBuilder::buildMatrix(int numcode) const
 }
 
 
-std::string IMTMatrixBuilder::get_alist_file(int m) const
+std::string IMTMatrixProvider::get_alist_file(int m) const
 {
     return root_dir + "/" + std::to_string(m_tools->get_n()) + "/alist/" + ("H_" + std::to_string(m) + ".alist");
 }
 
 
-template<typename T> FastMatrix<T> IMTMatrixBuilder::read_mat_IMT_format(const std::string& filename) const
+template<typename T> FastMatrix<T> IMTMatrixProvider::read_mat_IMT_format(const std::string& filename) const
 {
     std::ifstream file(filename);
 
@@ -89,7 +89,7 @@ template<typename T> FastMatrix<T> IMTMatrixBuilder::read_mat_IMT_format(const s
     return mat;
 }
 
-void IMTMatrixBuilder::read_mat_imt_format()
+void IMTMatrixProvider::read_mat_imt_format()
 {
     std::string dirpath(root_dir + "/" + std::to_string(m_tools->get_n()));
 
@@ -145,7 +145,7 @@ void IMTMatrixBuilder::read_mat_imt_format()
     std::cout << "    100%          " <<  std::endl;
 }
 
-void IMTMatrixBuilder::order_combine(const FastMatrix<bool>& src, const FastMatrix<uint32_t>& cmb_idx, AffMatrix& ord, AffMatrix& cmb) const
+void IMTMatrixProvider::order_combine(const FastMatrix<bool>& src, const FastMatrix<uint32_t>& cmb_idx, AffMatrix& ord, AffMatrix& cmb) const
 {
     ord = AffMatrix::zero(src.cols(), src.rows());
     cmb = AffMatrix::zero(src.cols(), src.rows()/2);
@@ -181,7 +181,7 @@ void IMTMatrixBuilder::order_combine(const FastMatrix<bool>& src, const FastMatr
 }
 
 
-void IMTMatrixBuilder::order_combine(const AffMatrix& src, const FastMatrix<uint32_t>& cmb_idx, AffMatrix& ord, AffMatrix& cmb) const
+void IMTMatrixProvider::order_combine(const AffMatrix& src, const FastMatrix<uint32_t>& cmb_idx, AffMatrix& ord, AffMatrix& cmb) const
 {
     ord = AffMatrix::zero(src.get_n_rows(), src.get_n_cols());
     cmb = AffMatrix::zero(src.get_n_rows(), src.get_n_cols()/2);

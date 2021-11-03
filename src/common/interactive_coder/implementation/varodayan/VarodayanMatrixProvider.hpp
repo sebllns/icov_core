@@ -1,9 +1,9 @@
-#include "VarodayanMatrixBuilder.h"
+#include "VarodayanMatrixProvider.h"
 #include <cstdint>
 
 using namespace icov;
 
-AffMatrix *VarodayanMatrixBuilder::buildMatrix(int numcode) const
+AffMatrix *VarodayanMatrixProvider::buildMatrix(int numcode) const
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
