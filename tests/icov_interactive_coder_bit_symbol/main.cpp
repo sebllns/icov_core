@@ -42,7 +42,7 @@ struct params
     bool enable_binarization_check = false;
     bool enable_q_quantization = true;
     int  n_ite     =   100;
-    int si_count = 2;
+    int si_count = 8;
     std::string coder_type = "null";
     std::string output_dir = "./results_bit_symbol/";
 };
@@ -224,11 +224,15 @@ int main(int argc,  char* argv[])
 
     int inverse_matrix_build = false;
 
+    float min_rate = 0.0f;
+
     if(p.coder_type == "imt")
     {
         IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
         syndromeMgr = imt_synd;
         mb = new IMTMatrixBuilder(imt_synd, p.database);
+
+        min_rate = 1.0 / 8;
 
         int n_8 = imt_synd->get_n()/8;
         int n_2 = imt_synd->get_n()/2;
@@ -270,6 +274,8 @@ int main(int argc,  char* argv[])
         end_matrix = n_2 - n_64;
 
         int pow = std::log2f(p.N);
+
+        min_rate = 1.0 / 64;
 
         encode_params.resize(3);
         encode_params[0].start_code = 0;
@@ -723,7 +729,7 @@ int main(int argc,  char* argv[])
             {
                 estim_rate += rate_results[si][bp][0];
                 icov_rate += rate_results[si][bp][1];
-                fp_rate += std::max(tsr["R"].get_data(si,frangping_rate.n_cols - 1 - bp), (float)1.0/8);
+                fp_rate += std::max(tsr["R"].get_data(si,frangping_rate.n_cols - 1 - bp), min_rate);
             }
 
             measure_file << sequence_file << "\t" << si + 1 << "\t" << std::fixed << std::setw( 7 ) << std::setprecision( 6 ) << std::setfill( '0' ) << (icov_rate - fp_rate) << "\t"<< (icov_rate - fp_rate)/fp_rate << std::endl;

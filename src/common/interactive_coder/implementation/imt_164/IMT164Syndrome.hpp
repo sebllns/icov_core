@@ -76,7 +76,7 @@ void IMT164SyndromeManager::reset_doping() { init_rateless = true;}
 void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider, Syndrome &syndrome)
 {
     if(!init_rateless) return;
-    std::cout << "compute doping" << std::endl;
+    //std::cout << "compute doping" << std::endl;
     Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
     int numcode = this->get_m_max();
@@ -87,7 +87,7 @@ void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider
 
 void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
 {
-    std::cout << "init_accumulation" << std::endl;
+    //std::cout << "init_accumulation" << std::endl;
 
     if(accumulated_syndrome == nullptr)
     {
