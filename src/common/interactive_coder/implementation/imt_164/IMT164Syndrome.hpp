@@ -80,7 +80,7 @@ void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider
     Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
     int numcode = this->get_m_max();
-    dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome, *h[this->get_level_count()-1]);
+    dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome, h[this->get_level_count()-1]);
     init_rateless = false;
 }
 
@@ -109,7 +109,7 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
 
             //compute syndrome = h * x
             icov::bit val = 0;
-            for(const auto& vn: h[k]->get_rows_from_col(row))
+            for(const auto& vn: h[k].get_rows_from_col(row))
             {
                 val ^= source_x[vn];
             }
@@ -146,7 +146,7 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
         for(int i = 0 ; i < m; i++)
         {
             bool synd_test = 0;
-            for(const auto& vn: h_dec[get_numcode(m)]->get_rows_from_col(i))
+            for(const auto& vn: h_dec[get_numcode(m)].get_rows_from_col(i))
             {
                 synd_test ^= source_x[vn];
             }

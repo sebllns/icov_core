@@ -21,14 +21,13 @@ public:
 
     // IMatrixProvider interface
 public:
-    AffMatrix *buildMatrix(int numcode) const override;
-
-
     std::string get_pcm(int level_idx) const;
 
 protected:
     std::string root_dir;
     std::shared_ptr<IMT164SyndromeManager> m_tools;
+
+    const AffMatrix _buildMatrix(int numcode) override;
 
 };
 }

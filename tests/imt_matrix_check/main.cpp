@@ -278,7 +278,7 @@ int main(int argc,  char* argv[])
         return 1;
     }
 
-    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, syndromeMgr, &llrProvider);
+    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, mb, syndromeMgr, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -288,7 +288,7 @@ int main(int argc,  char* argv[])
 
     n = syndromeMgr->get_n();
 
-    interactive_coder->buildMatrices(*mb, start_matrix, end_matrix+1, inverse_matrix_build);
+    interactive_coder->buildMatrices(start_matrix, end_matrix+1, inverse_matrix_build);
 
     icov::FastMatrix<icov::bit> h_dec;
 

@@ -20,8 +20,6 @@ public:
 
     // IMatrixProvider interface
 public:
-    AffMatrix *buildMatrix(int numcode) const override;
-
     void read_mat_imt_format();
     template<typename T>
     FastMatrix<T> read_mat_IMT_format(const std::string &filename) const;
@@ -29,9 +27,12 @@ public:
 
     void order_combine(const AffMatrix &src, const FastMatrix<uint32_t> &cmb_idx, AffMatrix &ord, AffMatrix &cmb) const;
     void order_combine(const FastMatrix<bool>& src, const FastMatrix<uint32_t> &cmb_idx, AffMatrix &ord, AffMatrix &cmb) const;
+
 protected:
     std::string root_dir;
     std::shared_ptr<IMTSyndromeManager> m_tools;
+
+    const AffMatrix _buildMatrix(int numcode) override;
 };
 }
 #endif // IMTMatrixProvider_H

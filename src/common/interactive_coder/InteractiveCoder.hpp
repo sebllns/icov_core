@@ -6,20 +6,20 @@ using namespace icov;
 
 // m = m_12 -> ordonner tous les LLR
 template <class Matrix>
-void InteractiveCoder<Matrix>::buildMatrices(IMatrixProvider<Matrix>& mb, int m_start, int m_end, bool inverse)
+void InteractiveCoder<Matrix>::buildMatrices(int m_start, int m_end, bool inverse)
 {
     if(inverse)
     {
         for(int m = m_end-1 ; m >= m_start ; m--)
         {
-            this->m_matrices.insert(m_matrices.begin(), std::unique_ptr<Matrix>(mb.buildMatrix(m)));
+            m_matrix_provider->buildMatrix(m);
         }
     }
     else
     {
         for(int m = m_start ; m < m_end ; m++)
         {
-            this->m_matrices.push_back(std::unique_ptr<Matrix>(mb.buildMatrix(m)));
+            m_matrix_provider->buildMatrix(m);
         }
     }
 }
@@ -27,7 +27,7 @@ void InteractiveCoder<Matrix>::buildMatrices(IMatrixProvider<Matrix>& mb, int m_
 template<class Matrix>
 const Matrix& InteractiveCoder<Matrix>::getMatrix(int numcode) const
 {
-    return *(m_matrices[std::min(numcode, (int)m_matrices.size()-1)]);
+    return m_matrix_provider->getMatrix(numcode);
 }
 
 template<class Matrix>

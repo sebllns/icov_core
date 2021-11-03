@@ -8,14 +8,14 @@
 
 using namespace icov;
 
-AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
+const AffMatrix IMT164MatrixProvider::_buildMatrix(int numcode)
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
 
-    AffMatrix *H = new AffMatrix(n, m);
+    AffMatrix H(n, m);
 
-    std::cout << "IMT164 " << numcode  << ", " << m << ", " << n << ", " << H->get_n_cols() << std::endl;
+    std::cout << "IMT164 " << numcode  << ", " << m << ", " << n << ", " << H.get_n_cols() << std::endl;
 
     int level_idx = m_tools->is_level(m);
 
@@ -26,15 +26,15 @@ AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
 
         m_tools->h[level_idx] = H;
 
-        PcmData::read_matrix(get_pcm(level_idx), *H);
+        PcmData::read_matrix(get_pcm(level_idx), H);
         PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
 
 
-        //std::cout << H->get_n_rows() << "x" << H->get_n_cols() << ": " << H->get_cols_max_degree() << ", " << H->get_rows_max_degree()<<std::endl;
+        //std::cout << H.get_n_rows() << "x" << H.get_n_cols() << ": " << H.get_cols_max_degree() << ", " << H.get_rows_max_degree()<<std::endl;
 
         m_tools->h_dec.insert(m_tools->h_dec.begin(), H);
 
-        m_tools->h_indexes = std::vector<int>(H->get_n_cols());
+        m_tools->h_indexes = std::vector<int>(H.get_n_cols());
         std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
 
         return  H;
@@ -72,20 +72,20 @@ AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
 
 
 
-    for(int j = 0; j < (int)H->get_n_rows() ; j++)
+    for(int j = 0; j < (int)H.get_n_rows() ; j++)
     {
         int offset = 0;
 
 
-        for(int i = 0; i < (int)H->get_n_cols() ; i++)
+        for(int i = 0; i < (int)H.get_n_cols() ; i++)
         {
 
             if(i == row_dst)
             {
 
-                if(m_tools->h_dec[0]->at(j, row1_idx) ^ m_tools->h_dec[0]->at(j, row2_idx))
+                if(m_tools->h_dec[0].at(j, row1_idx) ^ m_tools->h_dec[0].at(j, row2_idx))
                 {
-                    H->add_connection(j,i);
+                    H.add_connection(j,i);
                 }
 
                 offset--;
@@ -103,9 +103,9 @@ AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
                 }
 
 
-                if(m_tools->h_dec[0]->at(j, i + offset))
+                if(m_tools->h_dec[0].at(j, i + offset))
                 {
-                    H->add_connection(j,i);
+                    H.add_connection(j,i);
                 }
 
             }
@@ -128,14 +128,14 @@ AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
 
 //            if(m_tools->h[m_tools->current_level]->at(j, row1) ^ m_tools->h[m_tools->current_level]->at(j, row2))
 //            {
-//                H->add_connection(j,i);
+//                H.add_connection(j,i);
 //            }
 //        }
 
 //        //second part : copy of current matrix
 //        for(int i = row_count ; i < m ; i++)
 //        {
-//            if(m_tools->h[m_tools->current_level]->at(j,i)) H->add_connection(j,i);
+//            if(m_tools->h[m_tools->current_level]->at(j,i)) H.add_connection(j,i);
 //        }
 
         //interactive_coder->getMatrix(c).get_cols_max_degree() << ", " << interactive_coder->getMatrix(c).get_rows_max_degree()
@@ -218,26 +218,26 @@ AffMatrix *IMT164MatrixProvider::buildMatrix(int numcode) const
         }
     }
 
-    //std::cout << H->get_n_rows() << "x" << H->get_n_cols() << ": " << H->get_cols_max_degree() << ", " << H->get_rows_max_degree()<<std::endl;
+    //std::cout << H.get_n_rows() << "x" << H.get_n_cols() << ": " << H.get_cols_max_degree() << ", " << H.get_rows_max_degree()<<std::endl;
 
     if(level_idx >= 0)
     {
         m_tools->current_level = level_idx;
         m_tools->h[level_idx] = H;
 
-        m_tools->h_indexes = std::vector<int>(H->get_n_cols());
+        m_tools->h_indexes = std::vector<int>(H.get_n_cols());
         std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
     }
 
     m_tools->h_dec.insert(m_tools->h_dec.begin(), H);
 
-//    for(int i = 0; i < (int)H->get_n_cols() ; i++)
+//    for(int i = 0; i < (int)H.get_n_cols() ; i++)
 //    {
 //        std::cout << i+1 << ":";
 
-//        for(int j = 0; j < (int)H->get_n_rows(); j++)
+//        for(int j = 0; j < (int)H.get_n_rows(); j++)
 //        {
-//            if( H->at(j,i))
+//            if( H.at(j,i))
 //            {
 //                std::cout  << " " << j+1;
 //            }

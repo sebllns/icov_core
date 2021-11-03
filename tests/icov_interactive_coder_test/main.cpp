@@ -163,7 +163,7 @@ int main(int argc,  char* argv[])
         encode_params[0].step = 1;
     }
 
-    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, syndromeMgr, &llrProvider);
+    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, mb, syndromeMgr, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -176,7 +176,7 @@ int main(int argc,  char* argv[])
     uint32_t numcode = start_matrix;
     uint32_t end_code = end_matrix + 1;
 
-    interactive_coder->buildMatrices(*mb, numcode, end_code);
+    interactive_coder->buildMatrices(numcode, end_code);
 
     std::cout<<"init coder\n";
     for(int c = start_matrix; c < end_code; c++)

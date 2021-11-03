@@ -17,8 +17,8 @@ public:
 
 
     // IMatrixProvider interface
-public:
-    AffMatrix *buildMatrix(int numcode) const override;
+protected:
+    const AffMatrix _buildMatrix(int numcode) override;
 
 private:
     std::shared_ptr<VarodayanSyndromeManager> m_tools;
