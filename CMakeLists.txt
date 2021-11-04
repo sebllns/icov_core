@@ -18,7 +18,8 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(src third-party/aff3ct/src third-party/aff3ct/include)
+include_directories(src third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
+    third-party/aff3ct/lib/rang/include)
 
 set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
@@ -27,7 +28,7 @@ set(AFF3CT_COLORS OFF)
 
 set(AFF3CT_VERSION_FULL CACHE STRING "aaa" FORCE)
 mark_as_advanced(AFF3CT_VERSION_FULL)
-add_subdirectory(third-party/aff3ct)
+#add_subdirectory(third-party/aff3ct)
 
 # Link with the "Threads library (required to link with AFF3CT after)
 

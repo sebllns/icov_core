@@ -17,4 +17,3 @@ include_directories(.)
 
 
 target_link_libraries(${EXE_NAME}  s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib aff3ct::aff3ct-static-lib)
-

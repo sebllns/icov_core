@@ -3,12 +3,12 @@
 
 #include "interactive_coder/interface/IDecoder.h"
 
-#include <aff3ct.hpp>
+#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include "Decoder_LDPCA_BP_flooding_SPA.hpp"
 
 using namespace aff3ct;
 
-using AffMatrix = tools::Sparse_matrix;
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 using AffLDPCA = module::Decoder_LDPCA_BP_flooding_SPA<icov::CodedVal, icov::LLRVal>;
 
 namespace icov

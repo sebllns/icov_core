@@ -15,6 +15,14 @@ template <class Matrix>
 class InteractiveCoder
 {
 public:
+
+    struct encode_parameters
+    {
+        int start_code;
+        int stop_code;
+        int step;
+    };
+
     InteractiveCoder(IDecoder<Matrix>* dec, IMatrixProvider<Matrix> *mp, ISyndromeManager* syndromeMgr, LLRProvider* llrProvider):
        m_pdecoder(dec), m_psyndromeMgr(syndromeMgr), m_pllrProvider(llrProvider),
        m_matrix_provider(mp)
@@ -35,13 +43,15 @@ public:
 
     virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source, const std::vector<CodedVal> &mask);
 
-    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite);
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
 
-    int encode(uint32_t &o_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask);
+    int encodeLoop(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
 
     void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome);
 
     bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
+
+
 
 
 protected:

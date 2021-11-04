@@ -62,13 +62,6 @@ struct buffers
     std::vector<float> q_values;
 };
 
-struct encode_parameters
-{
-    int start_code;
-    int stop_code;
-    int step;
-};
-
 void init_params(params &p, int argc, char* argv[])
 {
     if(argc < 5) throw std::runtime_error("bad arguments");
@@ -206,7 +199,7 @@ int main(int argc,  char* argv[])
     // 2 - INIT ENCODER WITH PARAMS
     /****************************************************************************************/
 
-    std::vector<encode_parameters> encode_params;
+    std::vector<InteractiveCoder<AffMatrix>::encode_parameters> encode_params;
 
     std::cout<<"start interactive coder\n";
 
@@ -555,6 +548,10 @@ int main(int argc,  char* argv[])
 
                         //DebugTools::print_array<LLRVal>(b.llr.data(), b.llr.size(), "llr");
 
+
+                        //start encoding
+                        auto start = std::chrono::steady_clock::now();
+
                         //reset rate to 0
                         numcode = 0;
 
@@ -564,27 +561,7 @@ int main(int argc,  char* argv[])
                         //syndrome accumulation
                         syndromeMgr->init_accumulation(b.src_bits[i]);
 
-                        //start encoding
-                        auto start = std::chrono::steady_clock::now();
-
-                        for(auto &param: encode_params)
-                        {
-                            numcode = std::max(numcode, (uint32_t) param.start_code);
-                            end_code = param.stop_code;
-
-                            if(end_code <= numcode)
-                            {
-                                continue;
-                            }
-
-                            numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], end_code, param.step, p.n_ite, i == 0 ? b.sign_mask : std::vector<CodedVal>());
-
-                            //encoding done (no error)
-                            if(numerrors == 0) break;
-                        }
-
-
-
+                        interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
                         //get actual rate from numcode
                         rate_results[si][i][0] = estimated_rate;

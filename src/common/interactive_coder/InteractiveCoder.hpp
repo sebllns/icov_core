@@ -98,10 +98,32 @@ bool InteractiveCoder<Matrix>::checkDecodingSyndrome(const Syndrome &syndrome, c
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite)
+int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params, uint32_t n_ite, const std::vector<CodedVal> &mask)
 {
-    return this->encode(io_numcode,  o_stored_syndrome, source, numcodeMax, step, n_ite, std::vector<CodedVal>());
+    //syndrome accumulation
+    m_psyndromeMgr->init_accumulation(source);
+
+    int numerrors = -1;
+    numcode = 0;
+    for(auto &param: params)
+    {
+        numcode = std::max(numcode, (uint32_t) param.start_code);
+        int end_code = param.stop_code;
+
+        if(end_code <= numcode)
+        {
+            continue;
+        }
+
+        numerrors = this->encode(numcode, o_stored_syndrome, source, end_code, param.step, n_ite, mask);
+
+        //encoding done (no error)
+        if(numerrors == 0) break;
+    }
+
+    return numerrors;
 }
+
 
 template<class Matrix>
 int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask)
