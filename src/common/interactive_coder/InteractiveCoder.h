@@ -14,6 +14,11 @@ namespace icov {
 template <class Matrix>
 class InteractiveCoder
 {
+    using IMatrixProvider_sp = std::shared_ptr<IMatrixProvider<Matrix>>;
+    using IDecoder_sp = std::shared_ptr<IDecoder<Matrix>>;
+    using ISyndromeManager_sp = std::shared_ptr<ISyndromeManager>;
+    using LLRProvider_sp = std::shared_ptr<LLRProvider>;
+
 public:
 
     struct encode_parameters
@@ -23,7 +28,16 @@ public:
         int step;
     };
 
-    InteractiveCoder(IDecoder<Matrix>* dec, IMatrixProvider<Matrix> *mp, ISyndromeManager* syndromeMgr, LLRProvider* llrProvider):
+    InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp, ISyndromeManager *syndromeMgr, LLRProvider *llrProvider):
+       m_pdecoder(dec), m_psyndromeMgr(syndromeMgr), m_pllrProvider(llrProvider),
+       m_matrix_provider(mp)
+    {
+        //TODO INIT
+        m_decodage_syndrome = std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
+    };
+
+
+    InteractiveCoder(const IDecoder_sp &dec, const IMatrixProvider_sp &mp, const ISyndromeManager_sp &syndromeMgr, const LLRProvider_sp &llrProvider):
        m_pdecoder(dec), m_psyndromeMgr(syndromeMgr), m_pllrProvider(llrProvider),
        m_matrix_provider(mp)
     {
@@ -52,19 +66,21 @@ public:
     bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
 
 
+//    inline IMatrixProvider_sp matrixProvider() const {return  this->m_matrix_provider;}
+//    inline IDecoder_sp decoder() const {return  this->m_pdecoder;}
+//    inline ISyndromeManager_sp syndromeMgr() const {return  this->m_psyndromeMgr;}
+//    inline LLRProvider_sp llrProvider() const {return  this->m_pllrProvider;}
 
 
 protected:
 
-    inline IDecoder<Matrix>* decoder() const {return  this->m_pdecoder.get();}
-    inline ISyndromeManager* syndromeMgr() const {return  this->m_psyndromeMgr.get();}
-    inline LLRProvider* llrProvider() const {return  this->m_pllrProvider.get();}
 
-    std::shared_ptr<IMatrixProvider<Matrix>> m_matrix_provider;
+    IMatrixProvider_sp m_matrix_provider;
+    IDecoder_sp m_pdecoder;
+    ISyndromeManager_sp m_psyndromeMgr;
+    LLRProvider_sp m_pllrProvider;
+
     std::unique_ptr<Syndrome> m_decodage_syndrome;
-    std::unique_ptr<IDecoder<Matrix>> m_pdecoder;
-    std::unique_ptr<ISyndromeManager> m_psyndromeMgr;
-    std::unique_ptr<LLRProvider> m_pllrProvider;
 };
 
 

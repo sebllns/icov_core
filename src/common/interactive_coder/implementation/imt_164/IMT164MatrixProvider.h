@@ -27,7 +27,7 @@ protected:
     std::string root_dir;
     std::shared_ptr<IMT164SyndromeManager> m_tools;
 
-    const AffMatrix _buildMatrix(int numcode) override;
+    void _buildMatrix(int numcode, AffMatrix &H) override;
 
 };
 }

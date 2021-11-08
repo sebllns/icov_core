@@ -71,9 +71,8 @@
 #include <stdexcept>
 
 using namespace std;
-
-#include "common_types.h"
 #include "typedef.h"
+#include "common_types.h"
 #include "version.h"
 #include "helpers.h"
 

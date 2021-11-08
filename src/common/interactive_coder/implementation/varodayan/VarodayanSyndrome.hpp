@@ -2,26 +2,26 @@
 
 using namespace icov;
 
-inline VarodayanSyndromeManager::VarodayanSyndromeManager(int n):
+VarodayanSyndromeManager::VarodayanSyndromeManager(int n):
     ISyndromeManager(n)
 {
 
 }
 
-inline int VarodayanSyndromeManager::get_m(int numcode) const
+int VarodayanSyndromeManager::get_m(int numcode) const
 {
     int numInc = this->numIncVec[numcode];
     return (this->get_n() / totalNumInc) * numInc;
 }
 
 
-inline uint32_t VarodayanSyndromeManager::getIr(int code, int k) const
+uint32_t VarodayanSyndromeManager::getIr(int code, int k) const
 {
     return  ir[code * nzmax + k];
 }
 
 
-inline void VarodayanSyndromeManager::read_mat(std::ifstream &file)
+void VarodayanSyndromeManager::read_mat(std::ifstream &file)
 {
     //1- PARSE VARODAYAN FILE
     uint32_t k = 0;
@@ -63,7 +63,7 @@ inline void VarodayanSyndromeManager::read_mat(std::ifstream &file)
 }
 
 
-inline void VarodayanSyndromeManager::read_mat(const std::string &filename)
+void VarodayanSyndromeManager::read_mat(const std::string &filename)
 {
     std::ifstream file(filename);
     if (!file.is_open())

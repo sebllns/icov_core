@@ -3,12 +3,12 @@
 
 using namespace icov;
 
-const AffMatrix VarodayanMatrixProvider::_buildMatrix(int numcode)
+void VarodayanMatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
 
-    AffMatrix H (n, m);
+    H = AffMatrix(n, m);
 
     std::cout << m << ", " << n << std::endl;
 
@@ -19,6 +19,4 @@ const AffMatrix VarodayanMatrixProvider::_buildMatrix(int numcode)
             H.add_connection(k, m_tools->getIr(numcode, l));
         }
     }
-
-    return  H;
 }

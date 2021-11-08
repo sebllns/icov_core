@@ -64,4 +64,19 @@
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 #include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
+using AffMatrix = aff3ct::tools::Sparse_matrix;
+
 using namespace icov;
+
+namespace icov
+{
+struct CoderParameters
+{
+    std::string type;
+    std::string database;
+    int n;
+    int bp_ite;
+
+    virtual ~CoderParameters() = default;
+};
+}

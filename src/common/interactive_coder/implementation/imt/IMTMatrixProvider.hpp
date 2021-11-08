@@ -6,7 +6,7 @@
 
 using namespace icov;
 
-const AffMatrix IMTMatrixProvider::_buildMatrix(int numcode)
+void IMTMatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
@@ -21,7 +21,7 @@ const AffMatrix IMTMatrixProvider::_buildMatrix(int numcode)
         throw aff3ct::tools::invalid_argument(__FILE__, __LINE__, __func__, message.str());
     }
 
-    AffMatrix H(tools::AList
+    H = AffMatrix(tools::AList
     ::read(file));
 
 
@@ -44,7 +44,6 @@ const AffMatrix IMTMatrixProvider::_buildMatrix(int numcode)
 
     std::cout << "IMT " << numcode  << ", " << m << ", " << n << ", " << H.get_n_cols() << std::endl;
 
-    return  H;
 }
 
 

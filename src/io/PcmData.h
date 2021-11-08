@@ -51,8 +51,7 @@
 #include "common.h"
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 
-using namespace aff3ct;
-using AffMatrix = tools::Sparse_matrix;
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 class PcmData
 {

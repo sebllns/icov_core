@@ -561,7 +561,7 @@ int main(int argc,  char* argv[])
                         //syndrome accumulation
                         syndromeMgr->init_accumulation(b.src_bits[i]);
 
-                        interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
+                        numerrors = interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
                         //get actual rate from numcode
                         rate_results[si][i][0] = estimated_rate;

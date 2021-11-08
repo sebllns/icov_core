@@ -56,10 +56,22 @@ namespace icov {
 
 class Coder_IMT18
 {
-public:
-static const std::string id;
+    struct encode_parameters
+    {
+        icov::index_t start_code;
+        icov::index_t stop_code;
+        icov::index_t step;
+    };
 
-static void create(LLRProvider *llrProvider, IDecoder<AffMatrix> *ldpca_dec, ISyndromeManager *syndromeMgr, IMatrixProvider<AffMatrix> *mb);
+public:
+    struct parameters : CoderParameters
+    {
+        parameters(CoderParameters b): CoderParameters(b){};
+    };
+
+    static const std::string id;
+
+static void create(LLRProvider *llrProvider, IDecoder<AffMatrix> *ldpca_dec, ISyndromeManager *syndromeMgr, IMatrixProvider<AffMatrix> *mb, const parameters &p);
 };
 
 }

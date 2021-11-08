@@ -138,7 +138,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
     {
         //std::cout << io_numcode << std::endl;
 
-        m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *llrProvider());
+        m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *m_pllrProvider.get());
 
         if(io_numcode == next_test_code)
         {
@@ -160,6 +160,6 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 template<class Matrix>
 void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t numcode, uint32_t n_ite, const Syndrome &stored_syndrome)
 {
-    m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, numcode, *llrProvider());
-    decoder()->decode(o_decoded, m_psyndromeMgr->get_n(), numcode, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(numcode));
+    m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, numcode, *m_pllrProvider.get());
+    m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), numcode, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(numcode));
 }

@@ -32,7 +32,7 @@ protected:
     std::string root_dir;
     std::shared_ptr<IMTSyndromeManager> m_tools;
 
-    const AffMatrix _buildMatrix(int numcode) override;
+    void _buildMatrix(int numcode, AffMatrix &matrix) override;
 };
 }
 #endif // IMTMatrixProvider_H

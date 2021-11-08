@@ -312,6 +312,7 @@ typedef float LLRVal;
 typedef int CodedVal;
 typedef int SIVal;
 typedef bit SyndVal;
+typedef uint16_t index_t;
 
 //FastArray is faster
 using Syndrome = FastArray<bit>;

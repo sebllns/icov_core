@@ -8,12 +8,12 @@
 
 using namespace icov;
 
-const AffMatrix IMT164MatrixProvider::_buildMatrix(int numcode)
+void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
 {
     int m = m_tools->get_m(numcode);
     int n = m_tools->get_n();
 
-    AffMatrix H(n, m);
+    H = AffMatrix(n, m);
 
     std::cout << "IMT164 " << numcode  << ", " << m << ", " << n << ", " << H.get_n_cols() << std::endl;
 
@@ -37,7 +37,7 @@ const AffMatrix IMT164MatrixProvider::_buildMatrix(int numcode)
         m_tools->h_indexes = std::vector<int>(H.get_n_cols());
         std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
 
-        return  H;
+        return;
     }
 
     int row_count = m_tools->get_m_level(m_tools->get_level(m_tools->current_level)) - m_tools->get_m(numcode);
@@ -246,7 +246,7 @@ const AffMatrix IMT164MatrixProvider::_buildMatrix(int numcode)
 //    }
 
 
-    return  H;
+    return;
 }
 
 

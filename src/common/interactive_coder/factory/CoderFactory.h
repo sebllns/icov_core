@@ -48,15 +48,20 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "IcovCoder.h"
 
 namespace icov {
 
 class CoderFactory
 {
 public:
-
+    template<typename M>
+    static std::shared_ptr<InteractiveCoder<M>> create_coder(int argc, char* argv[]);
 
 };
+
+
+//template<>
+//std::shared_ptr<InteractiveCoder<AffMatrix>> CoderFactory::create_coder(int argc, char* argv[]);
 
 }
