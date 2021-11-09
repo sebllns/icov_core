@@ -8,12 +8,12 @@
 //#include <boost/filesystem.hpp>
 
 #include "tools/DebugTools.h"
-#include "interactive_coder/InteractiveCoder.hpp"
-#include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
+#include "interactive_coder/InteractiveCoder.h"
+#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
-#include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixProvider.hpp"
+#include "interactive_coder/implementation/imt/IMTSyndrome.h"
+#include "interactive_coder/implementation/imt/IMTMatrixProvider.h"
 
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 #include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"

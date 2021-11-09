@@ -35,4 +35,5 @@ protected:
     void _buildMatrix(int numcode, AffMatrix &matrix) override;
 };
 }
+
 #endif // IMTMatrixProvider_H

@@ -3,10 +3,11 @@
 
 #include <fstream>
 #include <iostream>
-
+#include <sstream>
 #include <vector>
 #include <string>
 
+#pragma once
 
 namespace icov {
 
@@ -14,7 +15,13 @@ class DebugTools
 {
 public:
 
-
+    static std::ofstream logFile;
+    static const bool debug_trace_enabled =
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+            true;
+#else
+            false;
+#endif
 
     DebugTools()
     {
@@ -79,17 +86,27 @@ public:
 
     template<typename T> static void print_array(const T *arr, int n, const std::string& name)
     {
-        std::cout << "\n\n********************************************************************************************\n" << name << "[";
-        for (int i = 0; i < n - 1; i++)
-        {
-            std::cout << arr[i] << ", ";
-        }
 
-        std::cout << arr[n-1] << "]\n" << std::endl;
+        std::cout << "\n\n********************************************************************************************\n" << array_tostring(arr, n, name);
 
         //getchar();
     }
 
+
+    template<typename T> static std::string array_tostring(const T *arr, int n, const std::string& name)
+    {
+        std::stringstream sstr;
+
+        sstr << name << "[";
+        for (int i = 0; i < n - 1; i++)
+        {
+            sstr << arr[i] << ", ";
+        }
+
+        sstr << arr[n-1] << "]\n";
+
+        return sstr.str();
+    }
 };
 
 }

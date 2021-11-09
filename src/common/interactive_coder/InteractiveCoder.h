@@ -57,6 +57,8 @@ public:
 
     virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source, const std::vector<CodedVal> &mask);
 
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
+
     int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
 
     int encodeLoop(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
@@ -66,10 +68,10 @@ public:
     bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
 
 
-//    inline IMatrixProvider_sp matrixProvider() const {return  this->m_matrix_provider;}
-//    inline IDecoder_sp decoder() const {return  this->m_pdecoder;}
-//    inline ISyndromeManager_sp syndromeMgr() const {return  this->m_psyndromeMgr;}
-//    inline LLRProvider_sp llrProvider() const {return  this->m_pllrProvider;}
+    IMatrixProvider_sp matrixProvider() const {return  this->m_matrix_provider;}
+    IDecoder_sp decoder() const {return  this->m_pdecoder;}
+    ISyndromeManager_sp syndromeMgr() const {return  this->m_psyndromeMgr;}
+    LLRProvider_sp llrProvider() const {return  this->m_pllrProvider;}
 
 
 protected:
@@ -82,8 +84,8 @@ protected:
 
     std::unique_ptr<Syndrome> m_decodage_syndrome;
 };
-
-
 }
+
+#include "InteractiveCoder.hpp"
 
 #endif // INTERACTIVECODER_H

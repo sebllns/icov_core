@@ -151,29 +151,39 @@ void IMTSyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& acc
 
 void IMTSyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider)
 {
-    int m = this->get_m(numcode);
-    o_stored_syndrome.resize(m);
+    int m = o_stored_syndrome.size();
+    int m_target = this->get_m(numcode);
 
     int m_12 = get_n()/2;
     int m_18 = get_n()/8;
 
     //intial syndrome is syndrome18
-    if(m == m_18)
+    if(m_target == m_18)
     {
+        o_stored_syndrome.resize(m_18);
         for(int i = 0; i < m_18 ; i++)
         {
             o_stored_syndrome[i] = syndrome18[i];
         }
     }
-    else if(m <= m_12)
-    {
-        //incremental syndrome
-        o_stored_syndrome[m-1] = m > get_n()/4 ? syndrome12[m-1] : syndrome14[m-1];
-    }
     else
     {
-        //doping when rate > 0.5
-        compute_doping_order(llr_provider);
-        o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-m_12-1]);
+        while(++m <= m_target)
+        {
+            o_stored_syndrome.resize(m);
+
+            if(m <= m_12)
+            {
+                //incremental syndrome
+                o_stored_syndrome[m-1] = m > get_n()/4 ? syndrome12[m-1] : syndrome14[m-1];
+            }
+            else
+            {
+                //doping when rate > 0.5
+                compute_doping_order(llr_provider);
+                o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-m_12-1]);
+            }
+        }
     }
+
 }

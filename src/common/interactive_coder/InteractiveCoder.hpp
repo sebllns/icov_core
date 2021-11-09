@@ -124,6 +124,32 @@ int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_s
     return numerrors;
 }
 
+template<class Matrix>
+int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t n_ite, const std::vector<CodedVal> &mask)
+{
+    std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());
+
+
+
+    bool convergence = false;
+    while(i < m_matrix_provider->getNumCodesCount() && !convergence)
+    {
+        uint32_t io_numcode = m_matrix_provider->getNumcode(i);
+
+        //std::cout << i << "->" << io_numcode << std::endl;
+
+        m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *m_pllrProvider.get());
+
+        this->decode(decoded, i, n_ite, o_stored_syndrome);
+
+        ++i;
+        convergence = testConvergence(decoded, source, mask);
+    }
+
+    --i;
+    if(convergence) return 0;
+    return errorCount(decoded, source, mask);
+}
 
 template<class Matrix>
 int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask)
@@ -158,8 +184,8 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 }
 
 template<class Matrix>
-void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t numcode, uint32_t n_ite, const Syndrome &stored_syndrome)
+void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t i, uint32_t n_ite, const Syndrome &stored_syndrome)
 {
-    m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, numcode, *m_pllrProvider.get());
-    m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), numcode, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(numcode));
+    m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, m_matrix_provider->getNumcode(i), *m_pllrProvider.get());
+    m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), i, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(i));
 }

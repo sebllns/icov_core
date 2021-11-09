@@ -50,6 +50,8 @@
 
 #include "IcovCoder.h"
 
+#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
+
 using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov {
@@ -71,7 +73,7 @@ public:
 
     static const std::string id;
 
-static void create(LLRProvider *llrProvider, IDecoder<AffMatrix> *ldpca_dec, ISyndromeManager *syndromeMgr, IMatrixProvider<AffMatrix> *mb, const parameters &p);
+static void create(LLRProvider *&llrProvider, IDecoder<AffMatrix> *&ldpca_dec, ISyndromeManager *&syndromeMgr, IMatrixProvider<AffMatrix> *&mb, const parameters &p);
 };
 
 }

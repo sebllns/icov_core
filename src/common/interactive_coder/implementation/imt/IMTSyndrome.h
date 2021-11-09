@@ -5,7 +5,7 @@
 
 
 #include <aff3ct.hpp>
-#include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
+#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 
 using namespace aff3ct;
 
@@ -52,6 +52,6 @@ public:
     void compute_doping_order(const LLRProvider& llr_provider);
 
 };
-
 }
+
 #endif // IMTSYNDROME_H

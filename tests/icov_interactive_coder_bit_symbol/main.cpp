@@ -9,21 +9,23 @@
 //#include <boost/filesystem.hpp>
 
 #include "tools/DebugTools.h"
-#include "interactive_coder/InteractiveCoder.hpp"
-#include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
+#include "interactive_coder/InteractiveCoder.h"
+#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
-#include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixProvider.hpp"
+#include "interactive_coder/implementation/imt/IMTSyndrome.h"
+#include "interactive_coder/implementation/imt/IMTMatrixProvider.h"
 
-#include "interactive_coder/implementation/imt_164/IMT164Syndrome.hpp"
-#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.hpp"
+#include "interactive_coder/implementation/imt_164/IMT164Syndrome.h"
+#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.h"
 
 #include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 #include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
 #include "TestSequenceInput.h"
 #include "TestSequenceResult.h"
+
+#include "interactive_coder/factory/CoderFactory.h"
 
 //#include <boost/filesystem.hpp>
 
@@ -44,7 +46,7 @@ struct params
     int  n_ite     =   100;
     int si_count = 8;
     std::string coder_type = "null";
-    std::string output_dir = "./results_bit_symbol/";
+    std::string output_dir = "/home/sbelleno/results/imt64/fangping/";
 };
 
 struct buffers
@@ -70,7 +72,7 @@ void init_params(params &p, int argc, char* argv[])
     p.N = atoi(argv[3]);
     p.n_ite = atoi(argv[4]);
 
-//    boost::filesystem::create_directories(p.output_dir);
+    //    boost::filesystem::create_directories(p.output_dir);
 }
 
 void init_buffers(const params &p, buffers &b);
@@ -112,17 +114,17 @@ void init_buffers(const params &p, buffers &b)
 
 float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
 {
-//    for(int i = 0 ; i < src.size() ; i++)
-//    {
-//        std::cout << src[i] << ", ";
-//    }
+    //    for(int i = 0 ; i < src.size() ; i++)
+    //    {
+    //        std::cout << src[i] << ", ";
+    //    }
 
-//    std::cout << std::endl;
+    //    std::cout << std::endl;
 
-//    for(int i = 0 ; i < si.size() ; i++)
-//    {
-//        std::cout << si[i] << ", ";
-//    }
+    //    for(int i = 0 ; i < si.size() ; i++)
+    //    {
+    //        std::cout << si[i] << ", ";
+    //    }
 
     std::cout << std::endl;
 
@@ -204,113 +206,112 @@ int main(int argc,  char* argv[])
     std::cout<<"start interactive coder\n";
 
     //common part
-    LLRProvider llrProvider(p.N);
-    Aff3ctDecoder ldpca_dec(p.N);
-    ISyndromeManager* syndromeMgr = nullptr;
-    IMatrixProvider<AffMatrix>* mb = nullptr;
+    std::shared_ptr<LLRProvider> llrProvider = nullptr;
+    //std::shared_ptr<Aff3ctDecoder> ldpca_dec = nullptr;
+    std::shared_ptr<ISyndromeManager> syndromeMgr = nullptr;
+    //std::shared_ptr<IMatrixProvider<AffMatrix>> mb = nullptr;
 
-
-    std::cout<<"type of coder = "<<p.coder_type<<std::endl;
 
     int start_matrix, end_matrix;
     int n = 0;
 
     int inverse_matrix_build = false;
 
-    float min_rate = 0.0f;
+    //    if(p.coder_type == "imt")
+    //    {
+    //        IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
+    //        syndromeMgr = imt_synd;
+    //        mb = new IMTMatrixProvider(imt_synd, p.database);
 
-    if(p.coder_type == "imt")
-    {
-        IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
-        syndromeMgr = imt_synd;
-        mb = new IMTMatrixProvider(imt_synd, p.database);
+    //        min_rate = 1.0 / 8;
 
-        min_rate = 1.0 / 8;
+    //        int n_8 = imt_synd->get_n()/8;
+    //        int n_2 = imt_synd->get_n()/2;
+    //        n = imt_synd->get_n();
 
-        int n_8 = imt_synd->get_n()/8;
-        int n_2 = imt_synd->get_n()/2;
-        n = imt_synd->get_n();
+    //        start_matrix = 0;
+    //        end_matrix = n_2 - n_8;
 
-        start_matrix = 0;
-        end_matrix = n_2 - n_8;
+    //        int pow = std::log2f(p.N);
 
-        int pow = std::log2f(p.N);
+    //        encode_params.resize(3);
+    //        encode_params[0].start_code = 0;
+    //        encode_params[0].stop_code = n_2 - n_8;
+    //        // encode_params[0].step = std::floor(4*pow/8);
+    //        encode_params[0].step = std::ceil(pow/8) * 4;
 
-        encode_params.resize(3);
-        encode_params[0].start_code = 0;
-        encode_params[0].stop_code = n_2 - n_8;
-        // encode_params[0].step = std::floor(4*pow/8);
-        encode_params[0].step = std::ceil(pow/8) * 4;
+    //        encode_params[1].start_code = encode_params[0].stop_code;
+    //        encode_params[1].stop_code = n - n_8;
+    //        // encode_params[1].step =  std::floor(5*pow/8);
+    //        encode_params[1].step = encode_params[0].step;
 
-        encode_params[1].start_code = encode_params[0].stop_code;
-        encode_params[1].stop_code = n - n_8;
-        // encode_params[1].step =  std::floor(5*pow/8);
-        encode_params[1].step = encode_params[0].step;
+    //        encode_params[2].start_code = encode_params[1].stop_code;
+    //        encode_params[2].stop_code = 3*n_2 - n_8 + 1;
+    //        // encode_params[2].step =  std::floor(9*pow/8);
+    //        encode_params[2].step = 2 * encode_params[1].step;
+    //    }
+    //    else if(p.coder_type == "imt164")
+    //    {
 
-        encode_params[2].start_code = encode_params[1].stop_code;
-        encode_params[2].stop_code = 3*n_2 - n_8 + 1;
-        // encode_params[2].step =  std::floor(9*pow/8);
-        encode_params[2].step = 2 * encode_params[1].step;
-    }
-    else if(p.coder_type == "imt164")
-    {
+    //        IMT164SyndromeManager* imt_synd = new IMT164SyndromeManager(p.N, 2, 64);
+    //        syndromeMgr = imt_synd;
+    //        mb = new IMT164MatrixProvider(imt_synd, p.database);
 
-        IMT164SyndromeManager* imt_synd = new IMT164SyndromeManager(p.N, 2, 64);
-        syndromeMgr = imt_synd;
-        mb = new IMT164MatrixProvider(imt_synd, p.database);
+    //        int n_64 = imt_synd->get_n()/64;
+    //        int n_2 = imt_synd->get_n()/2;
+    //        n = imt_synd->get_n();
 
-        int n_64 = imt_synd->get_n()/64;
-        int n_2 = imt_synd->get_n()/2;
-        n = imt_synd->get_n();
+    //        start_matrix = 0;
+    //        end_matrix = n_2 - n_64;
 
-        start_matrix = 0;
-        end_matrix = n_2 - n_64;
+    //        int pow = std::log2f(p.N);
 
-        int pow = std::log2f(p.N);
+    //        min_rate = 1.0 / 64;
 
-        min_rate = 1.0 / 64;
+    //        encode_params.resize(3);
+    //        encode_params[0].start_code = 0;
+    //        encode_params[0].stop_code = n_2 - n_64;
+    //        // encode_params[0].step = std::floor(4*pow/8);
+    //        encode_params[0].step = std::ceil(pow/8) * 4;
 
-        encode_params.resize(3);
-        encode_params[0].start_code = 0;
-        encode_params[0].stop_code = n_2 - n_64;
-        // encode_params[0].step = std::floor(4*pow/8);
-        encode_params[0].step = std::ceil(pow/8) * 4;
+    //        encode_params[1].start_code = encode_params[0].stop_code;
+    //        encode_params[1].stop_code = n - n_64;
+    //        // encode_params[1].step =  std::floor(5*pow/8);
+    //        encode_params[1].step = encode_params[0].step;
 
-        encode_params[1].start_code = encode_params[0].stop_code;
-        encode_params[1].stop_code = n - n_64;
-        // encode_params[1].step =  std::floor(5*pow/8);
-        encode_params[1].step = encode_params[0].step;
+    //        encode_params[2].start_code = encode_params[1].stop_code;
+    //        encode_params[2].stop_code = 3*n_2 - n_64 + 1;
+    //        // encode_params[2].step =  std::floor(9*pow/8);
+    //        encode_params[2].step = 2 * encode_params[1].step;
 
-        encode_params[2].start_code = encode_params[1].stop_code;
-        encode_params[2].stop_code = 3*n_2 - n_64 + 1;
-        // encode_params[2].step =  std::floor(9*pow/8);
-        encode_params[2].step = 2 * encode_params[1].step;
+    //        inverse_matrix_build = true;
+    //    }
+    //    else if(p.coder_type == "varodayan")
+    //    {
+    //        VarodayanSyndromeManager* varo_synd = new VarodayanSyndromeManager(p.N);
+    //        varo_synd->read_mat(p.database);
+    //        syndromeMgr = varo_synd;
+    //        mb = new VarodayanMatrixProvider(varo_synd);
 
-        inverse_matrix_build = true;
-    }
-    else if(p.coder_type == "varodayan")
-    {
-        VarodayanSyndromeManager* varo_synd = new VarodayanSyndromeManager(p.N);
-        varo_synd->read_mat(p.database);
-        syndromeMgr = varo_synd;
-        mb = new VarodayanMatrixProvider(varo_synd);
+    //        start_matrix = 0;
+    //        end_matrix = varo_synd->numCodes - 1;
 
-        start_matrix = 0;
-        end_matrix = varo_synd->numCodes - 1;
+    //        encode_params.resize(1);
+    //        encode_params[0].start_code = 0;
+    //        encode_params[0].stop_code = varo_synd->numCodes;
+    //        encode_params[0].step = 1;
+    //    }
+    //    else
+    //    {
+    //        //error
+    //        throw std::runtime_error("ERROR: Coder type could not be recognized: " + p.coder_type);
+    //        return 1;
+    //    }
 
-        encode_params.resize(1);
-        encode_params[0].start_code = 0;
-        encode_params[0].stop_code = varo_synd->numCodes;
-        encode_params[0].step = 1;
-    }
-    else
-    {
-        //error
-        throw std::runtime_error("ERROR: Coder type could not be recognized: " + p.coder_type);
-        return 1;
-    }
+    auto interactive_coder = CoderFactory::create_coder<AffMatrix>(argc, argv);
 
-    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, mb, syndromeMgr, &llrProvider);
+    llrProvider = interactive_coder->llrProvider();
+    syndromeMgr = interactive_coder->syndromeMgr();
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -323,17 +324,17 @@ int main(int argc,  char* argv[])
     uint32_t numcode = start_matrix;
     uint32_t end_code = end_matrix + 1;
 
-    interactive_coder->buildMatrices(numcode, end_code, inverse_matrix_build);
+    // interactive_coder->buildMatrices(numcode, end_code, inverse_matrix_build);
 
-    std::cout<<"init coder\n";
-    for(int c = start_matrix; c < end_code; c++)
-    {
-        //std::cout << c <<std::endl;
+    //    std::cout<<"init coder\n";
+    //    for(int c = start_matrix; c < end_code; c++)
+    //    {
+    //        //std::cout << c <<std::endl;
 
-        //std::cout << interactive_coder->getMatrix(c).get_n_rows() << "x" << interactive_coder->getMatrix(c).get_n_cols() << ": " << interactive_coder->getMatrix(c).get_cols_max_degree() << ", " << interactive_coder->getMatrix(c).get_rows_max_degree()<<std::endl;
+    //        //std::cout << interactive_coder->getMatrix(c).get_n_rows() << "x" << interactive_coder->getMatrix(c).get_n_cols() << ": " << interactive_coder->getMatrix(c).get_cols_max_degree() << ", " << interactive_coder->getMatrix(c).get_rows_max_degree()<<std::endl;
 
-        ldpca_dec.init_decoder(c, p.N, p.n_ite, interactive_coder->getMatrix(c));
-    }
+    //        ldpca_dec->init_decoder(c, p.N, p.n_ite, interactive_coder->getMatrix(c));
+    //    }
 
 
 
@@ -361,6 +362,8 @@ int main(int argc,  char* argv[])
 
     while (std::getline(seq_list, sequence_file))
     {
+        DebugTools::logFile << "=========================================================================" << std::endl;
+        DebugTools::logFile << sequence_file << std::endl;
 
         TestSequenceInput tsi(1024);
         tsi.read_from_file(input_dir + sequence_file + ".txt");
@@ -437,6 +440,9 @@ int main(int argc,  char* argv[])
         //encode for each SI
         for(int si = 0 ; si < si_count ; si++)
         {
+            DebugTools::logFile << "----------------------------------------------------------------------" << std::endl;
+            DebugTools::logFile << "\t > side info " << si+1 << std::endl;
+
             rate_results.push_back(std::vector<std::vector<float>>(lx, std::vector<float>(2, 0.0)));
             std::cout << "*************************************************************************" << std::endl;
 
@@ -467,15 +473,23 @@ int main(int argc,  char* argv[])
                 if(z > z_max) z_max = z;
             }
 
+            //check zmax = xmax - ymin
+            //check zmin = xmin - ymax
+
+            if(DebugTools::debug_trace_enabled) DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max << std::endl;
+
             if(p.enable_z_quantization)
             {
-                z_min = quantize(z_min, 16, -256, 256);
-                z_max = quantize(z_max, 16, -256, 256);
+                z_min = quantize(z_min, 16, -1024, 1024);
+                z_max = quantize(z_max, 16, -1024, 1024);
+                if(DebugTools::debug_trace_enabled) DebugTools::logFile << "\t After quantization zmin=" << z_min << " zmax=" << z_max << std::endl;
             }
 
+            if(DebugTools::debug_trace_enabled) DebugTools::logFile << "\t q=" << q << std::endl;
             if(p.enable_q_quantization)
             {
                 q = b.q_values[quantize(q, b.q_values)];
+                if(DebugTools::debug_trace_enabled) DebugTools::logFile << "\t After quantization q=" << q << std::endl;
             }
 
             //y_min = min(Y[k], 0<=k<N)
@@ -508,6 +522,14 @@ int main(int argc,  char* argv[])
             for(int i = 0; i < lx; i++)
             {
 
+                if(DebugTools::debug_trace_enabled)
+                {
+                    DebugTools::logFile << "\t\t >> bit plane " << i << std::endl;
+                    DebugTools::logFile << DebugTools::array_tostring(b.src_bits[i].data(), b.src_bits[i].size(), "src_bits");
+                    DebugTools::logFile << DebugTools::array_tostring(b.si_bits[i].data(), b.si_bits[i].size(), " si_bits");
+                }
+
+
                 int bitplane = (lx - i - 1);
 
                 //check coding/no-coding when option is enabled
@@ -528,12 +550,12 @@ int main(int argc,  char* argv[])
                     if(i == 0)
                     {
                         //get LLR for first bitplane level i.e. sign
-                        llrProvider.initLLR_s(bsp, b.side_info, b.src_bits[i]);
+                        llrProvider->initLLR_s(bsp, b.side_info, b.src_bits[i]);
                     }
                     else
                     {
                         //get LLR for bitplane
-                        llrProvider.initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
+                        llrProvider->initLLR_b(i-1, bsp, b.side_info,  b.src_bits[0], predec, b.src_bits[i]);
                     }
 
                     //                if(p.enable_nocoding && llrProvider.no_coding())
@@ -544,7 +566,7 @@ int main(int argc,  char* argv[])
                     //                else
                     {
                         //save LLR (in case of doping)
-                        b.llr = llrProvider.llr();
+                        b.llr = llrProvider->llr();
 
                         //DebugTools::print_array<LLRVal>(b.llr.data(), b.llr.size(), "llr");
 
@@ -561,11 +583,13 @@ int main(int argc,  char* argv[])
                         //syndrome accumulation
                         syndromeMgr->init_accumulation(b.src_bits[i]);
 
-                        numerrors = interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
+                        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
+
+                        //numerrors = interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
                         //get actual rate from numcode
                         rate_results[si][i][0] = estimated_rate;
-                        double rate = ( ((double)syndromeMgr->get_m(numcode)) / ((double)n));
+                        double rate = ( ((double)syndromeMgr->get_m(interactive_coder->matrixProvider()->getNumcode(numcode))) / ((double)n));
                         rate_results[si][i][1] = rate;
 
                         //double vtruth = tsr["R"].get_data(si, i);
@@ -599,7 +623,7 @@ int main(int argc,  char* argv[])
                             syndromeMgr->reset_doping();
                             for(int l = 0; l < n ; l++)
                             {
-                                llrProvider[l] = b.llr[l];
+                                llrProvider->operator[](l) = b.llr[l];
                             }
 
                             start = std::chrono::steady_clock::now();
@@ -649,6 +673,7 @@ int main(int argc,  char* argv[])
             std::cout << "z_max:\t" << bsp.z_max()<<  std::endl;
             std::cout << "n_bitplane:\t" << lx<<  std::endl;
 
+            DebugTools::logFile.flush();
         }
 
         std::ofstream result_file(p.output_dir + "./" + sequence_file + ".txt");
@@ -698,7 +723,7 @@ int main(int argc,  char* argv[])
         }
         result_file.close();
 
-
+        float min_rate = (1.0 * syndromeMgr->get_m(0))/syndromeMgr->get_n();
         for(int si = 0; si < rate_results.size() ; si++)
         {
             float icov_rate = 0.0, estim_rate = 0.0, fp_rate = 0.0;
@@ -720,9 +745,12 @@ int main(int argc,  char* argv[])
         std::cout << "Code size:\t" << p.N<<  std::endl;
         std::cout << "BP iterations:\t" << p.n_ite<<  std::endl;
         std::cout << "*************************************************************************" << std::endl;
+
+        DebugTools::logFile.flush();
     }
 
     measure_file.close();
 
+    DebugTools::logFile.close();
     return 0;
 }

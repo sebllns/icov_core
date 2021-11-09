@@ -1,15 +1,15 @@
 #ifndef AFF3CTDECODER_H
 #define AFF3CTDECODER_H
 
+#pragma once
+
 #include "interactive_coder/interface/IDecoder.h"
 
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include "Decoder_LDPCA_BP_flooding_SPA.hpp"
 
-using namespace aff3ct;
-
 using AffMatrix = aff3ct::tools::Sparse_matrix;
-using AffLDPCA = module::Decoder_LDPCA_BP_flooding_SPA<icov::CodedVal, icov::LLRVal>;
+using AffLDPCA = aff3ct::module::Decoder_LDPCA_BP_flooding_SPA<icov::CodedVal, icov::LLRVal>;
 
 namespace icov
 {
@@ -28,6 +28,6 @@ public:
 protected:
     std::vector<std::unique_ptr<AffLDPCA>> m_decvector;
 };
-
 }
+
 #endif // AFF3CTDECODER_H

@@ -16,29 +16,40 @@ public:
 
     M& buildMatrix(int index)
     {
+        std::cout << index << "->"  << getNumcode(index) << std::endl;
+        index = std::min(index, (int)m_matrices.size()-1);
         _buildMatrix(getNumcode(index), getMatrix(index));
         return getMatrix(index);
     }
 
     const M& getMatrix(int index) const
     {
-        return m_matrices[index];
+        return m_matrices[std::min(index, (int)m_matrices.size()-1)];
     }
 
     M& getMatrix(int index)
     {
-        return m_matrices[index];
+        return m_matrices[std::min(index, (int)m_matrices.size()-1)];
     }
 
-    void addNumcode(icov::index_t numcode)
+    void addNumcode(icov::index_t numcode, bool doping)
     {
         m_numcodes.push_back(numcode);
-        m_matrices.resize(m_numcodes.size());
+        if(!doping)
+        {
+            m_matrices.resize(m_numcodes.size());
+            std::cout << numcode << "->"  << m_matrices.size() << std::endl;
+        }
     }
 
     int getMatrixCount() const
     {
         return (int)m_matrices.size();
+    }
+
+    int getNumCodesCount() const
+    {
+        return (int)m_numcodes.size();
     }
 
     icov::index_t getNumcode(int index) const

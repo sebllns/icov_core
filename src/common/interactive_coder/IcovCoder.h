@@ -51,20 +51,20 @@
 
 #include "common.h"
 
-#include "interactive_coder/InteractiveCoder.hpp"
-#include "interactive_coder/aff3ct/Aff3ctDecoder.hpp"
+#include "interactive_coder/InteractiveCoder.h"
+//#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
-#include "interactive_coder/implementation/imt/IMTSyndrome.hpp"
-#include "interactive_coder/implementation/imt/IMTMatrixProvider.hpp"
+//#include "interactive_coder/implementation/imt/IMTSyndrome.h"
+//#include "interactive_coder/implementation/imt/IMTMatrixProvider.h"
 
-#include "interactive_coder/implementation/imt_164/IMT164Syndrome.hpp"
-#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.hpp"
+//#include "interactive_coder/implementation/imt_164/IMT164Syndrome.h"
+//#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.h"
 
-#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
-#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
+//#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
+//#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
-using AffMatrix = aff3ct::tools::Sparse_matrix;
+//using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 using namespace icov;
 

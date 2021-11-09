@@ -1,5 +1,3 @@
-#ifndef AFF3CTDECODER_HPP
-#define AFF3CTDECODER_HPP
 
 #include "Aff3ctDecoder.h"
 
@@ -37,5 +35,3 @@ void icov::Aff3ctDecoder::init_decoder(int numcode, int n, int n_ite, const AffM
 {
     m_decvector.push_back(std::unique_ptr<AffLDPCA>(new AffLDPCA(n, n_ite, matrix)));
 }
-
-#endif // AFF3CTDECODER_HPP

@@ -21,9 +21,7 @@ void IMTMatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
         throw aff3ct::tools::invalid_argument(__FILE__, __LINE__, __func__, message.str());
     }
 
-    H = AffMatrix(tools::AList
-    ::read(file));
-
+    H = AffMatrix(tools::AList::read(file));
 
     if(m == n/8)
     {

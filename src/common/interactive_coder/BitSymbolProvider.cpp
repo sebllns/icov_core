@@ -1,5 +1,7 @@
 #include "BitSymbolProvider.h"
 
+#include "tools/DebugTools.h"
+
 namespace icov
 {
 BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l):
@@ -85,28 +87,74 @@ int BitSymbolProvider::x_binary_length()
 
 bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0, float &p1, float &p)
 {
+    abs_predec = abs_predec << (l-b);
 
     p0 = 0.0;
     p1 = 0.0;
     p = 0.0f;
 
-    for(int i = 0 ; i < (1<<(l-b)) ; i++)
+    //IMPLEMENTATION FANGPING
+    int imax = (1<<(l-b));
+    for(int i = 0 ; i < imax ; i++)
     {
         int z = (abs_predec + i ) * (1 - 2 * negative) - yk;
 
         p0 += this->pz(z);
-        p1 += this->pz(z + (1<<(l-b)) * (1 - 2 * negative));
+        p1 += this->pz(z + imax * (1 - 2 * negative));
     }
 
-    p1+= p0;
+   // DebugTools::logFile <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1 << std::endl;
 
-    if(p1 == 0) std::cerr << "WARNING: p1 = 0" << std::endl;
+    //attention b = a+b
+    float pb = p1+p0;
 
-    p = p1 == 0 ? 0.5 : p0/p1;
+    //DebugTools::logFile <<  "\t\t\t yk=" << yk << std::endl;
 
-    return p1 != 0;
+    if(DebugTools::debug_trace_enabled)
+    {
+        if(pb == 0)
+        {
+            std::cerr << "WARNING: pb = 0" << std::endl;
+
+            DebugTools::logFile <<  "\t\t\t WARNING: (a + b) = 0" << std::endl;
+            DebugTools::logFile <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1 << " imax=" << ((1<<(l-b))) << std::endl;
 
 
+
+            DebugTools::logFile <<  "\t\t\t a = ";
+            int imax = (1<<(l-b));
+            for(int i = 0 ; i < imax ; i++)
+            {
+                int z = (abs_predec + i ) * (1 - 2 * negative) - yk;
+                DebugTools::logFile <<  "pz(" << z << ") + ";
+            }
+
+            DebugTools::logFile << std::endl <<  "\t\t\t b = ";
+
+            for(int i = 0 ; i < imax ; i++)
+            {
+                int z = (abs_predec + i ) * (1 - 2 * negative) - yk + imax * (1 - 2 * negative);
+                DebugTools::logFile <<  "pz(" << z << ") + ";
+
+
+            }
+
+            DebugTools::logFile << std::endl;
+        }
+
+
+        if(std::abs(p0/pb + p1/pb - 1) > 0.00001)
+        {
+            DebugTools::logFile <<  "\t\t\t WARNING: sum = " << (p0/pb + p1/pb) << " != 1" << std::endl;
+        }
+    }
+
+
+    p = pb == 0 ? 0.5 : p0/pb;
+
+    return pb != 0;
+
+    //IMPLEMENTATION SEBASTIEN
     int zk0 = (1-2*negative) * (abs_predec << (l-b))  - yk;
     int zk1 =  (1<<(l-b-1));
     int zk2 =  (1<<(l-b));
@@ -123,7 +171,7 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
 
     //    p1 = std::max(p1, (float)0.000001);
 
-    if(p1 == 0) std::cerr << "ERROR: p1 = 0" << std::endl;
+    if(p1 == 0) std::cerr << "WARNING: p1 = 0" << std::endl;
 
     p = p1 == 0 ? 0.5 : p0/p1;
 

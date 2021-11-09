@@ -9,6 +9,12 @@ namespace icov
 template<typename M>
 std::shared_ptr<InteractiveCoder<M> > CoderFactory::create_coder(int argc, char *argv[])
 {
+    throw std::runtime_error("CoderFactory does not implement the coder instanciation for matrix of type " + std::string(typeid (M).name()));
+}
+
+template<>
+std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder<>(int argc, char *argv[])
+{
     if(argc < 5) throw std::invalid_argument("no coder type was given");
 
 
@@ -19,18 +25,19 @@ std::shared_ptr<InteractiveCoder<M> > CoderFactory::create_coder(int argc, char 
     cp.n = atoi(argv[3]);
     cp.bp_ite = atoi(argv[4]);
 
-    LLRProvider *llrProvider;
-    IDecoder<M> *ldpca_dec;
-    ISyndromeManager *syndromeMgr;
-    IMatrixProvider<M> *mp;
+    LLRProvider *llrProvider = nullptr;
+    IDecoder<AffMatrix> *ldpca_dec = nullptr;
+    ISyndromeManager *syndromeMgr = nullptr;
+    IMatrixProvider<AffMatrix> *mp = nullptr;
 
     if(cp.type == "imt18")
     {
+
         //FILL CP18 HERE
         Coder_IMT18::parameters cp18(cp);
 
         //INSTANTIATE
-        //Coder_IMT18::create()
+        Coder_IMT18::create(llrProvider, ldpca_dec, syndromeMgr, mp, cp18);
     }
     else if(cp.type == "imt64")
     {
@@ -44,13 +51,10 @@ std::shared_ptr<InteractiveCoder<M> > CoderFactory::create_coder(int argc, char 
     {
         throw std::invalid_argument("Unknown coder type: " + cp.type);
     }
+
+    std::cout<<"type of coder = "<<cp.type<<std::endl;
+    return std::shared_ptr<InteractiveCoder<AffMatrix>>(new InteractiveCoder<AffMatrix>(ldpca_dec, mp, syndromeMgr, llrProvider));
 }
-
-//template<>
-//std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder<>(int argc, char *argv[])
-//{
-
-//}
 
 
 }

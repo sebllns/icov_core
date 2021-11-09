@@ -47,8 +47,11 @@
  *
  *****************************************************************************/
 #pragma once
+#include "common.h"
+#include "interactive_coder/InteractiveCoder.h"
 
-#include "IcovCoder.h"
+//#include "interactive_coder/IcovCoder.h"
+
 
 namespace icov {
 

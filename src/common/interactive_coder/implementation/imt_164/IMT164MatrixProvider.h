@@ -31,4 +31,6 @@ protected:
 
 };
 }
+
+#include "IMT164MatrixProvider.hpp"
 #endif // IMT164MatrixProvider_H
