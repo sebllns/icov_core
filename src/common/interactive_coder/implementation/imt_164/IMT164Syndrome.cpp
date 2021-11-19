@@ -215,32 +215,52 @@ void IMT164SyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& 
 
 void IMT164SyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider)
 {
-    //std::cout << "compute stored" << std::endl;
-    int m = get_m(numcode);
-    o_stored_syndrome.resize(m);
+    int m = o_stored_syndrome.size();
+    int m_target = this->get_m(numcode);
+
+    int m_max = get_m_max();
+    int m_min = get_m_min();
 
     //intial syndrome is syndrome18
-    if(m == get_m_min())
+    if(m_target == m_min || m < m_min)
     {
-        for(int i = 0; i < get_m_min() ; i++)
+        reset_doping();
+        o_stored_syndrome.resize(m_min);
+        for(int i = 0; i < m_min ; i++)
         {
             o_stored_syndrome[i] = this->accumulated_syndrome[i+1];
         }
-    }
-    else if(m <= get_m_max())
-    {
-        //incremental syndrome
-        o_stored_syndrome[m-1] = this->accumulated_syndrome[m];
-    }
-    else
-    {
-        //doping when rate > 0.5
 
-        if(init_rateless)
+        m = m_min;
+    }
+
+
+
+
+
+
+
+
+
+    while(++m <= m_target)
+    {
+        o_stored_syndrome.resize(m);
+
+        if(m <= m_max)
         {
-            compute_doping_order(llr_provider, doping_synd);
+            //incremental syndrome
+            o_stored_syndrome[m-1] = this->accumulated_syndrome[m];
         }
+        else
+        {
+            //doping when rate > 0.5
 
-        o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-get_m_max()-1]);
+            if(init_rateless)
+            {
+                compute_doping_order(llr_provider, doping_synd);
+            }
+
+            o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-m_max-1]);
+        }
     }
 }
