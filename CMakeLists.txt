@@ -36,6 +36,14 @@ set(AFF3CT_VERSION_FULL CACHE STRING "aaa" FORCE)
 mark_as_advanced(AFF3CT_VERSION_FULL)
 #add_subdirectory(third-party/aff3ct)
 
+#Link with Boost
+
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+
+find_package(Boost 1.70.0 COMPONENTS unit_test_framework program_options REQUIRED)
+
 # Link with the "Threads library (required to link with AFF3CT after)
 
 set(CMAKE_THREAD_PREFER_PTHREAD ON)

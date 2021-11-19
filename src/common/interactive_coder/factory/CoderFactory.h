@@ -48,19 +48,21 @@
  *****************************************************************************/
 #pragma once
 #include "common.h"
-#include "interactive_coder/InteractiveCoder.h"
+#include "interactive_coder/IcovCoder.h"
 
-//#include "interactive_coder/IcovCoder.h"
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
+#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov {
 
 class CoderFactory
 {
 public:
-    template<typename M>
-    static std::shared_ptr<InteractiveCoder<M>> create_coder(int argc, char* argv[]);
-
+    static std::shared_ptr<InteractiveCoder<AffMatrix>> create_coder(int argc, char* argv[]);
+    static std::shared_ptr<InteractiveCoder<AffMatrix>> create_coder(const po::variables_map& args);
 };
 
 

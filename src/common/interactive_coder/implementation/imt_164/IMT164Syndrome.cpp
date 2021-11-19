@@ -6,7 +6,6 @@ using namespace icov;
 IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level): ISyndromeManager(n),
     doping_idx(n), init_rateless(true), m_min_level(min_level), m_max_level(max_level)
 {
-    std::iota(doping_idx.begin(), doping_idx.end(), 0);
     int l = m_min_level;
     while (l <= m_max_level)
     {
@@ -18,6 +17,8 @@ IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level
     this->mapping_file.resize(get_level_count()-1, FastMatrix<index_t>(0,0));
 
     accumulated_syndrome = nullptr;
+
+    reset_doping();
 }
 
 int IMT164SyndromeManager::get_m_max() const
@@ -70,7 +71,11 @@ int IMT164SyndromeManager::get_m(int numcode) const
     return  this->get_m_min() + numcode;
 }
 
-void IMT164SyndromeManager::reset_doping() { init_rateless = true;}
+void IMT164SyndromeManager::reset_doping()
+{
+    std::iota(doping_idx.begin(), doping_idx.end(), 0);
+    init_rateless = true;
+}
 
 
 void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider, Syndrome &syndrome)
@@ -79,8 +84,8 @@ void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider
     //std::cout << "compute doping" << std::endl;
     Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
-    int numcode = this->get_m_max();
-    dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome, h[this->get_level_count()-1]);
+    //int numcode = this->get_m_max();
+    dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(), syndrome, h[this->get_level_count()-1]);
     init_rateless = false;
 }
 
@@ -88,6 +93,7 @@ void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider
 void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
 {
     //std::cout << "init_accumulation" << std::endl;
+    reset_doping();
 
     if(accumulated_syndrome == nullptr)
     {

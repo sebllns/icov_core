@@ -9,7 +9,8 @@ namespace icov {
 class IMTMatrixProvider : public IAff3ctMatrixProvider
 {
 public:
-    IMTMatrixProvider(IMTSyndromeManager* tools, std::string root):
+    //FIXME
+    IMTMatrixProvider(std::shared_ptr<IMTSyndromeManager> tools, std::string root):
         m_tools(tools),
         root_dir(root)
     {

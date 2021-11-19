@@ -84,7 +84,7 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
 }
 
 
-void icov::LLRProvider::initLLR(const std::vector<CodedVal> &side_info , const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info , const std::vector<CodedVal> &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "ERROR: LLRProvider::initLLR: length of arrays are not equal";
 

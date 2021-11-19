@@ -68,12 +68,15 @@ class Coder_IMT18
 public:
     struct parameters : CoderParameters
     {
-        parameters(CoderParameters b): CoderParameters(b){};
+        parameters(const boost::program_options::variables_map &args): CoderParameters(args, Coder_IMT18::id)
+        {
+
+        };
     };
 
     static const std::string id;
 
-static void create(LLRProvider *&llrProvider, IDecoder<AffMatrix> *&ldpca_dec, ISyndromeManager *&syndromeMgr, IMatrixProvider<AffMatrix> *&mb, const parameters &p);
+static void create(std::shared_ptr<LLRProvider> &llrProvider, std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec, std::shared_ptr<ISyndromeManager> &syndromeMgr,  std::shared_ptr<IMatrixProvider<AffMatrix>> &mb, const parameters &p);
 };
 
 }

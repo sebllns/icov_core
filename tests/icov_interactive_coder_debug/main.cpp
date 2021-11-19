@@ -174,7 +174,7 @@ int main(int argc,  char* argv[])
 
         IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
         syndromeMgr = imt_synd;
-        mb = new IMTMatrixProvider(imt_synd, p.database);
+        //mb = new IMTMatrixProvider(imt_synd, p.database);
 
         int n_8 = imt_synd->get_n()/8;
         int n_2 = imt_synd->get_n()/2;
@@ -290,7 +290,7 @@ int main(int argc,  char* argv[])
 
         //std::cout << "test code in [" << numcode << ", " << end_code << "[" << std::endl;
 
-        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, end_code, param.step, p.n_ite);
+        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits, end_code, param.step);
 
         if(numerrors == 0) break;
     }
@@ -320,7 +320,7 @@ int main(int argc,  char* argv[])
         }
 
         start = std::chrono::steady_clock::now();
-        interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+        interactive_coder->decode(b.dec_bits, numcode, stored_synd);
         end = std::chrono::steady_clock::now();
         elapsed_seconds = end-start;
         b.decoding_time = elapsed_seconds.count();

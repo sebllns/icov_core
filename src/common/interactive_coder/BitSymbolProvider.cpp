@@ -116,7 +116,7 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b, int yk
         {
             std::cerr << "WARNING: pb = 0" << std::endl;
 
-            DebugTools::logFile <<  "\t\t\t WARNING: (a + b) = 0" << std::endl;
+            DebugTools::logFile <<  "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
             DebugTools::logFile <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1 << " imax=" << ((1<<(l-b))) << std::endl;
 
 

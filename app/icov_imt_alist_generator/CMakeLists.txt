@@ -16,4 +16,4 @@ include_directories(.)
 #include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
-target_link_libraries(${EXE_NAME}  s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib aff3ct::aff3ct-static-lib)
+target_link_libraries(${EXE_NAME}  s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib)

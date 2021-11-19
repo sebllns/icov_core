@@ -100,6 +100,4 @@ public:
 
 };
 }
-
-#include "IMT164Syndrome.hpp"
 #endif // IMT164SYNDROME_H

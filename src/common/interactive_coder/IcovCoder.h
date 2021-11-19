@@ -52,7 +52,7 @@
 #include "common.h"
 
 #include "interactive_coder/InteractiveCoder.h"
-//#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
+#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
 //#include "interactive_coder/implementation/imt/IMTSyndrome.h"
@@ -64,7 +64,11 @@
 //#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
 //#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
-//using AffMatrix = aff3ct::tools::Sparse_matrix;
+using AffMatrix = aff3ct::tools::Sparse_matrix;
+using AffInteractiveCoder = icov::InteractiveCoder<AffMatrix>;
+
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 using namespace icov;
 
@@ -76,6 +80,41 @@ struct CoderParameters
     std::string database;
     int n;
     int bp_ite;
+
+    CoderParameters() = default;
+
+    static std::string parseType(const po::variables_map& args)
+    {
+        return args["coder"].as<std::string>();
+    }
+
+    static std::string parseDatabase(const po::variables_map& args)
+    {
+        return args["data-path"].as<std::string>();
+    }
+
+    static int parseCodeLength(const po::variables_map& args)
+    {
+        return args["code-length"].as<int>();
+    }
+
+    static int parseBpIte(const po::variables_map& args)
+    {
+        return args["bp-ite"].as<int>();
+    }
+
+    CoderParameters(const po::variables_map& args, std::string intented_type)
+    {
+        type = parseType(args);
+        database = parseDatabase(args);
+        n = parseCodeLength(args);
+        bp_ite = parseBpIte(args);
+
+        if(this->type != intented_type)
+        {
+            throw std::invalid_argument("Given type was \'" + type + "\' but intended type was \'" + intented_type + "\'\n");
+        }
+    }
 
     virtual ~CoderParameters() = default;
 };

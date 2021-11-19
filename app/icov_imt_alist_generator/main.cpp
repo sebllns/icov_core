@@ -13,58 +13,65 @@
 #include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
+#include "ProgramController.h"
+
 using namespace aff3ct;
 using namespace icov;
 
-/****************************************************************************************/
-// I - AFF3CT CONFIG & STRUCTS
-/****************************************************************************************/
-struct params
-{
-    std::string database = "database_path";
-    int   N         =   1000;     // codeword size
-};
 
 
-void init_params(params &p, int argc, char* argv[])
-{
-    if(argc < 3) throw "bad arguments";
-    p.database = std::string(argv[1]);
-    p.N = atoi(argv[2]);
-}
-
 /****************************************************************************************/
-// III - MAIN
+// MAIN
 /****************************************************************************************/
 int main(int argc,  char* argv[])
 {
     srand((unsigned)time(NULL));
 
-    /****************************************************************************************/
-    // 1 - INIT
-    /****************************************************************************************/
+    ProgramController pc;
 
-    params p;
-    init_params(p, argc, argv);
+    try
+    {
+        pc.processCommandLine(argc, argv);
+        pc.launchProgram();
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << pc.optionsDesc() << std::endl;
+        return 1;
+    }
+    catch(...)
+    {
+        std::cerr << "Fatal error" << std::endl;
+        return 2;
+    }
 
-    std::cout<<"start IMT alist generation\n";
 
-    IMTSyndromeManager imt_tools(p.N);
-    IMTMatrixProvider imt_builder(&imt_tools, p.database);
+//    /****************************************************************************************/
+//    // 1 - INIT
+//    /****************************************************************************************/
 
-    std::cout << "*************************************************************************" << std::endl;
-    /****************************************************************************************/
-    // 2 - BUILD MATRICES
-    /****************************************************************************************/
-    std::cout<<"build matrices\n";
+//    params p;
+//    init_params(p, argc, argv);
 
-    imt_builder.read_mat_imt_format();
+//    std::cout<<"start IMT alist generation\n";
 
-    std::cout << "*************************************************************************" << std::endl;
-    std::cout << "END OF GENERATION\n";
-    std::cout << "Database:\t" << p.database<<  std::endl;
-    std::cout << "Code size:\t" << p.N<<  std::endl;
-    std::cout << "*************************************************************************" << std::endl;
+//    IMTSyndromeManager imt_tools(p.N);
+//    IMTMatrixProvider imt_builder(&imt_tools, p.database);
+
+//    std::cout << "*************************************************************************" << std::endl;
+//    /****************************************************************************************/
+//    // 2 - BUILD MATRICES
+//    /****************************************************************************************/
+//    std::cout<<"build matrices\n";
+
+//    imt_builder.read_mat_imt_format();
+
+//    std::cout << "*************************************************************************" << std::endl;
+//    std::cout << "END OF GENERATION\n";
+//    std::cout << "Database:\t" << p.database<<  std::endl;
+//    std::cout << "Code size:\t" << p.N<<  std::endl;
+//    std::cout << "*************************************************************************" << std::endl;
 
 
     return 0;

@@ -55,7 +55,7 @@ struct buffers
     std::vector<CodedVal> sign_mask;
     std::vector<std::vector<CodedVal>> src_bits;
     std::vector<std::vector<CodedVal>> si_bits;
-    std::vector<CodedVal> side_info;
+    std::vector<SIVal> side_info;
     std::vector<LLRVal> llr;
     std::vector<CodedVal> dec_bits;
     std::vector<CodedVal> dec_signs;
@@ -88,7 +88,7 @@ void init_buffers(const params &p, buffers &b)
     b.src_symbols = std::vector<CodedVal>(p.N, 0);
     std::generate(b.src_symbols.begin(), b.src_symbols.end(), [x_min, x_max](){ return (CodedVal)(rand()%(x_max-x_min+1) + x_min); });
 
-    b.side_info = std::vector<CodedVal>(p.N, 0);
+    b.side_info = std::vector<SIVal>(p.N, 0);
     std::generate(b.side_info.begin(), b.side_info.end(), [y_min, y_max](){ return (CodedVal)(rand()%(y_max-y_min+1) + y_min); });
 
 
@@ -217,39 +217,7 @@ int main(int argc,  char* argv[])
 
     int inverse_matrix_build = false;
 
-    //    if(p.coder_type == "imt")
-    //    {
-    //        IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
-    //        syndromeMgr = imt_synd;
-    //        mb = new IMTMatrixProvider(imt_synd, p.database);
 
-    //        min_rate = 1.0 / 8;
-
-    //        int n_8 = imt_synd->get_n()/8;
-    //        int n_2 = imt_synd->get_n()/2;
-    //        n = imt_synd->get_n();
-
-    //        start_matrix = 0;
-    //        end_matrix = n_2 - n_8;
-
-    //        int pow = std::log2f(p.N);
-
-    //        encode_params.resize(3);
-    //        encode_params[0].start_code = 0;
-    //        encode_params[0].stop_code = n_2 - n_8;
-    //        // encode_params[0].step = std::floor(4*pow/8);
-    //        encode_params[0].step = std::ceil(pow/8) * 4;
-
-    //        encode_params[1].start_code = encode_params[0].stop_code;
-    //        encode_params[1].stop_code = n - n_8;
-    //        // encode_params[1].step =  std::floor(5*pow/8);
-    //        encode_params[1].step = encode_params[0].step;
-
-    //        encode_params[2].start_code = encode_params[1].stop_code;
-    //        encode_params[2].stop_code = 3*n_2 - n_8 + 1;
-    //        // encode_params[2].step =  std::floor(9*pow/8);
-    //        encode_params[2].step = 2 * encode_params[1].step;
-    //    }
     //    else if(p.coder_type == "imt164")
     //    {
 
@@ -308,7 +276,7 @@ int main(int argc,  char* argv[])
     //        return 1;
     //    }
 
-    auto interactive_coder = CoderFactory::create_coder<AffMatrix>(argc, argv);
+    auto interactive_coder = CoderFactory::create_coder(argc, argv);
 
     llrProvider = interactive_coder->llrProvider();
     syndromeMgr = interactive_coder->syndromeMgr();
@@ -364,6 +332,7 @@ int main(int argc,  char* argv[])
     {
         DebugTools::logFile << "=========================================================================" << std::endl;
         DebugTools::logFile << sequence_file << std::endl;
+        std::cout << sequence_file << std::endl;
 
         TestSequenceInput tsi(1024);
         tsi.read_from_file(input_dir + sequence_file + ".txt");
@@ -545,8 +514,6 @@ int main(int argc,  char* argv[])
                     //estimate probability and rate
                     float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
 
-                    syndromeMgr->reset_doping();
-
                     if(i == 0)
                     {
                         //get LLR for first bitplane level i.e. sign
@@ -580,12 +547,9 @@ int main(int argc,  char* argv[])
                         //reset error count
                         int numerrors = -1;
 
-                        //syndrome accumulation
-                        syndromeMgr->init_accumulation(b.src_bits[i]);
 
-                        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i], p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
 
-                        //numerrors = interactive_coder->encodeLoop(numcode, stored_synd, b.src_bits[i], encode_params, p.n_ite,  i == 0 ? b.sign_mask : std::vector<CodedVal>());
+                        numerrors = interactive_coder->encode(numcode, stored_synd, b.src_bits[i]);
 
                         //get actual rate from numcode
                         rate_results[si][i][0] = estimated_rate;
@@ -615,7 +579,7 @@ int main(int argc,  char* argv[])
 
                         if(numerrors != 0)
                         {
-                            std::cerr<<"ERROR: No convergence for bitplane="<< lx-i-1 <<std::endl;
+                            std::cerr<<"ERROR: No convergence for bitplane="<< i <<std::endl;
                         }
                         else
                         {
@@ -627,7 +591,7 @@ int main(int argc,  char* argv[])
                             }
 
                             start = std::chrono::steady_clock::now();
-                            interactive_coder->decode(b.dec_bits, numcode, p.n_ite, stored_synd);
+                            interactive_coder->decode(b.dec_bits, numcode, stored_synd);
                             end = std::chrono::steady_clock::now();
                             elapsed_seconds = end-start;
                             if(!interactive_coder->testConvergence(b.dec_bits, b.src_bits[i]))

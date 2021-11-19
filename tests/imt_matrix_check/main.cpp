@@ -8,18 +8,9 @@
 //#include <boost/filesystem.hpp>
 
 #include "tools/DebugTools.h"
-#include "interactive_coder/InteractiveCoder.h"
+
+#include "interactive_coder/factory/CoderFactory.h"
 #include "interactive_coder/aff3ct/Aff3ctDecoder.h"
-#include "interactive_coder/LLRProvider.h"
-
-#include "interactive_coder/implementation/imt/IMTSyndrome.h"
-#include "interactive_coder/implementation/imt/IMTMatrixProvider.h"
-
-#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
-#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
-
-#include "interactive_coder/implementation/imt_164/IMT164Syndrome.h"
-#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.h"
 
 #include "io/MatlabTxtMatrix.h"
 #include "io/PcmData.h"
@@ -201,15 +192,10 @@ int main(int argc,  char* argv[])
 
     std::cout<<"start interactive coder\n";
 
-    //common part
-    LLRProvider llrProvider(p.N);
-    Aff3ctDecoder ldpca_dec(p.N);
-    ISyndromeManager* syndromeMgr = nullptr;
-    IMatrixProvider<AffMatrix>* mb = nullptr;
+    auto interactive_coder = CoderFactory::create_coder(argc, argv);
 
     std::cout<<"type of coder = "<<p.coder_type<<std::endl;
 
-    int start_matrix, end_matrix;
     int n = 0;
 
     icov::FastMatrix<icov::bit>  h12;
@@ -217,68 +203,6 @@ int main(int argc,  char* argv[])
 
     int inverse_matrix_build = false;
 
-    if(p.coder_type == "imt")
-    {
-
-        IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.N);
-        syndromeMgr = imt_synd;
-        mb = new IMTMatrixProvider(imt_synd, p.database);
-
-        int n_8 = imt_synd->get_n()/8;
-        int n_2 = imt_synd->get_n()/2;
-        n = imt_synd->get_n();
-
-        start_matrix = 0;
-        end_matrix = n_2 - n_8;
-
-        h12 = read_h12_imt18(p.database + "/" + std::to_string(p.N));
-        mapping_files = read_mapping_files_imt18(p.database + "/" + std::to_string(p.N));
-
-        //TODO ORDER H12
-    }
-    else if(p.coder_type == "imt_164")
-    {
-        IMT164SyndromeManager* imt_synd = new IMT164SyndromeManager(p.N, 2, 64);
-        syndromeMgr = imt_synd;
-        mb = new IMT164MatrixProvider(imt_synd, p.database);
-
-        int n_64 = imt_synd->get_m_min();
-        int n_2 = imt_synd->get_m_max();
-        n = imt_synd->get_n();
-
-        start_matrix = 0;
-        end_matrix = n_2 - n_64;
-
-        inverse_matrix_build = true;
-
-        h12 = read_h12_imt164(p.database + "/" + std::to_string(p.N));
-
-        std::vector<int> levels;
-        for(int l = imt_synd->get_level_count()-2 ; l >= 0 ; --l)
-        {
-            levels.push_back(imt_synd->get_level(l));
-        }
-
-        mapping_files = read_mapping_files_imt164(p.database + "/" + std::to_string(p.N), levels);
-    }
-    else if(p.coder_type == "varodayan")
-    {
-        VarodayanSyndromeManager* varo_synd = new VarodayanSyndromeManager(p.N);
-        varo_synd->read_mat(p.database);
-        syndromeMgr = varo_synd;
-        mb = new VarodayanMatrixProvider(varo_synd);
-
-        start_matrix = 0;
-        end_matrix = varo_synd->numCodes - 1;
-    }
-    else
-    {
-        //error
-        throw std::runtime_error("ERROR: Coder type could not be recognized: " + p.coder_type);
-        return 1;
-    }
-
-    auto interactive_coder = new InteractiveCoder<AffMatrix>(&ldpca_dec, mb, syndromeMgr, &llrProvider);
 
     std::cout << "*************************************************************************" << std::endl;
     /****************************************************************************************/
@@ -286,21 +210,21 @@ int main(int argc,  char* argv[])
     /****************************************************************************************/
     std::cout<<"build matrices\n";
 
-    n = syndromeMgr->get_n();
-
-    interactive_coder->buildMatrices(start_matrix, end_matrix+1, inverse_matrix_build);
+    n = interactive_coder->syndromeMgr()->get_n();
 
     icov::FastMatrix<icov::bit> h_dec;
 
     h_dec = h12;
 
-    int numcode = end_matrix;
+
+    //GET NUMCODE CHECK
+    int numcode = interactive_coder->matrixProvider()->getNumcode(interactive_coder->matrixProvider()->getMatrixCount()-1);
 
     //std::cout << h_dec.to_string() << std::endl;
 
     if(!check_matrix(interactive_coder->getMatrix(numcode), h_dec))
     {
-        std::cout << "error " << syndromeMgr->get_m(numcode) << std::endl;
+        std::cout << "error " << interactive_coder->syndromeMgr()->get_m(numcode) << std::endl;
     }
 
     for(auto &mapping : mapping_files)
@@ -318,7 +242,7 @@ int main(int argc,  char* argv[])
 
             if(!check_matrix(interactive_coder->getMatrix(numcode), h_m))
             {
-                std::cout << "error " << syndromeMgr->get_m(numcode) << std::endl;
+                //std::cout << "error " << syndromeMgr->get_m(numcode) << std::endl;
             }
 
             h_dec = h_m;

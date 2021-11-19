@@ -33,35 +33,23 @@ const Matrix& InteractiveCoder<Matrix>::getMatrix(int numcode) const
 template<class Matrix>
 bool InteractiveCoder<Matrix>::testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source)
 {
-    return this->testConvergence(decoded, source, std::vector<CodedVal>());
-}
-
-template<class Matrix>
-bool InteractiveCoder<Matrix>::testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source, const std::vector<CodedVal> &mask)
-{
     if(decoded.size() != source.size()) return false;
 
-    bool use_mask = mask.size() == source.size();
-    CodedVal mask_value = 1;
     for (int i = 0; i < decoded.size(); i++)
     {
-        mask_value = use_mask ? mask[i] : 1;
-        if(mask_value && decoded[i] != source[i]) return false;
+        if(decoded[i] != source[i]) return false;
     }
 
     return true;
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source, const std::vector<CodedVal> &mask)
+int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source)
 {
     float numerrors = 0;
-    bool use_mask = mask.size() == source.size();
-    CodedVal mask_value = 1;
     for (int i = 0; i < decoded.size(); i++)
     {
-        mask_value = use_mask ? mask[i] : 1;
-        numerrors += mask_value * std::abs(decoded[i] - source[i]);
+        numerrors += std::abs(decoded[i] - source[i]);
     }
 
     return (int)numerrors;
@@ -98,7 +86,7 @@ bool InteractiveCoder<Matrix>::checkDecodingSyndrome(const Syndrome &syndrome, c
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params, uint32_t n_ite, const std::vector<CodedVal> &mask)
+int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params)
 {
     //syndrome accumulation
     m_psyndromeMgr->init_accumulation(source);
@@ -115,7 +103,7 @@ int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_s
             continue;
         }
 
-        numerrors = this->encode(numcode, o_stored_syndrome, source, end_code, param.step, n_ite, mask);
+        numerrors = this->encode(numcode, o_stored_syndrome, source, end_code, param.step);
 
         //encoding done (no error)
         if(numerrors == 0) break;
@@ -125,34 +113,36 @@ int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_s
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t n_ite, const std::vector<CodedVal> &mask)
+int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source)
 {
+//    //syndrome accumulation
+//    m_psyndromeMgr->init_accumulation(source);
+
+    o_stored_syndrome.resize(0);
+
     std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());
-
-
 
     bool convergence = false;
     while(i < m_matrix_provider->getNumCodesCount() && !convergence)
     {
         uint32_t io_numcode = m_matrix_provider->getNumcode(i);
 
-        //std::cout << i << "->" << io_numcode << std::endl;
+//        std::cout << ">> m=" << m_psyndromeMgr->get_m(io_numcode) << std::endl;
 
         m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode, *m_pllrProvider.get());
 
-        this->decode(decoded, i, n_ite, o_stored_syndrome);
+        this->decode(decoded, i, o_stored_syndrome);
 
-        ++i;
-        convergence = testConvergence(decoded, source, mask);
+        convergence = testConvergence(decoded, source);
+        if(!convergence) ++i;
     }
 
-    --i;
     if(convergence) return 0;
-    return errorCount(decoded, source, mask);
+    return errorCount(decoded, source);
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask)
+int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step)
 {
     int n = source.size();
 
@@ -168,9 +158,9 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 
         if(io_numcode == next_test_code)
         {
-            this->decode(decoded, io_numcode, n_ite, o_stored_syndrome);
+            this->decode(decoded, io_numcode, o_stored_syndrome);
 
-            if(testConvergence(decoded, source, mask))
+            if(testConvergence(decoded, source))
             {
                 return 0;
             }
@@ -180,12 +170,12 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
     }
 
     io_numcode = numcodeMax - 1;
-    return errorCount(decoded, source, mask);
+    return errorCount(decoded, source);
 }
 
 template<class Matrix>
-void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t i, uint32_t n_ite, const Syndrome &stored_syndrome)
+void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t i, const Syndrome &stored_syndrome)
 {
     m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, m_matrix_provider->getNumcode(i), *m_pllrProvider.get());
-    m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), i, n_ite, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(i));
+    m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), i, m_pllrProvider->llr(), *m_decodage_syndrome.get(), getMatrix(i));
 }

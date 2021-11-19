@@ -5,7 +5,7 @@ using namespace icov;
 
 IMTSyndromeManager::IMTSyndromeManager(int n): ISyndromeManager(n), doping_idx(n), init_rateless(true)
 {
-    std::iota(doping_idx.begin(), doping_idx.end(), 0);
+    reset_doping();
 }
 
 int IMTSyndromeManager::get_m(int numcode) const
@@ -14,7 +14,10 @@ int IMTSyndromeManager::get_m(int numcode) const
     return  this->get_n()/8 + numcode;
 }
 
-void IMTSyndromeManager::reset_doping() { init_rateless = true;}
+void IMTSyndromeManager::reset_doping()
+{
+    init_rateless = true;
+}
 
 uint32_t IMTSyndromeManager::get_c18(int m) const
 {
@@ -32,17 +35,20 @@ uint32_t IMTSyndromeManager::get_c18(int m) const
 void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider)
 {
     if(!init_rateless) return;
-    //std::cout << "compute doping" << std::endl;
+   // std::cout << "compute doping" << std::endl;
+    std::iota(doping_idx.begin(), doping_idx.end(), 0);
     Aff3ctDecoder dec(0);
     std::vector<CodedVal> o_decoded(this->get_n());
-    int numcode = this->get_n()/2;
-    dec.decode_doping(o_decoded, doping_idx, this->get_n(), numcode, 100, llr_provider.llr(), syndrome12, *h12_ord);
+    //int numcode = this->get_n()/2;
+    dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(), syndrome12, *h12_ord);
     init_rateless = false;
 }
 
 
 void IMTSyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
 {
+    reset_doping();
+
     int n = get_n();
 
     //We fill the 3 syndrome vectors directly calculated from source for m=n/2, m=n/4, m=n/8
@@ -50,7 +56,7 @@ void IMTSyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x
     {
         //compute syndrome12 = h12_ord * x
         syndrome12[i] = 0;
-         //std::cout << i << ": ";
+        //std::cout << i << ": ";
         for(const auto& vn: h12_ord->get_rows_from_col(i))
         {
             //std::cout << vn << ", ";
@@ -111,7 +117,7 @@ void IMTSyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& acc
         else
         {
             o_syndrome[k] = acc_syndrome[i];
-        }       
+        }
 
         //we fill the syndrome12 when decoding, only needed for doping
         if(m > m_12 && k < m_12)
@@ -158,32 +164,32 @@ void IMTSyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numcode
     int m_18 = get_n()/8;
 
     //intial syndrome is syndrome18
-    if(m_target == m_18)
+    if(m_target == m_18 || m < m_18)
     {
+        reset_doping();
         o_stored_syndrome.resize(m_18);
         for(int i = 0; i < m_18 ; i++)
         {
             o_stored_syndrome[i] = syndrome18[i];
         }
-    }
-    else
-    {
-        while(++m <= m_target)
-        {
-            o_stored_syndrome.resize(m);
 
-            if(m <= m_12)
-            {
-                //incremental syndrome
-                o_stored_syndrome[m-1] = m > get_n()/4 ? syndrome12[m-1] : syndrome14[m-1];
-            }
-            else
-            {
-                //doping when rate > 0.5
-                compute_doping_order(llr_provider);
-                o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-m_12-1]);
-            }
+        m = m_18;
+    }
+
+    while(++m <= m_target)
+    {
+        o_stored_syndrome.resize(m);
+
+        if(m <= m_12)
+        {
+            //incremental syndrome
+            o_stored_syndrome[m-1] = m > get_n()/4 ? syndrome12[m-1] : syndrome14[m-1];
+        }
+        else
+        {
+            //doping when rate > 0.5
+            compute_doping_order(llr_provider);
+            o_stored_syndrome[m-1] = llr_provider.src(doping_idx[m-m_12-1]);
         }
     }
-
 }

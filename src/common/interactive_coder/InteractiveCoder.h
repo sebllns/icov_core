@@ -32,7 +32,6 @@ public:
        m_pdecoder(dec), m_psyndromeMgr(syndromeMgr), m_pllrProvider(llrProvider),
        m_matrix_provider(mp)
     {
-        //TODO INIT
         m_decodage_syndrome = std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
     };
 
@@ -44,7 +43,7 @@ public:
         m_decodage_syndrome = std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
     };
 
-    virtual ~InteractiveCoder() = default;
+    ~InteractiveCoder() = default;
 
     void buildMatrices(int m_start, int m_end, bool inverse = false);
 
@@ -53,17 +52,15 @@ public:
 
     bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source);
 
-    virtual bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source, const std::vector<CodedVal> &mask);
+    int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
 
-    virtual int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source, const std::vector<CodedVal> &mask);
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source);
 
-    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step);
 
-    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
+    int encodeLoop(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params);
 
-    int encodeLoop(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params, uint32_t n_ite, const std::vector<CodedVal> &mask = std::vector<CodedVal>{});
-
-    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode,  uint32_t n_ite, const Syndrome& syndrome);
+    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode, const Syndrome& syndrome);
 
     bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
 

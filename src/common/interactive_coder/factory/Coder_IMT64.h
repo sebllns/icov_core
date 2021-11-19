@@ -48,14 +48,32 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "IcovCoder.h"
+
+#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
+
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov {
 
 class Coder_IMT64
 {
-public:
+    struct encode_parameters
+    {
+        icov::index_t start_code;
+        icov::index_t stop_code;
+        icov::index_t step;
+    };
 
+public:
+    struct parameters : CoderParameters
+    {
+        parameters(const boost::program_options::variables_map &args): CoderParameters(args, Coder_IMT64::id){};
+    };
+
+    static const std::string id;
+
+    static void create(std::shared_ptr<LLRProvider> &llrProvider, std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec, std::shared_ptr<ISyndromeManager> &syndromeMgr,  std::shared_ptr<IMatrixProvider<AffMatrix>> &mb, const parameters &p);
 
 };
 

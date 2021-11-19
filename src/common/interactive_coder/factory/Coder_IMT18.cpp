@@ -6,16 +6,14 @@ namespace icov
 {
 const std::string Coder_IMT18::id = "imt18";
 
-void Coder_IMT18::create(LLRProvider *&llrProvider, IDecoder<AffMatrix> *&ldpca_dec, ISyndromeManager *&syndromeMgr, IMatrixProvider<AffMatrix> *&mat_provider, const parameters &p)
+void Coder_IMT18::create(std::shared_ptr<LLRProvider> &llrProvider, std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec, std::shared_ptr<ISyndromeManager> &syndromeMgr,  std::shared_ptr<IMatrixProvider<AffMatrix>> &mat_provider, const parameters &p)
 {
-    llrProvider = new LLRProvider(p.n);
-    Aff3ctDecoder *dec = new Aff3ctDecoder(p.n);
-    ldpca_dec = dec;
+    llrProvider.reset(new LLRProvider(p.n));
 
-    IMTSyndromeManager* imt_synd = new IMTSyndromeManager(p.n);
+    std::shared_ptr<IMTSyndromeManager> imt_synd(new IMTSyndromeManager(p.n));
     syndromeMgr = imt_synd;
 
-    mat_provider = new IMTMatrixProvider(imt_synd, p.database);
+    mat_provider.reset(new IMTMatrixProvider(imt_synd, p.database));
 
     int n =  imt_synd->get_n();
     int n_8 = n/8;
@@ -53,7 +51,8 @@ void Coder_IMT18::create(LLRProvider *&llrProvider, IDecoder<AffMatrix> *&ldpca_
         }
     }
 
-   // if(numcode < encode_params[2].stop_code) mat_provider->addNumcode(encode_params[2].stop_code, encode_params[2].stop_code > p.n/2);
+    Aff3ctDecoder *dec = new Aff3ctDecoder(mat_provider->getMatrixCount());
+    ldpca_dec.reset(dec);
 
     for(int i = 0 ; i < mat_provider->getMatrixCount() ; i++)
     {

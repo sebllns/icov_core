@@ -3,20 +3,17 @@
 #include "Coder_IMT18.h"
 #include "Coder_IMT64.h"
 
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 namespace icov
 {
 
-template<typename M>
-std::shared_ptr<InteractiveCoder<M> > CoderFactory::create_coder(int argc, char *argv[])
+std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(int argc, char *argv[])
 {
-    throw std::runtime_error("CoderFactory does not implement the coder instanciation for matrix of type " + std::string(typeid (M).name()));
-}
+  //  throw std::runtime_error("CoderFactory does not implement the coder instanciation for matrix of type " + std::string(typeid (M).name()));
 
-template<>
-std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder<>(int argc, char *argv[])
-{
     if(argc < 5) throw std::invalid_argument("no coder type was given");
-
 
     //FILL CP HERE
     CoderParameters cp;
@@ -25,36 +22,59 @@ std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder<>(int a
     cp.n = atoi(argv[3]);
     cp.bp_ite = atoi(argv[4]);
 
-    LLRProvider *llrProvider = nullptr;
-    IDecoder<AffMatrix> *ldpca_dec = nullptr;
-    ISyndromeManager *syndromeMgr = nullptr;
-    IMatrixProvider<AffMatrix> *mp = nullptr;
+    //return create_coder(cp);
+}
 
-    if(cp.type == "imt18")
+std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(const boost::program_options::variables_map &args)
+{
+    //SHARED PTR -> RESET
+    std::shared_ptr<LLRProvider> llrProvider;
+    std::shared_ptr<IDecoder<AffMatrix>> ldpca_dec;
+    std::shared_ptr<ISyndromeManager> syndromeMgr;
+    std::shared_ptr<IMatrixProvider<AffMatrix>> mp;
+
+    std::string coder_type = CoderParameters::parseType(args);
+
+    if(coder_type == Coder_IMT18::id)
     {
-
-        //FILL CP18 HERE
-        Coder_IMT18::parameters cp18(cp);
-
-        //INSTANTIATE
-        Coder_IMT18::create(llrProvider, ldpca_dec, syndromeMgr, mp, cp18);
+        Coder_IMT18::create(llrProvider, ldpca_dec, syndromeMgr, mp, Coder_IMT18::parameters (args));
     }
-    else if(cp.type == "imt64")
+    else if(coder_type == Coder_IMT64::id)
     {
-
+        Coder_IMT64::create(llrProvider, ldpca_dec, syndromeMgr, mp, Coder_IMT64::parameters(args));
     }
-    else if(cp.type == "varodayan")
+    else if(coder_type == "varodayan")
     {
 
     }
     else
     {
-        throw std::invalid_argument("Unknown coder type: " + cp.type);
+        throw std::invalid_argument("Unknown coder type: " + coder_type);
     }
 
-    std::cout<<"type of coder = "<<cp.type<<std::endl;
-    return std::shared_ptr<InteractiveCoder<AffMatrix>>(new InteractiveCoder<AffMatrix>(ldpca_dec, mp, syndromeMgr, llrProvider));
-}
+    if(!llrProvider)
+    {
+        throw std::runtime_error("LLRProvider was not instantiated");
+    }
 
+    if(!ldpca_dec)
+    {
+        throw std::runtime_error("Decoder was not instantiated");
+    }
+
+    if(!mp)
+    {
+        throw std::runtime_error("MatrixProvider was not instantiated");
+    }
+
+    if(!syndromeMgr)
+    {
+        throw std::runtime_error("SyndromeManager was not instantiated");
+    }
+
+    std::cout<<"Initialization of coder with type = "<<coder_type<<std::endl;
+
+    return std::make_shared<InteractiveCoder<AffMatrix>>(ldpca_dec, mp, syndromeMgr, llrProvider);
+}
 
 }

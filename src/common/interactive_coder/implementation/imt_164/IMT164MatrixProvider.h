@@ -10,7 +10,7 @@ namespace icov {
 class IMT164MatrixProvider : public IAff3ctMatrixProvider
 {
 public:
-    IMT164MatrixProvider(IMT164SyndromeManager* tools, std::string root):
+    IMT164MatrixProvider(std::shared_ptr<IMT164SyndromeManager> tools, std::string root):
         m_tools(tools),
         root_dir(root)
     {
@@ -29,8 +29,9 @@ protected:
 
     void _buildMatrix(int numcode, AffMatrix &H) override;
 
+    void buildHighMatrix(int level_idx, AffMatrix &H);
+    void accumulateRows(int numcode, int level_idx, AffMatrix &dst, const AffMatrix &src);
+    void computeSyndromeCacheIndex();
 };
 }
-
-#include "IMT164MatrixProvider.hpp"
 #endif // IMT164MatrixProvider_H
