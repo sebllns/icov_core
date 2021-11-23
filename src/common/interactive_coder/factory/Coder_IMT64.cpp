@@ -42,17 +42,23 @@ void Coder_IMT64::create(std::shared_ptr<LLRProvider> &llrProvider, std::shared_
 
     icov::index_t numcode = 0;
 
-    for(auto &param: encode_params)
+//    for(auto &param: encode_params)
+//    {
+//        for(icov::index_t c = param.start_code; c < param.stop_code; c+= param.step)
+//        {
+//            if(numcode == 0 || c > numcode)
+//            {
+//                numcode = c;
+//                mat_provider->addNumcode(numcode, numcode > (n_max-n_min));
+//            }
+//        }
+//    }
+
+    for(int i = 0 ; i < encode_params[2].stop_code; i++)
     {
-        for(icov::index_t c = param.start_code; c < param.stop_code; c+= param.step)
-        {
-            if(numcode == 0 || c > numcode)
-            {
-                numcode = c;
-                mat_provider->addNumcode(numcode, numcode > (n_max-n_min));
-            }
-        }
+        mat_provider->addNumcode(i, i > (n_max-n_min));
     }
+
 
     Aff3ctDecoder *dec = new Aff3ctDecoder(mat_provider->getMatrixCount());
     ldpca_dec.reset(dec);

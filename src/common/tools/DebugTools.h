@@ -28,6 +28,13 @@ public:
 
     }
 
+   static void write_str(const std::string& filename, const std::string& str)
+    {
+        std::ofstream file(filename);
+        file << str;
+        file.close();
+    }
+
 
     template<typename T> static void write_vector(const std::string& filename, const std::vector<T>& data, char sep )
     {

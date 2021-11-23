@@ -142,6 +142,14 @@ public:
 
      }
 
+     void fill(T val)
+     {
+         for(int i = 0 ; i < this->size() ; i++)
+         {
+             this->m_data[i] = val;
+         }
+     }
+
 
      T at(int i, int j) const
      {
@@ -189,8 +197,14 @@ public:
       size_t rows() const {return m_rows;}
       size_t cols() const {return m_cols;}
 
-      size_t resize(size_t new_size) = delete;
+      void resize(size_t new_size) = delete;
 
+      void resize(size_t rows, size_t cols)
+      {
+          m_rows = rows;
+          m_cols = cols;
+          this->resize(rows*cols);
+      }
 
 protected:
     size_t m_rows;
