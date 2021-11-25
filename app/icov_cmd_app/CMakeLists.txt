@@ -1,7 +1,7 @@
 message("BUILD ICOV IMT ALIST GENERATOR PROJECT")
 
 # executable
-set( EXE_NAME icov_imt_alist_generator )
+set( EXE_NAME icov_cmd )
 
 # get source files
 file(GLOB SRC_FILES "*.cpp")
