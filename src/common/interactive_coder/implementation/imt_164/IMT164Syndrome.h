@@ -2,43 +2,14 @@
 #define IMT164SYNDROME_H
 
 #include "interactive_coder/interface/ISyndrome.h"
-
-
-#include <aff3ct.hpp>
 #include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 
-using namespace aff3ct;
-
-using AffMatrix = tools::Sparse_matrix;
 using index_t = uint16_t;
 
 namespace icov {
 
 class IMT164SyndromeManager : public ISyndromeManager
 {
-
-//struct syndrome_cell
-//{
-//    bool disabled;
-
-//    icov::bit *value;
-//    icov::bit *accumulation;
-
-//    icov::bit get_value()
-//    {
-//        if(value == nullptr)
-//        {
-//            throw std::runtime_error("error syndrome cell value cannot be null");
-//        }
-//        icov::bit v = *value;
-
-//        if(accumulation != nullptr)
-//        {
-//            v ^= *accumulation;
-//        }
-//        return v;
-//    }
-//};
 
 public:
     std::vector<uint8_t> m_levels;
@@ -52,7 +23,7 @@ public:
 
     std::vector<int> h_indexes;
 
-    icov::bit *accumulated_syndrome;//todo delete
+    icov::bit *accumulated_syndrome;
     std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
 
     Syndrome doping_synd;
@@ -70,7 +41,7 @@ public:
     int current_level;
 
     IMT164SyndromeManager(int n, int min_level, int max_level);
-    virtual ~IMT164SyndromeManager() = default;
+    virtual ~IMT164SyndromeManager();
 
     virtual void init_accumulation(const std::vector<CodedVal>& source_x) override;
 

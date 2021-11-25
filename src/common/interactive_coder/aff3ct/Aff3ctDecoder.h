@@ -4,9 +4,8 @@
 #pragma once
 
 #include "interactive_coder/interface/IDecoder.h"
-
-#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include "Decoder_LDPCA_BP_flooding_SPA.hpp"
+#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
 using AffLDPCA = aff3ct::module::Decoder_LDPCA_BP_flooding_SPA<icov::CodedVal, icov::LLRVal>;

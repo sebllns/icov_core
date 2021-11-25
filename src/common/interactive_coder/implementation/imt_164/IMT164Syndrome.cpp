@@ -6,7 +6,8 @@ using namespace icov;
 
 
 IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level): ISyndromeManager(n),
-    doping_idx(n), init_rateless(true), m_min_level(min_level), m_max_level(max_level)
+    doping_idx(n), init_rateless(true), m_min_level(min_level), m_max_level(max_level),
+    accumulated_syndrome(nullptr)
 {
     int l = m_min_level;
     while (l <= m_max_level)
@@ -18,9 +19,12 @@ IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level
     this->h.resize(get_level_count());
     this->mapping_file.resize(get_level_count()-1, FastMatrix<index_t>(0,0));
 
-    accumulated_syndrome = nullptr;
-
     reset_doping();
+}
+
+IMT164SyndromeManager::~IMT164SyndromeManager()
+{
+    if(accumulated_syndrome != nullptr) delete [] accumulated_syndrome;
 }
 
 int IMT164SyndromeManager::get_m_max() const
