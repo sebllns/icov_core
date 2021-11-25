@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "BinaryMode.h"
+#include "SymboleMode.h"
 
 ProgramController::ProgramController():
     m_options_desc("Program Usage", 1024, 512)
@@ -16,6 +17,7 @@ ProgramController::ProgramController():
                 ;
 
         BinaryMode::AddProgramOptions(m_options_desc);
+        SymboleMode::AddProgramOptions(m_options_desc);
 }
 
 const boost::program_options::options_description &ProgramController::optionsDesc() const
@@ -39,7 +41,7 @@ void ProgramController::processCommandLine(int argc, char **argv)
 
 void ProgramController::launchProgram()
 {
-    auto mode = programMode();
+    auto mode = programMode(m_options_map);
 
     if(mode == "binary")
     {
@@ -48,9 +50,16 @@ void ProgramController::launchProgram()
     }
     else if(mode == "symbole")
     {
-
+        std::cout << "symbole mode started" << std::endl;
+        SymboleMode sm(m_options_map);
+        sm.run();
+        std::cout << "end symbole\n";
     }
     else if(mode == "imt2alist")
+    {
+
+    }
+    else if(mode == "gen-numcodes")
     {
 
     }
@@ -58,31 +67,33 @@ void ProgramController::launchProgram()
     {
         throw std::invalid_argument("Unknown program mode: " + mode);
     }
+
+    std::cout << "end program\n";
 }
 
-const std::string &ProgramController::programMode() const
+const std::string &ProgramController::programMode(const po::variables_map &args)
 {
-    return m_options_map["mode"].as<std::string>();
+    return args["mode"].as<std::string>();
 }
 
-const std::string &ProgramController::coderType() const
+const std::string &ProgramController::coderType(const po::variables_map &args)
 {
-    return m_options_map["coder"].as<std::string>();
+    return args["coder"].as<std::string>();
 }
 
-const std::string &ProgramController::dataPath() const
+const std::string &ProgramController::dataPath(const po::variables_map &args)
 {
-    return m_options_map["data-path"].as<std::string>();
+    return args["data-path"].as<std::string>();
 }
 
-int ProgramController::codeLength() const
+int ProgramController::codeLength(const po::variables_map &args)
 {
-    return m_options_map["code-length"].as<int>();
+    return args["code-length"].as<int>();
 }
 
-int ProgramController::bp_ite() const
+int ProgramController::bp_ite(const po::variables_map &args)
 {
-    return m_options_map["bp-ite"].as<int>();
+    return args["bp-ite"].as<int>();
 }
 
 void ProgramController::launchBinaryMode()

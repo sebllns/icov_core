@@ -38,7 +38,7 @@ public:
         if(!doping)
         {
             m_matrices.resize(m_numcodes.size());
-            std::cout << numcode << "->"  << m_matrices.size() << std::endl;
+            //std::cout << numcode << "->"  << m_matrices.size() << std::endl;
         }
     }
 

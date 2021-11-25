@@ -16,6 +16,11 @@ void icov::Aff3ctDecoder::decode(std::vector<CodedVal> &o_decoded, int n, int id
 {
     //std::cout << "decode" << std::endl;
 
+    if((int)o_decoded.size() != n)
+    {
+        o_decoded = std::vector<CodedVal>(n, 0);
+
+    }
     int d = std::min(idx, (int)m_decvector.size()-1);
     m_decvector[d]-> reset();
     m_decvector[d]-> setSyndrome(&syndrome);

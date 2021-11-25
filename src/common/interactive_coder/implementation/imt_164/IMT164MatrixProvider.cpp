@@ -38,13 +38,35 @@ void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
     }
     else
     {
-        AffMatrix previous_mat =  m_tools->h_dec[0];
 
-        if((int)previous_mat.get_n_cols() != (m+1))
+        accumulateRows(numcode, H);
+
+        if(level_idx > 0)
         {
-            _buildMatrix(numcode+1, previous_mat);
+            PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
         }
-        accumulateRows(numcode, level_idx, H, previous_mat);
+
+        if(level_idx >= 0)
+        {
+            m_tools->current_level = level_idx;
+            m_tools->h[level_idx] = H;
+
+            m_tools->h_indexes = std::vector<int>(H.get_n_cols());
+            std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
+        }
+
+        m_tools->h_dec.insert(m_tools->h_dec.begin(), H);
+
+//        AffMatrix previous_mat =  m_tools->h_dec[0];
+
+//        if((int)previous_mat.get_n_cols() != (m+1))
+//        {
+//            _buildMatrix(numcode+1, previous_mat);
+//        }
+
+        //accumulateRows(numcode, level_idx, H, previous_mat);
+
+
 
 
 //        AffMatrix &previous_mat = m_tools->h_dec[0];
@@ -64,7 +86,61 @@ void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
         }
     }
 
-    std::cout << "IMT164 " << numcode  << ", " << m << ", " << n << ", " << H.get_n_cols() << std::endl;
+    std::cout << "IMT164 " << numcode  << ": " << m << " x " << n << " -> " << H.get_n_cols() << " x " << H.get_n_rows() << std::endl;
+}
+
+void IMT164MatrixProvider::accumulateRows(int numcode, AffMatrix &dst)
+{
+    int m = m_tools->get_m(numcode);
+
+    int level_idx = 1;
+
+    while(level_idx < (m_tools->get_level_count()-1) && m_tools->get_m_level(m_tools->get_level(level_idx)) <= m)
+    {
+        level_idx++;
+    }
+
+
+    auto &src = m_tools->h[level_idx];
+
+    m_deleted_row.resize(src.get_n_cols());
+    m_deleted_row.fill(false);
+
+    int row_idx = src.get_n_cols() - m;
+    dst = AffMatrix(src.get_n_rows(), m);
+
+    for(int i = 0 ; i < (int)dst.get_n_rows() ; i++)
+    {
+        for(int j = 0; j < row_idx; j++)
+        {
+            int row_src1 = m_tools->mapping_file[level_idx-1].at(j, 0);
+            int row_src2 = m_tools->mapping_file[level_idx-1].at(j, 1);
+
+            if(src.at(i, row_src1) ^ src.at(i, row_src2))
+            {
+                dst.add_connection(i, j);
+            }
+
+            //deleted_row
+            m_deleted_row[row_src1] = true;
+            m_deleted_row[row_src2] = true;
+        }
+
+        int k = row_idx;
+        for(int j = 0; j < (int)src.get_n_cols(); j++)
+        {
+            if(!m_deleted_row[j])
+            {
+                if(src.at(i, j)) dst.add_connection(i, k);
+                k++;
+            }
+        }
+
+        if(k != m)
+        {
+            throw std::runtime_error("k != m");
+        }
+    }
 }
 
 void icov::IMT164MatrixProvider::accumulateRows(int numcode, int level_idx, AffMatrix &dst, const AffMatrix &src)
@@ -143,23 +219,6 @@ void icov::IMT164MatrixProvider::accumulateRows(int numcode, int level_idx, AffM
     }
 
     indexes = indexes2;
-
-    if(level_idx > 0)
-    {
-        PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
-    }
-
-    if(level_idx >= 0)
-    {
-        m_tools->current_level = level_idx;
-        m_tools->h[level_idx] = dst;
-
-        m_tools->h_indexes = std::vector<int>(dst.get_n_cols());
-        std::iota(m_tools->h_indexes.begin(), m_tools->h_indexes.end(), 0);
-    }
-
-    m_tools->h_dec.insert(m_tools->h_dec.begin(), dst);
-
 }
 
 void icov::IMT164MatrixProvider::computeSyndromeCacheIndex()

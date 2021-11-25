@@ -26,10 +26,12 @@ public:
 protected:
     std::string root_dir;
     std::shared_ptr<IMT164SyndromeManager> m_tools;
+    icov::FastArray<bool> m_deleted_row;
 
     void _buildMatrix(int numcode, AffMatrix &H) override;
 
     void buildHighMatrix(int level_idx, AffMatrix &H);
+    void accumulateRows(int numcode, AffMatrix &dst);
     void accumulateRows(int numcode, int level_idx, AffMatrix &dst, const AffMatrix &src);
     void computeSyndromeCacheIndex();
 };

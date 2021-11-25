@@ -115,9 +115,6 @@ int InteractiveCoder<Matrix>::encodeLoop(uint32_t &numcode, Syndrome &o_stored_s
 template<class Matrix>
 int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source)
 {
-//    //syndrome accumulation
-//    m_psyndromeMgr->init_accumulation(source);
-
     o_stored_syndrome.resize(0);
 
     std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());

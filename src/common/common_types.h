@@ -76,6 +76,13 @@ public:
     T at(int i) const {return m_data[i];}
     T& at(int i) {return m_data[i];}
 
+    void fill(T val)
+    {
+        for(int i = 0 ; i < this->size() ; i++)
+        {
+            this->m_data[i] = val;
+        }
+    }
 
     size_t size() const {return m_size;}
     size_t capacity() const {return m_capacity;}
@@ -140,14 +147,6 @@ public:
          m_cols(cols)
      {
 
-     }
-
-     void fill(T val)
-     {
-         for(int i = 0 ; i < this->size() ; i++)
-         {
-             this->m_data[i] = val;
-         }
      }
 
 

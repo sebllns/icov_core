@@ -7,7 +7,7 @@
  *  @ingroup icov-core
  */
 
-/** @file ProgramController.h
+/** @file SymboleMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup common
@@ -48,31 +48,75 @@
  *****************************************************************************/
 #pragma once
 
+#include "common.h"
+#include "interactive_coder/IcovCoder.h"
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 
-class ProgramController
+class SymboleMode
 {
 public:
-    ProgramController();
-    ~ProgramController() = default;
+    SymboleMode(const po::variables_map &args);
+    ~SymboleMode() = default;
 
-    const po::options_description& optionsDesc() const;
-    void processCommandLine(int argc, char** argv);
-    void launchProgram();
-    const std::string& programMode() const;
-    const std::string& coderType() const;
-    const std::string& dataPath() const;
-    int codeLength() const;
-    int bp_ite() const;
+    void run();
 
+    static void AddProgramOptions(po::options_description &desc);
 
 private:
 
-    void launchBinaryMode();
+    void encode();
+    void write_results();
+    void process_input_list(const std::string& file);
+    void process_input_file(const std::string& file);
+    void compute_src_bits();
+    void process_si();
+    void compute_si_bits();
+    void init_bsp();
+    void encode_bitplane(int i);
+    bool check_decoding(int i);
+    void fill_predec(int i);
 
-    po::options_description m_options_desc;
-    po::variables_map m_options_map;
+    int quantize(int value, int step, int min, int max);
+    int quantize(float value, const std::vector<float>& v);
+
+    std::shared_ptr<AffInteractiveCoder> m_coder;
+    int n;
+
+    std::string m_dataset_dir;
+    std::string m_result_dir;
+
+    std::vector<CodedVal> src_symbols;
+    std::vector<std::vector<CodedVal>> src_bits;
+
+    std::vector<SIVal> side_info;
+    std::vector<std::vector<CodedVal>> si_bits;
+
+    std::vector<LLRVal> llr;
+    std::vector<CodedVal> dec_bits;
+    std::vector<CodedVal> dec_signs;
+    std::vector<CodedVal> dec_symbols;
+    std::vector<std::pair<float,float>> sim_result;
+    std::vector<float> q_values;
+    BitSymbolProvider bsp;
+    std::vector<int> predec;
+
+    int lx;
+    Syndrome stored_synd;
+    int max_si_count;
+
+    bool enable_q_quantization;
+    bool enable_z_quantization;
+
+    uint32_t numcode;
+    int numerrors;
+
+    static const std::string dataset_dir_id;
+    static const std::string result_dir_id;
+    static const std::string max_si_count_id;
+    static const std::string enable_q_quantization_id;
+    static const std::string enable_z_quantization_id;
+
+
 };
-

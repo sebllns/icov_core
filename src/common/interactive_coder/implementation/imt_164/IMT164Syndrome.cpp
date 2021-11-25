@@ -105,14 +105,14 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
 
     int offset = 0;
 
-    std::cout << "ACCUM" << std::endl;
+//    std::cout << "ACCUM" << std::endl;
 
     for(int k = 0; k < get_level_count() ; k++)
     {
         int m = get_m_level(m_levels[k]);
         int count = k > 0 ? m/2 : m;
 
-        std::cout << h[k].get_n_rows() << "x" << h[k].get_n_cols() << std::endl;
+//        std::cout << h[k].get_n_rows() << "x" << h[k].get_n_cols() << std::endl;
 
         std::stringstream sstr;
         sstr << h[k].transpose();
@@ -132,7 +132,7 @@ void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& sourc
 
             int s = i + offset;
 
-            std::cout << "s" << s + 1 << " = s" << (int)m_levels[k] << "_" << col+1 <<" = " << val << std::endl;
+//            std::cout << "s" << s + 1 << " = s" << (int)m_levels[k] << "_" << col+1 <<" = " << val << std::endl;
 
             accumulated_syndrome[s] = val;
 
@@ -199,38 +199,37 @@ void IMT164SyndromeManager::compute_deacc(Syndrome& o_syndrome, const Syndrome& 
     {
         o_syndrome[i] = 0;
 
-        std::cout << i+1 << "=";
+//        std::cout << i+1 << "=";
 
 
         for(const auto &k: this->m_decoded_syndrome[std::min(numcode, (int)m_decoded_syndrome.size()-1)][i])
         {
-            std::cout << k << "(" << acc_syndrome[k-1] << ")";
+           // std::cout << k << "(" << acc_syndrome[k-1] << ")";
             o_syndrome[i] ^= acc_syndrome[k-1];
         }
 
-        std::cout << std::endl;
+//        std::cout << std::endl;
     }
 
 
 
-    auto &s = synd_dec[std::min(numcode, (int)synd_dec.size()-1)];
+    //CHECK SYNDROME
+//    auto &s = synd_dec[std::min(numcode, (int)synd_dec.size()-1)];
 
 
 
-    for (int i = 0; i < std::min(m, get_m_max()); i++)
-    {
-        if(o_syndrome[i] != synd_dec[std::min(numcode, (int)synd_dec.size()-1)][i])
-        {
-            std::cout << "error synd " << i + 1<< std::endl;
-        }
-    }
+//    for (int i = 0; i < std::min(m, get_m_max()); i++)
+//    {
+//        if(o_syndrome[i] != synd_dec[std::min(numcode, (int)synd_dec.size()-1)][i])
+//        {
+//            std::cout << "error synd " << i + 1<< std::endl;
+//        }
+//    }
 
-    std::cout << "acc: "<< acc_syndrome.to_string() << std::endl;
-    std::cout << "dec: " << o_syndrome.to_string() << std::endl;
-    std::cout << "gt: " << s.to_string() << std::endl;
-
-
-    std::cout << "--" << std::endl;
+//    std::cout << "acc: "<< acc_syndrome.to_string() << std::endl;
+//    std::cout << "dec: " << o_syndrome.to_string() << std::endl;
+//    std::cout << "gt: " << s.to_string() << std::endl;
+//    std::cout << "--" << std::endl;
 
     //doping for rate > 0.5
     if(m >  get_m_max())
@@ -268,7 +267,7 @@ void IMT164SyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numc
         for(int i = 0; i < m_min ; i++)
         {
             o_stored_syndrome[i] = this->accumulated_syndrome[i];
-            std::cout << "stored_"<<i+1<<std::endl;
+//            std::cout << "stored_"<<i+1<<std::endl;
         }
 
         m = m_min;
@@ -281,7 +280,7 @@ void IMT164SyndromeManager::compute_stored(Syndrome& o_stored_syndrome, int numc
 
         if(m <= m_max)
         {
-            std::cout << "stored_"<<m<<std::endl;
+//            std::cout << "stored_"<<m<<std::endl;
             //incremental syndrome
             o_stored_syndrome[m-1] = this->accumulated_syndrome[m-1];
         }

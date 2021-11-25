@@ -42,7 +42,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(Boost 1.70.0 COMPONENTS unit_test_framework program_options REQUIRED)
+find_package(Boost 1.70.0 COMPONENTS unit_test_framework program_options filesystem REQUIRED)
 
 # Link with the "Threads library (required to link with AFF3CT after)
 
@@ -83,7 +83,7 @@ add_subdirectory(tests/icov_interactive_coder_debug)
 add_subdirectory(tests/imt_matrix_check)
 
 message(STATUS "[INFO] Building ICOV core apps")
-add_subdirectory(app/icov_imt_alist_generator)
+add_subdirectory(app/icov_cmd_app)
 
 #set(INSTALL_DEMO 1)
 
