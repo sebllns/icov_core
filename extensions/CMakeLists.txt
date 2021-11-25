@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-message("ICOV EXTENSIONS ENABLED")
+message(STATUS "ICOV EXTENSIONS ENABLED")
 
 
 #add_compile_options(-Wall)

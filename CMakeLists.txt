@@ -17,7 +17,8 @@ set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${I
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 
 if(ICOV_CORE_DEBUG_TRACE_ENABLED)
-add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED")
+    message(STATUS "[INFO] ICOV CORE DEBUG TRACING IS ENABLED")
+    add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED")
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
@@ -26,15 +27,6 @@ message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
 include_directories(src third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
     third-party/aff3ct/lib/rang/include)
-
-set(AFF3CT_COMPILE_EXE OFF)
-set(AFF3CT_COMPILE_STATIC_LIB ON)
-set(AFF3CT_POLAR_BIT_PACKING OFF)
-set(AFF3CT_COLORS OFF)
-
-set(AFF3CT_VERSION_FULL CACHE STRING "aaa" FORCE)
-mark_as_advanced(AFF3CT_VERSION_FULL)
-#add_subdirectory(third-party/aff3ct)
 
 #Link with Boost
 
@@ -52,6 +44,16 @@ find_package(Threads REQUIRED)
 
 # Link with AFF3CT
 
+set(AFF3CT_COMPILE_EXE OFF)
+set(AFF3CT_COMPILE_STATIC_LIB ON)
+set(AFF3CT_POLAR_BIT_PACKING OFF)
+set(AFF3CT_COLORS OFF)
+
+set(AFF3CT_VERSION_FULL CACHE STRING "aaa" FORCE)
+mark_as_advanced(AFF3CT_VERSION_FULL)
+message("AFF VERSION ${AFF3CT_VERSION_FULL}")
+add_subdirectory(third-party/aff3ct)
+
 message("build ${AFF3CT_VERSION_FULL}")
 set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/")
 message("SEARCHING AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
@@ -60,8 +62,8 @@ message("SEARCHING AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
 SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 
-find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/" NO_DEFAULT_PATH)
-message("FOUND AFF3CT IN AFF3CT_CONFIG=${AFF3CT_CONFIG}")
+#find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/" NO_DEFAULT_PATH)
+#message(STATUS "FOUND AFF3CT IN AFF3CT_CONFIG=${AFF3CT_CONFIG}")
 
 add_subdirectory(src)
 

@@ -15,6 +15,6 @@ if(Boost_FOUND)
 
     include_directories(. ${Boost_INCLUDE_DIRS})
 
-    target_link_libraries(${EXE_NAME} s_IcovCoreLib aff3ct::aff3ct-static-lib ${Boost_LIBRARIES})
+    target_link_libraries(${EXE_NAME} s_IcovCoreLib ${Boost_LIBRARIES})
 
 endif()

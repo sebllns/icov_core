@@ -18,5 +18,5 @@ include_directories(bitvector)
 
 if(Boost_FOUND)
     add_executable(bitvector_benchmark ${SRC} ${HEADER} bitvector/main.cpp)
-    target_link_libraries(bitvector_benchmark s_IcovCoreLib Boost::unit_test_framework aff3ct::aff3ct-static-lib)
+    target_link_libraries(bitvector_benchmark s_IcovCoreLib Boost::unit_test_framework)
 endif()
