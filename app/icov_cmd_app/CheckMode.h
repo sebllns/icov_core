@@ -51,13 +51,14 @@
 #include "common.h"
 #include "interactive_coder/IcovCoder.h"
 #include <boost/program_options.hpp>
+
 namespace po = boost::program_options;
 
 
 class CheckMode
 {
 public:
-    CheckMode(const po::variables_map &args);
+    CheckMode(const po::variables_map &args, const std::string& data_path);
     ~CheckMode() = default;
 
     void run();
@@ -70,21 +71,17 @@ private:
     void fill_pcrossover();
     bool check_decoding();
     void write_results();
+    FastMatrix<icov::bit> getHighLevelMatrix();
+    FastMatrix<icov::bit> getHighLevelMatrixImt164();
+    FastMatrix<uint16_t> getMappingVector(int m);
+    int getNextLevel(int current);
+    int getMinLevel();
+
+    void compare_matrix(const AffMatrix& m, const icov::FastMatrix<icov::bit> &gt);
 
     std::shared_ptr<AffInteractiveCoder> m_coder;
-    std::vector<CodedVal> m_src_bits;
-    std::vector<CodedVal> m_dec_bits;
-    std::vector<double> m_pcrossover;
     Syndrome m_stored_syndrome;
-    uint32_t m_numcodeIdx;
-    uint32_t m_error_count;
-    int m_nite;
+    std::string datapath;
 
-
-    std::vector<LLRVal> llr;
-    std::vector<double> time;
-    std::vector<double> decoding_time;
-    std::vector<double> numerrors;
-    std::vector<double> rate;
 };
 

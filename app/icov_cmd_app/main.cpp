@@ -13,6 +13,8 @@
 #include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 #include "interactive_coder/LLRProvider.h"
 
+
+#include <boost/exception/diagnostic_information.hpp>
 #include "ProgramController.h"
 
 using namespace aff3ct;
@@ -36,13 +38,15 @@ int main(int argc,  char* argv[])
     }
     catch(std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: program execution has stopped prematurely" << std::endl;
+        std::cerr << boost::current_exception_diagnostic_information() << std::endl;
         std::cerr << pc.optionsDesc() << std::endl;
         return 1;
     }
     catch(...)
     {
         std::cerr << "Fatal error" << std::endl;
+        std::cerr << boost::current_exception_diagnostic_information() << std::endl;
         return 2;
     }
 

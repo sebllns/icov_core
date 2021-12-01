@@ -21,7 +21,7 @@ public:
 
     // IMatrixProvider interface
 public:
-    std::string get_pcm(int level_idx) const;
+    std::string get_pcm_path(int level_idx) const;
 
 protected:
     std::string root_dir;

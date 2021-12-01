@@ -77,6 +77,11 @@ int IMT164SyndromeManager::get_m(int numcode) const
     return  this->get_m_min() + numcode;
 }
 
+string IMT164SyndromeManager::get_type() const
+{
+    return "imt164";
+}
+
 void IMT164SyndromeManager::reset_doping()
 {
     std::iota(doping_idx.begin(), doping_idx.end(), 0);

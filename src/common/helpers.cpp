@@ -47,6 +47,11 @@
  *
  *****************************************************************************/
 #include "helpers.h"
+#include <boost/filesystem.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+
+namespace fs = boost::filesystem;
+
 namespace icov::helpers
 {
 int pow2(int k)
@@ -54,6 +59,33 @@ int pow2(int k)
     return k << 1;
 }
 
+string path::get_data_folder(const string &root, int code_size, bool auto_create)
+{
+    fs::path path(root);
+    path /= std::to_string(code_size);
 
+    path = fs::absolute(path);
+    if(auto_create)
+    {
+        try_create_directories(path.string());
+    }
+    return path.string();
+}
+
+bool path::try_create_directories(const string &path)
+{
+    bool created = false;
+    try
+    {
+        created = fs::create_directories(path);
+    }
+    catch (...)
+    {
+        created = false;
+        std::cerr << "Error: could not create directory " << path << std::endl;
+        std::cerr << boost::current_exception_diagnostic_information() << std::endl;
+    }
+    return created;
+}
 
 }

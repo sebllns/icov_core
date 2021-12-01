@@ -59,7 +59,8 @@
 
 #include "common.h"
 
-namespace icov::helpers {
+namespace icov::helpers
+{
 
 template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)
 {
@@ -97,4 +98,42 @@ template<typename T> static FastMatrix<T> transpose(const FastMatrix<T>& m)
 
 int pow2(int k);
 
+namespace io
+{
+template<typename T> static void write_vector(const std::string& filename, const std::vector<T>& data, char sep )
+{
+    std::ofstream file(filename);
+    file << data.size();
+    for(int i = 0; i < data.size(); i++)
+    {
+        file  << sep << data[i];
+    }
+    file.close();
+}
+
+
+template<typename T> static void read_vector(const std::string& filename,  std::vector<T>& data)
+{
+    std::ifstream file(filename);
+    int n = 0;
+    file >> n;
+    data = std::vector<T>(n);
+
+    T val;
+    for(int i = 0; i < data.size(); i++)
+    {
+        file  >> val;
+        data[i] = val;
+    }
+    file.close();
+}
+}
+
+namespace path
+{
+
+bool try_create_directories(const std::string& path);
+std::string get_data_folder(const std::string& root, int code_size, bool auto_create = false);
+
+}
 }

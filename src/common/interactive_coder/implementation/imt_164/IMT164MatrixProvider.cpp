@@ -12,8 +12,8 @@ void icov::IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H)
 {
     m_tools->current_level = level_idx;
 
-    PcmData::read_matrix(get_pcm(level_idx), H);
-    PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
+    PcmData::read_matrix(get_pcm_path(level_idx), H);
+    PcmData::read_mapping_vector(get_pcm_path(level_idx-1), m_tools->mapping_file[level_idx-1]);
 
 
     m_tools->h_indexes = std::vector<int>(H.get_n_cols());
@@ -43,7 +43,7 @@ void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
 
         if(level_idx > 0)
         {
-            PcmData::read_mapping_vector(get_pcm(level_idx-1), m_tools->mapping_file[level_idx-1]);
+            PcmData::read_mapping_vector(get_pcm_path(level_idx-1), m_tools->mapping_file[level_idx-1]);
         }
 
         if(level_idx >= 0)
@@ -291,7 +291,7 @@ void icov::IMT164MatrixProvider::computeSyndromeCacheIndex()
 }
 
 
-std::string IMT164MatrixProvider::get_pcm(int level_idx) const
+std::string IMT164MatrixProvider::get_pcm_path(int level_idx) const
 {
     std::string filename = "H";
     if(level_idx < m_tools->get_level_count()-1)

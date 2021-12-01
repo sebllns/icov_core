@@ -3,6 +3,8 @@
 
 #include "BinaryMode.h"
 #include "SymboleMode.h"
+#include "ExportMode.h"
+#include "CheckMode.h"
 
 ProgramController::ProgramController():
     m_options_desc("Program Usage", 1024, 512)
@@ -18,6 +20,8 @@ ProgramController::ProgramController():
 
         BinaryMode::AddProgramOptions(m_options_desc);
         SymboleMode::AddProgramOptions(m_options_desc);
+        ExportMode::AddProgramOptions(m_options_desc);
+        CheckMode::AddProgramOptions(m_options_desc);
 }
 
 const boost::program_options::options_description &ProgramController::optionsDesc() const
@@ -45,23 +49,31 @@ void ProgramController::launchProgram()
 
     if(mode == "binary")
     {
-        launchBinaryMode();
+        std::cout << "binary mode started" << std::endl;
+        BinaryMode mode(m_options_map);
+        mode.run();
         std::cout << "end binary\n";
     }
     else if(mode == "symbole")
     {
         std::cout << "symbole mode started" << std::endl;
-        SymboleMode sm(m_options_map);
-        sm.run();
+        SymboleMode mode(m_options_map);
+        mode.run();
         std::cout << "end symbole\n";
     }
-    else if(mode == "imt2alist")
+    else if(mode == "export")
     {
-
+        std::cout << "export mode started" << std::endl;
+        ExportMode mode(m_options_map, codeLength(m_options_map), dataPath(m_options_map));
+        mode.run();
+        std::cout << "end export\n";
     }
-    else if(mode == "gen-numcodes")
+    else if(mode == "check")
     {
-
+        std::cout << "check mode started" << std::endl;
+        CheckMode mode(m_options_map, dataPath(m_options_map));
+        mode.run();
+        std::cout << "end check\n";
     }
     else
     {
@@ -96,9 +108,3 @@ int ProgramController::bp_ite(const po::variables_map &args)
     return args["bp-ite"].as<int>();
 }
 
-void ProgramController::launchBinaryMode()
-{
-    std::cout << "binary mode started" << std::endl;
-    BinaryMode bm(m_options_map);
-    bm.run();
-}

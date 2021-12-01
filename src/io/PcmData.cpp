@@ -154,6 +154,8 @@ void PcmData::read_mapping_vector(const string &filepath, icov::FastMatrix<uint1
             uint16_t value = 0;
             file >> value;
             m.at(i, j) = value - 1;
+
+            std::cout << i << j << " = " << m.at(i, j) << " = " << value << std::endl;
         }
     }
 }

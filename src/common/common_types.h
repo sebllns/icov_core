@@ -32,7 +32,7 @@ public:
         m_data(new T[f.m_capacity])
     {
         //std::cout<<"new copy " << m_size << std::endl;
-         std::memcpy(m_data, f.m_data, m_size);
+         std::memcpy(m_data, f.m_data, m_size * sizeof (T));
     }
 
     FastArray(size_t size):
@@ -59,13 +59,17 @@ public:
     FastArray<T>& operator = (const FastArray<T> & f)
     {
 
-        if(m_data != nullptr) delete[] m_data;
+        if(m_data != nullptr)
+        {
+            delete[] m_data;
+            m_data = nullptr;
+        }
         this->m_capacity = f.m_capacity;
         this->m_size = f.m_size;
         m_data = new T [m_capacity];
-        std::memcpy(m_data, f.m_data, m_size);
+        std::memcpy(m_data, f.m_data, m_size * sizeof (T));
 
-        //std::cout<<"copy " << m_size << std::endl;
+        //std::cout<<"copy " << m_capacity << " "  << m_size << std::endl;
 
         return *this;
     }
@@ -96,7 +100,7 @@ public:
 
             if(tmp != nullptr)
             {
-                if(m_size > 0) std::memcpy(m_data, tmp, m_size);
+                if(m_size > 0) std::memcpy(m_data, tmp, m_size * sizeof (T));
                 delete[] tmp;
             }
             m_capacity = new_size;
@@ -147,6 +151,22 @@ public:
          m_cols(cols)
      {
 
+     }
+
+     FastMatrix(const FastMatrix& f): FastArray<T>(f.m_rows*f.m_cols),
+       m_rows(f.m_rows),
+       m_cols(f.m_cols)
+     {
+         std::cout<<"new copy " << this->m_size << std::endl;
+          std::memcpy(this->m_data, f.m_data, this->m_size * sizeof (T));
+     }
+
+     FastMatrix<T>& operator = (const FastMatrix<T> & f)
+     {
+         this->m_rows = f.m_rows;
+         this->m_cols = f.m_cols;
+
+         FastArray<T>::operator=(f);
      }
 
 

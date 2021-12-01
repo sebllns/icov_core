@@ -51,6 +51,9 @@ public:
 
     void compute_doping_order(const LLRProvider& llr_provider);
 
+    std::string get_type() const override;
+
+
 };
 }
 

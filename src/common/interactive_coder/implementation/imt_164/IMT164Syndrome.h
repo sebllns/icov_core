@@ -51,6 +51,8 @@ public:
 
     virtual int get_m(int numcode) const override;
 
+    std::string get_type() const override;
+
     void reset_doping() override;
 
     int get_m_max() const;

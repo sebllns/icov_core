@@ -44,6 +44,11 @@ void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider)
     init_rateless = false;
 }
 
+string IMTSyndromeManager::get_type() const
+{
+    return "imt18";
+}
+
 
 void IMTSyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
 {

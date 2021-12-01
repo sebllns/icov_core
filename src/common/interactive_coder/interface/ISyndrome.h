@@ -84,6 +84,8 @@ public:
     */
     virtual void compute_deacc(Syndrome& o_syndrome, const Syndrome& stored_syndrome, int numcode, LLRProvider& llr_provider) = 0;
 
+    virtual std::string get_type() const = 0;
+
 
     virtual int get_m(int numcode) const
     {
