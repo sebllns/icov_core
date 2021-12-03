@@ -66,7 +66,7 @@ class Coder_IMT64
     };
 
 public:
-    struct parameters : CoderParameters
+    struct parameters : public CoderParameters
     {
         parameters(const boost::program_options::variables_map &args): CoderParameters(args, Coder_IMT64::id){};
     };

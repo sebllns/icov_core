@@ -16,6 +16,7 @@ ProgramController::ProgramController():
                 ("data-path,d",   po::value<std::string>()->required(),             "set the data path")
                 ("code-length,n",   po::value<int>()->required(),             "set the code length")
                 ("bp-ite,it",   po::value<int>()->default_value(100),             "set iteration count for BP LDPC coder")
+                ("numcodes",   po::value<std::string>()->default_value("numcodes.txt"),             "set the data path")
                 ;
 
         BinaryMode::AddProgramOptions(m_options_desc);

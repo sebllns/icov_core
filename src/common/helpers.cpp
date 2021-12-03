@@ -47,6 +47,8 @@
  *
  *****************************************************************************/
 #include "helpers.h"
+#include "Tools/Code/LDPC/AList/AList.hpp"
+
 #include <boost/filesystem.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -64,7 +66,7 @@ string path::get_data_folder(const string &root, int code_size, bool auto_create
     fs::path path(root);
     path /= std::to_string(code_size);
 
-    path = fs::absolute(path);
+    path = fs::absolute(path).make_preferred();
     if(auto_create)
     {
         try_create_directories(path.string());
@@ -86,6 +88,22 @@ bool path::try_create_directories(const string &path)
         std::cerr << boost::current_exception_diagnostic_information() << std::endl;
     }
     return created;
+}
+
+string path::combine(const string &path1, const string &path2)
+{
+    return  fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
+}
+
+void io::writeAlist(const string &filename, const AffMatrix &data)
+{
+    std::ofstream alist_file(filename);
+    if (!alist_file.is_open())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot open file " + filename));
+    }
+
+    aff3ct::tools::AList::write(data, alist_file);
 }
 
 }

@@ -72,6 +72,7 @@ public:
     int n;
     po::variables_map m_options_map;
     std::string datapath;
+    std::string numcodes_file;
 
     static const std::string rate_min_id;
     static const std::string rate_max_id;

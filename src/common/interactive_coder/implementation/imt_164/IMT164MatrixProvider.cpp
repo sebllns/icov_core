@@ -225,7 +225,6 @@ void icov::IMT164MatrixProvider::computeSyndromeCacheIndex()
 {
     std::vector<std::vector<index_t>> syndrome_index;
 
-    int offset = 0;
     for(int k = 0 ; k < m_tools->get_level_count() ; k++)
     {
         int l = m_tools->get_level(k);
@@ -282,7 +281,7 @@ void icov::IMT164MatrixProvider::computeSyndromeCacheIndex()
                 syndrome_index.insert(syndrome_index.begin() + c1pos, inserted);
                 syndrome_index.insert(syndrome_index.begin() + c2pos, erased);
 
-                std::cout << syndrome_index.size() << std::endl;
+               // std::cout << syndrome_index.size() << std::endl;
             }
 
             m_tools->m_decoded_syndrome.push_back(syndrome_index);

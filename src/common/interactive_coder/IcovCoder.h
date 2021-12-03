@@ -78,6 +78,7 @@ struct CoderParameters
 {
     std::string type;
     std::string database;
+    std::string numcode_file;
     int n;
     int bp_ite;
 
@@ -103,17 +104,32 @@ struct CoderParameters
         return args["bp-ite"].as<int>();
     }
 
+    static std::string parseNumcodeFile(const po::variables_map& args)
+    {
+        return args["numcodes"].as<std::string>();
+    }
+
     CoderParameters(const po::variables_map& args, std::string intented_type)
     {
         type = parseType(args);
         database = parseDatabase(args);
         n = parseCodeLength(args);
         bp_ite = parseBpIte(args);
+        numcode_file = parseNumcodeFile(args);
 
         if(this->type != intented_type)
         {
             throw std::invalid_argument("Given type was \'" + type + "\' but intended type was \'" + intented_type + "\'\n");
         }
+    }
+
+
+    std::vector<int> getNumcodes() const
+    {
+        std::string path = icov::helpers::path::combine(icov::helpers::path::get_data_folder(database, n, false), numcode_file);
+        std::vector<int> numcodes_v;
+        icov::helpers::io::read_vector(path, numcodes_v);
+        return numcodes_v;
     }
 
     virtual ~CoderParameters() = default;

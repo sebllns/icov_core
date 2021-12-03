@@ -16,8 +16,6 @@ public:
 
 
     std::vector<AffMatrix> h_dec;
-    std::vector<Syndrome> synd_dec;
-
     std::vector<AffMatrix> h;
     std::vector<FastMatrix<index_t>> mapping_file;
 

@@ -93,9 +93,6 @@ FastMatrix<uint16_t> CheckMode::getMappingVector(int m)
         BOOST_THROW_EXCEPTION(std::runtime_error("Bad row count: " + std::to_string(v.rows())  + " != " + std::to_string(nrows)));
     }
 
-
-    std::cout << "BEFORE RETURN\n" << v.to_string() << std::endl;
-
     return v;
 }
 
@@ -146,6 +143,7 @@ void CheckMode::run()
 {
     auto mp = m_coder->matrixProvider();
     auto sm = m_coder->syndromeMgr();
+    auto lp = m_coder->llrProvider();
 
     //read initial matrix
     auto m_src = getHighLevelMatrix();
@@ -156,6 +154,9 @@ void CheckMode::run()
     //get next level
     int j = 0;
     int i = mp->getMatrixCount();
+
+    Syndrome stored_syndrome(sm->get_n());
+    Syndrome decoded_syndrome(sm->get_n());
 
     while((int)m_src.rows() > sm->get_m(mp->getNumcode(0)))
     {        
@@ -174,7 +175,6 @@ void CheckMode::run()
 
         //compute gt
         std::vector<int> deleted(m_src.rows(), 0);
-
 
         for(int c = 0; c < col_count ; c++)
         {
@@ -214,7 +214,6 @@ void CheckMode::run()
             std::cerr << boost::current_exception_diagnostic_information() << std::endl;
         }
 
-
         if(j == v_acc.rows())
         {
             m_src = m_gt;
@@ -222,7 +221,37 @@ void CheckMode::run()
             j = 0;
         }
 
-        //sm->compute_stored()
-        //sm->compute_deacc()
+
+        auto src = lp->initSrcRand();
+        stored_syndrome.resize(0);
+        decoded_syndrome.resize(0);
+
+        sm->init_accumulation(src);
+        sm->compute_stored(stored_syndrome, numcode, *lp);
+        if((int)stored_syndrome.size() != row_count)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Stored syndrome bad size: " + std::to_string(stored_syndrome.size()) + " != " + std::to_string(row_count)));
+        }
+
+        sm->compute_deacc(decoded_syndrome, stored_syndrome, numcode, *lp);
+        if((int)decoded_syndrome.size() != row_count)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Decoded syndrome bad size: " + std::to_string(decoded_syndrome.size()) + " != " + std::to_string(row_count)));
+        }
+
+        for(int k = 0; k < row_count; k++)
+        {
+            icov:bit s = 0;
+
+            for(int ki = 0; ki < col_count; ki++)
+            {
+                s ^= src[ki] * m_gt.at(k, ki);
+            }
+
+            if(s != decoded_syndrome[k])
+            {
+                 BOOST_THROW_EXCEPTION(std::runtime_error("Error detected in syndrome computation at index " + std::to_string(k)));
+            }
+        }
     }
 }

@@ -7,9 +7,7 @@
 #include <aff3ct.hpp>
 #include "interactive_coder/aff3ct/Aff3ctDecoder.h"
 
-using namespace aff3ct;
-
-using AffMatrix = tools::Sparse_matrix;
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 
 namespace icov {

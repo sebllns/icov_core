@@ -7,7 +7,8 @@
 #include <random>
 
 icov::LLRProvider::LLRProvider(int n):
-    m_llr(n, 0)
+    m_llr(n, 0),
+    m_src(n, 0)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
 }
@@ -136,6 +137,13 @@ void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<Coded
     }
 
     m_floor_type = !m_floor_type;
+}
+
+std::vector<icov::CodedVal> icov::LLRProvider::initSrcRand()
+{
+    std::vector<CodedVal> src(m_src.size(), 0);
+    std::generate(src.begin(), src.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
+     return src;
 }
 
 uint32_t icov::LLRProvider::index_min() const

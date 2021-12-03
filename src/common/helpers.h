@@ -59,6 +59,11 @@
 
 #include "common.h"
 
+
+#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
+
+using AffMatrix = aff3ct::tools::Sparse_matrix;
+
 namespace icov::helpers
 {
 
@@ -100,7 +105,7 @@ int pow2(int k);
 
 namespace io
 {
-template<typename T> static void write_vector(const std::string& filename, const std::vector<T>& data, char sep )
+template<typename T> void write_vector(const std::string& filename, const std::vector<T>& data, char sep )
 {
     std::ofstream file(filename);
     file << data.size();
@@ -112,9 +117,15 @@ template<typename T> static void write_vector(const std::string& filename, const
 }
 
 
-template<typename T> static void read_vector(const std::string& filename,  std::vector<T>& data)
+template<typename T> void read_vector(const std::string& filename,  std::vector<T>& data)
 {
     std::ifstream file(filename);
+
+    if(!file.is_open())
+    {
+        throw std::invalid_argument("cannot open file " + filename);
+    }
+
     int n = 0;
     file >> n;
     data = std::vector<T>(n);
@@ -127,6 +138,8 @@ template<typename T> static void read_vector(const std::string& filename,  std::
     }
     file.close();
 }
+
+void writeAlist(const std::string& filename,  const AffMatrix& data);
 }
 
 namespace path
@@ -134,6 +147,6 @@ namespace path
 
 bool try_create_directories(const std::string& path);
 std::string get_data_folder(const std::string& root, int code_size, bool auto_create = false);
-
+std::string combine(const std::string& path1, const std::string& path2);
 }
 }

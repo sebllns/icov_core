@@ -27,6 +27,7 @@ ExportMode::ExportMode(const boost::program_options::variables_map &args, int co
     min_rate = args[rate_min_id].as<float>();
     max_rate = args[rate_max_id].as<float>();
     doping_rate = args[rate_doping_id].as<float>();
+    numcodes_file = args["numcodes"].as<std::string>();
 }
 
 void ExportMode::run()
@@ -41,8 +42,16 @@ void ExportMode::run()
 
 void ExportMode::export_matrices()
 {
+    fs::path alist_dir = icov::helpers::path::get_data_folder(datapath, n, true);
+    alist_dir /= "alist";
+    icov::helpers::path::try_create_directories(alist_dir.string());
 
-
+    for(int i = 0 ; i < m_coder->matrixProvider()->getMatrixCount() ; i++)
+    {
+        auto m = m_coder->getMatrix(i);
+        std::string name = "H_" + std::to_string(m.get_n_cols()) + ".alist";
+        icov::helpers::io::writeAlist((alist_dir / name).string(), m);
+    }
 }
 
 void ExportMode::export_numcode()
@@ -101,7 +110,7 @@ void ExportMode::export_numcode()
 
     numcodes.push_back((int)(doping_rate * n));
     fs::path path = icov::helpers::path::get_data_folder(datapath, n, true);
-    path /= "numcodes.txt";
+    path /= numcodes_file;
     std::cout << "Writing numcodes in " << path << std::endl;
     icov::helpers::io::write_vector(path.string(), numcodes, '\n');
 }
