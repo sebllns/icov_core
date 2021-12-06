@@ -19,7 +19,7 @@ IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level
     this->h.resize(get_level_count());
     this->mapping_file.resize(get_level_count()-1, FastMatrix<index_t>(0,0));
 
-    reset_doping();
+    this->reset_doping();
 }
 
 IMT164SyndromeManager::~IMT164SyndromeManager()

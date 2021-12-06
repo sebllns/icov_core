@@ -69,6 +69,8 @@ FastMatrix<uint16_t> CheckMode::getMappingVector(int m)
 {
     FastMatrix<uint16_t> v;
 
+    assert(m > 0 && m >= m_coder->syndromeMgr()->get_m(m_coder->matrixProvider()->getNumcode(0)));
+
     int n =  m_coder->syndromeMgr()->get_n();
     int nrows = m;
 
@@ -190,7 +192,7 @@ void CheckMode::run()
             }
 
             int l = j;
-            for(int k = 0; k < m_src.rows() ; k++)
+            for(size_t k = 0; k < m_src.rows() ; k++)
             {
                 if(!deleted[k])
                 {
@@ -209,11 +211,10 @@ void CheckMode::run()
             std::cerr << boost::current_exception_diagnostic_information() << std::endl;
         }
 
-        if(j == v_acc.rows())
+        if(j == (int)v_acc.rows())
         {
             m_src = m_gt;
-            if(m_src.rows() > sm->get_m(mp->getNumcode(0))) v_acc = getMappingVector(getNextLevel(m_src.rows()));
-            j = 0;
+            if((int)m_src.rows() > sm->get_m(mp->getNumcode(0))) v_acc = getMappingVector(getNextLevel(m_src.rows()));
         }
 
 
@@ -236,7 +237,7 @@ void CheckMode::run()
 
         for(int k = 0; k < row_count; k++)
         {
-            icov:bit s = 0;
+            bit s = 0;
 
             for(int ki = 0; ki < col_count; ki++)
             {
