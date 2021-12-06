@@ -9,12 +9,7 @@
 namespace fs = boost::filesystem;
 void CheckMode::AddProgramOptions(boost::program_options::options_description &desc)
 {
-    desc.add_options()
-            (
-                "check-iterations",
-                po::value<int>()->default_value(100),
-                "set iteration count for test loop"
-             );
+
 }
 
 FastMatrix<bit> CheckMode::getHighLevelMatrix()

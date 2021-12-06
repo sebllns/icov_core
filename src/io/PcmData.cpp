@@ -90,6 +90,8 @@ void PcmData::read_matrix(const string &filepath, AffMatrix &h)
             h.add_connection(i, one_col - 1);
         }
     }
+
+    file.close();
 }
 
 void PcmData::read_matrix(const string &filepath, icov::FastMatrix<bool> &h)
@@ -126,11 +128,16 @@ void PcmData::read_matrix(const string &filepath, icov::FastMatrix<bool> &h)
             h.at(one_col - 1, i) = 1;
         }
     }
+
+    file.close();
 }
 
 void PcmData::read_mapping_vector(const string &filepath, icov::FastMatrix<uint16_t> &m)
 {
     std::ifstream file(filepath);
+
+    std::cout << "read_mapping_vector " << filepath << std::endl;;
+
 
     if (!file.is_open())
     {
@@ -145,17 +152,28 @@ void PcmData::read_mapping_vector(const string &filepath, icov::FastMatrix<uint1
     file >> n_rows;
     file >> n_cols;
 
+    std::cout <<"V "<< n_cols << ", " << n_rows << std::endl;
+
+
     m = icov::FastMatrix<uint16_t>(n_rows, n_cols);
+
+    std::cout << "read\n";
+
 
     for(int i = 0; i < n_rows ; i++)
     {
+        std::cout << "ROW " <<i << std::endl;
         for(int j = 0 ; j < n_cols ; j++)
         {
             uint16_t value = 0;
             file >> value;
             m.at(i, j) = value - 1;
+           // std::cout << i << ", " << j << std::endl;
         }
     }
+
+    std::cout << "end\n";
+    file.close();
 }
 
 

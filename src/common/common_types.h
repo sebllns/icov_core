@@ -150,6 +150,7 @@ public:
          m_rows(rows),
          m_cols(cols)
      {
+         std::cout<<"new " << this->m_size << std::endl;
 
      }
 

@@ -10,6 +10,7 @@ using namespace icov;
 
 void icov::IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H)
 {
+    std::cout << "build high matrix\n";
     m_tools->current_level = level_idx;
 
     PcmData::read_matrix(get_pcm_path(level_idx), H);
@@ -43,6 +44,7 @@ void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
 
         if(level_idx > 0)
         {
+            std::cout << "read_mapping_vector \n";
             PcmData::read_mapping_vector(get_pcm_path(level_idx-1), m_tools->mapping_file[level_idx-1]);
         }
 
