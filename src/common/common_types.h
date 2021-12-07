@@ -69,7 +69,7 @@ public:
         m_data = new T [m_capacity];
         std::memcpy(m_data, f.m_data, m_size * sizeof (T));
 
-        //std::cout<<"copy " << m_capacity << " "  << m_size << std::endl;
+        std::cout<<"copy " << m_capacity << " "  << m_size << std::endl;
 
         return *this;
     }
@@ -167,7 +167,20 @@ public:
          this->m_rows = f.m_rows;
          this->m_cols = f.m_cols;
 
-         FastArray<T>::operator=(f);
+         if(this->m_data != nullptr)
+         {
+             delete[] this->m_data;
+             this->m_data = nullptr;
+         }
+         this->m_capacity = f.m_capacity;
+         this->m_size = f.m_size;
+         this->m_data = new T [this->m_capacity];
+         std::memcpy(this->m_data, f.m_data, this->m_size * sizeof (T));
+
+         std::cout<<"copy " << this->m_capacity << " "  << this->m_size << std::endl;
+
+         return *this;
+
      }
 
 

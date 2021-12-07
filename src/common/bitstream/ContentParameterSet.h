@@ -70,5 +70,5 @@ protected:
 
 
 public:
-  ContentParameterSet();
+  ContentParameterSet() = default;
 };

@@ -276,7 +276,7 @@ int main(int argc,  char* argv[])
     //        return 1;
     //    }
 
-    auto interactive_coder = CoderFactory::create_coder(argc, argv);
+    icov::InteractiveCoder<AffMatrix> *interactive_coder =nullptr; //  CoderFactory::create_coder(argc, argv);
 
     llrProvider = interactive_coder->llrProvider();
     syndromeMgr = interactive_coder->syndromeMgr();

@@ -9,6 +9,8 @@ file(GLOB SRC_FILES "*.cpp")
 # get include files
 file(GLOB INC_FILES "*.h")
 
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
+
 add_executable(${EXE_NAME} main.cpp ${SRC_FILES} ${INC_FILES})
 
 

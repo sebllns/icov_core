@@ -1,9 +1,5 @@
 #include "ViewportUnit.h"
 
-ViewportUnit::ViewportUnit()
-{
-}
-
 NalUnit ViewportUnit::ToNal()
 {
     NalUnit nal(icov::NalUnitType::NAL_UNIT_CODED_VPU);

@@ -18,6 +18,8 @@ file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
 
 include_directories(. common/interactive_coder)
 
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
+#,readability-*
 
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})

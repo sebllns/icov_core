@@ -109,7 +109,7 @@ struct CoderParameters
         return args["numcodes"].as<std::string>();
     }
 
-    CoderParameters(const po::variables_map& args, std::string intented_type)
+    CoderParameters(const po::variables_map& args, const std::string&intented_type)
     {
         type = parseType(args);
         database = parseDatabase(args);

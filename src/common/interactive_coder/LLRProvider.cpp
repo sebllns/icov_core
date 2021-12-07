@@ -8,13 +8,16 @@
 
 icov::LLRProvider::LLRProvider(int n):
     m_llr(n, 0),
-    m_src(n, 0)
+    m_src(n, 0),
+    m_floor_type(0)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
 icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr):
-    m_llr(llr)
+    m_llr(llr),
+    m_src(llr.size(), 0),
+    m_floor_type(0)
 {
     std::iota(doping_order.begin(), doping_order.end(), 0);
 }
@@ -33,7 +36,7 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVa
     }
 }
 
-void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int> sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int>& sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)
 {
     m_src = src_bits;
 

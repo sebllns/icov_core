@@ -58,5 +58,5 @@ class SequenceOfViewports
 private:
   int m_num_viewports;
 public:
-  SequenceOfViewports();
+  SequenceOfViewports() = default;
 };

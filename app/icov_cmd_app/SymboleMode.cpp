@@ -32,7 +32,9 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args):
     n(m_coder->syndromeMgr()->get_n()),
     bsp(0,0,0,0,0,0),
     predec(n, 0),
-    stored_synd(n)
+    stored_synd(n),
+    lx(0),
+    numcode(0)
 {
     if(!args.count(dataset_dir_id))
     {
@@ -90,7 +92,10 @@ bool SymboleMode::check_decoding(int i)
             std::cerr << dec_bits[di] -  src_bits[i][di] << " ";
         }
         std::cerr<<std::endl;
+        return false;
     }
+
+    return true;
 }
 
 void SymboleMode::fill_predec(int i)

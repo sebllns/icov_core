@@ -7,7 +7,8 @@ using namespace icov;
 
 IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level, int max_level): ISyndromeManager(n),
     doping_idx(n), init_rateless(true), m_min_level(min_level), m_max_level(max_level),
-    accumulated_syndrome(nullptr)
+    accumulated_syndrome(nullptr),
+    current_level(max_level)
 {
     int l = m_min_level;
     while (l <= m_max_level)

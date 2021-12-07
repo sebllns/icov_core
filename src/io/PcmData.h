@@ -56,9 +56,10 @@ using AffMatrix = aff3ct::tools::Sparse_matrix;
 class PcmData
 {
 public:
-    PcmData();
     static void read_matrix(const std::string &filepath, AffMatrix &h);
     static void read_matrix(const std::string &filepath, icov::FastMatrix<bool> &h);
     static void read_mapping_vector(const std::string &filepath, icov::FastMatrix<uint16_t> &m);
+private:
+    PcmData() = default;
 };
 

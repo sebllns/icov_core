@@ -60,7 +60,7 @@ class ViewportUnit
 {
 
 public:
-  ViewportUnit();
+  ViewportUnit() = default;
   NalUnit ToNal();
   bool TryParse(NalUnit nal);
   void addIcu(InteractiveCodedUnit icu);

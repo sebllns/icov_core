@@ -27,7 +27,8 @@ const icov::byte NalUnit::getRbspByte(int position) const
 }
 void NalUnit::serialize(icov::byte *&dst) const
 {
-    icov::byte header[6];
+    size_t header_size = 6;
+    icov::byte header[header_size];
     header[0] = ((icov::byte)m_forbiddenZeroBit) << 7;
     header[0] |= ((icov::byte)m_nuhReservedZeroBit) << 6;
     header[0] |= ((icov::byte)m_nuhLayerId) & 0b00111111;
@@ -48,7 +49,8 @@ void NalUnit::serialize(icov::byte *&dst) const
 
 void NalUnit::deserialize(icov::byte *src)
 {
-    icov::byte header[6];
+    size_t header_size = 6;
+    icov::byte header[header_size];
     memcpy(header, src, sizeof(header));
 
     m_forbiddenZeroBit = (header[0] >> 7) & 0x01;

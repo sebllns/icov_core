@@ -51,11 +51,6 @@
 #include <fstream>
 #include <sstream>
 
-PcmData::PcmData()
-{
-
-}
-
 void PcmData::read_matrix(const string &filepath, AffMatrix &h)
 {
     std::ifstream file(filepath);

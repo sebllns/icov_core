@@ -61,7 +61,6 @@ namespace icov {
 class CoderFactory
 {
 public:
-    static std::shared_ptr<InteractiveCoder<AffMatrix>> create_coder(int argc, char* argv[]);
     static std::shared_ptr<InteractiveCoder<AffMatrix>> create_coder(const po::variables_map& args);
 };
 

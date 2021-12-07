@@ -9,22 +9,6 @@ namespace po = boost::program_options;
 namespace icov
 {
 
-std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(int argc, char *argv[])
-{
-  //  throw std::runtime_error("CoderFactory does not implement the coder instanciation for matrix of type " + std::string(typeid (M).name()));
-
-    if(argc < 5) throw std::invalid_argument("no coder type was given");
-
-    //FILL CP HERE
-    CoderParameters cp;
-    cp.type = argv[1];
-    cp.database = argv[2];
-    cp.n = atoi(argv[3]);
-    cp.bp_ite = atoi(argv[4]);
-
-    //return create_coder(cp);
-}
-
 std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(const boost::program_options::variables_map &args)
 {
     //SHARED PTR -> RESET
