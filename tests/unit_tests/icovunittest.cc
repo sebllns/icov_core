@@ -70,3 +70,18 @@ BOOST_AUTO_TEST_SUITE_END();
 
 
 
+BOOST_AUTO_TEST_SUITE(io)
+
+BOOST_AUTO_TEST_CASE( vector )
+{
+    std::vector<icov::CodedVal> values(8192);
+    std::iota(values.begin(), values.end(), 0);
+
+    icov::helpers::io::write_vector("./vector_test", values, '\n');
+
+    std::vector<icov::CodedVal> values_parsed;
+    icov::helpers::io::read_vector("./vector_test", values_parsed);
+    BOOST_REQUIRE(values == values_parsed);
+}
+
+BOOST_AUTO_TEST_SUITE_END();
