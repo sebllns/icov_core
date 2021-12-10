@@ -21,13 +21,6 @@ class InteractiveCoder
 
 public:
 
-    struct encode_parameters
-    {
-        int start_code;
-        int stop_code;
-        int step;
-    };
-
     InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp, ISyndromeManager *syndromeMgr, LLRProvider *llrProvider):
        m_pdecoder(dec), m_psyndromeMgr(syndromeMgr), m_pllrProvider(llrProvider),
        m_matrix_provider(mp)
@@ -45,11 +38,6 @@ public:
 
     ~InteractiveCoder() = default;
 
-    void buildMatrices(int m_start, int m_end, bool inverse = false);
-
-
-    virtual const Matrix& getMatrix(int numcode) const;
-
     bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source);
 
     int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
@@ -58,12 +46,7 @@ public:
 
     int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step);
 
-    int encodeLoop(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source,  const std::vector<encode_parameters> &params);
-
     void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode, const Syndrome& syndrome);
-
-    bool checkDecodingSyndrome(const Syndrome &syndrome, const std::vector<CodedVal> &source, int numcode) const;
-
 
     IMatrixProvider_sp matrixProvider() const {return  this->m_matrix_provider;}
     IDecoder_sp decoder() const {return  this->m_pdecoder;}

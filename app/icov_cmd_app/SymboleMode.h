@@ -51,7 +51,10 @@
 #include "common.h"
 #include "interactive_coder/IcovCoder.h"
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
 
 class SymboleMode
@@ -67,14 +70,14 @@ public:
 private:
 
     void encode();
-    void write_results();
+    void write_results(const std::string& filename);
     void process_input_list(const std::string& file);
     void process_input_file(const std::string& file);
     void compute_src_bits();
     void process_si();
     void compute_si_bits();
     void init_bsp();
-    void encode_bitplane(int i);
+    void encode_bitplane(int i, std::vector<std::vector<float>>& result);
     bool check_decoding(int i);
     void fill_predec(int i);
 
@@ -84,8 +87,9 @@ private:
     std::shared_ptr<AffInteractiveCoder> m_coder;
     int n;
 
-    std::string m_dataset_dir;
-    std::string m_result_dir;
+    fs::path m_dataset_dir;
+    fs::path m_references_dir;
+    fs::path m_result_dir;
 
     std::vector<CodedVal> src_symbols;
     std::vector<std::vector<CodedVal>> src_bits;
@@ -100,7 +104,10 @@ private:
     std::vector<std::pair<float,float>> sim_result;
     std::vector<float> q_values;
     BitSymbolProvider bsp;
-    std::vector<int> predec;
+    std::vector<int> predec;    
+    std::vector<std::vector<std::vector<float>>> rate_results;
+
+    std::ofstream measure_file;
 
     int lx;
     Syndrome stored_synd;
@@ -114,9 +121,8 @@ private:
 
     static const std::string dataset_dir_id;
     static const std::string result_dir_id;
+    static const std::string reference_dir_id;
     static const std::string max_si_count_id;
     static const std::string enable_q_quantization_id;
     static const std::string enable_z_quantization_id;
-
-
 };

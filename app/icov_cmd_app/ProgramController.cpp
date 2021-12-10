@@ -33,19 +33,20 @@ const boost::program_options::options_description &ProgramController::optionsDes
 void ProgramController::processCommandLine(int argc, char **argv)
 {
     po::store(po::parse_command_line(argc, argv, m_options_desc), m_options_map);
+}
 
+void ProgramController::launchProgram()
+{
     if (m_options_map.count("help"))
     {
         std::cout << m_options_desc << std::endl;
+        return;
     }
     else
     {
         po::notify(m_options_map);
     }
-}
 
-void ProgramController::launchProgram()
-{
     auto mode = programMode(m_options_map);
 
     if(mode == "binary")

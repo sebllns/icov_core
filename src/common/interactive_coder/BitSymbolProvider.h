@@ -8,6 +8,12 @@ namespace icov
 class BitSymbolProvider
 {
 public:
+
+
+    static std::vector<std::vector<CodedVal>> compute_bits(const std::vector<CodedVal> &input);
+
+    static std::vector<CodedVal> compute_symboles(const std::vector<std::vector<CodedVal>> &input);
+
     BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l);
 
     float z_min();

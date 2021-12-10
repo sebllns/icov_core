@@ -48,7 +48,7 @@ void ExportMode::export_matrices()
 
     for(int i = 0 ; i < m_coder->matrixProvider()->getMatrixCount() ; i++)
     {
-        auto m = m_coder->getMatrix(i);
+        auto m = m_coder->matrixProvider()->getMatrix(i);
         std::string name = "H_" + std::to_string(m.get_n_cols()) + ".alist";
         icov::helpers::io::writeAlist((alist_dir / name).string(), m);
     }

@@ -4,6 +4,59 @@
 
 namespace icov
 {
+std::vector<std::vector<CodedVal> > BitSymbolProvider::compute_bits(const std::vector<CodedVal> &src_symbols)
+{
+    int x_min = *std::min_element(src_symbols.begin(), src_symbols.end());
+    int x_max = *std::max_element(src_symbols.begin(), src_symbols.end());
+    int n = src_symbols.size();
+
+    //get length for binary representation of X
+//    lx =  std::floor(std::log2f(std::max(std::abs(x_min), std::abs(x_max)))) + 2;
+    int lx = helpers::maths::binary_length(std::max(std::abs(x_min), std::abs(x_max))) + 1;
+
+    //init bit planes of X
+   auto src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(n, 0));
+
+    for(int i = 0 ; i < n ; i++)
+    {
+        int x_reconstruction = 0;
+        src_bits[0][i] = (src_symbols[i] < 0);
+
+        for(int j = 1 ; j < lx ; j++)
+        {
+            src_bits[lx-j][i] = (std::abs(src_symbols[i]) >> (j-1)) & 1U;
+            x_reconstruction |= src_bits[lx-j][i] << (j-1);
+        }
+
+        //sanity check for X binarization
+        x_reconstruction *= (1 - 2*src_bits[0][i]);
+        if(x_reconstruction != src_symbols[i]) throw std::runtime_error("ERROR: Binarization failed: " + std::to_string(x_reconstruction) + " != " + std::to_string(src_symbols[i]));
+    }
+
+    return src_bits;
+}
+
+std::vector<CodedVal> BitSymbolProvider::compute_symboles(const std::vector<std::vector<CodedVal> > &src_bits)
+{
+    int n = src_bits[0].size();
+    int lx = src_bits.size();
+
+    auto symboles = std::vector<CodedVal>(n, 0);
+
+    for(int i = 0 ; i < n ; i++)
+    {
+        CodedVal x_reconstruction = 0;
+        for(int j = 1 ; j < lx ; j++)
+        {
+            x_reconstruction |= src_bits[lx-j][i] << (j-1);
+        }
+
+        symboles[i] = x_reconstruction * (1 - 2*src_bits[0][i]);
+    }
+
+   return symboles;
+}
+
 BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l):
     m_z_min(z_min), m_z_max(z_max), m_y_min(y_min), m_y_max(y_max), m_q0(q), m_l(l)
 {

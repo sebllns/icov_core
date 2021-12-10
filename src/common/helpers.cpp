@@ -56,9 +56,9 @@ namespace fs = boost::filesystem;
 
 namespace icov::helpers
 {
-int pow2(int k)
+int maths::pow2(int k)
 {
-    return k << 1;
+    return 1 << k;
 }
 
 string path::get_data_folder(const string &root, int code_size, bool auto_create)
@@ -104,6 +104,19 @@ void io::writeAlist(const string &filename, const AffMatrix &data)
     }
 
     aff3ct::tools::AList::write(data, alist_file);
+}
+
+void path::assert_directory_exists(const std::string& path)
+{
+    if(!fs::is_directory(fs::absolute(path).make_preferred()))
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Is not a valid directory: " + path));
+    }
+}
+
+uint32_t maths::binary_length(int val)
+{
+    return  std::floor(std::log2f(std::abs(val))) + 1;
 }
 
 }

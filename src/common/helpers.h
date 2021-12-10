@@ -100,8 +100,11 @@ template<typename T> static FastMatrix<T> transpose(const FastMatrix<T>& m)
     return t;
 }
 
-
-int pow2(int k);
+namespace maths
+{
+    int pow2(int k);
+    uint32_t binary_length(int val);
+}
 
 namespace io
 {
@@ -145,6 +148,7 @@ void writeAlist(const std::string& filename,  const AffMatrix& data);
 namespace path
 {
 
+void assert_directory_exists(const std::string& path);
 bool try_create_directories(const std::string& path);
 std::string get_data_folder(const std::string& root, int code_size, bool auto_create = false);
 std::string combine(const std::string& path1, const std::string& path2);

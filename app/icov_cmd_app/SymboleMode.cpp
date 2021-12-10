@@ -14,11 +14,66 @@
 
 namespace fs = boost::filesystem;
 
+//estimate probability and rate
+//    std::vector<std::pair<float,float>> sim_result;
+//float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
+float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
+{
+    //    for(int i = 0 ; i < src.size() ; i++)
+    //    {
+    //        std::cout << src[i] << ", ";
+    //    }
+
+    //    std::cout << std::endl;
+
+    //    for(int i = 0 ; i < si.size() ; i++)
+    //    {
+    //        std::cout << si[i] << ", ";
+    //    }
+
+    std::cout << std::endl;
+
+    float r = 0.0;
+    float p = 0.0;
+
+    int lx = src.size();
+    int ly = si.size();
+
+    p = std::abs(lx-ly);
+
+    for(int i = 0 ; i < std::min(lx,ly) ; i++)
+    {
+        if(src[i] != si[i])
+        {
+            p++;
+        }
+    }
+
+    p /= src.size();
+
+    //std::cout << "p error = " << p << std::endl;
+
+    int i = 0;
+    while(i < (int)sim_result.size() && sim_result[i].first < p)
+    {
+        i++;
+    }
+
+    //todo interpolation ?
+    r = sim_result[i].second;
+
+    std::cout << "estimated rate=" << r << std::endl;
+
+    return r;
+}
+
+
 
 void SymboleMode::AddProgramOptions(boost::program_options::options_description &desc)
 {
     desc.add_options()
             (dataset_dir_id.c_str(),   po::value<std::string>(),      "Input directoty")
+            (reference_dir_id.c_str(),   po::value<std::string>(),      "Reference directoty")
             (result_dir_id.c_str(),   po::value<std::string>(),      "Result directoty")
             (max_si_count_id.c_str(),   po::value<int>()->default_value(8),      "Side info count")
             (enable_q_quantization_id.c_str(),   po::value<bool>()->default_value(true),      "Enable quantization of parameter q")
@@ -46,34 +101,55 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args):
         throw std::invalid_argument(result_dir_id + " is missing");
     }
 
-    m_dataset_dir = args[dataset_dir_id].as<std::string>();
-    m_result_dir = args[result_dir_id].as<std::string>();
+    if(!args.count(reference_dir_id))
+    {
+        throw std::invalid_argument(reference_dir_id + " is missing");
+    }
+
+    m_dataset_dir = fs::absolute(args[dataset_dir_id].as<std::string>()).make_preferred();
+    m_references_dir = m_dataset_dir / "results" / args[reference_dir_id].as<std::string>();
+    m_result_dir = fs::absolute(args[result_dir_id].as<std::string>()).make_preferred();
     max_si_count = args[max_si_count_id].as<int>();
     enable_q_quantization = args[enable_q_quantization_id].as<bool>();
     enable_z_quantization = args[enable_z_quantization_id].as<bool>();
 
     q_values = {0.125, 0.375, 0.5625, 0.6875, 0.78125, 0.84375, 0.90625, 0.96875};
+
+    helpers::path::assert_directory_exists(m_dataset_dir.string());
+    helpers::path::assert_directory_exists(m_references_dir.string());
+    helpers::path::try_create_directories(m_result_dir.string());
+    helpers::path::assert_directory_exists(m_result_dir.string());
 }
 
 void SymboleMode::run()
 {
+    auto measure_path = fs::path(m_result_dir) / "metric.csv";
+    measure_file = std::ofstream(measure_path);
+    measure_file << "file\tsi\tabs diff\trelative diff\n";
+    if(!measure_file.is_open())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("can't open measure file " + measure_path.string()));
+    }
     fs::path seq_list = fs::path(m_dataset_dir) / "files.txt";
     process_input_list(seq_list.string());
+    measure_file.close();
 }
 
 void SymboleMode::encode()
-{   
+{
+    auto res = std::vector<std::vector<float>>(lx, std::vector<float>(2, 0.0));
     for(int i = 0; i < lx; i++)
     {
         try
         {
-            encode_bitplane(i);
+            encode_bitplane(i, res);
         } catch (...)
         {
             std::cerr << "Error: Could not process bitplane " << i << std::endl;
             std::cerr << boost::current_exception_diagnostic_information() << std::endl;
         }
     }
+    rate_results.push_back(res);
 }
 
 bool SymboleMode::check_decoding(int i)
@@ -114,9 +190,77 @@ void SymboleMode::fill_predec(int i)
     }
 }
 
-void SymboleMode::write_results()
-{
+void SymboleMode::write_results(const std::string& sequence_name)
+{    
+    TestSequenceResult tsr;
+    tsr.read_from_file((m_references_dir / (sequence_name + ".mat")).string());
 
+    std::ofstream result_file(fs::path(m_result_dir) / (sequence_name + ".txt"));
+
+    for(int i = 0; i < 2; i++)
+    {
+        result_file << ((i == 0) ? "# estimated rate" : "# actual rate") << std::endl;
+        for(auto &si : rate_results)
+        {
+            for(auto &bp : si)
+            {
+                result_file<< std::fixed << std::setw( 7 ) << std::setprecision( 6 )
+                           << std::setfill( '0' ) << bp[i] << " ";
+            }
+            result_file << std::endl;
+        }
+        result_file << std::endl;
+    }
+
+    result_file <<"# Fangping's rate"  << std::endl;
+    auto &frangping_rate = tsr["R"];
+    for(int i = 0; i < std::min(max_si_count, frangping_rate.n_rows); i++)
+    {
+        for(int j = 0; j < frangping_rate.n_cols ; j++)
+        {
+            result_file<< std::fixed << std::setw( 7 ) << std::setprecision( 6 )
+                       << std::setfill( '0' ) << frangping_rate.get_data(i,frangping_rate.n_cols - 1 - j) << " ";
+        }
+        result_file << std::endl;
+    }
+
+    result_file << std::endl;
+
+//    if(p.enable_binarization_check)
+//    {
+//        result_file << "# X binarization" << std::endl;
+
+//        for(int i = 0 ; i < p.N ; i++)
+//        {
+//            result_file << b.src_symbols[i] << "\t   ";
+//            for(int j = 0 ; j < lx ; j++)
+//            {
+//                result_file << b.src_bits[j][i] << " ";
+//            }
+//            result_file << std::endl;
+//        }
+//    }
+
+
+    result_file.close();
+
+
+    auto syndromeMgr = m_coder->syndromeMgr();
+    float min_rate = (1.0 * syndromeMgr->get_m(0))/syndromeMgr->get_n();
+    for(int si = 0; si < rate_results.size() ; si++)
+    {
+        float icov_rate = 0.0, estim_rate = 0.0, fp_rate = 0.0;
+        for(int bp = 0; bp < rate_results[si].size() ; bp++)
+        {
+            estim_rate += rate_results[si][bp][0];
+            icov_rate += rate_results[si][bp][1];
+            fp_rate += std::max(tsr["R"].get_data(si,frangping_rate.n_cols - 1 - bp), min_rate);
+        }
+
+        measure_file << sequence_name << "\t" << si + 1 << "\t" << std::fixed << std::setw( 7 ) << std::setprecision( 6 ) << std::setfill( '0' ) << (icov_rate - fp_rate) << "\t"<< (icov_rate - fp_rate)/fp_rate << std::endl;
+    }
+
+    measure_file.flush();
 }
 
 void SymboleMode::process_input_list(const std::string &file)
@@ -129,12 +273,10 @@ void SymboleMode::process_input_list(const std::string &file)
     {
         try
         {
-            sequence_name += ".txt";
-
-            fs::path seq_path = fs::path(m_dataset_dir) / "sequences" / sequence_name;
+            fs::path seq_path = fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
 
             process_input_file(seq_path.string());
-
+            write_results(sequence_name);
         }
         catch (...)
         {
@@ -148,6 +290,8 @@ void SymboleMode::process_input_list(const std::string &file)
 void SymboleMode::process_input_file(const string &file)
 {
     std::cout << file << std::endl;
+
+    rate_results.clear();
 
 //    std::ifstream seq(file);
 //    if(!seq.is_open()) BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot open file " + file));
@@ -172,31 +316,9 @@ void SymboleMode::process_input_file(const string &file)
 
 void SymboleMode::compute_src_bits()
 {
-    //find x_min and x_max values in source X
-    int x_min = *std::min_element(src_symbols.begin(), src_symbols.end());
-    int x_max = *std::max_element(src_symbols.begin(), src_symbols.end());
-
-    //get length for binary representation of X
-    lx =  std::floor(std::log2f(std::max(std::abs(x_min), std::abs(x_max)))) + 2;
-
     //init bit planes of X
-    src_bits = std::vector<std::vector<CodedVal>>(lx, std::vector<CodedVal>(n, 0));
-
-    for(int i = 0 ; i < n ; i++)
-    {
-        int x_reconstruction = 0;
-        src_bits[0][i] = (src_symbols[i] < 0);
-
-        for(int j = 1 ; j < lx ; j++)
-        {
-            src_bits[lx-j][i] = (std::abs(src_symbols[i]) >> (j-1)) & 1U;
-            x_reconstruction |= src_bits[lx-j][i] << (j-1);
-        }
-
-        //sanity check for X binarization
-        x_reconstruction *= (1 - 2*src_bits[0][i]);
-        if(x_reconstruction != src_symbols[i]) throw std::runtime_error("ERROR: Binarization failed: " + std::to_string(x_reconstruction) + " != " + std::to_string(src_symbols[i]));
-    }
+    src_bits = BitSymbolProvider::compute_bits(src_symbols);
+    lx = src_bits.size();
 }
 
 void SymboleMode::process_si()
@@ -303,7 +425,7 @@ int SymboleMode::quantize(float value, const std::vector<float> &v)
     return idx;
 }
 
-void SymboleMode::encode_bitplane(int i)
+void SymboleMode::encode_bitplane(int i, std::vector<std::vector<float>>& result)
 {
     auto llrProvider = m_coder->llrProvider();
     auto syndromeMgr = m_coder->syndromeMgr();
@@ -330,6 +452,9 @@ void SymboleMode::encode_bitplane(int i)
     numerrors = m_coder->encode(numcode, stored_synd, src_bits[i]);
 
     double rate = ( ((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode))) / ((double)n));
+    float estimated_rate = 0.0f;
+    result[i][0] = estimated_rate;
+    result[i][1] = rate;
 
     //reset doping state and LLR
     syndromeMgr->reset_doping();
@@ -337,8 +462,6 @@ void SymboleMode::encode_bitplane(int i)
     {
         llrProvider->operator[](l) = llr[l];
     }
-
-    //rate_results[si][i][1] = rate;
 
     if(numerrors != 0)
     {
@@ -354,6 +477,7 @@ void SymboleMode::encode_bitplane(int i)
 }
 
 const std::string SymboleMode::dataset_dir_id = "symbole-data-dir";
+const std::string SymboleMode::reference_dir_id = "symbole-reference-dir";
 const std::string SymboleMode::result_dir_id = "symbole-result-dir";
 const std::string SymboleMode::max_si_count_id = "symbole-si-count";
 const std::string SymboleMode::enable_q_quantization_id = "symbole-q-quant";
