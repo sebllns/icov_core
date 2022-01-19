@@ -119,4 +119,19 @@ uint32_t maths::binary_length(int val)
     return  std::floor(std::log2f(std::abs(val))) + 1;
 }
 
+int rand::range(int min_included, int max_included)
+{
+    return  min_included + (std::rand() % static_cast<int>(max_included - min_included + 1));
+}
+
+void rand::init()
+{
+    srand((unsigned) time(0));
+}
+
+float rand::normalized()
+{
+    return static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+}
+
 }

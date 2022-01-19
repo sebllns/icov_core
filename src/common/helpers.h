@@ -48,6 +48,8 @@
  *****************************************************************************/
 #pragma once
 
+#define _USE_MATH_DEFINES // for C++
+
 #include <vector>
 #include <cstdint>
 #include <cstring>
@@ -66,6 +68,15 @@ using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov::helpers
 {
+
+template<class ForwardIt, class T>
+void iota(ForwardIt first, ForwardIt last, T value, T step)
+{
+    while(first != last) {
+        *first++ = value;
+        value += step;
+    }
+}
 
 template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)
 {
@@ -104,6 +115,13 @@ namespace maths
 {
     int pow2(int k);
     uint32_t binary_length(int val);
+}
+
+namespace rand
+{
+    void init();
+    int range(int min_included, int max_included);
+    float normalized();
 }
 
 namespace io
