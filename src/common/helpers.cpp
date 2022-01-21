@@ -134,4 +134,27 @@ float rand::normalized()
     return static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
 }
 
+float maths::normalize(float val, float min, float max)
+{
+    return (val-min) / (max-min);
+}
+
+float maths::wrap(float val, float min, float max)
+{
+    while (val < min)
+    {
+        val += (max-min);
+    }
+
+    while (val > max)
+    {
+        val -= (max-min);
+    }
+
+    return val;
+
+    //return val - (min - max) * floor(val / (max - min));
+}
+
+
 }

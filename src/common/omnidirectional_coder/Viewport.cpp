@@ -15,14 +15,14 @@ void Viewport::computeOrdering()
 
     access_block_index = 77; //icov::helpers::rand::range(0, icus.size() - 1);
 
-    order = std::vector<uint16_t>(icus.size());
+    order = BlockOrder(icus.size());
     //order[0] = access_block_index;
 
     RowMinMax available(rows);
-    uint16_t block_row = 0;
-    uint16_t block_offset = 0;
-    uint16_t minrowidx = 0;
-    uint16_t maxrowidx = available.size();
+    int16_t block_row = 0;
+    int16_t block_offset = 0;
+    int16_t minrowidx = 0;
+    int16_t maxrowidx = available.size();
 
     getBlockCoords(*icus[access_block_index].get(), block_row, block_offset);
 
@@ -37,14 +37,14 @@ void Viewport::computeOrdering()
             available[block_row].second = available[block_row].first - 1;
         }
 
-        uint16_t right = getBlockIndex(block_row, block_offset + 1);
-        uint16_t left = getBlockIndex(block_row, block_offset - 1);
-        uint16_t up = (block_row > minrowidx) ? getBlockIndex(block_row-1, block_offset) : 0;
-        uint16_t down = (block_row < maxrowidx) ? getBlockIndex(block_row+1, block_offset) : 0;
+        int16_t right = getBlockIndex(block_row, block_offset + 1);
+        int16_t left = getBlockIndex(block_row, block_offset - 1);
+        int16_t up = (block_row > minrowidx) ? getBlockIndex(block_row-1, block_offset) : 0;
+        int16_t down = (block_row < maxrowidx) ? getBlockIndex(block_row+1, block_offset) : 0;
 
         if(right > available[block_row].first && right <= available[block_row].second)
         {
-            uint16_t count = available[block_row].second - right + 2;
+            int16_t count = available[block_row].second - right + 2;
             std::iota(order.begin()+i, order.begin()+i+count, right - 1);
             i += count;
             std::cout << "right " << count << std::endl;
@@ -54,7 +54,7 @@ void Viewport::computeOrdering()
         }
         else if(left >= available[block_row].first && left < available[block_row].second)
         {
-            uint16_t count = left - available[block_row].first + 2;
+            int16_t count = left - available[block_row].first + 2;
             icov::helpers::iota(order.begin()+i, order.begin()+i+count, (int)left + 1, -1);
             available[block_row].first = left + 2;
             i += count;
@@ -84,7 +84,7 @@ void Viewport::computeOrdering()
         {
             //jump
             std::cout << "jump " << std::endl;
-            uint16_t searchrow = 0;
+            int16_t searchrow = 0;
 
             if(block_row > 0)
             {
@@ -97,7 +97,7 @@ void Viewport::computeOrdering()
 
             if(block_row == 0 || available[searchrow].second < available[searchrow].first)
             {
-                searchrow = std::min(block_row + 1, (uint16_t)available.size() - 1);
+                searchrow = std::min(block_row + 1, (int16_t)available.size() - 1);
                 while(searchrow < (available.size() - 1) && available[searchrow].second < available[searchrow].first)
                 {
                     searchrow++;
@@ -119,50 +119,68 @@ void Viewport::computeRows()
 {
     float u, v;
     //u = icus.begin()->get()->u;
-    v = icus.begin()->get()->v;
+    v = v_min;
 
-    rows = RowMinMax(1+(v - icus.back().get()->v)/icus.begin()->get()->h, MinMax(0,0));
+    uint32_t rowcount = 1+(v_max - v_min)/icus.begin()->get()->h;
+
+    std::cout << "rowcount=" << rowcount << std::endl;
+
+    rows = RowMinMax(rowcount, MinMax(0,0));
+
+
     int rowidx = 0;
     for(int i = 0; i < (int)icus.size() ; i++)
     {
-        if(icus[i]->v < v)
+        float iv = icov::helpers::maths::wrap(icus[i]->v, v_min, v_max);
+        if(iv > v)
         {
             rowidx++;
-            v = icus[i]->v;
+            v = iv;
             rows[rowidx].first = i;
         }
         rows[rowidx].second = i;
     }
 }
 
-uint16_t Viewport::rowLength(uint16_t row)
+int16_t Viewport::rowLength(int16_t row)
 {
     return 1 + rows[row].second - rows[row].first;
 }
 
-void Viewport::getBlockCoords(const Block &b, uint16_t &o_row, uint16_t &o_offset)
+void Viewport::getBlockCoords(const Block &b, int16_t &o_row, int16_t &o_offset)
 {
     const auto &tl = icus.begin()->get();
     const auto &br = icus.back();
 
+    float tl_u = tl->u, tl_v = tl->v, br_u = br->u, br_v = br->v, u = b.u, v = b.v;
 
-    o_row = (uint16_t)((rows.size()-1) * (1 - (b.v - br->v) / (tl->v - br->v)));
+    normalizeUV(tl_u, tl_v);
+    normalizeUV(br_u, br_v);
+    normalizeUV(u, v);
 
-    uint16_t min = rows[o_row].first;
-    uint16_t max = rows[o_row].second;
+    o_row = (int16_t)((rows.size()-1) * v);
+
+    int16_t min = rows[o_row].first;
+    int16_t max = rows[o_row].second;
 
     const auto &left = icus[min];
     const auto &right = icus[max];
 
-    o_offset = (uint16_t)((max - min) * ((b.u - left->u) / (right->u - left->u)));
+    float l_u = left->u, r_u = right->u;
+    //normalizeUV(l_u, r_u);
+
+     l_u = icov::helpers::maths::normalize(icov::helpers::maths::wrap(l_u, u_min, u_max), u_min, u_max);
+     r_u = icov::helpers::maths::normalize(icov::helpers::maths::wrap(r_u, u_min, u_max), u_min, u_max);
+
+    o_offset = (int16_t)((max - min) * icov::helpers::maths::normalize(b.u, l_u, r_u));
 }
 
-uint16_t Viewport::getBlockIndex(uint16_t row, uint16_t offset)
+int16_t Viewport::getBlockIndex(int16_t row, int16_t offset)
 {
     return rows[row].first + offset;
 }
 
-void Viewport::findNextFreeBlock(uint16_t &row, uint16_t &offset, bool down)
+void Viewport::findNextFreeBlock(int16_t &row, int16_t &offset, bool down)
 {
     int direction = down ? 1 : -1;
 
@@ -173,4 +191,10 @@ void Viewport::findNextFreeBlock(uint16_t &row, uint16_t &offset, bool down)
         offset = 0;
         row += direction;
     }
+}
+
+void Viewport::normalizeUV(float &u, float &v)
+{
+    u = icov::helpers::maths::normalize(icov::helpers::maths::wrap(u, u_min, u_max), u_min, u_max);
+    v = icov::helpers::maths::normalize(icov::helpers::maths::wrap(v, v_min, v_max), v_min, v_max);
 }

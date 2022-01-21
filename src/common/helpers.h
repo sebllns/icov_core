@@ -115,6 +115,9 @@ namespace maths
 {
     int pow2(int k);
     uint32_t binary_length(int val);
+    float normalize(float val, float min, float max);
+    float wrap(float val, float min, float max);
+    float repeat(float val, float min, float max);
 }
 
 namespace rand

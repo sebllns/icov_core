@@ -50,8 +50,8 @@
 #include "Block.h"
 #include "common.h"
 
-using MinMax = std::pair<uint16_t, uint16_t>;
-using BlockOrder = std::vector<uint16_t>;
+using MinMax = std::pair<int16_t, int16_t>;
+using BlockOrder = std::vector<int16_t>;
 using RowMinMax = std::vector<MinMax>;
 
 /** @class Viewport
@@ -68,17 +68,21 @@ public:
     BlockOrder order;
     RowMinMax rows;
 
-    uint16_t access_block_index;
+    int16_t access_block_index;
 
     float center_x;
     float center_y;
     float fov_x;
     float fov_y;
+
+    float u_min, u_max, v_min, v_max;
+
     Viewport(float pcenter_x, float pcenter_y, float fov_x, float fov_y);
     void computeOrdering();
     void computeRows();
-    uint16_t rowLength(uint16_t row);
-    void getBlockCoords(const Block &b, uint16_t & o_row, uint16_t &o_offset);
-    uint16_t getBlockIndex(uint16_t row, uint16_t offset);
-    void findNextFreeBlock(uint16_t &row, uint16_t &offset, bool down);
+    int16_t rowLength(int16_t row);
+    void getBlockCoords(const Block &b, int16_t & o_row, int16_t &o_offset);
+    int16_t getBlockIndex(int16_t row, int16_t offset);
+    void findNextFreeBlock(int16_t &row, int16_t &offset, bool down);
+    void normalizeUV(float &u, float &v);
 };
