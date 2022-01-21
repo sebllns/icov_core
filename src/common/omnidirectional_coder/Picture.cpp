@@ -82,14 +82,34 @@ shared_ptr<Viewport> Picture::getViewport(float pcenter_x, float pcenter_y, floa
     std::cout << "vp vmin, vmax = " << viewport->v_min << ", " << viewport->v_max << std::endl;
 
 
-    BlockVector vp((i_max-i_min+1)*(j_max-j_min+1));
+    std::vector<shared_ptr<DecodingBlock>> vp((i_max-i_min+1)*(j_max-j_min+1));
 
     int k = 0;
+
+    int vp_rows = 1 + i_max - i_min;
+    int vp_cols = 1 + j_max - j_min;
+
     for(int i = i_min ; i <= i_max ; i++)
     {
         for(int j = j_min ; j <= j_max ; j++)
         {
-            vp[k++] = getBlock(i, j);
+            auto b = getBlock(i, j);
+
+            vp[k] = std::make_shared<DecodingBlock>(b->u, b->v, b->w, b->h);
+
+            if(k > 0 && vp[k-1]->v == vp[k]->v)
+            {
+                vp[k]->neighbors[0] =  vp[k-1];
+                vp[k-1]->neighbors[1] = vp[k];
+            }
+
+            if(i > i_min)
+            {
+                vp[k]->neighbors[2] = vp[k-vp_cols];
+                vp[k-vp_cols]->neighbors[3] = vp[k];
+            }
+
+            k++;
         }
     }
 

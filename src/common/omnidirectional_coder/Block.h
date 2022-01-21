@@ -64,6 +64,8 @@ public:
   float w;
   float h;
   bool isAccessBlock;
+
+  Block() = default;
   Block(float px, float py, float pw, float ph);
 };
 

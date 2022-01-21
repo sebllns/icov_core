@@ -49,6 +49,7 @@
 
 #include "Block.h"
 #include "common.h"
+#include "DecodingBlock.h"
 
 using MinMax = std::pair<int16_t, int16_t>;
 using BlockOrder = std::vector<int16_t>;
@@ -64,7 +65,7 @@ class Viewport
 private:
 
 public:
-    BlockVector icus;
+    std::vector<std::shared_ptr<DecodingBlock>> icus;
     BlockOrder order;
     RowMinMax rows;
 

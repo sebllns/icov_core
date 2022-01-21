@@ -6,5 +6,5 @@ Block::Block(float px, float py, float pw, float ph):
     w(pw),
     h(ph)
 {
-
+    isAccessBlock = false;
 }
