@@ -30,6 +30,7 @@ DecodingBlock::DecodingBlock()
 {
     unused = false;
     decoded = false;
+    isAccessBlock = false;
 
     for(int i = 0; i < 4 ; i++)
     {

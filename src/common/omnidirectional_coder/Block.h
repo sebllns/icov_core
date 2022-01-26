@@ -65,7 +65,10 @@ public:
   float h;
   bool isAccessBlock;
 
-  Block() = default;
+  Block()
+  {
+      isAccessBlock = false;
+  }
   Block(float px, float py, float pw, float ph);
 };
 

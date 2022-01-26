@@ -13,10 +13,7 @@ void Viewport::computeOrdering()
 {
     std::cout << "****************************************" << std::endl;
 
-    access_block_index = 77; //icov::helpers::rand::range(0, icus.size() - 1);
-
     order = BlockOrder(icus.size());
-    //order[0] = access_block_index;
 
     RowMinMax available(rows);
     int16_t block_row = 0;

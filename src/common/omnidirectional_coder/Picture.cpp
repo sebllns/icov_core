@@ -1,13 +1,16 @@
 #include "Picture.h"
 
+//phi = y
+//theta = x
 Picture::Picture(int pw, int ph):
     w(pw),
     h(ph)
 {
-    center_x = 0;
-    center_y = 0;
     fov_x = 2 * M_PI;
     fov_y = M_PI;
+
+    center_x = fov_x/2;
+    center_y = fov_y/2;
 }
 
 void Picture::buildConstantSizeBlocks(int pw, int ph)
@@ -96,6 +99,12 @@ shared_ptr<Viewport> Picture::getViewport(float pcenter_x, float pcenter_y, floa
             auto b = getBlock(i, j);
 
             vp[k] = std::make_shared<DecodingBlock>(b->u, b->v, b->w, b->h);
+            vp[k]->isAccessBlock = b->isAccessBlock;
+
+            if(vp[k]->isAccessBlock)
+            {
+                viewport->access_block_index = k;
+            }
 
             if(k > 0 && vp[k-1]->v == vp[k]->v)
             {
@@ -145,4 +154,122 @@ float Picture::u(float theta)
 float Picture::v(float phi)
 {
     return phi / fov_y;
+}
+
+bool Picture::contains(float u_min, float u_max, float v_min, float v_max, float u, float v)
+{
+     return (u >= u_min && u <= u_max && v >= v_min && v <= v_max)
+             ||((u+1) >= u_min && (u+1) <= u_max && v >= v_min && v <= v_max)
+             ||((u+1) >= u_min && (u+1) <= u_max && (v+1) >= v_min && (v+1) <= v_max)
+             ||((u) >= u_min && (u) <= u_max && (v+1) >= v_min && (v+1) <= v_max);
+}
+
+bool Picture::contains(float u_min, float u_max, float v_min, float v_max, const Block& b)
+{
+//    std::cout <<  u_min << ", " <<     u_max << ", " << v_min << ", " << v_max << ", " << u << ", " << v;
+    while(u_min < 0)
+    {
+        u_min += 1.0;
+        u_max += 1.0;
+    }
+
+    while(v_min < 0)
+    {
+        v_min += 1.0;
+        v_max += 1.0;
+    }
+
+    while(u_min > u_max)
+    {
+        u_max += 1.0;
+    }
+
+    while(v_min > v_max)
+    {
+        v_max += 1.0;
+    }
+
+    return     contains(u_min, u_max, v_min, v_max, b.u-0.5*b.w, b.v-0.5*b.h)
+            || contains(u_min, u_max, v_min, v_max, b.u+0.5*b.w, b.v-0.5*b.h)
+            || contains(u_min, u_max, v_min, v_max, b.u+0.5*b.w, b.v+0.5*b.h)
+            || contains(u_min, u_max, v_min, v_max, b.u-0.5*b.w, b.v+0.5*b.h);
+}
+
+float Picture::phiMin()
+{
+    return center_y - 0.5 * fov_y;
+}
+
+float Picture::thetaMin()
+{
+    return center_x - 0.5 * fov_x;
+}
+
+float Picture::phiMax()
+{
+    return center_y + 0.5 * fov_y;
+
+}
+
+float Picture::thetaMax()
+{
+    return center_x + 0.5 * fov_x;
+}
+
+void Picture::initAccessBlocks(float pfov_x, float pfov_y)
+{
+    float step_x = pfov_x;
+    float step_y = pfov_y;
+
+    float min_x = 0;
+    float min_y = 0;
+
+    float max_x = pfov_x;
+    float max_y = pfov_y;
+
+    for(min_x = 0; min_x < fov_x ; min_x += step_x)
+    {
+        for(min_y = 0; min_y < fov_y ; min_y += step_y)
+        {
+            std::cout << min_x << ", "<< max_y << std::endl;
+            max_x = min_x + pfov_x;
+            max_y = min_y + pfov_y;
+
+            std::cout << "****************************************\n" << std::endl;
+            float pcenter_u = u(0.5 * (min_x + max_x));
+            float pcenter_v = v(0.5 * (min_y + max_y));
+
+            float u_min = u(min_x);
+            float u_max = u(max_x);
+
+            float v_min = v(min_y);
+            float v_max = v(max_y);
+
+            bool found = false;
+            for(auto b: access_blocks)
+            {
+                if(contains(u_min, u_max, v_min, v_max, *(icus[b].get())))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found)
+            {
+                int i = 0, j = 0;
+                getBlockCoords(pcenter_u, pcenter_v, i, j);
+
+                while(i < 0) i += block_rows;
+                while(j < 0) j += block_cols;
+
+                i %= block_rows;
+                j %= block_cols;
+
+                uint16_t acces_block_idx = i*block_cols + j;
+                access_blocks.push_back(acces_block_idx);
+                icus[acces_block_idx]->isAccessBlock = true;
+            }
+        }
+    }
 }

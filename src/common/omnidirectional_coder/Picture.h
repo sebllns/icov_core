@@ -61,7 +61,7 @@ private:
 
 public:
     BlockVector icus;
-    BlockVector access_blocks;
+    std::vector<uint16_t> access_blocks;
     int w;
     int h;
     int total_w;
@@ -79,4 +79,11 @@ public:
     void getBlockCoords(float u, float v, int &i, int &j);
     float u(float theta);
     float v(float phi);
+    bool contains(float u_min, float u_max, float v_min,  float v_max, float u, float v);
+    bool contains(float u_min, float u_max, float v_min,  float v_max, const Block& b);
+    float phiMin();
+    float thetaMin();
+    float phiMax();
+    float thetaMax();
+    void initAccessBlocks(float fov_x, float fov_y);
 };
