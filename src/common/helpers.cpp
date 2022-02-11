@@ -61,7 +61,7 @@ int maths::pow2(int k)
     return 1 << k;
 }
 
-string path::get_data_folder(const string &root, int code_size, bool auto_create)
+std::string path::get_data_folder(const std::string &root, int code_size, bool auto_create)
 {
     fs::path path(root);
     path /= std::to_string(code_size);
@@ -74,7 +74,7 @@ string path::get_data_folder(const string &root, int code_size, bool auto_create
     return path.string();
 }
 
-bool path::try_create_directories(const string &path)
+bool path::try_create_directories(const std::string &path)
 {
     bool created = false;
     try
@@ -90,12 +90,12 @@ bool path::try_create_directories(const string &path)
     return created;
 }
 
-string path::combine(const string &path1, const string &path2)
+std::string path::combine(const std::string &path1, const std::string &path2)
 {
     return  fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
 }
 
-void io::writeAlist(const string &filename, const AffMatrix &data)
+void io::writeAlist(const std::string &filename, const AffMatrix &data)
 {
     std::ofstream alist_file(filename);
     if (!alist_file.is_open())

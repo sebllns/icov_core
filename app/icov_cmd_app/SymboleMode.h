@@ -49,7 +49,7 @@
 #pragma once
 
 #include "common.h"
-#include "interactive_coder/IcovCoder.h"
+#include "ldpc_codec/IcovCoder.h"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 

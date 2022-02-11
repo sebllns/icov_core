@@ -78,7 +78,7 @@ void iota(ForwardIt first, ForwardIt last, T value, T step)
     }
 }
 
-template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)
+template<typename T> bool lazy_compare_vector(const std::vector<T>& v1, const std::vector<T>& v2)
 {
     if(v1.size() != v2.size())
     {
@@ -98,7 +98,7 @@ template<typename T> static bool lazy_compare_vector(const std::vector<T>& v1, c
 }
 
 
-template<typename T> static FastMatrix<T> transpose(const FastMatrix<T>& m)
+template<typename T> FastMatrix<T> transpose(const FastMatrix<T>& m)
 {
     FastMatrix<T> t(m.cols(), m.rows());
     for(int i = 0; i < t.rows() ; i++)
@@ -109,6 +109,19 @@ template<typename T> static FastMatrix<T> transpose(const FastMatrix<T>& m)
         }
     }
     return t;
+}
+
+namespace assert
+{
+
+    template<typename T> void range(T val, T min, T max)
+    {
+        if(min > max) BOOST_THROW_EXCEPTION(std::invalid_argument("Required min <= max"));
+
+         if(val < min || val > max) BOOST_THROW_EXCEPTION(std::out_of_range("VALUE=" + std::to_string(val) + " while the acceptable range is [" + std::to_string(min) + ", " + std::to_string(max) + "]"));
+
+    }
+
 }
 
 namespace maths
@@ -174,4 +187,5 @@ bool try_create_directories(const std::string& path);
 std::string get_data_folder(const std::string& root, int code_size, bool auto_create = false);
 std::string combine(const std::string& path1, const std::string& path2);
 }
+
 }

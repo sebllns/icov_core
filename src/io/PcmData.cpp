@@ -51,7 +51,7 @@
 #include <fstream>
 #include <sstream>
 
-void PcmData::read_matrix(const string &filepath, AffMatrix &h)
+void PcmData::read_matrix(const std::string &filepath, AffMatrix &h)
 {
     std::ifstream file(filepath);
 
@@ -89,7 +89,7 @@ void PcmData::read_matrix(const string &filepath, AffMatrix &h)
     file.close();
 }
 
-void PcmData::read_matrix(const string &filepath, icov::FastMatrix<bool> &h)
+void PcmData::read_matrix(const std::string &filepath, icov::FastMatrix<bool> &h)
 {
     std::ifstream file(filepath);
 
@@ -127,7 +127,7 @@ void PcmData::read_matrix(const string &filepath, icov::FastMatrix<bool> &h)
     file.close();
 }
 
-void PcmData::read_mapping_vector(const string &filepath, icov::FastMatrix<uint16_t> &m)
+void PcmData::read_mapping_vector(const std::string &filepath, icov::FastMatrix<uint16_t> &m)
 {
     std::ifstream file(filepath);
 

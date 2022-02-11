@@ -9,23 +9,23 @@
 ////#include <boost/filesystem.hpp>
 
 //#include "tools/DebugTools.h"
-//#include "interactive_coder/InteractiveCoder.h"
-//#include "interactive_coder/aff3ct/Aff3ctDecoder.h"
-//#include "interactive_coder/LLRProvider.h"
+//#include "ldpc_codec/InteractiveCoder.h"
+//#include "ldpc_codec/aff3ct/Aff3ctDecoder.h"
+//#include "ldpc_codec/LLRProvider.h"
 
-//#include "interactive_coder/implementation/imt/IMTSyndrome.h"
-//#include "interactive_coder/implementation/imt/IMTMatrixProvider.h"
+//#include "ldpc_codec/implementation/imt/IMTSyndrome.h"
+//#include "ldpc_codec/implementation/imt/IMTMatrixProvider.h"
 
-//#include "interactive_coder/implementation/imt_164/IMT164Syndrome.h"
-//#include "interactive_coder/implementation/imt_164/IMT164MatrixProvider.h"
+//#include "ldpc_codec/implementation/imt_164/IMT164Syndrome.h"
+//#include "ldpc_codec/implementation/imt_164/IMT164MatrixProvider.h"
 
-//#include "interactive_coder/implementation/varodayan/VarodayanSyndrome.hpp"
-//#include "interactive_coder/implementation/varodayan/VarodayanMatrixProvider.hpp"
+//#include "ldpc_codec/implementation/varodayan/VarodayanSyndrome.hpp"
+//#include "ldpc_codec/implementation/varodayan/VarodayanMatrixProvider.hpp"
 
 //#include "TestSequenceInput.h"
 //#include "TestSequenceResult.h"
 
-//#include "interactive_coder/factory/CoderFactory.h"
+//#include "ldpc_codec/factory/CoderFactory.h"
 
 ////#include <boost/filesystem.hpp>
 

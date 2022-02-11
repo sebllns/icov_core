@@ -7,7 +7,7 @@ TestSequenceInput::TestSequenceInput(size_t size):
 
 }
 
-bool TestSequenceInput::read_from_file(string filename)
+bool TestSequenceInput::read_from_file(std::string filename)
 {
     m_data.clear();
 

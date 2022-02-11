@@ -10,7 +10,7 @@
 /** @file common.h
  *  @brief Defines version information, constants and small in-line functions
  *  @ingroup common
- *  @author SÃ©bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
@@ -70,7 +70,8 @@
 #include <cstdio>
 #include <stdexcept>
 
-using namespace std;
+#include <boost/throw_exception.hpp>
+
 #include "typedef.h"
 #include "common_types.h"
 #include "version.h"

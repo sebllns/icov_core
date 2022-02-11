@@ -1,6 +1,6 @@
 #include "BinaryMode.h"
 
-#include "interactive_coder/factory/CoderFactory.h"
+#include "ldpc_codec/factory/CoderFactory.h"
 
 #include "tools/DebugTools.h"
 

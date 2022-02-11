@@ -8,15 +8,13 @@ project(icov_core LANGUAGES CXX)
 # library
 set( LIB_NAME IcovCoreLib )
 
+include_directories(. common common/dev_tools ldpc_codec omnidirectional_layer video_layer)
 
 # get source files
 file(GLOB_RECURSE SRC_FILES "*.cpp" )
 
 # get include files
 file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
-
-
-include_directories(. common/interactive_coder)
 
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
 #,readability-*

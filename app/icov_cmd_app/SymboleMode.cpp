@@ -2,7 +2,7 @@
 
 #include "TestSequenceInput.h"
 #include "TestSequenceResult.h"
-#include "interactive_coder/factory/CoderFactory.h"
+#include "ldpc_codec/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 
 #include <boost/filesystem.hpp>
@@ -287,7 +287,7 @@ void SymboleMode::process_input_list(const std::string &file)
     seq_list.close();
 }
 
-void SymboleMode::process_input_file(const string &file)
+void SymboleMode::process_input_file(const std::string &file)
 {
     std::cout << file << std::endl;
 

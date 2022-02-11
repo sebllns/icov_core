@@ -103,22 +103,10 @@ _deps
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
 
 ### CMake ###
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
 CMakeUserPresets.json
 
 ### CMake Patch ###
 # External projects
-*-prefix/
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake
 
@@ -137,26 +125,18 @@ CMakeUserPresets.json
 
 
 # A listing of all the files included in the project
-*.files
 
 # Include directories
-*.includes
 
 # Project configuration settings like predefined Macros
-*.config
 
 # Qt Creator settings
-*.creator
 
 # User project settings
-*.creator.user*
 
 # Qt Creator backups
-*.autosave
 
 # Flags for Clang Code Model
-*.cxxflags
-*.cflags
 
 
 # End of https://www.toptal.com/developers/gitignore/api/qtcreator
@@ -177,10 +157,6 @@ CMakeUserPresets.json
 .nfs*
 
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/tasks.json
-!.vscode/launch.json
-*.code-workspace
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
@@ -564,3 +540,4 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudiocode,visualstudio,linux,windows
+*.~*
