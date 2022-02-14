@@ -48,7 +48,7 @@ float IPicture::fov_y() const
 
 point3d IPicture::getCartesianCoords(size_t id) const
 {
-    angle_radian p_spher(angleX(getById(id)->u()), angleY(getById(id)->v()));
+    angle_radian p_spher(angleX(getById(id)->center_u()), angleY(getById(id)->center_v()));
     point3d p_cart(0.0f,0.0f, 0.0f);
     bg::transform(p_spher, p_cart);
     return p_cart;

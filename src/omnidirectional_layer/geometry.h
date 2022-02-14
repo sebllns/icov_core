@@ -71,13 +71,14 @@ struct viewport_geometry
     float focale;
     point2d resolution;
     point2d center;
-    box roi;
+    box visible_block_roi;
 };
 
 box get_roi(const point2d &resolution, const point2d &padding);
 
 bool is_visible(const point2d &p, const box &viewport);
 
+point3d inverse_YPR(const point3d &p, float yaw, float pitch, float roll);
 point3d rotate_YPR(const point3d &p, float yaw, float pitch, float roll);
 
 point2d get_viewport_coordinates(const point3d &p, const viewport_geometry &viewport);
