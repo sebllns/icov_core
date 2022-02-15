@@ -62,12 +62,11 @@ class IAccessBlockManager
 {
 protected:
     BlockIteratorVector m_blocks;
+    BlockVector::const_iterator m_invalidBlock;
 
 public:
     virtual ~IAccessBlockManager() = default;
     virtual void buildAccessBlocks(const IPicture &pic, const IViewportManager &vpm) = 0;
-    virtual BlockVector::const_iterator findAccessBlock(const viewport_geometry &vp, const IViewportManager &vpm) const;
-
-    bool isValidBlock(BlockVector::const_iterator it);
+    virtual BlockVector::const_iterator findAccessBlock(const IViewportManager &vpm) const;
 };
 

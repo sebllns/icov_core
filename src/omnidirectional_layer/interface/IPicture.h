@@ -76,21 +76,15 @@ public:
 
     virtual ~IPicture() = default;
 
-    BlockVector::const_iterator getById(size_t id) const
-    {
-        if(id <= 0 && id > m_icus.size()) return m_icus.end();
-        return m_icus.begin() + id - 1;
-    }
+    const BlockVector& icus() const;
 
-    BlockVector::const_iterator getBlock(int i, int j) const
-    {
-        return getById(getId(i,j));
-    }
+    BlockVector::const_iterator getById(size_t id) const;
 
-    bool isValidBlock(BlockVector::const_iterator it) const
-    {
-        return it != m_icus.end();
-    }
+    BlockVector::const_iterator getBlock(int i, int j) const;
+
+    bool isValidBlock(BlockVector::const_iterator it) const;
+
+    BlockVector::const_iterator invalidBlock() const;
 
     virtual void getPixelCoords(float u, float v, int &i, int &j) const;
     virtual int i(float u) const;

@@ -48,6 +48,7 @@
 #pragma once
 
 #include "common.h"
+#include "omnidirectional_layer/geometry.h"
 
 class IPicture;
 
@@ -58,18 +59,8 @@ class IPicture;
  */
 class Block
 {
-protected:
 
-    IPicture *m_parent;
-    float m_u;
-    float m_v;
-    float m_w;
-    float m_h;
-    bool m_isAccessBlock;
-
-public:
-
-    enum NeighborIndex
+public: enum NeighborIndex
     {
         THIS    = 0,
         RIGHT    = 1,
@@ -79,17 +70,27 @@ public:
         COUNT,
     };
 
+protected:
 
-  size_t uid[NeighborIndex::COUNT];
+    IPicture *m_parent;
+    float m_u;
+    float m_v;
+    float m_w;
+    float m_h;
+    bool m_isAccessBlock;  
+    size_t uid[NeighborIndex::COUNT];
 
+    //center, topleft, topright, bottomright, bottomleft
+    point3d cartesian_coords[5];
 
+public:
 
   Block(size_t id, IPicture *parent, float px, float py, float pw, float ph);
   const IPicture *parent() const;
 
   void setId(NeighborIndex index, size_t id);
   size_t getId(NeighborIndex index) const;
-
+  const point3d& getCartesianCoord(uint16_t i) const;
 
   float u() const;
   float v() const;
@@ -100,6 +101,8 @@ public:
   float center_v() const;
 
   bool isAccessBlock() const;
+
+//  bool isVisible(const viewport_geometry &vpg) const;
 };
 
 using sp_Block = std::shared_ptr<Block>;

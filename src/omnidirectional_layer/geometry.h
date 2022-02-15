@@ -64,21 +64,30 @@ typedef bg::model::box<point2d>                                                 
 
 typedef boost::qvm::vec<float, 3> float3;
 
+
 struct viewport_geometry
 {
+//    enum visibility_test_strategy_t
+//    {
+//        NONE = 0,
+//        CENTER_WITH_PADDING,
+//        CENTER_AND_CORNERS,
+//    };
+
     angle_radian pov;
     angle_radian fov;
     float focale;
     point2d resolution;
     point2d center;
-    box visible_block_roi;
+    point2d roi_size;
+//    visibility_test_strategy_t visibility_test_strategy;
+
+public:
+    angle_radian getPov() const;
+    void setPov(angle_radian newPov);
 };
 
-box get_roi(const point2d &resolution, const point2d &padding);
-
-bool is_visible(const point2d &p, const box &viewport);
+bool is_visible(const point3d &p, const point2d &viewport_size);
 
 point3d inverse_YPR(const point3d &p, float yaw, float pitch, float roll);
 point3d rotate_YPR(const point3d &p, float yaw, float pitch, float roll);
-
-point2d get_viewport_coordinates(const point3d &p, const viewport_geometry &viewport);

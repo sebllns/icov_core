@@ -6,6 +6,32 @@ IPicture::IPicture(size_t w, size_t h, float center_angle_x, float center_angle_
 
 }
 
+const BlockVector &IPicture::icus() const
+{
+    return m_icus;
+}
+
+BlockVector::const_iterator IPicture::getById(size_t id) const
+{
+    if(id <= 0 && id > m_icus.size()) return m_icus.end();
+    return m_icus.begin() + id - 1;
+}
+
+BlockVector::const_iterator IPicture::getBlock(int i, int j) const
+{
+    return getById(getId(i,j));
+}
+
+bool IPicture::isValidBlock(BlockVector::const_iterator it) const
+{
+    return it != invalidBlock();
+}
+
+BlockVector::const_iterator IPicture::invalidBlock() const
+{
+    return m_icus.end();
+}
+
 size_t IPicture::width() const
 {
     return m_width;

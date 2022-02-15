@@ -47,8 +47,9 @@
  *****************************************************************************/
 #pragma once
 
+#include "omnidirectional_layer/geometry.h"
+
 class Block;
-struct viewport_geometry;
 
 /** @class IViewportManager
  *  @brief IViewportManager
@@ -58,8 +59,22 @@ struct viewport_geometry;
 class IViewportManager
 {
 private:
+    viewport_geometry m_viewportGeometry;
 
 public:
     virtual ~IViewportManager() = default;
-    virtual bool isBlockVisible(const Block& b, const viewport_geometry &v) = 0;
+    virtual bool isBlockVisible(const Block& b) const = 0;
+    const viewport_geometry &viewportGeometry() const;
+    viewport_geometry &viewportGeometry();
 };
+
+inline const viewport_geometry &IViewportManager::viewportGeometry() const
+{
+    return m_viewportGeometry;
+}
+
+inline viewport_geometry &IViewportManager::viewportGeometry()
+{
+    return m_viewportGeometry;
+}
+

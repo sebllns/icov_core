@@ -156,5 +156,9 @@ float maths::wrap(float val, float min, float max)
     //return val - (min - max) * floor(val / (max - min));
 }
 
+void assert::check(bool expr)
+{
+    if(!expr) BOOST_THROW_EXCEPTION(std::invalid_argument("Assertion is invalid: checked expression is not true"));
+}
 
 }

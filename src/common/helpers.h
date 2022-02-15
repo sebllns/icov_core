@@ -122,6 +122,8 @@ namespace assert
 
     }
 
+    void check(bool expr);
+
 }
 
 namespace maths
