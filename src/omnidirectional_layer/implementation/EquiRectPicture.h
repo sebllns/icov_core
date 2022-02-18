@@ -47,8 +47,6 @@
  *****************************************************************************/
 #pragma once
 
-#include "Viewport.h"
-#include "omnidirectional_layer/interface/IBlockManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 
 

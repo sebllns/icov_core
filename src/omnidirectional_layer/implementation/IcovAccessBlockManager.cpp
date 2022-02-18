@@ -24,13 +24,13 @@ void IcovAccessBlockManager::buildAccessBlocks(const IPicture &pic,  IViewportMa
         }
     }
 
-//    for(float angle_y = pic.minAngleY() ; angle_y <= pic.maxAngleY() ; angle_y += m_angle_delta.y())
-//    {
-//        for(float angle_x = pic.minAngleX() ; angle_x < pic.maxAngleX() ; angle_x += m_angle_delta.x())
-//        {
+    //    for(float angle_y = pic.minAngleY() ; angle_y <= pic.maxAngleY() ; angle_y += m_angle_delta.y())
+    //    {
+    //        for(float angle_x = pic.minAngleX() ; angle_x < pic.maxAngleX() ; angle_x += m_angle_delta.x())
+    //        {
 
-//        }
-//    }
+    //        }
+    //    }
 
     vpm.viewportGeometry().setPov(pov);
 

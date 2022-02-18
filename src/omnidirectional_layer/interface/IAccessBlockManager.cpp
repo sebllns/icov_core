@@ -3,6 +3,8 @@
 #include "omnidirectional_layer/interface/IViewportManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 
+
+///TODO: RETEST PREVIOUS AB + MOVE FUNCTION
 BlockVector::const_iterator IAccessBlockManager::findAccessBlock(const IViewportManager &vpm) const
 {
     for(const auto &b : m_blocks)
@@ -10,6 +12,7 @@ BlockVector::const_iterator IAccessBlockManager::findAccessBlock(const IViewport
         if(vpm.isBlockVisible(*b)) return b;
     }
 
+    //TODO: MOVE IT
     //BOOST_THROW_EXCEPTION(std::logic_error("Could not find any access block"));
 
     return m_invalidBlock;

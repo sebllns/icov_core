@@ -60,7 +60,8 @@ class IPicture;
 class Block
 {
 
-public: enum NeighborIndex
+public:
+    enum NeighborIndex
     {
         THIS    = 0,
         RIGHT    = 1,
@@ -86,6 +87,8 @@ protected:
 public:
 
   Block(size_t id, IPicture *parent, float px, float py, float pw, float ph);
+  ~Block();
+
   const IPicture *parent() const;
 
   void setId(NeighborIndex index, size_t id);
@@ -101,6 +104,8 @@ public:
   float center_v() const;
 
   bool isAccessBlock() const;
+
+
 
 //  bool isVisible(const viewport_geometry &vpg) const;
 };

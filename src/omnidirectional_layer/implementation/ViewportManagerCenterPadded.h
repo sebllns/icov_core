@@ -56,7 +56,7 @@
  *
  *  A ViewportManagerCenterPadded is the smallest unit of a EquiRectPicture or ViewportManagerCenterPadded and is conveying the pixels to be decoded and the pixels to be displayed.
  */
-class ViewportManagerCenterPadded : IViewportManager
+class ViewportManagerCenterPadded : public IViewportManager
 {
 protected:
     float m_padding;
@@ -65,5 +65,5 @@ public:
     ~ViewportManagerCenterPadded() = default;
 
     // IViewportManager interface
-    virtual bool isBlockVisible(const Block &b, const viewport_geometry &v) const override;
+    virtual bool isBlockVisible(const Block &b) const override;
 };

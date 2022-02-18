@@ -6,11 +6,11 @@ ViewportManagerCenterPadded::ViewportManagerCenterPadded(float padding):
 
 }
 
-bool ViewportManagerCenterPadded::isBlockVisible(const Block &b, const viewport_geometry &vpg) const
+bool ViewportManagerCenterPadded::isBlockVisible(const Block &b) const
 {
-    auto rotated = inverse_YPR(b.getCartesianCoord(0), vpg.pov.x(), vpg.pov.y(), 0);
+    auto rotated = inverse_YPR(b.getCartesianCoord(0), viewportGeometry().pov.x(), viewportGeometry().pov.y(), 0);
 
-    auto roi = vpg.roi_size;
+    auto roi = viewportGeometry().roi_size;
 
     if(rotated.x() < 0) return false;
 

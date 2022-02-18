@@ -399,6 +399,9 @@ std::vector<size_t> sort_indexes_abs(const std::vector<T> &v,  std::vector<size_
   return idx;
 }
 
+template<typename Iterator> struct value_type
+{ typedef decltype( *(Iterator()) ) result; };
+
 }
 
 #endif // COMMON_TYPES_H

@@ -52,9 +52,9 @@
 
 #include "common.h"
 #include "omnidirectional_layer/interface/IRenderer.h"
-#include "omnidirectional_layer/interface/IBlockManager.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
 
-class IBlockDecoder : IBlockManager
+class IBlockDecoder : IBlockProcessor
 {
 protected:
   std::unique_ptr<IRenderer> m_renderer;

@@ -47,9 +47,11 @@
  *****************************************************************************/
 #pragma once
 
-#include "omnidirectional_layer/implementation/Viewport.h"
-#include "omnidirectional_layer/interface/IBlockManager.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/geometry.h"
+
+
+class RequestManager;
 
 /** @class IPicture
  *  @brief IPicture
@@ -70,6 +72,8 @@ protected:
 
     BlockVector m_icus;
 
+    RequestManager *m_requestManager;
+
 public:
 
     IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y, float fov_x, float fov_y);
@@ -77,6 +81,8 @@ public:
     virtual ~IPicture() = default;
 
     const BlockVector& icus() const;
+
+    bool blockExists(size_t id) const;
 
     BlockVector::const_iterator getById(size_t id) const;
 
@@ -114,4 +120,7 @@ public:
 
     point3d getCartesianCoords(size_t id) const;
 
+    RequestManager *requestManager() const;
+    void setRequestManager(RequestManager *newRequestManager);
+    void releaseRequestManager();
 };

@@ -53,12 +53,14 @@
  *  @brief IcovAccessBlockManager
  *
  *  A IcovAccessBlockManager is the smallest unit of a EquiRectPicture or IcovAccessBlockManager and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  TODO : RENAME WITHOUT ICOV
  */
-class IcovAccessBlockManager : IAccessBlockManager
+class IcovAccessBlockManager : public IAccessBlockManager
 {
 protected:
     angle_radian m_angle_delta;
 public:
+    IcovAccessBlockManager() = default;
     IcovAccessBlockManager(angle_radian angle_delta);
     ~IcovAccessBlockManager() = default;
 

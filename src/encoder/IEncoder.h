@@ -1,15 +1,16 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup icov-core 
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
+/** @addtogroup IEncoder
+ * IEncoder package (client side).
  *  @ingroup icov-core
  */
 
-/** @file IBlockManager.h
- *  @brief IBlockManager conveying IBlockManager Units (VPU) for VCL data
- *  @ingroup common
+/** @file IEncoder.h
+ *  @brief Defines an abstract ICOV IEncoder.
+ *  @ingroup IEncoder
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2021
@@ -45,27 +46,26 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
-#pragma once
+
+#ifndef IEncoder_H
+#define IEncoder_H
 
 #include "common.h"
-#include "omnidirectional_layer/DecodingBlock.h"
-#include <unordered_set>
 
-/** @class IBlockManager
- *  @brief IBlockManager
- *
- *  A IBlockManager is
- */
-class IBlockManager
+class IPicture;
+class Block;
+
+class IEncoder
 {
-private:
-    std::unordered_set<size_t> m_elements;
 
-public:
-    virtual ~IBlockManager() = default;
+public:               
+    virtual ~IEncoder() = default;
 
-    virtual void processBlock(const Block& b, uint16_t prediction) = 0;
-    void processBlock(BlockVector::const_iterator b);
-
-    bool isProcessed(size_t id);
+    virtual void openFile(const std::string &filename) = 0;
+    virtual void dispose() = 0;
+    virtual void encode(const IPicture& p) = 0;
+    virtual void encodeBlock(const Block &b) = 0;
+    virtual void encodeBlockWithPrediction(const Block &b, uint16_t prediction) = 0;
 };
+
+#endif // IEncoder_H

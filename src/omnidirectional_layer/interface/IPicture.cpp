@@ -1,5 +1,22 @@
 #include "IPicture.h"
 
+RequestManager *IPicture::requestManager() const
+{
+    assert(m_requestManager != nullptr);
+    return m_requestManager;
+}
+
+void IPicture::setRequestManager(RequestManager *newRequestManager)
+{
+    m_requestManager = newRequestManager;
+    assert(m_requestManager != nullptr);
+}
+
+void IPicture::releaseRequestManager()
+{
+    m_requestManager = nullptr;
+}
+
 IPicture::IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y, float fov_x, float fov_y):
     m_width(w), m_height(h), m_total_w(w), m_total_h(h), m_center_angle_x(center_angle_x), m_center_angle_y(center_angle_y), m_fov_x(fov_x), m_fov_y(fov_y)
 {
@@ -11,9 +28,14 @@ const BlockVector &IPicture::icus() const
     return m_icus;
 }
 
+bool IPicture::blockExists(size_t id) const
+{
+    return id > 0 && id <= m_icus.size();
+}
+
 BlockVector::const_iterator IPicture::getById(size_t id) const
 {
-    if(id <= 0 && id > m_icus.size()) return m_icus.end();
+    if(!blockExists(id)) return m_icus.end();
     return m_icus.begin() + id - 1;
 }
 

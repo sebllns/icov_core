@@ -51,7 +51,7 @@
 #pragma once
 
 #include "common.h"
-#include "Block.h"
+#include "omnidirectional_layer/Block.h"
 
 
 class IPicture;
@@ -66,7 +66,7 @@ protected:
 
 public:
     virtual ~IAccessBlockManager() = default;
-    virtual void buildAccessBlocks(const IPicture &pic, const IViewportManager &vpm) = 0;
+    virtual void buildAccessBlocks(const IPicture &pic, IViewportManager &vpm) = 0;
     virtual BlockVector::const_iterator findAccessBlock(const IViewportManager &vpm) const;
 };
 

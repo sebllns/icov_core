@@ -3,6 +3,7 @@
 
 const IPicture *Block::parent() const
 {
+    assert(m_parent != nullptr);
     return m_parent;
 }
 
@@ -96,7 +97,8 @@ Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph
     m_w(pw),
     m_h(ph)
 {
-    icov::helpers::assert::check(parent != nullptr);
+    icov::helpers::assert::check(parent != nullptr, "Parent of block is not null");
+    icov::helpers::assert::check(id > 0, "ID of block is > 0");
 
     m_isAccessBlock = false;
     std::fill(uid, uid+NeighborIndex::COUNT, 0);
@@ -126,4 +128,9 @@ Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph
     phi = parent->angleX(u());
     bg::transform(angle_radian(phi, theta), cart_coord);
     cartesian_coords[4] = cart_coord;
+}
+
+Block::~Block()
+{
+    m_parent = nullptr;
 }

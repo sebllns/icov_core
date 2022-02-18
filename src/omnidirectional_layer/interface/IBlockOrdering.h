@@ -48,11 +48,7 @@
 #pragma once
 
 #include "omnidirectional_layer/Block.h"
-//#include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
-
-#include "omnidirectional_layer/interface/IBlockManager.h"
-#include "omnidirectional_layer/interface/IAccessBlockManager.h"
 
 
 /** @class IBlockOrdering
@@ -62,31 +58,13 @@
  */
 class IBlockOrdering
 {
-protected:
-    size_t m_width;
-    size_t m_height;
-    size_t m_total_w;
-    size_t m_total_h;
-    float m_center_angle_x;
-    float m_center_angle_y;
-    float m_fov_x;
-    float m_fov_y;
-
 public:
-
     virtual ~IBlockOrdering() = default;
 
-    virtual BlockVector::const_iterator getNextBlock(const BlockVector::iterator current, const IBlockManager &ibm, const IViewportManager &vpm) const = 0;
+    virtual BlockVector::const_iterator getNextBlock(const Block &current, const IViewportManager &vpm) = 0;
 
-    BlockVector::const_iterator findAccessBlock(const viewport_geometry &vpg, const IViewportManager &vpm, const IAccessBlockManager &abm) const
-    {
-        auto acces_block = abm.findAccessBlock(vpg, vpm);
+    virtual void reset() = 0;
 
-        //if(acces_block == )
-
-        return acces_block;
-    }
-
-
+    virtual bool isBlockProcessed(size_t id) const = 0;
 
 };

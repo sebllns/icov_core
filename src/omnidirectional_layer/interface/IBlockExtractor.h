@@ -52,9 +52,9 @@
 #define IBlockExtractor_H
 
 #include "common.h"
-#include "IBlockManager.h"
+#include "IBlockProcessor.h"
 
-class IBlockExtractor : IBlockManager
+class IBlockExtractor : IBlockProcessor
 {
 protected:
 

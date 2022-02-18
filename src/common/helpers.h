@@ -122,7 +122,7 @@ namespace assert
 
     }
 
-    void check(bool expr);
+    void check(bool expr, const std::string& msg);
 
 }
 
