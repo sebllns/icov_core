@@ -10,13 +10,13 @@ BlockOrdering::BlockOrdering(size_t blocks_count):
 
 std::vector<BlockOrdering::block_path_info>::iterator BlockOrdering::getPathInfoById(size_t id)
 {
-    assert(id > 0 && id <= m_path_info.size());
+    ICOV_ASSERT_MSG(id > 0 && id <= m_path_info.size(), "ID value is " << id);
     return m_path_info.begin() + id - 1;
 }
 
 std::vector<BlockOrdering::block_path_info>::const_iterator BlockOrdering::getPathInfoById(size_t id) const
 {
-    assert(id > 0 && id <= m_path_info.size());
+    ICOV_ASSERT_MSG(id > 0 && id <= m_path_info.size(), "ID value is " << id);
     return m_path_info.begin() + id - 1;
 }
 
@@ -31,7 +31,7 @@ Block::NeighborIndex BlockOrdering::findAvailableNeighbor(const Block &current, 
         if(!isBlockProcessed(n_id) && pic->blockExists(n_id))
         {
             auto n_block = pic->getById(n_id);
-            auto path_info = getPathInfoById(nn);
+            auto path_info = getPathInfoById(n_id);
             path_info->visibility_tested = true;
             if(vpm.isBlockVisible(*n_block))
             {
@@ -47,8 +47,10 @@ Block::NeighborIndex BlockOrdering::findAvailableNeighbor(const Block &current, 
 
 BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm)
 {
+//    std::cout << "getNextBlock " << current.getId(Block::THIS) << std::endl;
     auto pic = current.parent();
     auto path_it = getPathInfoById(current.getId(Block::THIS));
+    path_it->visibility_tested = true;
     path_it->is_visible = true;
 
 
@@ -59,13 +61,14 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
 
     do
     {
-        available = findAvailableNeighbor(current, vpm);
+        available = findAvailableNeighbor(*pic->getById(m_cursor.top()), vpm);
         if(available == Block::COUNT) m_cursor.pop();
     }
     while(available == Block::COUNT && !m_cursor.empty());
 
+    std::cout << available << std::endl;
 
-    return pic->invalidBlock();
+    return pic->getById(current.getId(available));
 }
 
 

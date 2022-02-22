@@ -34,7 +34,10 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(Boost 1.70.0 COMPONENTS program_options filesystem REQUIRED)
+find_package(Boost 1.70.0 COMPONENTS
+    program_options
+    filesystem
+    REQUIRED)
 
 # Link with the "Threads library (required to link with AFF3CT after)
 
@@ -59,8 +62,8 @@ set (AFF3CT_DIR "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/")
 message("SEARCHING AFF3CT IN AFF3CT_DIR=${AFF3CT_DIR}")
 
 
-SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
-SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
+#SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
+#SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 
 #find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${CMAKE_CURRENT_BINARY_DIR}/third-party/aff3ct/lib/cmake/" NO_DEFAULT_PATH)
 #message(STATUS "FOUND AFF3CT IN AFF3CT_CONFIG=${AFF3CT_CONFIG}")

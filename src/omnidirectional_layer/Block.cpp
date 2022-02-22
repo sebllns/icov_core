@@ -15,7 +15,7 @@ void Block::setId(NeighborIndex index, size_t id)
 
 size_t Block::getId(NeighborIndex index) const
 {
-    assert(index >= NeighborIndex::THIS && index < NeighborIndex::COUNT);
+    if(index < NeighborIndex::THIS || index >= NeighborIndex::COUNT) return 0;
     return  uid[index];
 }
 

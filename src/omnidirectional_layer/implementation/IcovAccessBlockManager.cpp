@@ -33,6 +33,4 @@ void IcovAccessBlockManager::buildAccessBlocks(const IPicture &pic,  IViewportMa
     //    }
 
     vpm.viewportGeometry().setPov(pov);
-
-
 }

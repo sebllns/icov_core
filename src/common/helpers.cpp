@@ -161,4 +161,9 @@ void assert::check(bool expr, const std::string& msg)
     if(!expr) BOOST_THROW_EXCEPTION(std::invalid_argument("Assertion is invalid: " + msg));
 }
 
+void assert::not_null(void *p)
+{
+    if(!p || p == nullptr) ICOV_THROW_NULLPTR("Nullptr is forbidden");
+}
+
 }

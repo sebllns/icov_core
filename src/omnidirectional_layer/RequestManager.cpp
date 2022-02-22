@@ -28,7 +28,7 @@ void RequestManager::update(float angle_x, float angle_y)
 
     while(m_picture->isValidBlock(current_block))
     {
-        std::cout << "block " << current_block->getId(Block::THIS) << std::endl;
+        if(m_blockProcessor) m_blockProcessor->processBlock(*current_block, 0);
         current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
     }
 

@@ -49,6 +49,8 @@
 #pragma once
 
 #define _USE_MATH_DEFINES // for C++
+#define BOOST_ENABLE_ASSERT_DEBUG_HANDLER
+#define BOOST_STACKTRACE_USE_ADDR2LINE
 
 #include <vector>
 #include <cstdint>
@@ -58,13 +60,30 @@
 #include <numeric>
 #include <algorithm>
 #include <cmath>
-
+#include <stdexcept>    // std::logic_error
+#include <iostream>     // std::cerr
+#include <boost/stacktrace.hpp>
+#include <boost/exception/all.hpp>
 #include "common.h"
 
 
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
+
+
+namespace boost {
+inline void assertion_failed_msg(char const* expr, char const* msg, char const* function, char const* /*file*/, long /*line*/) {
+    std::cerr << "Expression '" << expr << "' is false in function '" << function << "': " << (msg ? msg : "<...>") << ".\n"
+            << "Backtrace:\n" << boost::stacktrace::stacktrace() << '\n';
+    std::abort();
+}
+
+inline void assertion_failed(char const* expr, char const* function, char const* file, long line) {
+    ::boost::assertion_failed_msg(expr, 0 /*nullptr*/, function, file, line);
+}
+} // namespace boost
+
 
 namespace icov::helpers
 {
@@ -84,16 +103,16 @@ template<typename T> bool lazy_compare_vector(const std::vector<T>& v1, const st
     {
         return false;
     }
-
-
+    
+    
     bool equal = true;
     int i = -1;
-
+    
     while(equal && ++i < (int)v1.size())
     {
         equal = (v1[i] == v2[i]);
     }
-
+    
     return equal;
 }
 
@@ -111,35 +130,75 @@ template<typename T> FastMatrix<T> transpose(const FastMatrix<T>& m)
     return t;
 }
 
+namespace exception
+{
+typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+
+template <class E>
+void throw_with_trace(const E& e) {
+    BOOST_THROW_EXCEPTION(boost::enable_error_info(e)
+            << traced(boost::stacktrace::stacktrace()));
+}
+
+#if !defined(NDEBUG) || defined(ICOV_CORE_DEBUG_TRACE_ENABLED)
+
+#define ICOV_THROW_EXCEPTION(e) icov::helpers::exception::throw_with_trace(e)
+#else
+#define ICOV_THROW_EXCEPTION(e) BOOST_THROW_EXCEPTION(e)
+#endif
+
+#define ICOV_THROW_LOGICAL_EXCEPTION(msg) ICOV_THROW_EXCEPTION(std::logic_error(msg))
+#define ICOV_THROW_RUNTIME_EXCEPTION(msg) ICOV_THROW_EXCEPTION(std::runtime_error(msg))
+#define ICOV_THROW_INVALID_ARGUMENT(msg) ICOV_THROW_EXCEPTION(std::invalid_argument(msg))
+#define ICOV_THROW_OUT_OF_RANGE(msg) ICOV_THROW_EXCEPTION(std::range_error(msg))
+#define ICOV_THROW_NULLPTR(msg) ICOV_THROW_EXCEPTION(std::invalid_argument(msg))
+
+}
+
 namespace assert
 {
 
-    template<typename T> void range(T val, T min, T max)
-    {
-        if(min > max) BOOST_THROW_EXCEPTION(std::invalid_argument("Required min <= max"));
+#ifndef NDEBUG
+#define ICOV_ASSERT_MSG(cond, msg) {\
+    if(!(cond))\
+{\
+    std::cerr << "*******************************************************" << std::endl << msg << std::endl;\
+}\
+    BOOST_ASSERT(cond);\
+}
+#else
+#define ICOV_ASSERT_MSG(...)
+#endif
 
-         if(val < min || val > max) BOOST_THROW_EXCEPTION(std::out_of_range("VALUE=" + std::to_string(val) + " while the acceptable range is [" + std::to_string(min) + ", " + std::to_string(max) + "]"));
 
-    }
+template<typename T> void range(T val, T min, T max)
+{
+    if(min > max) BOOST_THROW_EXCEPTION(std::invalid_argument("Required min <= max"));
+    
+    if(val < min || val > max) BOOST_THROW_EXCEPTION(std::out_of_range("VALUE=" + std::to_string(val) + " while the acceptable range is [" + std::to_string(min) + ", " + std::to_string(max) + "]"));
+    
+}
 
-    void check(bool expr, const std::string& msg);
+void not_null(void *p);
+
+void check(bool expr, const std::string& msg);
 
 }
 
 namespace maths
 {
-    int pow2(int k);
-    uint32_t binary_length(int val);
-    float normalize(float val, float min, float max);
-    float wrap(float val, float min, float max);
-    float repeat(float val, float min, float max);
+int pow2(int k);
+uint32_t binary_length(int val);
+float normalize(float val, float min, float max);
+float wrap(float val, float min, float max);
+float repeat(float val, float min, float max);
 }
 
 namespace rand
 {
-    void init();
-    int range(int min_included, int max_included);
-    float normalized();
+void init();
+int range(int min_included, int max_included);
+float normalized();
 }
 
 namespace io
@@ -159,16 +218,16 @@ template<typename T> void write_vector(const std::string& filename, const std::v
 template<typename T> void read_vector(const std::string& filename,  std::vector<T>& data)
 {
     std::ifstream file(filename);
-
+    
     if(!file.is_open())
     {
         throw std::invalid_argument("cannot open file " + filename);
     }
-
+    
     int n = 0;
     file >> n;
     data = std::vector<T>(n);
-
+    
     T val;
     for(int i = 0; i < data.size(); i++)
     {
