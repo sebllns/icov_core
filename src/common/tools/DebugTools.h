@@ -15,6 +15,7 @@ class DebugTools
 {
 public:
 
+    static std::ostream debug_stream;
     static std::ofstream logFile;
     static const bool debug_trace_enabled =
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED

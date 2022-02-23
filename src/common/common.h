@@ -72,6 +72,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include "tools/DebugTools.h"
 #include "typedef.h"
 #include "common_types.h"
 #include "version.h"

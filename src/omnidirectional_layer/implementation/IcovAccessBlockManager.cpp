@@ -16,7 +16,7 @@ void IcovAccessBlockManager::buildAccessBlocks(const IPicture &pic,  IViewportMa
 
     for(auto it = std::begin(pic.icus()); it != std::end(pic.icus()); ++it)
     {
-        vpm.viewportGeometry().setPov(angle_radian(pic.angleX(it->center_u()), pic.angleY(it->center_v())));
+        vpm.viewportGeometry().setPov(angle_radian(pic.angleX(it->center_u()), pic.angleY(it->center_v())- M_PI_2)); //FIXME have to put pic.angleY - M_PI_2
 
         if(!pic.isValidBlock(findAccessBlock(vpm)))
         {

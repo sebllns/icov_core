@@ -2,6 +2,7 @@
 
 bool is_visible(const point3d &p, const point2d &viewport_size)
 {
+    //std::cout << viewport_size.x() << ", " << viewport_size.y() << std::endl;
     return p.x() > 0
             && abs(p.y()) < p.x() * viewport_size.x()/2
             && abs(p.z()) < p.x() * viewport_size.y()/2;

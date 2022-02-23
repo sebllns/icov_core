@@ -65,6 +65,7 @@ protected:
     BlockVector::const_iterator m_invalidBlock;
 
 public:
+    const BlockIteratorVector& blocks() const;
     virtual ~IAccessBlockManager() = default;
     virtual void buildAccessBlocks(const IPicture &pic, IViewportManager &vpm) = 0;
     virtual BlockVector::const_iterator findAccessBlock(const IViewportManager &vpm) const;
