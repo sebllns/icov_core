@@ -61,5 +61,7 @@ class IBlockProcessor
 public:
     virtual ~IBlockProcessor() = default;
 
+    inline virtual void startProcess() {};
     virtual void processBlock(const Block& b, uint16_t prediction) = 0;
+    inline virtual void endProcess() {};
 };

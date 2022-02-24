@@ -26,12 +26,13 @@ void RequestManager::update(float angle_x, float angle_y)
 
     icov::helpers::assert::check(m_picture->isValidBlock(current_block), "No access block was found in the viewport");
 
+    if(m_blockProcessor) m_blockProcessor->startProcess();
     while(m_picture->isValidBlock(current_block))
     {
         if(m_blockProcessor) m_blockProcessor->processBlock(*current_block, 0);
         current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
     }
-
+    if(m_blockProcessor) m_blockProcessor->endProcess();
 }
 
 const std::shared_ptr<IAccessBlockManager> &RequestManager::accessBlocks() const
