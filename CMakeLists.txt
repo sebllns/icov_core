@@ -74,6 +74,8 @@ if(ICOV_EXTENSIONS_ENABLED)
     add_subdirectory(extensions)
 endif()
 
+add_subdirectory(encoder)
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)

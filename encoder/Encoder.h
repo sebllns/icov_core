@@ -13,8 +13,8 @@
  *  @ingroup Encoder
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under 
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -47,17 +47,14 @@
  *
  *****************************************************************************/
 
-#ifndef Encoder_H
-#define Encoder_H
+#pragma once
 
-
-#include "IEncoder.h"
+#include "omnidirectional_layer/interface/IEncoder.h"
 
 //https://www.boost.org/doc/libs/1_68_0/libs/gil/doc/html/io.html
-class Encoder : IEncoder
+class Encoder : public IEncoder
 {
 protected:
-
 
 public:
   Encoder();
@@ -74,5 +71,3 @@ public:
   void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
 
 };
-
-#endif // Encoder_H
