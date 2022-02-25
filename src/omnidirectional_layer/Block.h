@@ -61,12 +61,12 @@ class Block
 {
 
 public:
-    enum NeighborIndex
+    enum NeighborDirection
     {
         THIS    = 0,
         RIGHT    = 1,
         LEFT   ,
-        TOP     ,
+        UP     ,
         DOWN  ,
         COUNT,
     };
@@ -79,7 +79,7 @@ protected:
     float m_w;
     float m_h;
     bool m_isAccessBlock;  
-    size_t uid[NeighborIndex::COUNT];
+    size_t uid[NeighborDirection::COUNT];
 
     //center, topleft, topright, bottomright, bottomleft
     point3d cartesian_coords[5];
@@ -91,8 +91,8 @@ public:
 
   const IPicture *parent() const;
 
-  void setId(NeighborIndex index, size_t id);
-  size_t getId(NeighborIndex index) const;
+  void setId(NeighborDirection index, size_t id);
+  size_t getId(NeighborDirection index) const;
   const point3d& getCartesianCoord(uint16_t i) const;
 
   float u() const;

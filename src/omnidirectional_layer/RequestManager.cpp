@@ -5,6 +5,17 @@
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+
+const std::shared_ptr<IBlockPrediction> &RequestManager::blockPrediction() const
+{
+    return m_blockPrediction;
+}
+
+void RequestManager::setBlockPrediction(const std::shared_ptr<IBlockPrediction> &newBlockPrediction)
+{
+    m_blockPrediction = newBlockPrediction;
+}
 
 void RequestManager::start()
 {
@@ -23,14 +34,16 @@ void RequestManager::update(float angle_x, float angle_y)
     m_viewport->viewportGeometry().setPov(angle_radian(angle_x, angle_y));
 
     auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
+    bool is_access_block = true;
 
     icov::helpers::assert::check(m_picture->isValidBlock(current_block), "No access block was found in the viewport");
 
     if(m_blockProcessor) m_blockProcessor->startProcess();
     while(m_picture->isValidBlock(current_block))
     {
-        if(m_blockProcessor) m_blockProcessor->processBlock(*current_block, 0);
+        if(m_blockProcessor) m_blockProcessor->processBlock(*current_block, is_access_block ? 0 : m_blockPrediction->getPrediction(*current_block, *m_ordering));
         current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
+        is_access_block = false;
     }
     if(m_blockProcessor) m_blockProcessor->endProcess();
 }

@@ -63,7 +63,7 @@ public:
  *
  *  A BlockPrediction
  */
-class BlockPrediction : IBlockPrediction
+class BlockPrediction : public IBlockPrediction
 {
 public: 
     enum predType
@@ -71,10 +71,10 @@ public:
         NONE = 0,
         RIGHT = (1 << Block::RIGHT),
         LEFT = (1 << Block::LEFT),
-        TOP = (1 << Block::TOP),
+        TOP = (1 << Block::UP),
         BOTTOM = (1 << Block::DOWN),
-        TOP_RIGHT = (1 << Block::TOP) | (1 << Block::RIGHT),
-        TOP_LEFT = (1 << Block::TOP) | (1 << Block::LEFT),
+        TOP_RIGHT = (1 << Block::UP) | (1 << Block::RIGHT),
+        TOP_LEFT = (1 << Block::UP) | (1 << Block::LEFT),
         BOTTOM_RIGHT = (1 << Block::DOWN) | (1 << Block::RIGHT),
         BOTTOM_LEFT = (1 << Block::DOWN) | (1 << Block::LEFT),
     };
@@ -88,7 +88,7 @@ inline uint16_t BlockPrediction::getPrediction(const Block &b, const IBlockOrder
 {
     predType pred = NONE;
 
-    if(ordering.isBlockProcessed(b.getId(Block::TOP)))
+    if(ordering.isBlockProcessed(b.getId(Block::UP)))
     {
         if(ordering.isBlockProcessed(b.getId(Block::LEFT)))
         {

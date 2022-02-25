@@ -31,7 +31,7 @@ void EquiRectPicture::buildConstantSizeBlocks(int pw, int ph)
             Block b(id, this, j*bw, i*bh, bw, bh);
             b.setId(Block::LEFT, getId(i, j-1));
             b.setId(Block::RIGHT, getId(i, j+1));
-            b.setId(Block::TOP, getId(i-1, j));
+            b.setId(Block::UP, getId(i-1, j));
             b.setId(Block::DOWN, getId(i+1, j));
 
             m_icus.push_back(b);

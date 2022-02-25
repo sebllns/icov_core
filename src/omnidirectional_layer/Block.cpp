@@ -7,15 +7,15 @@ const IPicture *Block::parent() const
     return m_parent;
 }
 
-void Block::setId(NeighborIndex index, size_t id)
+void Block::setId(NeighborDirection index, size_t id)
 {
-    assert(index >= NeighborIndex::THIS && index < NeighborIndex::COUNT);
+    assert(index >= NeighborDirection::THIS && index < NeighborDirection::COUNT);
     uid[index] = id;
 }
 
-size_t Block::getId(NeighborIndex index) const
+size_t Block::getId(NeighborDirection index) const
 {
-    if(index < NeighborIndex::THIS || index >= NeighborIndex::COUNT) return 0;
+    if(index < NeighborDirection::THIS || index >= NeighborDirection::COUNT) return 0;
     return  uid[index];
 }
 
@@ -101,8 +101,8 @@ Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph
     icov::helpers::assert::check(id > 0, "ID of block is > 0");
 
     m_isAccessBlock = false;
-    std::fill(uid, uid+NeighborIndex::COUNT, 0);
-    setId(NeighborIndex::THIS, id);
+    std::fill(uid, uid+NeighborDirection::COUNT, 0);
+    setId(NeighborDirection::THIS, id);
 
     float phi = parent->angleX(center_u());
     float theta = parent->angleY(center_v());

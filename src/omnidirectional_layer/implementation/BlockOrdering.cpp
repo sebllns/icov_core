@@ -10,23 +10,23 @@ BlockOrdering::BlockOrdering(size_t blocks_count):
 
 std::vector<BlockOrdering::block_path_info>::iterator BlockOrdering::getPathInfoById(size_t id)
 {
-    ICOV_ASSERT_MSG(id > 0 && id <= m_path_info.size(), "ID value is " << id);
+    ICOV_ASSERT_MSG(blockExists(id), "ID value is " << id);
     return m_path_info.begin() + id - 1;
 }
 
 std::vector<BlockOrdering::block_path_info>::const_iterator BlockOrdering::getPathInfoById(size_t id) const
 {
-    ICOV_ASSERT_MSG(id > 0 && id <= m_path_info.size(), "ID value is " << id);
+    ICOV_ASSERT_MSG(blockExists(id), "ID value is " << id);
     return m_path_info.begin() + id - 1;
 }
 
-Block::NeighborIndex BlockOrdering::findAvailableNeighbor(const Block &current, const IViewportManager &vpm)
+Block::NeighborDirection BlockOrdering::findAvailableNeighbor(const Block &current, const IViewportManager &vpm)
 {
     auto pic = current.parent();
 
     for(uint16_t n = Block::RIGHT ; n != Block::COUNT ; n++)
     {
-        auto nn = static_cast<Block::NeighborIndex>(n);
+        auto nn = static_cast<Block::NeighborDirection>(n);
         auto n_id = current.getId(nn);
 
 
@@ -78,7 +78,7 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
     m_elements.push_back(current.getId(Block::THIS));
     m_cursor.push(current.getId(Block::THIS));
 
-    Block::NeighborIndex available = Block::THIS;
+    Block::NeighborDirection available = Block::THIS;
 
     do
     {
@@ -106,6 +106,12 @@ void BlockOrdering::reset()
 
 bool BlockOrdering::isBlockProcessed(size_t id) const
 {
+    if(!blockExists(id)) return false;
     auto it = getPathInfoById(id);
     return it->visibility_tested && it->is_visible;
+}
+
+bool BlockOrdering::blockExists(size_t id) const
+{
+    return id > 0 && id <= m_path_info.size();
 }

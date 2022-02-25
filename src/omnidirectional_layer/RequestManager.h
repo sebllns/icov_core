@@ -55,6 +55,7 @@ class IBlockOrdering;
 class IViewportManager;
 class IBlockProcessor;
 class IAccessBlockManager;
+class IBlockPrediction;
 
 /** @class RequestManager
  *  @brief RequestManager
@@ -73,6 +74,7 @@ private:
     std::shared_ptr<IViewportManager> m_viewport;
     std::shared_ptr<IPicture> m_picture;
     std::shared_ptr<IBlockProcessor> m_blockProcessor;
+    std::shared_ptr<IBlockPrediction> m_blockPrediction;
 
 public:
     RequestManager() = default;
@@ -91,4 +93,6 @@ public:
     void setBlockProcessor(const std::shared_ptr<IBlockProcessor> &newBlockProcessor);
     const std::shared_ptr<IAccessBlockManager> &accessBlocks() const;
     void setAccessBlocks(const std::shared_ptr<IAccessBlockManager> &newAccessBlocks);
+    const std::shared_ptr<IBlockPrediction> &blockPrediction() const;
+    void setBlockPrediction(const std::shared_ptr<IBlockPrediction> &newBlockPrediction);
 };

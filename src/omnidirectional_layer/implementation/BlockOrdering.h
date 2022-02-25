@@ -84,7 +84,7 @@ protected:
     std::vector<block_path_info>::iterator getPathInfoById(size_t id);
     std::vector<block_path_info>::const_iterator getPathInfoById(size_t id) const;
 
-    Block::NeighborIndex findAvailableNeighbor(const Block &current, const IViewportManager &vpm);
+    Block::NeighborDirection findAvailableNeighbor(const Block &current, const IViewportManager &vpm);
 
 public:
     BlockOrdering(size_t blocks_count);
@@ -102,4 +102,5 @@ public:
     BlockVector::const_iterator getNextBlock(const Block &current, const IViewportManager &vpm) override;
     void reset() override;
     bool isBlockProcessed(size_t id) const override;
+    bool blockExists(size_t id) const;
 };
