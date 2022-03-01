@@ -24,6 +24,8 @@ Block::NeighborDirection BlockOrdering::findAvailableNeighbor(const Block &curre
 {
     auto pic = current.parent();
 
+    Block::NeighborDirection result = Block::COUNT;
+
     for(uint16_t n = Block::RIGHT ; n != Block::COUNT ; n++)
     {
         auto nn = static_cast<Block::NeighborDirection>(n);
@@ -31,51 +33,99 @@ Block::NeighborDirection BlockOrdering::findAvailableNeighbor(const Block &curre
 
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        icov::DebugTools::debug_stream << "    block " << current.getId(Block::THIS) << ", neighbor " << nn;
+        icov::DebugTools::debug_stream << "\n    block " << current.getId(Block::THIS) << ", neighbor " << nn;
 #endif
 
         if(pic->blockExists(n_id) && !isBlockProcessed(n_id))
         {
-            auto n_block = pic->getById(n_id);
+            //            auto n_block = pic->getById(n_id);
             auto path_info = getPathInfoById(n_id);
-            path_info->visibility_tested = true;
-            if(vpm.isBlockVisible(*n_block))
+
+            ICOV_ASSERT_MSG(path_info->visibility_tested, "No visibility info avalaible");
+
+            if(path_info->is_visible)
+            {
+                ICOV_ASSERT_MSG(path_info->si_horizontal || path_info->si_vertical, "No side info avalaible");
+
+                if(path_info->si_horizontal && path_info->si_vertical)
+                {
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+                    icov::DebugTools::debug_stream << ": AVAILABLE!";
+#endif
+
+                    return nn;
+                }
+
+                if(result == Block::COUNT) result = nn;
+            }
+            else
             {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-               icov::DebugTools::debug_stream << ": AVAILABLE!\n";
+                icov::DebugTools::debug_stream << ": NOT visible...";
 #endif
-                path_info->is_visible = true;
-                return nn;
             }
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-            icov::DebugTools::debug_stream << ": NOT visible...\n";
-#endif
-            path_info->is_visible = false;
         }
         else
         {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-            icov::DebugTools::debug_stream << ": NOT available...\n";
+            icov::DebugTools::debug_stream << ": NOT available...";
 #endif
         }
     }
 
-    return Block::COUNT;
+    return result;
 }
 
 BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm)
 {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    icov::DebugTools::debug_stream << "block " << m_elements.size() <<" id = " << current.getId(Block::THIS) << std::endl;
+    icov::DebugTools::debug_stream << "\nblock " << m_elements.size() <<" id = " << current.getId(Block::THIS) << std::endl;
 #endif
 
     auto pic = current.parent();
     auto path_it = getPathInfoById(current.getId(Block::THIS));
     path_it->visibility_tested = true;
     path_it->is_visible = true;
+    path_it->is_processed = true;
 
-    m_elements.push_back(current.getId(Block::THIS));
+    if(m_elements.empty()) m_elements.push_back(current.getId(Block::THIS));
+
+    for(uint16_t dir = Block::RIGHT ; dir != Block::COUNT ; dir++)
+    {
+        Block::NeighborDirection nb_dir = static_cast<Block::NeighborDirection>(dir);
+
+        auto nb_id = current.getId(nb_dir);
+        auto nb_path_info = getPathInfoById(nb_id);
+
+        if(pic->blockExists(nb_id) && !isBlockProcessed(nb_id))
+        {
+            if(!nb_path_info->visibility_tested)
+            {
+                m_elements.push_back(nb_id);
+                nb_path_info->is_visible = vpm.isBlockVisible(*(pic->getById(nb_id)));
+                nb_path_info->visibility_tested = true;
+            }
+
+
+            if(nb_path_info->is_visible)
+            {
+                switch (nb_dir)
+                {
+                case Block::RIGHT:
+                case Block::LEFT:
+                    nb_path_info->si_horizontal = true;
+                    break;
+                case Block::UP:
+                case Block::DOWN:
+                    nb_path_info->si_vertical = true;
+                    break;
+
+                default: ICOV_THROW_LOGICAL_EXCEPTION("should not reach this line");
+                }
+            }
+        }
+    }
+
     m_cursor.push(current.getId(Block::THIS));
 
     Block::NeighborDirection available = Block::THIS;
@@ -95,6 +145,7 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
 
 void BlockOrdering::reset()
 {
+    std::cout << "reset " << m_elements.size() << std::endl;
     for(size_t id : m_elements)
     {
         getPathInfoById(id)->reset();
@@ -107,8 +158,7 @@ void BlockOrdering::reset()
 bool BlockOrdering::isBlockProcessed(size_t id) const
 {
     if(!blockExists(id)) return false;
-    auto it = getPathInfoById(id);
-    return it->visibility_tested && it->is_visible;
+    return getPathInfoById(id)->is_processed;
 }
 
 bool BlockOrdering::blockExists(size_t id) const

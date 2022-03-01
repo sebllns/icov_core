@@ -63,7 +63,9 @@ protected:
     {
         bool visibility_tested;
         bool is_visible;
-        char neighbor_available;
+        bool is_processed;
+        bool si_horizontal;
+        bool si_vertical;
 
         block_path_info()
         {
@@ -74,7 +76,9 @@ protected:
         {
             visibility_tested = false;
             is_visible = false;
-            neighbor_available = 0;
+            is_processed = false;
+            si_horizontal = false;
+            si_vertical = false;
         }
     };
 
