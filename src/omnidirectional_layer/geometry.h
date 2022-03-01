@@ -67,20 +67,12 @@ typedef boost::qvm::vec<float, 3> float3;
 
 struct viewport_geometry
 {
-//    enum visibility_test_strategy_t
-//    {
-//        NONE = 0,
-//        CENTER_WITH_PADDING,
-//        CENTER_AND_CORNERS,
-//    };
-
     angle_radian pov;
     angle_radian fov;
     float focale;
     point2d resolution;
     point2d center;
     point2d roi_size;
-//    visibility_test_strategy_t visibility_test_strategy;
 
 public:
     angle_radian getPov() const;
