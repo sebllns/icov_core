@@ -25,7 +25,7 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(src third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
+include_directories(. src third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
     third-party/aff3ct/lib/rang/include)
 
 #Link with Boost

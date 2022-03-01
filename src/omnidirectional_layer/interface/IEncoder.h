@@ -62,7 +62,7 @@ public:
 
     virtual void openFile(const std::string &filename) = 0;
     virtual void dispose() = 0;
-    virtual void encode(const IPicture& p) = 0;
+    virtual void encode(std::ostream&) = 0;
     virtual void encodeBlock(const Block &b) = 0;
     virtual void encodeBlockWithPrediction(const Block &b, uint16_t prediction) = 0;
 };

@@ -50,11 +50,12 @@
 #pragma once
 
 #include "omnidirectional_layer/interface/IEncoder.h"
+#include <opencv2/opencv.hpp>
 
-//https://www.boost.org/doc/libs/1_68_0/libs/gil/doc/html/io.html
 class Encoder : public IEncoder
 {
 protected:
+    cv::Mat m_img_src;
 
 public:
   Encoder();
@@ -63,7 +64,7 @@ public:
   // IEncoder interface
   void openFile(const std::string &filename) override;
   void dispose() override;
-  void encode(const IPicture &p) override;
+  void encode(std::ostream &ostr) override;
 
 
   //DCT / QUANTIZATION
