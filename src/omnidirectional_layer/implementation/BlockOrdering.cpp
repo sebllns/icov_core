@@ -95,10 +95,11 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
         Block::NeighborDirection nb_dir = static_cast<Block::NeighborDirection>(dir);
 
         auto nb_id = current.getId(nb_dir);
-        auto nb_path_info = getPathInfoById(nb_id);
 
         if(pic->blockExists(nb_id) && !isBlockProcessed(nb_id))
         {
+            auto nb_path_info = getPathInfoById(nb_id);
+
             if(!nb_path_info->visibility_tested)
             {
                 m_elements.push_back(nb_id);
