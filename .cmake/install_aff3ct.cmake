@@ -1,6 +1,6 @@
 message(STATUS "[INFO] Installing aff3ct")
 
-message(WARNING "TODO: ADD THE GIT SUBMODULE HERE")
+add_git_submodule(third-party/aff3ct)
 
 set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)

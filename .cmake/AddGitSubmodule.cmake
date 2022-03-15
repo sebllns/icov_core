@@ -19,6 +19,4 @@ if(NOT EXISTS ${dir}/CMakeLists.txt)
     COMMAND_ERROR_IS_FATAL ANY)
 endif()
 
-add_subdirectory(${dir})
-
 endfunction(add_git_submodule)
