@@ -80,7 +80,10 @@ endif()
 add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 
 message(STATUS "[INFO] Building ICOV core apps")
-add_subdirectory(app/icov_cmd_app)
+add_subdirectory(app/cli)
+if(ICOV_PLATFORM MATCHES LINUX OR ICOV_PLATFORM MATCHES WIN)
+    add_subdirectory(app/opencv_interactive_viewport)
+endif()
 
 if(INSTALL_DEMO)
 
