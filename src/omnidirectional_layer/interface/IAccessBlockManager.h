@@ -69,5 +69,6 @@ public:
     virtual ~IAccessBlockManager() = default;
     virtual void buildAccessBlocks(const IPicture &pic, IViewportManager &vpm) = 0;
     virtual BlockVector::const_iterator findAccessBlock(const IViewportManager &vpm) const;
+    virtual bool isAccessBlock(size_t id) const;
 };
 

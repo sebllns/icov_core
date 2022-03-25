@@ -12,7 +12,6 @@
 #include <fstream>
 #include <stdio.h>
 
-#include <boost/qvm/all.hpp>
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/BlockExtractor.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
@@ -23,9 +22,12 @@
 #include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/RequestManager.h"
-#include "encoder/Encoder.h"
+#include "encoder/FakeEncoder.h"
 
 #include "single360degreecamerahandler.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/qvm/all.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 
@@ -39,6 +41,8 @@ private:
     uint16_t m_single_si_count;
     uint16_t m_double_si_count;
     std::ofstream m_csv_file;
+    std::ifstream m_encoded_image;
+    int header[4];
 
 public:
     angle_degree Pov;
@@ -48,14 +52,18 @@ public:
     bool b_show_block_grid;
     bool b_show_block_number;
     bool b_show_path;
+    bool b_use_encoded_stream;
 
-    BlockProcessor();
+
+
+    BlockProcessor(const std::string &encoded_image);
     ~BlockProcessor();
 
     // IBlockProcessor interface
     void processBlock(const Block &b, uint16_t prediction) override;
     void endProcess() override;
     void startProcess() override;
+    std::ostream encodingStream();
 };
 
 void BlockProcessor::startProcess()
@@ -71,7 +79,8 @@ void BlockProcessor::endProcess()
     m_csv_file.flush();
 }
 
-BlockProcessor::BlockProcessor()
+BlockProcessor::BlockProcessor(const std::string &encoded_image):
+    m_encoded_image(encoded_image, std::ios::in | std::ios::binary)
 {
     m_csv_file.open("./viewport_report.csv");
     m_csv_file << "pov_x,pov_y,blockCount,single_si_count,double_si_count\n";
@@ -80,6 +89,12 @@ BlockProcessor::BlockProcessor()
     b_show_block_number = true;
     b_show_side_infos = true;
     b_show_path = true;
+    b_use_encoded_stream = true;
+
+
+    m_encoded_image.read((char*)&header[0], sizeof (header));
+
+    std::cout << header[0] << "x" << header[1] << "/" << header[2] << ", " << header[3]<< std::endl;
 }
 
 BlockProcessor::~BlockProcessor()
@@ -96,6 +111,53 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction)
     int bx = (int)(p.u(p.angleX(b.u())) * p.width());
     int by = (int)(p.v(p.angleY(b.v())) * p.height());
     auto rect_block = cv::Rect(bx, by, bw, bh);
+
+
+    if(b_use_encoded_stream)
+    {
+        cv::Mat blockRegion(bh, bw, BlockRequested.type());
+
+        int si_offset = 0;
+
+
+        switch (static_cast<BlockPrediction::predType>(prediction))
+        {
+        case BlockPrediction::NONE:
+            si_offset += 0;
+            break;
+        case BlockPrediction::RIGHT:
+            si_offset += 0;
+            break;
+        case BlockPrediction::LEFT:
+            si_offset += 1;
+            break;
+        case BlockPrediction::TOP:
+            si_offset += 2;
+            break;
+        case BlockPrediction::BOTTOM:
+            si_offset += 3;
+            break;
+        case BlockPrediction::TOP_RIGHT:
+            si_offset += 4;
+            break;
+        case BlockPrediction::TOP_LEFT:
+            si_offset += 5;
+            break;
+        case BlockPrediction::BOTTOM_RIGHT:
+            si_offset += 6;
+            break;
+        case BlockPrediction::BOTTOM_LEFT:
+            si_offset += 7;
+            break;
+
+        }
+
+        m_encoded_image.seekg(sizeof (header) + ((b.getId(Block::THIS) - 1) * 8 + si_offset) * bw * bh * blockRegion.elemSize());
+        m_encoded_image.read((char *)blockRegion.data,  bw * bh * blockRegion.elemSize());
+
+        blockRegion.copyTo(BlockRequested(rect_block));
+    }
+
     if(b_show_block_grid) cv::rectangle(BlockRequested, rect_block,  cv::Scalar(0, 0, 255), 10);
 
     //access block
@@ -185,9 +247,6 @@ void run()
     icov::helpers::rand::init();
     std::string fileAddr = "./P29_8888x4444.jpg";
 
-    Encoder encoder;
-    encoder.openFile(fileAddr);
-
     // viewport parameters
     cv::Size outputResolution(1920, 1080);
     double fovX_degree = 110.f;
@@ -253,11 +312,21 @@ void run()
     req_mgr.setOrdering(std::make_shared<BlockOrdering>(picture->icus().size()));
     req_mgr.setViewport(std::make_shared<ViewportManagerCenterPadded>(1.2f));
     req_mgr.setBlockPrediction(std::make_shared<BlockPrediction>());
-    auto blockprocessor = std::make_shared<BlockProcessor>();
-    req_mgr.setBlockProcessor(blockprocessor);
 
     req_mgr.viewport()->viewportGeometry() = vpg;
     req_mgr.start();
+
+    boost::filesystem::path encoded_file_path("./encoded.icov");
+    FakeEncoder encoder;
+    encoder.openFile(fileAddr);
+
+
+    std::ofstream encoded_file(encoded_file_path.string(), std::ios::out | std::ios::binary);
+    encoder.encode(encoded_file, *picture, *req_mgr.accessBlocks());
+    encoded_file.close();
+
+    auto blockprocessor = std::make_shared<BlockProcessor>(encoded_file_path.string());
+    req_mgr.setBlockProcessor(blockprocessor);
 
     cv::Mat &blockRequested = blockprocessor->BlockRequested;
     blockRequested.create(equirectangularImage.size(), equirectangularImage.type());

@@ -50,9 +50,8 @@
 #pragma once
 
 #include "common.h"
-
-class IPicture;
-class Block;
+#include "omnidirectional_layer/interface/IPicture.h"
+#include "omnidirectional_layer/interface/IAccessBlockManager.h"
 
 class IEncoder
 {
@@ -62,7 +61,7 @@ public:
 
     virtual void openFile(const std::string &filename) = 0;
     virtual void dispose() = 0;
-    virtual void encode(std::ostream&) = 0;
-    virtual void encodeBlock(const Block &b) = 0;
-    virtual void encodeBlockWithPrediction(const Block &b, uint16_t prediction) = 0;
+    virtual void encode(std::ostream &output, const IPicture &picture, const IAccessBlockManager &access_blocks) = 0;
+    virtual void encodeBlock(std::ostream &output, const Block &b, bool access_block) = 0;
+    virtual void encodeBlockWithPrediction(std::ostream &output, const Block &b, uint16_t prediction) = 0;
 };

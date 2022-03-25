@@ -19,4 +19,16 @@ BlockVector::const_iterator IAccessBlockManager::findAccessBlock(const IViewport
     return m_invalidBlock;
 }
 
+bool IAccessBlockManager::isAccessBlock(size_t id) const
+{
+    auto b = m_blocks.begin();
+
+    while (b!=m_blocks.end()) {
+        if ((*b)->getId(Block::THIS) == id) return true;
+        ++b;
+    }
+
+    return false;
+}
+
 

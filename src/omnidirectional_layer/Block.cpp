@@ -60,36 +60,6 @@ bool Block::isAccessBlock() const
     return m_isAccessBlock;
 }
 
-//bool Block::isVisible(const viewport_geometry &vpg) const
-//{
-//    auto rotated = inverse_YPR(cartesian_coords[0], vpg.pov.x(), vpg.pov.y(), 0);
-
-//    auto roi = vpg.roi_size;
-
-//    if(rotated.x() < 0) return false;
-
-//    switch (vpg.visibility_test_strategy)
-//    {
-//    case viewport_geometry::NONE:
-//        return true;
-//    case viewport_geometry::CENTER_WITH_PADDING:
-//    {
-//        bg::multiply_value(roi, 1.2);//todo auto factor from size
-//        return is_visible(rotated, roi);
-//    }
-//    case viewport_geometry::CENTER_AND_CORNERS:
-//    {
-//        bool visible = false;
-
-//        //TODO
-
-//        return visible;
-//    }
-//    }
-
-//    return false;
-//}
-
 Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph):
     m_parent(parent),
     m_u(pu),

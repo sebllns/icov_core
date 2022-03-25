@@ -82,6 +82,7 @@ public:
     BlockPrediction() = default;
     ~BlockPrediction() = default;
     uint16_t getPrediction(const Block &b, const IBlockOrdering &ordering) const override;
+
 };
 
 inline uint16_t BlockPrediction::getPrediction(const Block &b, const IBlockOrdering &ordering) const
