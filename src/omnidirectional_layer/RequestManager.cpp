@@ -26,14 +26,21 @@ void RequestManager::start()
 
 void RequestManager::update(float angle_x, float angle_y)
 {
-    std::cout << "UPDATE " << angle_x << ", " << angle_y << std::endl;
+//    std::cout << "UPDATE " << angle_x << ", " << angle_y << std::endl;
 
     //TODO: check angle request ?
 
     m_ordering->reset();
     m_viewport->viewportGeometry().setPov(angle_radian(angle_x, angle_y));
 
+//    std::cout << "resolution " << m_viewport->viewportGeometry().resolution.x() << " " << m_viewport->viewportGeometry().resolution.y() <<  std::endl;
+
+//    std::cout << "pov " << m_viewport->viewportGeometry().pov.x() << " " << m_viewport->viewportGeometry().pov.y() <<  std::endl;
+
+//        std::cout << "fov " << m_viewport->viewportGeometry().fov.x() << " " << m_viewport->viewportGeometry().fov.y() <<  std::endl;
+
     auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
+
     bool is_access_block = true;
 
     icov::helpers::assert::check(m_picture->isValidBlock(current_block), "No access block was found in the viewport");

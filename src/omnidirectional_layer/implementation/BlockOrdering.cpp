@@ -146,7 +146,7 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
 
 void BlockOrdering::reset()
 {
-    std::cout << "reset " << m_elements.size() << std::endl;
+//    std::cout << "reset " << m_elements.size() << std::endl;
     for(size_t id : m_elements)
     {
         getPathInfoById(id)->reset();

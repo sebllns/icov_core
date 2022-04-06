@@ -60,6 +60,10 @@
 #include <cstring>
 #include <assert.h>
 #include <cassert>
+#include <cmath>
+
+#define RAD2DEG (180.0 * M_1_PI)
+#define DEG2RAD (M_PI / 180.0)
 
 namespace icov
 {

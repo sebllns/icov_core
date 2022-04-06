@@ -1,4 +1,9 @@
-message("BUILD ICOV IMT ALIST GENERATOR PROJECT")
+message("BUILD ICOV CLI PROJECT")
+
+find_package(Boost 1.70.0 COMPONENTS
+    program_options
+    filesystem
+    REQUIRED)
 
 # executable
 set( EXE_NAME icov_cli )
@@ -18,4 +23,4 @@ include_directories(.)
 #include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
-target_link_libraries(${EXE_NAME}  s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib)
+target_link_libraries(${EXE_NAME} ${Boost_LIBRARIES} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib)
