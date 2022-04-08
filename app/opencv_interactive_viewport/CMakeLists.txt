@@ -31,7 +31,9 @@ ExternalProject_Add(glfw3
     CMAKE_ARGS ${glfw3_CMAKE_ARGS}
     INSTALL_COMMAND "")
 
-find_package(glfw3 3.3 REQUIRED)
+#find_package(glfw3 3.3 REQUIRED)
+
+message("glfw3='${glfw3_INSTALL_DIR}'")
 
 
 set(glad_PREFIX "${CMAKE_BINARY_DIR}/third-party/glad")
