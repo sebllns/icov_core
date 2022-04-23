@@ -91,17 +91,13 @@ add_dependencies(${EXE_NAME}  glfw3 glad_project)
 
 include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${glad_INSTALL_DIR}/include)
 
-if(UNIX)
-    target_link_libraries(${EXE_NAME}  dl)
-endif()
+target_link_directories(${EXE_NAME} PRIVATE ${glad_INSTALL_DIR}/lib)
 
 if(UNIX)
     target_link_libraries(${EXE_NAME}  dl)
 endif()
 
-message(WARNING "TODO glad lib path")
-
-target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${glad_LIBRARY} ${OpenCV_LIBS}) #${glad_INSTALL_DIR}/lib/libglad.a
+target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw glad ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${OpenCV_LIBS}) #${glad_LIBRARY} ${glad_INSTALL_DIR}/lib/libglad.a
 
 set_source_files_properties( "*.c" PROPERTIES LANGUAGE "CXX" )
 
