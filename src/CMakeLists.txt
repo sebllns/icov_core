@@ -13,7 +13,8 @@ file(GLOB_RECURSE SRC_FILES "*.cpp" )
 # get include files
 file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
 
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
+message(WARNING "make static analysis optional")
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
 #,readability-*
 
 # library

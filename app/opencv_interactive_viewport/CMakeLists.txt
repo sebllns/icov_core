@@ -58,6 +58,7 @@ message(STATUS "OPENGL_INCLUDE_DIR := ${OPENGL_INCLUDE_DIR}")
 message(STATUS "GLUT_INCLUDE_DIR := ${GLUT_INCLUDE_DIR}")
 message(STATUS "OpenCV = ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "glm = ${GLM_INCLUDE_DIRS}")
+message(STATUS "glad = ${glad_LIBRARY}")
 
 if(UNIX)
 add_compile_options("-Wno-write-strings")
@@ -100,7 +101,7 @@ endif()
 
 message(WARNING "TODO glad lib path")
 
-target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${glad_INSTALL_DIR}/lib/libglad.a ${OpenCV_LIBS})
+target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${glad_LIBRARY} ${OpenCV_LIBS}) #${glad_INSTALL_DIR}/lib/libglad.a
 
 set_source_files_properties( "*.c" PROPERTIES LANGUAGE "CXX" )
 
