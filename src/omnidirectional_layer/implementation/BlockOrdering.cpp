@@ -33,7 +33,7 @@ Block::NeighborDirection BlockOrdering::findAvailableNeighbor(const Block &curre
 
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        icov::DebugTools::debug_stream << "\n    block " << current.getId(Block::THIS) << ", neighbor " << nn;
+        icov::DebugTools::debug_stream << "\n    block " << current.getId(Block::SELF) << ", neighbor " << nn;
 #endif
 
         if(pic->blockExists(n_id) && !isBlockProcessed(n_id))
@@ -79,16 +79,16 @@ Block::NeighborDirection BlockOrdering::findAvailableNeighbor(const Block &curre
 BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm)
 {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    icov::DebugTools::debug_stream << "\nblock " << m_elements.size() <<" id = " << current.getId(Block::THIS) << std::endl;
+    icov::DebugTools::debug_stream << "\nblock " << m_elements.size() <<" id = " << current.getId(Block::SELF) << std::endl;
 #endif
 
     auto pic = current.parent();
-    auto path_it = getPathInfoById(current.getId(Block::THIS));
+    auto path_it = getPathInfoById(current.getId(Block::SELF));
     path_it->visibility_tested = true;
     path_it->is_visible = true;
     path_it->is_processed = true;
 
-    if(m_elements.empty()) m_elements.push_back(current.getId(Block::THIS));
+    if(m_elements.empty()) m_elements.push_back(current.getId(Block::SELF));
 
     for(uint16_t dir = Block::RIGHT ; dir != Block::COUNT ; dir++)
     {
@@ -127,9 +127,9 @@ BlockVector::const_iterator BlockOrdering::getNextBlock(const Block &current, co
         }
     }
 
-    m_cursor.push(current.getId(Block::THIS));
+    m_cursor.push(current.getId(Block::SELF));
 
-    Block::NeighborDirection available = Block::THIS;
+    Block::NeighborDirection available = Block::SELF;
 
     do
     {

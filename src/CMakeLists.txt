@@ -20,6 +20,8 @@ message(WARNING "make static analysis optional")
 # library
 add_library( ${LIB_NAME} SHARED ${SRC_FILES} ${INC_FILES})
 add_library( s_${LIB_NAME} STATIC ${SRC_FILES} ${INC_FILES})
+#add_dependencies(${LIB_NAME} aff3ct_project)
+#add_dependencies(s_${LIB_NAME} aff3ct_project)
 
 #install(TARGETS ${LIB_NAME} DESTINATION ./lib EXPORT icov-targets)
 #install(EXPORT icov-targets DESTINATION lib/icov)

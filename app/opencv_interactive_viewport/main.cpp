@@ -152,7 +152,7 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction)
 
         }
 
-        m_encoded_image.seekg(sizeof (header) + ((b.getId(Block::THIS) - 1) * 8 + si_offset) * bw * bh * blockRegion.elemSize());
+        m_encoded_image.seekg(sizeof (header) + ((b.getId(Block::SELF) - 1) * 8 + si_offset) * bw * bh * blockRegion.elemSize());
         m_encoded_image.read((char *)blockRegion.data,  bw * bh * blockRegion.elemSize());
 
         blockRegion.copyTo(BlockRequested(rect_block));

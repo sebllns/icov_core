@@ -1,11 +1,5 @@
 message("BUILD ICOV INTERACTIVE CODER TEST PROJECT")
 
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-
-find_package(Boost 1.70.0 COMPONENTS unit_test_framework)
-
 # get source files
 file(GLOB SRC_FILES "*.cpp")
 
@@ -18,5 +12,5 @@ include_directories(bitvector)
 
 if(Boost_FOUND)
     add_executable(bitvector_benchmark ${SRC} ${HEADER} bitvector/main.cpp)
-    target_link_libraries(bitvector_benchmark s_IcovCoreLib Boost::unit_test_framework)
+    target_link_libraries(bitvector_benchmark s_IcovCoreLib)
 endif()

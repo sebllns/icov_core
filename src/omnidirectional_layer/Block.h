@@ -63,7 +63,7 @@ class Block
 public:
     enum NeighborDirection
     {
-        THIS    = 0,
+        SELF    = 0,
         RIGHT    = 1,
         LEFT   ,
         UP     ,

@@ -123,5 +123,5 @@ float BlockDecoder::getTime()
 
 void BlockDecoder::processBlock(const Block &b, uint16_t prediction)
 {
-    std::cout << "decode block " << b.getId(Block::THIS) << std::endl;
+    std::cout << "decode block " << b.getId(Block::SELF) << std::endl;
 }
