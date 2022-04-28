@@ -26,5 +26,5 @@ add_library( s_${LIB_NAME} STATIC ${SRC_FILES} ${INC_FILES})
 #install(TARGETS ${LIB_NAME} DESTINATION ./lib EXPORT icov-targets)
 #install(EXPORT icov-targets DESTINATION lib/icov)
 
-target_link_libraries(${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} pthread dl)
-target_link_libraries(s_${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} pthread dl)
+target_link_libraries(${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(s_${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
