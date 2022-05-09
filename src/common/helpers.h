@@ -62,6 +62,7 @@
 #include <cmath>
 #include <stdexcept>    // std::logic_error
 #include <iostream>     // std::cerr
+
 #include <boost/stacktrace.hpp>
 #include <boost/exception/all.hpp>
 #include "common.h"
