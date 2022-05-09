@@ -69,8 +69,8 @@ COMPONENTS
 OPTIONAL_COMPONENTS
     unit_test_framework
 REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-message(STATUS "Include boost dir: ${Boost_INCLUDE_DIRS}")
+include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIR})
+message(STATUS "Include boost dir: ${Boost_INCLUDE_DIR}")
 message("\n")
 
 #---------------------------------------------------------------------
@@ -123,7 +123,7 @@ message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
     # INSTALL_DIR ${aff3ct_INSTALL_DIR}
     # CMAKE_ARGS ${aff3ct_CMAKE_ARGS})
 
-include_directories(third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
+include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
     third-party/aff3ct/lib/rang/include)
 message("-------------------------------------------------------------------------")
 
