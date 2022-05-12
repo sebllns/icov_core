@@ -86,7 +86,7 @@ add_dependencies(${EXE_NAME}  glfw3 glad_project)
 
 include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${glad_INSTALL_DIR}/include ${glfw3_INSTALL_DIR}/include)
 
-target_link_directories(${EXE_NAME} PRIVATE ${glad_INSTALL_DIR}/lib ${glfw3_INSTALL_DIR}/lib64)
+target_link_directories(${EXE_NAME} PRIVATE ${glad_INSTALL_DIR}/lib ${glfw3_INSTALL_DIR}/lib64 ${glfw3_INSTALL_DIR}/lib)
 
 if(UNIX)
     target_link_libraries(${EXE_NAME}  dl)
