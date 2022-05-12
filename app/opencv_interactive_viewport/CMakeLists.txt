@@ -20,7 +20,7 @@ set(glfw3_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${glfw3_INSTALL_DIR} -DGLFW_BUILD_EX
 message("glfw3_PREFIX='${glfw3_PREFIX}'")
 message("glfw3_INSTALL_DIR='${glfw3_INSTALL_DIR}'")
 message("glfw3_CMAKE_ARGS='${glfw3_CMAKE_ARGS}'")
-ExternalProject_Add(glfw3
+ExternalProject_Add(glfw3_project
     PREFIX ${glfw3_PREFIX}
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     INSTALL_DIR ${glfw3_INSTALL_DIR}
@@ -82,7 +82,7 @@ file(GLOB INC_FILES "*.h")
 
 
 add_executable(${EXE_NAME}  main.cpp ${SRC_FILES} ${INC_FILES})
-add_dependencies(${EXE_NAME}  glfw3 glad_project)
+add_dependencies(${EXE_NAME}  glfw3_project glad_project)
 
 include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${glad_INSTALL_DIR}/include ${glfw3_INSTALL_DIR}/include)
 
@@ -92,7 +92,7 @@ if(UNIX)
     target_link_libraries(${EXE_NAME}  dl)
 endif()
 
-target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw glad ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${OpenCV_LIBS})
+target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib glfw3 glad ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${OpenCV_LIBS})
 set_source_files_properties( "*.c" PROPERTIES LANGUAGE "CXX" )
 
 set_target_properties(${EXE_NAME}
