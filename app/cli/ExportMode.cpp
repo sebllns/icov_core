@@ -27,7 +27,7 @@ ExportMode::ExportMode(const boost::program_options::variables_map &args, int co
     min_rate = args[rate_min_id].as<float>();
     max_rate = args[rate_max_id].as<float>();
     doping_rate = args[rate_doping_id].as<float>();
-    numcodes_file = args["numcodes"].as<std::string>();
+    numcodes_file = args[OPT_NUMCODES].as<std::string>();
 }
 
 void ExportMode::run()

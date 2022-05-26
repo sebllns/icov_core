@@ -2,6 +2,9 @@
 #include <cmath>
 #include <boost/filesystem.hpp>
 #include "omnidirectional_layer/BlockPrediction.h"
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include "CommonLib/Unit.h"
 
 namespace fs = boost::filesystem;
 
@@ -127,3 +130,4 @@ void FakeEncoder::encodeBlockWithPrediction(std::ostream &output, const Block &b
     output.write((char*)pixels.data, rect_block.area() * pixels.elemSize());
 
 }
+

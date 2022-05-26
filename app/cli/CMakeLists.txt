@@ -20,7 +20,5 @@ add_executable(${EXE_NAME} main.cpp ${SRC_FILES} ${INC_FILES})
 
 
 include_directories(.)
-#include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-
-target_link_libraries(${EXE_NAME} ${Boost_LIBRARIES} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib)
+target_link_libraries(${EXE_NAME} ${Boost_LIBRARIES} s_IcovCoreLib s_IcovEncoderLib)

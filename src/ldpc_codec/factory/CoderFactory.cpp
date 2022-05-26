@@ -9,7 +9,7 @@ namespace po = boost::program_options;
 namespace icov
 {
 
-std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(const boost::program_options::variables_map &args)
+sp_InteractiveCoder CoderFactory::create_coder(const boost::program_options::variables_map &args)
 {
     //SHARED PTR -> RESET
     std::shared_ptr<LLRProvider> llrProvider;
@@ -29,7 +29,7 @@ std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(const b
     }
     else if(coder_type == "varodayan")
     {
-
+        throw std::invalid_argument("Coder type not implemented: " + coder_type);
     }
     else
     {
@@ -59,6 +59,18 @@ std::shared_ptr<InteractiveCoder<AffMatrix> > CoderFactory::create_coder(const b
     std::cout<<"Initialization of coder with type = "<<coder_type<<std::endl;
 
     return std::make_shared<InteractiveCoder<AffMatrix>>(ldpca_dec, mp, syndromeMgr, llrProvider);
+}
+
+void CoderFactory::create_coder_yuv(const boost::program_options::variables_map &args, sp_InteractiveCoder &y_coder, sp_InteractiveCoder &uv_coder)
+{
+    boost::program_options::variables_map args_uv(args);
+    boost::any uv_length(args[OPT_CODE_LENGTH].as<int>()/2);
+    auto code_length_option = args_uv[OPT_CODE_LENGTH];
+    code_length_option.value() = uv_length;
+    args_uv.insert_or_assign(OPT_CODE_LENGTH, code_length_option);
+
+    y_coder = CoderFactory::create_coder(args);
+    uv_coder = CoderFactory::create_coder(args_uv);
 }
 
 }

@@ -59,7 +59,7 @@ private:
 
 public:
   BlockDecoder();
-  virtual void decode(/*stream*/);
+  virtual void decode(/*stream*/) override;
   float getTime();
   ~BlockDecoder();
 

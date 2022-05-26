@@ -77,5 +77,6 @@
 #include "common_types.h"
 #include "version.h"
 #include "helpers.h"
+#include "options.h"
 
 #endif // COMMON_H

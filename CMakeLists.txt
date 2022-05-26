@@ -63,6 +63,11 @@ message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${AFF3CT_PACKAGE_DIR}" NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
 
+#LINK WITH VVC
+add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
+include_directories(third-party/vvc/source/Lib)
+
 add_subdirectory(src)
 
 if(ICOV_EXTENSIONS_ENABLED)

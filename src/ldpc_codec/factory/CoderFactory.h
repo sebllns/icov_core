@@ -55,13 +55,16 @@ namespace po = boost::program_options;
 
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 using AffMatrix = aff3ct::tools::Sparse_matrix;
+using sp_InteractiveCoder = std::shared_ptr<InteractiveCoder<AffMatrix>>;
 
 namespace icov {
 
 class CoderFactory
 {
 public:
-    static std::shared_ptr<InteractiveCoder<AffMatrix>> create_coder(const po::variables_map& args);
+    static sp_InteractiveCoder create_coder(const po::variables_map& args);
+
+    static void create_coder_yuv(const po::variables_map& args, sp_InteractiveCoder &y_coder, sp_InteractiveCoder &uv_coder);
 };
 
 

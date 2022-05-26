@@ -86,27 +86,27 @@ struct CoderParameters
 
     static std::string parseType(const po::variables_map& args)
     {
-        return args["coder"].as<std::string>();
+        return args[OPT_CODER_TYPE].as<std::string>();
     }
 
     static std::string parseDatabase(const po::variables_map& args)
     {
-        return args["data-path"].as<std::string>();
+        return args[OPT_DATA_PATH].as<std::string>();
     }
 
     static int parseCodeLength(const po::variables_map& args)
     {
-        return args["code-length"].as<int>();
+        return args[OPT_CODE_LENGTH].as<int>();
     }
 
     static int parseBpIte(const po::variables_map& args)
     {
-        return args["bp-ite"].as<int>();
+        return args[OPT_BP_ITE].as<int>();
     }
 
     static std::string parseNumcodeFile(const po::variables_map& args)
     {
-        return args["numcodes"].as<std::string>();
+        return args[OPT_NUMCODES].as<std::string>();
     }
 
     CoderParameters(const po::variables_map& args, const std::string&intented_type)

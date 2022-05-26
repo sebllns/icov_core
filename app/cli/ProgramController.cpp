@@ -5,6 +5,7 @@
 #include "SymboleMode.h"
 #include "ExportMode.h"
 #include "CheckMode.h"
+#include "EncodeMode.h"
 
 ProgramController::ProgramController():
     m_options_desc("Program Usage", 1024, 512)
@@ -12,17 +13,18 @@ ProgramController::ProgramController():
         m_options_desc.add_options()
                 ("help,h",     "produce help message")
                 ("mode,m",   po::value<std::string>()->required(),      "set the program mode")
-                ("coder,c",   po::value<std::string>()->required(),      "set the coder type")
-                ("data-path,d",   po::value<std::string>()->required(),             "set the data path")
-                ("code-length,n",   po::value<int>()->required(),             "set the code length")
-                ("bp-ite,it",   po::value<int>()->default_value(100),             "set iteration count for BP LDPC coder")
-                ("numcodes",   po::value<std::string>()->default_value("numcodes.txt"),             "set the data path")
+                ((std::string(OPT_CODER_TYPE)+",c").c_str(),   po::value<std::string>()->required(),      "set the coder type")
+                ((std::string(OPT_DATA_PATH)+",d").c_str(),   po::value<std::string>()->required(),             "set the data path")
+                ((std::string(OPT_CODE_LENGTH)+",n").c_str(),   po::value<int>()->required(),             "set the code length")
+                ((std::string(OPT_BP_ITE)+",it").c_str(),   po::value<int>()->default_value(100),             "set iteration count for BP LDPC coder")
+                (OPT_NUMCODES,   po::value<std::string>()->default_value("numcodes.txt"),             "set the data path")
                 ;
 
         BinaryMode::AddProgramOptions(m_options_desc);
         SymboleMode::AddProgramOptions(m_options_desc);
         ExportMode::AddProgramOptions(m_options_desc);
         CheckMode::AddProgramOptions(m_options_desc);
+        EncodeMode::AddProgramOptions(m_options_desc);
 }
 
 const boost::program_options::options_description &ProgramController::optionsDesc() const
@@ -37,7 +39,7 @@ void ProgramController::processCommandLine(int argc, char **argv)
 
 void ProgramController::launchProgram()
 {
-    if (m_options_map.count("help"))
+    if (m_options_map.count(OPT_HELP))
     {
         std::cout << m_options_desc << std::endl;
         return;
@@ -92,21 +94,21 @@ const std::string &ProgramController::programMode(const po::variables_map &args)
 
 const std::string &ProgramController::coderType(const po::variables_map &args)
 {
-    return args["coder"].as<std::string>();
+    return args[OPT_CODER_TYPE].as<std::string>();
 }
 
 const std::string &ProgramController::dataPath(const po::variables_map &args)
 {
-    return args["data-path"].as<std::string>();
+    return args[OPT_DATA_PATH].as<std::string>();
 }
 
 int ProgramController::codeLength(const po::variables_map &args)
 {
-    return args["code-length"].as<int>();
+    return args[OPT_CODE_LENGTH].as<int>();
 }
 
 int ProgramController::bp_ite(const po::variables_map &args)
 {
-    return args["bp-ite"].as<int>();
+    return args[OPT_BP_ITE].as<int>();
 }
 
