@@ -1,3 +1,6 @@
 [submodule "third-party/aff3ct"]
 	path = third-party/aff3ct
 	url = https://github.com/aff3ct/aff3ct.git
+[submodule "third-party/vvc"]
+	path = third-party/vvc
+	url = https://vcgit.hhi.fraunhofer.de/jvet/VVCSoftware_VTM.git
