@@ -59,6 +59,11 @@ void Encoder::encode(std::ostream &output, const IPicture &picture, const IAcces
 
      const std::vector<int> qp_set = {22, 27, 32, 37, 42};
 
+     Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
+     internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
+     internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
+     const int maxLog2TrDynamicRange = 15;
+
      for(int qp: qp_set)
      {
          quantizeFrame(qp, encoderPicture.getOrigBuf(), encoderPicture.getRecoBuf(), enc_struc, internalBitDepth, maxLog2TrDynamicRange);  // give the whole extended image ( .getOrigBuf() and .getRecoBuf() ) to the function because vector icues_enc is based on extended frames

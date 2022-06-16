@@ -47,7 +47,7 @@ void ICU_Encoder::creatTUs(const UInt tuWidth_luma, const UInt tuHeight_luma)
         divresult = div(Int(tuIndex), Int(nx_tus));
         UInt tuXPosTopLeft = divresult.rem;
         UInt tuYPosTopLeft = divresult.quot;
-        Area tuLumaArea = Area(tuXPosTopLeft*tuWidth_luma + _sourceX.Y().x, tuYPosTopLeft*tuHeight_luma + _sourceX.Y().y, tuWidth_luma, tuHeight_luma) & _sourceX.Y();
+        Area tuLumaArea = Area(tuXPosTopLeft*tuWidth_luma + _sourceX.Y().x, tuYPosTopLeft*tuHeight_luma + _sourceX.Y().y, tuWidth_luma, tuHeight_luma);// & (_sourceX.Y());
         addTU(UnitArea(_sourceX.chromaFormat, tuLumaArea ));
     }
 }

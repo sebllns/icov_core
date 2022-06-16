@@ -71,19 +71,19 @@ namespace icov
   class Logger : public std::streambuf
   {
   public:
-    LogType logLevel;
-    LogType logLevelFilter;
+    enum_t::LogType logLevel;
+    enum_t::LogType logLevelFilter;
 
     bool showTimestamp;
     bool showLogLevel;
     bool showLogConsole;
 
-    Logger(std::basic_ios<char> &out, bool showLogLevel_ = true, bool addTimestamp_ = false, LogType logLevelFilter_ = LogType::LOG_TYPE_INFO, bool showLogConsole_ = true)
+    Logger(std::basic_ios<char> &out, bool showLogLevel_ = true, bool addTimestamp_ = false, enum_t::LogType logLevelFilter_ = enum_t::LogType::LOG_TYPE_INFO, bool showLogConsole_ = true)
         : m_out(out), m_sink(), m_newline(true), m_callback(nullptr),
           showLogLevel(showLogLevel_),
           showTimestamp(addTimestamp_),
           showLogConsole(showLogConsole_),
-          logLevel(LogType::LOG_TYPE_INFO), logLevelFilter(logLevelFilter_)
+          logLevel(enum_t::LogType::LOG_TYPE_INFO), logLevelFilter(logLevelFilter_)
     {
       setp(0, 0);
       m_sink = m_out.rdbuf(this);
@@ -137,17 +137,17 @@ namespace icov
       return m_callback != nullptr;
     }
 
-    std::string logTypeStr(LogType logType)
+    std::string LogTypeStr(enum_t::LogType LogType)
     {
-      switch (logType)
+      switch (LogType)
       {
-      case LogType::LOG_TYPE_INFO:
+      case enum_t::LogType::LOG_TYPE_INFO:
         return "INFO";
-      case LogType::LOG_TYPE_DEBUG:
+      case enum_t::LogType::LOG_TYPE_DEBUG:
         return "DEBUG";
-      case LogType::LOG_TYPE_WARNING:
+      case enum_t::LogType::LOG_TYPE_WARNING:
         return "WARNING";
-      case LogType::LOG_TYPE_ERROR:
+      case enum_t::LogType::LOG_TYPE_ERROR:
         return "ERROR";
       default:
         return "";
@@ -166,7 +166,7 @@ namespace icov
         result = false;
 
       // --   add log level here
-      if (showLogLevel && logLevel > 0 && logLevel < 6 && !(str << "[" << logTypeStr(logLevel) << "] "))
+      if (showLogLevel && logLevel > 0 && logLevel < 6 && !(str << "[" << LogTypeStr(logLevel) << "] "))
         result = false;
 
       return result;

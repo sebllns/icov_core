@@ -3,7 +3,8 @@
 #include "common.h"
 #include "CommonLib/Common.h"
 #include "CommonLib/TypeDef.h"
-
+#include <CommonLib/Unit.h>
+#include <CommonLib/Buffer.h>
 using Bool = bool;
 using Int = int;
 using UInt = unsigned int;
