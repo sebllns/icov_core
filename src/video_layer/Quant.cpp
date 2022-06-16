@@ -4,60 +4,15 @@
 **   Supervisors: Aline ROUMY, Thomas MAUGEY
 **   Inria research institute
 **************************************************************************/
-#include "myquant.h"
+#include "Quant.h"
 #include "CommonLib/UnitTools.h"
-#include <CommonLib/Rom.h>
-#include <CommonLib/ChromaFormat.h>
 
-MyQpParam::MyQpParam(const Int qpy, const ChannelType chType, const ChromaFormat chFmt, const Int channelBitDepth, const Int chromaQPOffset, const int dqp)
-{
-
-    channelType = chType;
-    chromaFomat = chFmt;
-    /*
-        the quantizer step size is in the range of 0.630 ≤ Δq ≤ 228.1. Thereby, the maximum
-        quantizer step size is in the range of the maximum amplitude of the 8 bit input signal.
-        For higher bit-depths, a QP offset is specified, increasing the QP parameter range by
-        6 per additional bit of signal bit depth towards finer quantization (i.e. towards lower
-        QP values).
-     */
-    const Int qpBdOffset = 6 * (channelBitDepth - 8); //seul changement ici
-    Int baseQp;
-
-    if(isLuma(chType))
-    {
-        baseQp = qpy + qpBdOffset;
-    }
-    else
-    {
-        baseQp = Clip3( -qpBdOffset, (chromaQPMappingTableSize - 1), qpy + chromaQPOffset );
-
-        if(baseQp < 0)
-        {
-            baseQp = baseQp + qpBdOffset;
-        }
-        else
-        {
-            baseQp = getScaledChromaQP(baseQp, chFmt) + qpBdOffset;
-        }
-    }
-
-    baseQp = Clip3( 0, MAX_QP+qpBdOffset, baseQp + dqp );
-
-    Qp =baseQp;
-    per=baseQp/6;
-    rem=baseQp%6;
-
-}
-
-
-
-MyQuant::MyQuant()
+icov::video::ICOV_Quant::ICOV_Quant()
 {
 
 }
 
-MyQuant::~MyQuant()
+icov::video::ICOV_Quant::~ICOV_Quant()
 {
 
     for (auto& kv : _mapQuantizerWeightingMatrix)
@@ -102,10 +57,8 @@ const Int quantInterDefault8x8[8*8] =
   24,25,28,33,41,54,71,91
 };
 
-const AreaBuf<const Int> MyQuant::getDefaultQuantizationMatrix(const Size& size,  const MyQpParam &cQP, const SliceType sliceType)
+const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(const Size& size,  const icov::video::ICOV_QpParam &cQP, const SliceType sliceType)
 {
-//    std::map<std::pair<Size, Int>, AreaBuf<Int>,  WeightingMatrixComparator> _mapQuantizerWeightingMatrix; // quantization matrix for a specific size (UInt width, UInt height) and qp_rem (remainder (q)
-
     std::pair<Size, Int> key(size, cQP.rem);
     auto it = _mapQuantizerWeightingMatrix.find(key);
     if (it != _mapQuantizerWeightingMatrix.end())
@@ -135,7 +88,7 @@ const AreaBuf<const Int> MyQuant::getDefaultQuantizationMatrix(const Size& size,
     int* dstBuf = (int*) xMalloc (int, size.area());
     AreaBuf<Int> areaBuf(dstBuf, size);
 
-    Int quantScales = g_quantScales[0][cQP.rem]; //[0] ??
+    Int quantScales = g_quantScales[0][cQP.rem];
     quantScales = quantScales << LOG2_SCALING_LIST_NEUTRAL_VALUE;
     UInt ratio_x, ratio_y;  // it is on purpose that we used UInt, because later we need only integer part of division
     ratio_x = size.width  / sizeQuantMatrixBase;
@@ -171,19 +124,19 @@ const AreaBuf<const Int> MyQuant::getDefaultQuantizationMatrix(const Size& size,
 
 }
 
-const AreaBuf<const Int> MyQuant::getDefaultDequantizationMatrix(const Size &size, const MyQpParam &cQP, const SliceType sliceType)
+const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultDequantizationMatrix(const Size &size, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType)
 {
 
 }
 
-Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const MyQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
 
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
     const TCoeff entropyCodingMinimum = -(1 << maxLog2TrDynamicRange);
     const TCoeff entropyCodingMaximum =  (1 << maxLog2TrDynamicRange) - 1;
 
-    const Int  defaultQuantisationCoefficient = g_quantScales[0][cQP.rem];//???
+    const Int  defaultQuantisationCoefficient = g_quantScales[0][cQP.rem];
     const Size& size = pSrc;
 
     /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
@@ -195,7 +148,7 @@ Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, 
     Int iTransformShift = getTransformShift(channelBitDepth, size, maxLog2TrDynamicRange);
 
     Int iWHScale = 1;
-    if( TU::needsBlockSizeTrafoScale( size ) )
+    //if( TU::needsBlockSizeTrafoScale( size ) )
     {
       iTransformShift += ADJ_QUANT_SHIFT;
       iWHScale = 181;
@@ -234,7 +187,7 @@ Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, 
     }
 }
 
-Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const MyQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
     CHECK( qWeightingMatrix.width!= pSrc.width || qWeightingMatrix.height!= pSrc.height, "Sizes do not match");
@@ -252,7 +205,7 @@ Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<cons
     Int iTransformShift = getTransformShift(channelBitDepth, size, maxLog2TrDynamicRange);
 
     Int iWHScale = 1;
-    if( TU::needsBlockSizeTrafoScale( size ) )
+    //if( TU::needsBlockSizeTrafoScale( size ) )
     {
       iTransformShift += ADJ_QUANT_SHIFT;
       iWHScale = 181;
@@ -292,7 +245,7 @@ Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<cons
     }
 }
 
-Void MyQuant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const MyQpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const icov::video::ICOV_QpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
 
     CHECK( piQCoef.width!= piCoef.width || piQCoef.height!= piCoef.height, "Sizes do not match");
@@ -305,11 +258,11 @@ Void MyQuant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const MyQpPara
     const Int QP_per = cQP.per;
     const Int QP_rem = cQP.rem;
 
-    const Bool needsScalingCorrection = TU::needsBlockSizeTrafoScale( size );
-    const Int  NEScale    = TU::needsSqrt2Scale( size ) ? 181 : 1;
+    const Bool needsScalingCorrection = true; // TU::needsBlockSizeTrafoScale( size );
+    const Int  NEScale    = 0;// TU::needsSqrt2Scale( size ) ? 181 : 1;
 
     const Int  rightShift = (needsScalingCorrection ?   8 : 0 ) + (IQUANT_SHIFT - (iTransformShift + QP_per));
-    const Int scale     = g_invQuantScales[QP_rem] * NEScale;
+    const Int scale     = g_invQuantScales[0][QP_rem] * NEScale;
 
     const Int scaleBits = ( IQUANT_SHIFT + 1 );
 
@@ -357,50 +310,3 @@ Void MyQuant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const MyQpPara
     }
 }
 
-
-void MyQuant::quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &quantizedImage, EncodingStructure &encStruct, const ComponentID compID, const int bitDepths[], int maxLog2TrDynamicRange)
-{
-    int bit_depth = bitDepths[toChannelType(compID)];
-
-    MyQpParam cQP(qp, toChannelType(compID), encStruct.getICU(0).get_sourceX().chromaFormat, bit_depth, 0, 0);
-
-
-    MyTransform2D transform2D;
-    MyQuant quant;
-    TCoeff uiAbsSum;
-
-
-    for(UInt i=0; i < encStruct.vec_icus.size(); i++)
-    {
-        InteractiveCodingUnit& curr_icu = encStruct.getICU(i).get_sourceX();
-        for(UInt j=0; j < curr_icu.TUs.size(); j++)
-        {
-            MyTransformUnit& curr_tu = curr_icu.TUs[j];
-            transform2D.transformNxN(curr_tu.getTransformCoeffs(compID), originalImage, curr_tu.block(compID), bit_depth, maxLog2TrDynamicRange);
-            quant.quant(curr_tu.getQuantizedTransformCoeffs(compID), curr_tu.getTransformCoeffs(compID), uiAbsSum, cQP, SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
-            quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID), curr_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth, maxLog2TrDynamicRange);
-            transform2D.invTransformNxN(quantizedImage, curr_tu.block(compID), curr_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth, maxLog2TrDynamicRange);
-
-
-            //            totalDist += distCost.getDistPart(VTM_Utility::getAreaBuf(originalImage, curr_tu.block(compID)),
-            //                                              VTM_Utility::getAreaBuf(quantizedImage, curr_tu.block(compID)),
-            //                                              bit_depth, compID, DF_SSE);
-
-        }
-    }
-
-}
-
-void MyQuant::quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &quantizedImage, EncodingStructure &encStruct, const int bitDepths[], int maxLog2TrDynamicRange)
-{
-    if(originalImage.chromaFormat != quantizedImage.chromaFormat)
-        throw std::runtime_error("The original image and the quantized image should have similar chroma");
-
-    const UInt numCh = getNumberValidComponents( originalImage.chromaFormat );
-
-    for( UInt ch = 0; ch < numCh; ch++ )
-    {
-        const ComponentID compID = ComponentID( ch );
-        quantizeFrame(qp, originalImage, quantizedImage, encStruct, compID, bitDepths, maxLog2TrDynamicRange);  // give the whole extended image ( .getOrigBuf() and .getRecoBuf() ) to the function because vector icues_enc is based on extended frames
-    }
-}

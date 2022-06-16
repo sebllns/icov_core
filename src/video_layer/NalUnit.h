@@ -58,7 +58,7 @@ class NalUnit
 public:
   /** construct an NALunit structure with given header values. */
   NalUnit(
-      icov::NalUnitType nalUnitType,
+      icov::enum_t::NalUnitType nalUnitType,
       int temporalId = 0,
       uint32_t nuhReservedZeroBit = 0,
       uint32_t forbiddenZeroBit = 0,
@@ -72,7 +72,7 @@ public:
 
 
     NalUnit()
-      : m_nalUnitType(icov::NalUnitType::NAL_UNIT_INVALID), m_temporalId(0),
+      : m_nalUnitType(icov::enum_t::NalUnitType::NAL_UNIT_INVALID), m_temporalId(0),
         m_nuhLayerId(0), m_forbiddenZeroBit(0), m_nuhReservedZeroBit(0),
         m_rbsp(nullptr),
         m_rbsp_length(0)
@@ -83,7 +83,7 @@ public:
   void deserialize(icov::byte *src);
 
   void setRbsp(icov::byte *data, int length);
-  icov::NalUnitType getType() const;
+  icov::enum_t::NalUnitType getType() const;
   int getRbspLength() const;
   const void readRbsp(icov::byte *dst, int length, int offset = 0) const;
   const icov::byte getRbspByte(int position) const;
@@ -93,7 +93,7 @@ private:
   icov::int8b m_temporalId;
 
   /// 5 bits
-  icov::NalUnitType m_nalUnitType;
+  icov::enum_t::NalUnitType m_nalUnitType;
 
   /// 6 bits
   icov::int8b m_nuhLayerId;

@@ -6,7 +6,7 @@ void NalUnit::setRbsp(icov::byte *data, int length)
     m_rbsp_length = length;
 }
 
-icov::NalUnitType NalUnit::getType() const
+icov::enum_t::NalUnitType NalUnit::getType() const
 {
     return m_nalUnitType;
 }
@@ -57,7 +57,7 @@ void NalUnit::deserialize(icov::byte *src)
     m_nuhReservedZeroBit = (header[0] >> 6) & 0x01;
     m_nuhLayerId = header[0] & 0b00111111;
 
-    m_nalUnitType = (icov::NalUnitType)((header[1] & 0b11111000) >> 3);
+    m_nalUnitType = (icov::enum_t::NalUnitType)((header[1] & 0b11111000) >> 3);
     m_temporalId = header[1] & 0b00000111;
 
     m_rbsp_length = header[2] << 24 | header[3] << 16 | header[4] << 8 | header[5];

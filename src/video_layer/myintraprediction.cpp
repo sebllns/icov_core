@@ -955,10 +955,10 @@ void MyIntraPrediction::predIntraAng(PelBuf &piPred, const UInt dirMode)
 //    }
 
 
-    if(m_flipVert)
-        VTM_Utility::flipVert<Pel>(piPred, piPred);
+//    if(m_flipVert)
+//        VTM_Utility::flipVert<Pel>(piPred, piPred);
 
-    if(m_flipHoriz)
-        VTM_Utility::flipHoriz<Pel>(piPred, piPred);
+//    if(m_flipHoriz)
+//        VTM_Utility::flipHoriz<Pel>(piPred, piPred);
 
 }

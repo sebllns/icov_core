@@ -2,7 +2,7 @@
 
 NalUnit ViewportUnit::ToNal()
 {
-    NalUnit nal(icov::NalUnitType::NAL_UNIT_CODED_VPU);
+    NalUnit nal(icov::enum_t::NalUnitType::NAL_UNIT_CODED_VPU);
 
     icov::bitstreambuf buf;
     icov::obitstream os(&buf);
@@ -28,7 +28,7 @@ NalUnit ViewportUnit::ToNal()
 
 bool ViewportUnit::TryParse(NalUnit nal)
 {
-    if (nal.getType() != icov::NalUnitType::NAL_UNIT_CODED_VPU)
+    if (nal.getType() != icov::enum_t::NalUnitType::NAL_UNIT_CODED_VPU)
         return false;
 
     int size = nal.getRbspLength();
