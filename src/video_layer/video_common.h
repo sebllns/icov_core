@@ -5,6 +5,11 @@
 #include "CommonLib/TypeDef.h"
 #include <CommonLib/Unit.h>
 #include <CommonLib/Buffer.h>
+
+namespace icov {
+namespace  video {
+
+
 using Bool = bool;
 using Int = int;
 using UInt = unsigned int;
@@ -26,8 +31,12 @@ extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize
 
 inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chFmt)
 {
-  return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP)];
+    return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP)];
 }
 
 static const Int ADJ_QUANT_SHIFT =                                  7;
 static const Int ADJ_DEQUANT_SHIFT =            ( ADJ_QUANT_SHIFT + 1 );
+
+void init_video_lib();
+}
+}
