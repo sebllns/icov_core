@@ -11,6 +11,9 @@
 #include "video_layer/video_common.h"
 #include "common.h"
 
+using namespace icov::video;
+
+
 template<typename T>
 struct MyStorage : public UnitBuf<T>
 {

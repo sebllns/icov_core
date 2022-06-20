@@ -7,6 +7,8 @@
 #include "Quant.h"
 #include "CommonLib/UnitTools.h"
 
+using namespace icov::video;
+
 icov::video::ICOV_Quant::ICOV_Quant()
 {
 

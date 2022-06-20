@@ -9,6 +9,9 @@
 #include "CommonLib/CommonDef.h"
 #include "CommonLib/Unit.h"
 #include "video_common.h"
+
+using namespace icov::video;
+
 class MyTransform2D
 {
 protected:

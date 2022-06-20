@@ -7,12 +7,14 @@
 #include <opencv2/imgproc.hpp>
 #include "video_layer/mypicture.h"
 #include "video_layer/quantizeFrame.h"
+#include "enc_helpers.h"
 
 namespace fs = boost::filesystem;
 
+
 Encoder::Encoder()
 {
-  std::cout << "new encoder" << std::endl;
+
 }
 
 Encoder::~Encoder()
@@ -30,18 +32,38 @@ void Encoder::openFile(const std::string &filename)
 
 void Encoder::encode(std::ostream &output, const IPicture &picture, const IAccessBlockManager &access_blocks)
 {
-    picture.getBlock(0,0)->w();
+    //constants
+    const Size icuSize_luma=Size(32, 32);
+    const Size tuSize_luma=Size(32, 32);
+    //    const Size icuSize_luma=Size(256, 256);
+    //    const Size tuSize_luma=Size(256, 256);
+    Size tuSizeAfterRegrouping_luma = Size(1,1);
+    const int maxLog2TrDynamicRange = 15;
+    const int margin_x_360luma = 2; // in fact we need 1 margin for each color component, but since UnitArea handles division by 2 for chroma 420, it is easier to add 2 pixel margins per left and right side and this will be divided by 2 for chroma.
+
+    const std::vector<int> qp_set = {22, 27, 32, 37, 42};
+
+    Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
+    internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
+    internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
+
+    ChromaFormat chromaFormatIDC = CHROMA_420;
+
+    //end constants
 
      ICOV_ASSERT_MSG(m_img_src.total() > 0, "Cannot encode empty image");
      int values[] = {m_img_src.rows, m_img_src.cols, m_img_src.type(), m_img_src.channels()};
      output.write(reinterpret_cast<const char*>(&values), sizeof(values));
 
-     //TODO manage resize
+     //resize
+     cv::Size size_before = m_img_src.size();
+     resize_covering_blocks(m_img_src, cv::Size(icuSize_luma.width, icuSize_luma.height));
+     cv::Size size_after = m_img_src.size();
+     std::cout << "image size is changing from " << size_before << " to " << size_after << ". image aspect ratio is changing from " << double(size_before.width)/double(size_before.height) << " to " << double(size_after.width)/double(size_after.height) << std::endl;
+     //end resize
 
-     ChromaFormat chromaFormatIDC = CHROMA_420;
      int sourceWidth = m_img_src.cols;
      int sourceHeight = m_img_src.rows;
-     const int margin_x_360luma = 2; // in fact we need 1 margin for each color component, but since UnitArea handles division by 2 for chroma 420, it is easier to add 2 pixel margins per left and right side and this will be divided by 2 for chroma.
 
      UnitArea extendedFrameArea(chromaFormatIDC, Area(0, 0, sourceWidth + 2*margin_x_360luma, sourceHeight));
      UnitArea mainFrameArea(chromaFormatIDC, Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
@@ -54,28 +76,22 @@ void Encoder::encode(std::ostream &output, const IPicture &picture, const IAcces
      encoderPicture.create(PIC_PREDICTION, extendedFrameArea);
 
      PelUnitBuf mainFrameOrig = encoderPicture.getOrigBuf(mainFrameArea);
-     cvMatToYUV(m_img_src, mainFrameOrig);
      EncodingStructure enc_struc;
 
-     const std::vector<int> qp_set = {22, 27, 32, 37, 42};
 
-     Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
-     internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
-     internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   // Bit-depth the codec operates at (input/output files will be converted). (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will be converted
-     const int maxLog2TrDynamicRange = 15;
+     cvMatToYUV(m_img_src, mainFrameOrig);
 
      for(int qp: qp_set)
      {
          quantizeFrame(qp, encoderPicture.getOrigBuf(), encoderPicture.getRecoBuf(), enc_struc, internalBitDepth, maxLog2TrDynamicRange);  // give the whole extended image ( .getOrigBuf() and .getRecoBuf() ) to the function because vector icues_enc is based on extended frames
 
-
      }
 
-     //encode the blocks
-     for(const auto& b: picture.icus())
-     {
-         encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::THIS)));
-     }
+//     //encode the blocks
+//     for(const auto& b: picture.icus())
+//     {
+//         encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::THIS)));
+//     }
 }
 
 void Encoder::encodeBlock(std::ostream &output, const Block &b, bool access_block)

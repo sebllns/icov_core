@@ -1,4 +1,7 @@
 #include "quantizeFrame.h"
+#include "QpParam.h"
+#include "Quant.h"
+#include "mytransform2d.h"
 
 void quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &quantizedImage, EncodingStructure &encStruct, const int bitDepths[], int maxLog2TrDynamicRange)
 {
@@ -20,11 +23,10 @@ void quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &qu
 {
     int bit_depth = bitDepths[toChannelType(compID)];
 
-    //MyQpParam cQP(qp, toChannelType(compID), encStruct.vec_icus[0].get_sourceX().chromaFormat, bit_depth, 0, 0);
+    icov::video::ICOV_QpParam cQP(qp, toChannelType(compID), encStruct.vec_icus[0].get_sourceX().chromaFormat, bit_depth, 0, 0);
+    icov::video::ICOV_Quant quant;
 
-
-    //MyTransform2D transform2D;
-    //MyQuant quant;
+    MyTransform2D transform2D;
     TCoeff uiAbsSum;
 
     if(compID==COMPONENT_Y)
@@ -37,14 +39,11 @@ void quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &qu
         InteractiveCodingUnit& curr_icu = encStruct.vec_icus[i].get_sourceX();
         for(UInt j=0; j < curr_icu.TUs.size(); j++)
         {
-            //FIXME
-            //MyTransformUnit& curr_tu = curr_icu.TUs[j];
-            //transform2D.transformNxN(curr_tu.getTransformCoeffs(compID), originalImage, curr_tu.block(compID), bit_depth, maxLog2TrDynamicRange);
-            //quant.quant(curr_tu.getQuantizedTransformCoeffs(compID), curr_tu.getTransformCoeffs(compID), uiAbsSum, cQP, SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
-            //quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID), curr_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth, maxLog2TrDynamicRange);
-            //transform2D.invTransformNxN(quantizedImage, curr_tu.block(compID), curr_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth, maxLog2TrDynamicRange);
-
-
+            MyTransformUnit& curr_tu = curr_icu.TUs[j];
+            transform2D.transformNxN(curr_tu.getTransformCoeffs(compID), originalImage, curr_tu.block(compID), bit_depth, maxLog2TrDynamicRange);
+            quant.quant(curr_tu.getQuantizedTransformCoeffs(compID), curr_tu.getTransformCoeffs(compID), uiAbsSum, cQP, SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
+            quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID), curr_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth, maxLog2TrDynamicRange);
+            transform2D.invTransformNxN(quantizedImage, curr_tu.block(compID), curr_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth, maxLog2TrDynamicRange);
         }
     }
 }

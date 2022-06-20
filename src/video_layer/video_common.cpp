@@ -1,9 +1,19 @@
 #include "video_common.h"
 #include "CommonLib/version.h"
+#include "Utilities/program_options_lite.h"
 
-void icov::video::init_video_lib()
+void icov::video::init_video_lib(int argc, char *argv[])
 {
-    std::cout << "VVCSoftware: VTM Encoder Version " << VTM_VERSION << std::endl;
+    std::cout << "VVCSoftware: VTM Encoder Version "
+    << VTM_VERSION
+    << std::endl
+    << NVM_ONOS
+    << std::endl;
+
+    fprintf( stdout, NVM_ONOS );
+    fprintf( stdout, NVM_COMPILEDBY );
+    fprintf( stdout, NVM_BITS );
+
 
 #if ENABLE_SIMD_OPT //NEEDED FOR VVC
     std::string SIMD;
@@ -12,9 +22,14 @@ void icov::video::init_video_lib()
             ( "SIMD", SIMD, string( "" ), "" )
             ( "c", df::program_options_lite::parseConfigFile, "" );
     df::program_options_lite::SilentReporter err;
-    df::program_options_lite::scanArgv( opts, argc, ( const TChar** ) argv, err );
-    std::cout << "[SIMD=" << read_x86_extension( SIMD ) << "]" << std::endl;
+    df::program_options_lite::scanArgv( opts, argc, ( const char** ) argv, err );
+    fprintf( stdout, "[SIMD=%s] ", read_x86_extension( SIMD ) );
 #endif
+#if ENABLE_TRACING
+    fprintf( stdout, "[ENABLE_TRACING] " );
+#endif
+    fprintf( stdout, "\n" );
+
     // initialize global variables
     initROM();  // really necessary, but it should be called once
     //END NEEDED FOR VVC

@@ -78,41 +78,10 @@ MyTransformUnit* InteractiveCodingUnit::addTU(const UnitArea &unit)
     previousTU.next = &currTU;
 
     return &currTU;
-/*
-
-    if(!firstTU)
-    {
-        firstTU = std::make_shared<MyTransformUnit>(unit);
-        lastTU = firstTU;
-//        _previousTU = firstTU;
-        return firstTU;
-    }
-
-    std::shared_ptr<MyTransformUnit> tu(new MyTransformUnit(unit));
-//    MyTransformUnit* tu = new MyTransformUnit(unit);
-
-    tu->previous = lastTU.get();
-    lastTU->next = tu.get();
-
-    lastTU = tu;
-
-    return lastTU;
-    */
 }
 
 MyTransformUnit* InteractiveCodingUnit::getTU(const UnitArea &unit)
 {
-
-//    if(!firstTU)
-//        return nullptr;
-
-//    for(std::shared_ptr<MyTransformUnit> tu = firstTU; tu; tu=std::shared_ptr<MyTransformUnit> (tu->next))
-//    {
-//        if(*tu==unit)
-//            return tu;
-//    }
-
-//    return nullptr;
 
     for(unsigned int i=0; i < TUs.size(); i++)
     {

@@ -18,6 +18,8 @@ using Int64 = long long;
 using UInt64 = unsigned long long;
 using UChar = unsigned char; // Unsigned 8-bit values
 
+typedef       signed char         SChar; // Signed 8-bit values
+
 //typedef       unsigned int        UInt;
 //typedef       int                 Int;
 //typedef       unsigned char       UChar; // Unsigned 8-bit values
@@ -36,7 +38,9 @@ inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chFmt)
 
 static const Int ADJ_QUANT_SHIFT =                                  7;
 static const Int ADJ_DEQUANT_SHIFT =            ( ADJ_QUANT_SHIFT + 1 );
+static const Int MAX_TU_SIZE =                                    128;
+extern SChar          g_aucLog2                       [MAX_CU_SIZE + 1];
 
-void init_video_lib();
+void init_video_lib(int argc, char *argv[]);
 }
 }

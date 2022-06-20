@@ -1,6 +1,6 @@
 message(STATUS "[INFO] Installing aff3ct")
 
-add_git_submodule(third-party/aff3ct)
+add_git_submodule(${CMAKE_CURRENT_SOURCE_DIR}/third-party/aff3ct)
 
 set(AFF3CT_COMPILE_EXE OFF)
 set(AFF3CT_COMPILE_STATIC_LIB ON)
