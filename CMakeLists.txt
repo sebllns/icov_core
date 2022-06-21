@@ -29,8 +29,7 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(. src third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
-    third-party/aff3ct/lib/rang/include)
+include_directories(. src)
 
 #Link with Boost
 
@@ -62,11 +61,13 @@ set (AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
 message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${AFF3CT_PACKAGE_DIR}" NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
+include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
+    third-party/aff3ct/lib/rang/include)
 
 #LINK WITH VVC
 add_subdirectory("third-party/vvc/source/Lib/CommonLib")
 target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
-include_directories(third-party/vvc/source/Lib)
+include_directories(SYSTEM third-party/vvc/source/Lib)
 
 add_subdirectory(src)
 
