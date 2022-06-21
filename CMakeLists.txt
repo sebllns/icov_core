@@ -60,8 +60,6 @@ include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include thi
 #END AFF3CT
 
 #LINK WITH VVC
-add_subdirectory("third-party/vvc/source/Lib/CommonLib")
-target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
 # enable sse4.1 build for all source files for gcc and clang
 if( UNIX OR MINGW )
   add_compile_options( "-msse4.1" )
@@ -71,6 +69,8 @@ if( MSVC )
   add_compile_options( "/MP" )
   add_compile_options( "/EHsc" )
 endif()
+add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
 include_directories(SYSTEM third-party/vvc/source/Lib)
 #END VCC
 
