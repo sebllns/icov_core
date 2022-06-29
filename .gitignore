@@ -5,6 +5,12 @@ doc/html/
 doc/latex
 data/imt/*/alist/
 
+# Winmerge
+*.orig
+*_LOCAL_*
+*_REMOTE_*
+*_BACKUP_*
+*_BASE_*
 
 ### CMake ###
 CMakeLists.txt.user

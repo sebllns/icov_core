@@ -51,7 +51,7 @@ void FakeEncoder::encode(std::ostream &output, const IPicture &picture, const IA
         cout << "encode the blocks" << std::endl;
         for(const auto& b: picture.icus())
         {
-            encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::THIS)));
+            encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
         }
 }
 

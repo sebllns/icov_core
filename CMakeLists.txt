@@ -1,17 +1,24 @@
 cmake_minimum_required(VERSION 3.2)
 
+########################################
+#            INIT PROJECT              #
+########################################
 project(icov_core LANGUAGES CXX)
-
-message("BUILD ICOV CORE PROJECT")
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
+message(STATUS "BUILD ICOV CORE PROJECT")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #set(CMAKE_CXX_EXTENSIONS OFF)
 
+#Include functions
+message(VERBOSE "Includes")
+include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
 include(ExternalProject)
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
+endif()
+
 # set address sanitizer compiler arguments
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
   if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
@@ -26,24 +33,71 @@ if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
   endif()
 endif()
 
+########################################
+#            INFOS COMPILER            #
+########################################
+message("-------------------------------------------------------------------------")
+if(CMAKE_CXX_COMPILER_LOADED)
+     message(STATUS "C++ Compiler path: ${CMAKE_CXX_COMPILER}")
+     message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+     message(STATUS "C++ Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
+     if(CMAKE_COMPILER_IS_GNUCXX) 
+        message(STATUS "C++ Compiler is part of GCC")
+    endif()
+endif()
+message("\n")
+
+if(CMAKE_C_COMPILER_LOADED)
+     message(STATUS "C Compiler path: ${CMAKE_C_COMPILER}")
+     message(STATUS "C Compiler ID: ${CMAKE_C_COMPILER_ID}")
+     message(STATUS "C Compiler version: ${CMAKE_C_COMPILER_VERSION}")
+     if(CMAKE_COMPILER_IS_GNUC) 
+        message(STATUS "C Compiler is part of GCC")
+    endif()
+else()
+    message(STATUS "No C compiler defined")
+endif()
+
+message("\n")
+message(STATUS "Cmake infos")
+execute_process(COMMAND "${CMAKE_COMMAND}" --version COMMAND_ECHO STDOUT)
+message("-------------------------------------------------------------------------")
+
+########################################
+#        CHECK DEPENDENCIES            #
+########################################
+message(STATUS "Checking dependencies...\n") #cf https://cmake.org/cmake/help/latest/command/message.html
+
+#---------------------------------------------------------------------
+
 #Link with Boost
-set(Boost_USE_STATIC_LIBS OFF)
+message(STATUS "[INFO] Checking Boost support...")
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-find_package(Boost 1.70.0 COMPONENTS
+find_package(Boost 1.70.0 
+COMPONENTS
     program_options
     filesystem
-    REQUIRED)
-#END BOOST
+OPTIONAL_COMPONENTS
+    unit_test_framework
+REQUIRED)
+include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIR})
+message(STATUS "Include boost dir: ${Boost_INCLUDE_DIR}")
+message("\n")
 
+#---------------------------------------------------------------------
 # Link with the "Threads library (required to link with AFF3CT after)
+message(STATUS "[INFO] Checking Threads support...")
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-#END THREADS
+message("\n")
 
+#---------------------------------------------------------------------
 # Link with AFF3CT
+message(STATUS "[INFO] Checking AFF3CT support...")
 #SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 #SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 
@@ -55,36 +109,49 @@ set (AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
 message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${AFF3CT_PACKAGE_DIR}" NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
+
+# set(AFF3CT_COMPILE_EXE OFF)
+# set(AFF3CT_COMPILE_STATIC_LIB ON)
+# set(AFF3CT_POLAR_BIT_PACKING OFF)
+# set(AFF3CT_COLORS OFF)
+
+# set(aff3ct_PREFIX "${CMAKE_BINARY_DIR}/third-party/aff3ct")
+# set(aff3ct_INSTALL_DIR "${aff3ct_PREFIX}")
+# set(aff3ct_CMAKE_ARGS 
+    # -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}"
+    # -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE 
+    # -DCMAKE_INSTALL_PREFIX=${aff3ct_INSTALL_DIR}
+    # -DAFF3CT_COMPILE_EXE=${AFF3CT_COMPILE_EXE}
+    # -DAFF3CT_COMPILE_STATIC_LIB=${AFF3CT_COMPILE_STATIC_LIB}
+    # -DAFF3CT_POLAR_BIT_PACKING=${AFF3CT_POLAR_BIT_PACKING}
+    # -DAFF3CT_COLORS=${AFF3CT_COLORS})
+
+# message("aff3ct_PREFIX='${aff3ct_PREFIX}'")
+# message("aff3ct_INSTALL_DIR='${aff3ct_INSTALL_DIR}'")
+# message("aff3ct_CMAKE_ARGS='${aff3ct_CMAKE_ARGS}'")
+# ExternalProject_Add(aff3ct_project
+    # PREFIX ${aff3ct_PREFIX}
+    # GIT_REPOSITORY https://github.com/aff3ct/aff3ct.git
+    # GIT_SUBMODULES_RECURSE TRUE
+    # GIT_PROGRESS TRUE
+    # INSTALL_DIR ${aff3ct_INSTALL_DIR}
+    # CMAKE_ARGS ${aff3ct_CMAKE_ARGS})
+
 include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
     third-party/aff3ct/lib/rang/include)
-#END AFF3CT
+message("-------------------------------------------------------------------------")
 
-#LINK WITH VVC
-# enable sse4.1 build for all source files for gcc and clang
-if( UNIX OR MINGW )
-  add_compile_options( "-msse4.1" )
-endif()
-# enable parallel build for Visual Studio
-if( MSVC )
-  add_compile_options( "/MP" )
-  add_compile_options( "/EHsc" )
-endif()
-add_subdirectory("third-party/vvc/source/Lib/CommonLib")
-target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
-include_directories(SYSTEM third-party/vvc/source/Lib)
-#END VCC
-
-#ICOV PROJECT
+########################################
+#               ICOV                   #
+########################################
 set(ICOV_CORE_VERSION_MAJOR "0")
 set(ICOV_CORE_VERSION_MINOR "8")
 set(ICOV_CORE_VERSION_PATCH "0")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
-
-
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 
 if(ICOV_CORE_DEBUG_TRACE_ENABLED)
-    message(STATUS "[INFO] ICOV CORE DEBUG TRACING IS ENABLED")
+    message(STATUS "[INFO] ICOV core debug trace is ENABLED")
     add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED")
 endif()
 
@@ -92,8 +159,8 @@ file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-add_subdirectory(src)
 include_directories(. src)
+add_subdirectory(src)
 
 if(ICOV_EXTENSIONS_ENABLED)
     add_subdirectory(extensions)
@@ -114,11 +181,9 @@ add_subdirectory(app/cli)
 if(ICOV_PLATFORM MATCHES LINUX OR ICOV_PLATFORM MATCHES WIN)
     add_subdirectory(app/opencv_interactive_viewport)
 endif()
-#END ICOV
 
-#DEMO
 if(INSTALL_DEMO)
-
+    message(STATUS "[INFO] Configuring ICOV demo")
     set(ICOV_DEMO_ROOT_DIR "${CMAKE_BINARY_DIR}/demo")
 
     make_directory(${ICOV_DEMO_ROOT_DIR})
@@ -145,14 +210,11 @@ if(INSTALL_DEMO)
     message(STATUS "[INFO] Extracting demo")
     file(ARCHIVE_EXTRACT INPUT ${ICOV_DEMO_ROOT_DIR}/demo.zip DESTINATION ${ICOV_DEMO_DIR} VERBOSE)
 endif()
-#END DEMO
 
-#RESOURCES
 FILE(COPY "data/" DESTINATION "${EXECUTABLE_OUTPUT_PATH}/data")
-#END RESOURCES
 
-#PRINT DEBUG INFO
+
 execute_process(COMMAND "${CMAKE_CXX_COMPILER} -v" COMMAND_ECHO STDOUT)
 execute_process(COMMAND "${CMAKE_COMMAND} -v" COMMAND_ECHO STDOUT)
-#END PRINT
+
 

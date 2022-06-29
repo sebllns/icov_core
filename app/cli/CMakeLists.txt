@@ -1,10 +1,5 @@
 message("BUILD ICOV CLI PROJECT")
 
-find_package(Boost 1.70.0 COMPONENTS
-    program_options
-    filesystem
-    REQUIRED)
-
 # executable
 set( EXE_NAME icov_cli )
 

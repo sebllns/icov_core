@@ -61,7 +61,7 @@ add_compile_options("-Wno-write-strings")
 endif()
 
 # executable
-set( EXE_NAME icov_opencv_interactive_viewport )
+set( EXE_NAME icov_opencv_interactive_viewport)
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXE_NAME})
 #set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/icov_viewport_construction)

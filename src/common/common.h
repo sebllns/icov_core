@@ -69,14 +69,13 @@
 #include <iostream>
 #include <cstdio>
 #include <stdexcept>
-
-#include <boost/throw_exception.hpp>
-
 #include "tools/DebugTools.h"
 #include "typedef.h"
 #include "common_types.h"
 #include "version.h"
 #include "helpers.h"
 #include "options.h"
+
+#include <boost/throw_exception.hpp>
 
 #endif // COMMON_H

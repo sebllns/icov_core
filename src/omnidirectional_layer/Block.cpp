@@ -9,13 +9,13 @@ const IPicture *Block::parent() const
 
 void Block::setId(NeighborDirection index, size_t id)
 {
-    assert(index >= NeighborDirection::THIS && index < NeighborDirection::COUNT);
+    assert(index >= NeighborDirection::SELF && index < NeighborDirection::COUNT);
     uid[index] = id;
 }
 
 size_t Block::getId(NeighborDirection index) const
 {
-    if(index < NeighborDirection::THIS || index >= NeighborDirection::COUNT) return 0;
+    if(index < NeighborDirection::SELF || index >= NeighborDirection::COUNT) return 0;
     return  uid[index];
 }
 
@@ -72,7 +72,7 @@ Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph
 
     m_isAccessBlock = false;
     std::fill(uid, uid+NeighborDirection::COUNT, 0);
-    setId(NeighborDirection::THIS, id);
+    setId(NeighborDirection::SELF, id);
 
     float phi = parent->angleX(center_u());
     float theta = parent->angleY(center_v());

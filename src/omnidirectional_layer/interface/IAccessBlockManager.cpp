@@ -25,7 +25,7 @@ bool IAccessBlockManager::isAccessBlock(size_t id) const
     auto b = m_blocks.begin();
 
     while (b!=m_blocks.end()) {
-        if ((*b)->getId(Block::THIS) == id) return true;
+        if ((*b)->getId(Block::SELF) == id) return true;
         ++b;
     }
 
