@@ -6,6 +6,10 @@ cmake_minimum_required(VERSION 3.2)
 project(icov_core LANGUAGES CXX)
 message(STATUS "BUILD ICOV CORE PROJECT")
 
+set(ICOV_EXTENSIONS_ENABLED ON CACHE BOOL "Enable extensions code for ICOV")
+set(ICOV_APPS_ENABLED ON CACHE BOOL "Build ICOV apps")
+set(ICOV_TESTS_ENABLED ON CACHE BOOL "Build ICOV tests")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -156,7 +160,6 @@ if(ICOV_CORE_DEBUG_TRACE_ENABLED)
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
-
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
 include_directories(. src)
@@ -176,11 +179,9 @@ endif()
 
 add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 
-message(STATUS "[INFO] Building ICOV core apps")
-add_subdirectory(app/cli)
-if(ICOV_PLATFORM MATCHES LINUX OR ICOV_PLATFORM MATCHES WIN)
-    add_subdirectory(app/opencv_interactive_viewport)
-endif()
+if(ICOV_APPS_ENABLED)
+add_subdirectory(app)
+endif(ICOV_APPS_ENABLED)
 
 if(INSTALL_DEMO)
     message(STATUS "[INFO] Configuring ICOV demo")

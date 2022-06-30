@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 message(STATUS "ICOV EXTENSIONS ENABLED")
 
+set(ALL_EXTENSIONS_ENABLED ON CACHE BOOL "Force usage of all extensions")
+
 if(ALL_EXTENSIONS_ENABLED)
     set(BITSTREAM_UTILS_ENABLED ON)
 endif()
