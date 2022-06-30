@@ -2,8 +2,8 @@
 #define BITSTREAMEXTENSION_H
 #pragma once
 
-#include <boost/crc.hpp>
 #include "common.h"
+#include <boost/crc.hpp>
 
 namespace icov
 {

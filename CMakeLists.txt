@@ -92,6 +92,33 @@ message(STATUS "Include boost dir: ${Boost_INCLUDE_DIR}")
 message("\n")
 
 #---------------------------------------------------------------------
+#LINK WITH VVC
+
+# use ccache
+find_program( CCACHE_FOUND ccache )
+if( CCACHE_FOUND )
+  message( STATUS "ccache found. using it." )
+  set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
+  set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
+endif()
+
+#TODO: forced to include full VVC for Windows, but need only CommonLib (build error if we add only CommonLib)
+add_subdirectory("third-party/vvc")
+#add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+# enable sse4.1 build for all source files for gcc and clang
+if( UNIX OR MINGW )
+    target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
+    add_compile_options( "-msse4.1" )
+endif()
+# enable parallel build for Visual Studio
+if( MSVC )
+  add_compile_options( "/MP" )
+  add_compile_options( "/EHsc" )
+  target_compile_options(CommonLib PUBLIC "/wd4996")
+endif()
+include_directories(SYSTEM third-party/vvc/source/Lib)
+
+#---------------------------------------------------------------------
 # Link with the "Threads library (required to link with AFF3CT after)
 message(STATUS "[INFO] Checking Threads support...")
 set(CMAKE_THREAD_PREFER_PTHREAD ON)

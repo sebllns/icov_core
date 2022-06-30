@@ -53,8 +53,10 @@
 #ifndef _HAS_STD_BYTE
 #define _HAS_STD_BYTE 0
 #endif
+#ifndef NOMINMAX 
 #define NOMINMAX
-#include <Windows.h>
+#endif
+//#include <Windows.h>
 #endif
 
 #include <ctype.h>
