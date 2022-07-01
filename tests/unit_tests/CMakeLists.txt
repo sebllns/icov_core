@@ -3,4 +3,7 @@ if(Boost_unit_test_framework_FOUND)
     set(SRC icovunittest.cc)
     add_executable(icov_core_unit_tests ${SRC})
     target_link_libraries(icov_core_unit_tests Boost::unit_test_framework s_IcovCoreLib)
+    # set the folder where to place the projects
+    set_target_properties(icov_core_unit_tests PROPERTIES FOLDER "public/tests" )
 endif()
+

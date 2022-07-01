@@ -14,3 +14,6 @@ if(Boost_FOUND)
     add_executable(bitvector_benchmark ${SRC} ${HEADER} bitvector/main.cpp)
     target_link_libraries(bitvector_benchmark s_IcovCoreLib)
 endif()
+
+# set the folder where to place the projects
+set_target_properties( bitvector_benchmark PROPERTIES FOLDER "public/tests" )

@@ -17,3 +17,6 @@ add_executable(${EXE_NAME} main.cpp ${SRC_FILES} ${INC_FILES})
 include_directories(.)
 
 target_link_libraries(${EXE_NAME} ${Boost_LIBRARIES} s_IcovCoreLib s_IcovEncoderLib)
+
+# set the folder where to place the projects
+set_target_properties( ${EXE_NAME} PROPERTIES FOLDER "public/app" )

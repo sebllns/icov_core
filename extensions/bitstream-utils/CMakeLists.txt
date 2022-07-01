@@ -22,3 +22,6 @@ target_include_directories(s_${LIB_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(${LIB_NAME} ${Boost_LIBRARIES})
 target_link_libraries(s_${LIB_NAME} ${Boost_LIBRARIES})
 
+# set the folder where to place the projects
+set_target_properties( ${LIB_NAME} PROPERTIES FOLDER "public/lib/shared" )
+set_target_properties( s_${LIB_NAME} PROPERTIES FOLDER "public/lib/static" )

@@ -18,3 +18,5 @@ include_directories(.)
 
 target_link_libraries(${EXE_NAME} s_IcovCoreLib)
 
+# set the folder where to place the projects
+set_target_properties( ${EXE_NAME} PROPERTIES FOLDER "public/tests" )

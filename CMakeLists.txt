@@ -10,6 +10,9 @@ set(ICOV_EXTENSIONS_ENABLED ON CACHE BOOL "Enable extensions code for ICOV")
 set(ICOV_APPS_ENABLED ON CACHE BOOL "Build ICOV apps")
 set(ICOV_TESTS_ENABLED ON CACHE BOOL "Build ICOV tests")
 
+# use folders in IDEs for projects (e.g. lib sample app test)
+set_property( GLOBAL PROPERTY USE_FOLDERS ON )
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

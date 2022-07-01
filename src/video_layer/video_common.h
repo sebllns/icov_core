@@ -29,11 +29,12 @@ typedef       signed char         SChar; // Signed 8-bit values
 //typedef       unsigned long long  UInt64;
 
 static const Int chromaQPMappingTableSize = 58;
-extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize];
+//extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize];
 
 inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chFmt)
 {
-    return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP)];
+	return 0;
+   // return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP)];
 }
 
 static const Int ADJ_QUANT_SHIFT =                                  7;
