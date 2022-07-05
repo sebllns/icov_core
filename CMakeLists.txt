@@ -6,9 +6,9 @@ cmake_minimum_required(VERSION 3.2)
 project(icov_core LANGUAGES CXX)
 message(STATUS "BUILD ICOV CORE PROJECT")
 
-set(ICOV_EXTENSIONS_ENABLED ON CACHE BOOL "Enable extensions code for ICOV")
-set(ICOV_APPS_ENABLED ON CACHE BOOL "Build ICOV apps")
-set(ICOV_TESTS_ENABLED ON CACHE BOOL "Build ICOV tests")
+set(BUILD_ICOV_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
+set(BUILD_ICOV_ENCODER ON CACHE BOOL "Build the icov encoder lib")
+set(BUILD_ICOV_APPS ON CACHE BOOL "Build ICOV apps")
 
 # use folders in IDEs for projects (e.g. lib sample app test)
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
@@ -50,6 +50,7 @@ if(CMAKE_CXX_COMPILER_LOADED)
      message(STATUS "C++ Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
      if(CMAKE_COMPILER_IS_GNUCXX) 
         message(STATUS "C++ Compiler is part of GCC")
+        execute_process(COMMAND "${CMAKE_CXX_COMPILER} -v" COMMAND_ECHO STDOUT)
     endif()
 endif()
 message("\n")
@@ -132,9 +133,6 @@ message("\n")
 #---------------------------------------------------------------------
 # Link with AFF3CT
 message(STATUS "[INFO] Checking AFF3CT support...")
-#SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
-#SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
-
 set(AFF3CT_BUILD_DIR third-party/aff3ct CACHE STRING "Path to aff3ct build directory default is ${CMAKE_BINARY_DIR}/third-party/aff3ct")
 set(AFF3CT_BUILD_DIR_FULL ${CMAKE_BINARY_DIR}/${AFF3CT_BUILD_DIR})
 include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/install_aff3ct.cmake)
@@ -143,33 +141,6 @@ set (AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
 message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${AFF3CT_PACKAGE_DIR}" NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
-
-# set(AFF3CT_COMPILE_EXE OFF)
-# set(AFF3CT_COMPILE_STATIC_LIB ON)
-# set(AFF3CT_POLAR_BIT_PACKING OFF)
-# set(AFF3CT_COLORS OFF)
-
-# set(aff3ct_PREFIX "${CMAKE_BINARY_DIR}/third-party/aff3ct")
-# set(aff3ct_INSTALL_DIR "${aff3ct_PREFIX}")
-# set(aff3ct_CMAKE_ARGS 
-    # -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}"
-    # -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE 
-    # -DCMAKE_INSTALL_PREFIX=${aff3ct_INSTALL_DIR}
-    # -DAFF3CT_COMPILE_EXE=${AFF3CT_COMPILE_EXE}
-    # -DAFF3CT_COMPILE_STATIC_LIB=${AFF3CT_COMPILE_STATIC_LIB}
-    # -DAFF3CT_POLAR_BIT_PACKING=${AFF3CT_POLAR_BIT_PACKING}
-    # -DAFF3CT_COLORS=${AFF3CT_COLORS})
-
-# message("aff3ct_PREFIX='${aff3ct_PREFIX}'")
-# message("aff3ct_INSTALL_DIR='${aff3ct_INSTALL_DIR}'")
-# message("aff3ct_CMAKE_ARGS='${aff3ct_CMAKE_ARGS}'")
-# ExternalProject_Add(aff3ct_project
-    # PREFIX ${aff3ct_PREFIX}
-    # GIT_REPOSITORY https://github.com/aff3ct/aff3ct.git
-    # GIT_SUBMODULES_RECURSE TRUE
-    # GIT_PROGRESS TRUE
-    # INSTALL_DIR ${aff3ct_INSTALL_DIR}
-    # CMAKE_ARGS ${aff3ct_CMAKE_ARGS})
 
 include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
     third-party/aff3ct/lib/rang/include)
@@ -180,7 +151,7 @@ message("-----------------------------------------------------------------------
 ########################################
 set(ICOV_CORE_VERSION_MAJOR "0")
 set(ICOV_CORE_VERSION_MINOR "8")
-set(ICOV_CORE_VERSION_PATCH "0")
+set(ICOV_CORE_VERSION_PATCH "6")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 
@@ -192,27 +163,30 @@ endif()
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-include_directories(. src)
-add_subdirectory(src)
+#REQUIRED
+include_directories(. lib lib/icov)
+add_subdirectory(lib/icov)
 
-if(ICOV_EXTENSIONS_ENABLED)
-    add_subdirectory(extensions)
+if(BUILD_ICOV_ENCODER)
+    add_subdirectory(lib/encoder)
 endif()
 
-add_subdirectory(encoder)
+if(BUILD_ICOV_EXTENSIONS)
+    add_subdirectory(lib/extensions)
+endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
+if(BUILD_ICOV_TESTS OR (NOT DEFINED BUILD_ICOV_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug))
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/benchmarks)
+    add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 endif()
 
-add_subdirectory(tests/icov_interactive_coder_bit_symbol)
-
-if(ICOV_APPS_ENABLED)
+if(BUILD_ICOV_APPS)
 add_subdirectory(app)
-endif(ICOV_APPS_ENABLED)
+endif(BUILD_ICOV_APPS)
 
+#INSTALL DEMO
 if(INSTALL_DEMO)
     message(STATUS "[INFO] Configuring ICOV demo")
     set(ICOV_DEMO_ROOT_DIR "${CMAKE_BINARY_DIR}/demo")
@@ -224,7 +198,6 @@ if(INSTALL_DEMO)
         file(DOWNLOAD https://sourceforge.net/projects/icov/files/icov-demonstrator/version.txt ${ICOV_DEMO_VERSION_PATH})
         file(STRINGS "${ICOV_DEMO_VERSION_PATH}" ICOV_DEMO_VERSION)
     endif()
-
 
     set(ICOV_DEMO_DIR "${ICOV_DEMO_ROOT_DIR}/${ICOV_DEMO_VERSION}")
 
@@ -243,9 +216,5 @@ if(INSTALL_DEMO)
 endif()
 
 FILE(COPY "data/" DESTINATION "${EXECUTABLE_OUTPUT_PATH}/data")
-
-
-execute_process(COMMAND "${CMAKE_CXX_COMPILER} -v" COMMAND_ECHO STDOUT)
-execute_process(COMMAND "${CMAKE_COMMAND} -v" COMMAND_ECHO STDOUT)
 
 

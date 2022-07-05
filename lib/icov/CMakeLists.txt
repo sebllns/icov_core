@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 3.10)
 # library
 set( LIB_NAME IcovCoreLib )
 
-include_directories(. common common/dev_tools ldpc_codec omnidirectional_layer video_layer)
-
 # get source files
 file(GLOB_RECURSE SRC_FILES "common/*.cpp" "io/*.cpp" "ldpc_codec/*.cpp" "omnidirectional_layer/*.cpp")
 #"video_layer/*.cpp"
@@ -26,6 +24,10 @@ add_library( s_${LIB_NAME} STATIC ${SRC_FILES})
 
 #install(TARGETS ${LIB_NAME} DESTINATION ./lib EXPORT icov-targets)
 #install(EXPORT icov-targets DESTINATION lib/icov)
+
+
+target_include_directories(${LIB_NAME} PUBLIC . common common/dev_tools ldpc_codec omnidirectional_layer video_layer)
+target_include_directories(s_${LIB_NAME} PUBLIC . common common/dev_tools ldpc_codec omnidirectional_layer video_layer)
 
 target_link_libraries(${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS} CommonLib)
 target_link_libraries(s_${LIB_NAME} aff3ct::aff3ct-static-lib ${Boost_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS} CommonLib)
