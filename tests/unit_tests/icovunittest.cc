@@ -4,7 +4,7 @@
 #include <boost/test/unit_test.hpp>
 //#include <boost/test/included/unit_test.hpp>
 
-#include "ldpc_codec/BitSymbolProvider.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 
 BOOST_AUTO_TEST_SUITE(binary_tests)
 

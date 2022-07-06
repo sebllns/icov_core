@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CommonLib/Common.h"
 #include "CommonLib/TypeDef.h"
 #include <CommonLib/Unit.h>

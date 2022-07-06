@@ -54,6 +54,8 @@
 #include "InteractiveCoder.h"
 #include "aff3ct/Aff3ctDecoder.h"
 #include "LLRProvider.h"
+#include "options.h"
+#include "helpers.h"
 
 //#include "implementation/imt/IMTSyndrome.h"
 //#include "implementation/imt/IMTMatrixProvider.h"

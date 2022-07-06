@@ -49,7 +49,7 @@
 
 #include "Block.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
-
+#include "helpers.h"
 
 class IBlockPrediction
 {

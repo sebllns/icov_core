@@ -49,7 +49,7 @@
 #pragma once
 
 #include "common.h"
-#include "ldpc_codec/IcovCoder.h"
+#include "ldpc_codec_layer/IcovCoder.h"
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;

@@ -1,6 +1,7 @@
 #include "BitSymbolProvider.h"
 
 #include "tools/DebugTools.h"
+#include "helpers.h"
 
 namespace icov
 {

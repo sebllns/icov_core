@@ -1,7 +1,7 @@
 #ifndef IAFF3CTMatrixProvider_H
 #define IAFF3CTMatrixProvider_H
 
-#include "ldpc_codec/interface/IMatrixProvider.h"
+#include "ldpc_codec_layer/interface/IMatrixProvider.h"
 #include <aff3ct.hpp>
 
 using namespace aff3ct;

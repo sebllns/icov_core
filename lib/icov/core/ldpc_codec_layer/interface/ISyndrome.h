@@ -50,7 +50,7 @@
 #define ISYNDROME_H
 
 #include "common.h"
-#include "ldpc_codec/LLRProvider.h"
+#include "ldpc_codec_layer/LLRProvider.h"
 
 namespace icov
 {

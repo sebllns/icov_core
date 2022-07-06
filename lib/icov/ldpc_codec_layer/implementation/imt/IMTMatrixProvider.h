@@ -1,7 +1,7 @@
 #ifndef IMTMatrixProvider_H
 #define IMTMatrixProvider_H
 
-#include "ldpc_codec/aff3ct/IAff3ctMatrixProvider.h"
+#include "ldpc_codec_layer/aff3ct/IAff3ctMatrixProvider.h"
 #include "IMTSyndrome.h"
 #include "common.h"
 

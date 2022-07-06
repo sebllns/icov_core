@@ -1,4 +1,5 @@
 #include "EquiRectPicture.h"
+#include <cmath>
 
 //*/phi = y
 //theta = x

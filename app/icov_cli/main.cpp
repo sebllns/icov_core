@@ -7,11 +7,11 @@
 #include <aff3ct.hpp>
 
 #include "tools/DebugTools.h"
-#include "ldpc_codec/InteractiveCoder.h"
-#include "ldpc_codec/implementation/imt/IMTSyndrome.h"
-#include "ldpc_codec/implementation/imt/IMTMatrixProvider.h"
-#include "ldpc_codec/aff3ct/Aff3ctDecoder.h"
-#include "ldpc_codec/LLRProvider.h"
+#include "ldpc_codec_layer/InteractiveCoder.h"
+#include "ldpc_codec_layer/implementation/imt/IMTSyndrome.h"
+#include "ldpc_codec_layer/implementation/imt/IMTMatrixProvider.h"
+#include "ldpc_codec_layer/aff3ct/Aff3ctDecoder.h"
+#include "ldpc_codec_layer/LLRProvider.h"
 
 
 #include <boost/exception/diagnostic_information.hpp>

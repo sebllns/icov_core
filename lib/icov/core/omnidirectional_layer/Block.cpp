@@ -1,5 +1,6 @@
 #include "Block.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "helpers.h"
 
 const IPicture *Block::parent() const
 {

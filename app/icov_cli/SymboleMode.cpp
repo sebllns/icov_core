@@ -2,7 +2,7 @@
 
 #include "TestSequenceInput.h"
 #include "TestSequenceResult.h"
-#include "ldpc_codec/factory/CoderFactory.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 
 #include <boost/filesystem.hpp>

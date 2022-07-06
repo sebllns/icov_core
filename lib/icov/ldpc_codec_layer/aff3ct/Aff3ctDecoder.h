@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ldpc_codec/interface/IDecoder.h"
+#include "ldpc_codec_layer/interface/IDecoder.h"
 #include "Decoder_LDPCA_BP_flooding_SPA.hpp"
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 

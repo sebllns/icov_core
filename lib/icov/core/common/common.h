@@ -52,6 +52,7 @@
 #if _MSC_VER
 #ifndef _HAS_STD_BYTE
 #define _HAS_STD_BYTE 0
+#define _USE_MATH_DEFINES
 #endif
 #ifndef NOMINMAX 
 #define NOMINMAX
@@ -74,10 +75,10 @@
 #include "tools/DebugTools.h"
 #include "typedef.h"
 #include "common_types.h"
-#include "version.h"
-#include "helpers.h"
-#include "options.h"
+//#include "version.h"
+//#include "helpers.h"
+//#include "options.h"
 
-#include <boost/throw_exception.hpp>
+//#include <boost/throw_exception.hpp>
 
 #endif // COMMON_H

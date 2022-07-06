@@ -1,6 +1,6 @@
 #include "EncodeMode.h"
 
-#include "ldpc_codec/factory/CoderFactory.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
 
 #include "tools/DebugTools.h"
 

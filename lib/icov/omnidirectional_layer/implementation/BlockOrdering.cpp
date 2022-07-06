@@ -1,6 +1,7 @@
 #include "BlockOrdering.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "helpers.h"
 
 BlockOrdering::BlockOrdering(size_t blocks_count):
     m_path_info(std::vector<block_path_info>(blocks_count))

@@ -95,16 +95,16 @@ std::string path::combine(const std::string &path1, const std::string &path2)
     return  fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
 }
 
-void io::writeAlist(const std::string &filename, const AffMatrix &data)
-{
-    std::ofstream alist_file(filename);
-    if (!alist_file.is_open())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot open file " + filename));
-    }
-
-    aff3ct::tools::AList::write(data, alist_file);
-}
+//void io::writeAlist(const std::string &filename, const AffMatrix &data)
+//{
+//    std::ofstream alist_file(filename);
+//    if (!alist_file.is_open())
+//    {
+//        BOOST_THROW_EXCEPTION(std::runtime_error("cannot open file " + filename));
+//    }
+//
+//    aff3ct::tools::AList::write(data, alist_file);
+//}
 
 void path::assert_directory_exists(const std::string& path)
 {
