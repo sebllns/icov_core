@@ -6,7 +6,6 @@
 
 void EncodeMode::AddProgramOptions(boost::program_options::options_description &desc)
 {
-
 }
 
 EncodeMode::EncodeMode(const po::variables_map &args)

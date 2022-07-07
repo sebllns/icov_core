@@ -28,6 +28,10 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
 endif()
 
+if(MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+endif()
+
 # set address sanitizer compiler arguments
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
   if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
