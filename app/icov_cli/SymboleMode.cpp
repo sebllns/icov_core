@@ -10,7 +10,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <stdexcept>
-
+#include <fstream>
 
 namespace fs = boost::filesystem;
 
@@ -124,7 +124,7 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args):
 void SymboleMode::run()
 {
     auto measure_path = fs::path(m_result_dir) / "metric.csv";
-    measure_file = std::ofstream(measure_path);
+    measure_file = std::ofstream(measure_path.string());
     measure_file << "file\tsi\tabs diff\trelative diff\n";
     if(!measure_file.is_open())
     {
@@ -195,7 +195,7 @@ void SymboleMode::write_results(const std::string& sequence_name)
     TestSequenceResult tsr;
     tsr.read_from_file((m_references_dir / (sequence_name + ".mat")).string());
 
-    std::ofstream result_file(fs::path(m_result_dir) / (sequence_name + ".txt"));
+    std::ofstream result_file((fs::path(m_result_dir) / (sequence_name + ".txt")).string());
 
     for(int i = 0; i < 2; i++)
     {

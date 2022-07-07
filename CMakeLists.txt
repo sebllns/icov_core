@@ -9,6 +9,8 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 set(BUILD_ICOV_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
 set(BUILD_ICOV_ENCODER ON CACHE BOOL "Build the icov encoder lib")
 set(BUILD_ICOV_APPS ON CACHE BOOL "Build ICOV apps")
+set(WITH_CPPCHECK OFF CACHE BOOL "ENABLE CPPCHECK")
+set(WITH_CLANG_TIDY OFF CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
 
 # use folders in IDEs for projects (e.g. lib sample app test)
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
@@ -97,7 +99,6 @@ message("\n")
 
 #---------------------------------------------------------------------
 #LINK WITH VVC
-
 # use ccache
 find_program( CCACHE_FOUND ccache )
 if( CCACHE_FOUND )
@@ -106,9 +107,8 @@ if( CCACHE_FOUND )
   set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
 endif()
 
-#TODO: forced to include full VVC for Windows, but need only CommonLib (build error if we add only CommonLib)
-add_subdirectory("third-party/vvc")
-#add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+
 # enable sse4.1 build for all source files for gcc and clang
 if( UNIX OR MINGW )
     target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
@@ -121,6 +121,8 @@ if( MSVC )
   target_compile_options(CommonLib PUBLIC "/wd4996")
 endif()
 include_directories(SYSTEM third-party/vvc/source/Lib)
+set_target_properties(CommonLib PROPERTIES FOLDER "third-party" )
+message("\n")
 
 #---------------------------------------------------------------------
 # Link with the "Threads library (required to link with AFF3CT after)
@@ -142,8 +144,11 @@ message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED PATHS "${AFF3CT_PACKAGE_DIR}" NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
 
-include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
-    third-party/aff3ct/lib/rang/include)
+#include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
+#    third-party/aff3ct/lib/rang/include)
+
+message(WARNING "Move aff3ct to better place (lib/icov/ldpc_codec_layer)")
+message("\n")
 message("-------------------------------------------------------------------------")
 
 ########################################

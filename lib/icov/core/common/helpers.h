@@ -68,9 +68,7 @@
 #include "common.h"
 
 
-//#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
-//
-//using AffMatrix = aff3ct::tools::Sparse_matrix;
+
 
 
 namespace boost {
@@ -238,7 +236,6 @@ template<typename T> void read_vector(const std::string& filename,  std::vector<
     file.close();
 }
 
-//void writeAlist(const std::string& filename,  const AffMatrix& data);
 }
 
 namespace path

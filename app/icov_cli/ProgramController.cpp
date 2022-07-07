@@ -6,6 +6,7 @@
 #include "ExportMode.h"
 #include "CheckMode.h"
 #include "EncodeMode.h"
+#include "helpers.h"
 
 ProgramController::ProgramController():
     m_options_desc("Program Usage", 1024, 512)
@@ -81,7 +82,7 @@ void ProgramController::launchProgram()
     }
     else
     {
-        throw std::invalid_argument("Unknown program mode: " + mode);
+        ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode);
     }
 
     std::cout << "end program\n";

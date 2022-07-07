@@ -1,5 +1,6 @@
 #include "ExportMode.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "ldpc_codec_layer/io/Alist.h"
 #include "tools/DebugTools.h"
 #include <boost/filesystem.hpp>
 
