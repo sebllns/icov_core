@@ -34,16 +34,16 @@ endif()
 
 # set address sanitizer compiler arguments
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
-  if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
-    if( USE_ADDRESS_SANITIZER )
-      # add compile options
-      add_compile_options( "-fsanitize=address" )
-      add_link_options( "-fsanitize=address" )
+    if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
+        if( USE_ADDRESS_SANITIZER )
+            # add compile options
+            add_compile_options( "-fsanitize=address" )
+            add_link_options( "-fsanitize=address" )
+        endif()
     endif()
-  endif()
-  if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
-    add_compile_options( "-fabi-version=6" )
-  endif()
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
+        add_compile_options( "-fabi-version=6" )
+    endif()
 endif()
 
 ########################################
@@ -51,10 +51,10 @@ endif()
 ########################################
 message("-------------------------------------------------------------------------")
 if(CMAKE_CXX_COMPILER_LOADED)
-     message(STATUS "C++ Compiler path: ${CMAKE_CXX_COMPILER}")
-     message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
-     message(STATUS "C++ Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
-     if(CMAKE_COMPILER_IS_GNUCXX) 
+    message(STATUS "C++ Compiler path: ${CMAKE_CXX_COMPILER}")
+    message(STATUS "C++ Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+    message(STATUS "C++ Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
+    if(CMAKE_COMPILER_IS_GNUCXX)
         message(STATUS "C++ Compiler is part of GCC")
         execute_process(COMMAND "${CMAKE_CXX_COMPILER} -v" COMMAND_ECHO STDOUT)
     endif()
@@ -62,10 +62,10 @@ endif()
 message("\n")
 
 if(CMAKE_C_COMPILER_LOADED)
-     message(STATUS "C Compiler path: ${CMAKE_C_COMPILER}")
-     message(STATUS "C Compiler ID: ${CMAKE_C_COMPILER_ID}")
-     message(STATUS "C Compiler version: ${CMAKE_C_COMPILER_VERSION}")
-     if(CMAKE_COMPILER_IS_GNUC) 
+    message(STATUS "C Compiler path: ${CMAKE_C_COMPILER}")
+    message(STATUS "C Compiler ID: ${CMAKE_C_COMPILER_ID}")
+    message(STATUS "C Compiler version: ${CMAKE_C_COMPILER_VERSION}")
+    if(CMAKE_COMPILER_IS_GNUC)
         message(STATUS "C Compiler is part of GCC")
     endif()
 else()
@@ -91,12 +91,12 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost 1.70.0 
-COMPONENTS
+    COMPONENTS
     program_options
     filesystem
-OPTIONAL_COMPONENTS
-    unit_test_framework
-REQUIRED)
+#    OPTIONAL_COMPONENTS
+#    unit_test_framework
+    REQUIRED)
 include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIR})
 message(STATUS "Include boost dir: ${Boost_INCLUDE_DIR}")
 message("\n")
@@ -106,9 +106,9 @@ message("\n")
 # use ccache
 find_program( CCACHE_FOUND ccache )
 if( CCACHE_FOUND )
-  message( STATUS "ccache found. using it." )
-  set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
-  set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
+    message( STATUS "ccache found. using it." )
+    set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
+    set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
 endif()
 
 add_subdirectory("third-party/vvc/source/Lib/CommonLib")
@@ -120,9 +120,9 @@ if( UNIX OR MINGW )
 endif()
 # enable parallel build for Visual Studio
 if( MSVC )
-  add_compile_options( "/MP" )
-  add_compile_options( "/EHsc" )
-  target_compile_options(CommonLib PUBLIC "/wd4996")
+    add_compile_options( "/MP" )
+    add_compile_options( "/EHsc" )
+    target_compile_options(CommonLib PUBLIC "/wd4996")
 endif()
 include_directories(SYSTEM third-party/vvc/source/Lib)
 set_target_properties(CommonLib PROPERTIES FOLDER "third-party" )
@@ -192,7 +192,7 @@ if(BUILD_ICOV_TESTS OR (NOT DEFINED BUILD_ICOV_TESTS AND CMAKE_BUILD_TYPE MATCHE
 endif()
 
 if(BUILD_ICOV_APPS)
-add_subdirectory(app)
+    add_subdirectory(app)
 endif(BUILD_ICOV_APPS)
 
 #INSTALL DEMO
@@ -213,9 +213,9 @@ if(INSTALL_DEMO)
     #write version
     make_directory(${ICOV_DEMO_DIR})
 
-#     if(UNIX)
-# message("DLunix")
-# endif()
+    #     if(UNIX)
+    # message("DLunix")
+    # endif()
 
     message(STATUS "[INFO] Downloading demo v${ICOV_DEMO_VERSION} to ${ICOV_DEMO_DIR}")
     file(DOWNLOAD https://downloads.sourceforge.net/project/icov/icov-demonstrator/icov-equirect-sample/v1/linux/demo-linux.zip  ${ICOV_DEMO_ROOT_DIR}/demo.zip)
