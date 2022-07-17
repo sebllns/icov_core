@@ -86,9 +86,9 @@ message(STATUS "Checking dependencies...\n") #cf https://cmake.org/cmake/help/la
 
 #Link with Boost
 message(STATUS "[INFO] Checking Boost support...")
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+#set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost 1.70.0 
     COMPONENTS

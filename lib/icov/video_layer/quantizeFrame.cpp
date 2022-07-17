@@ -1,5 +1,5 @@
 #include "quantizeFrame.h"
-#include "QpParam.h"
+#include "IcovQpParam.h"
 #include "Quant.h"
 #include "mytransform2d.h"
 
@@ -23,7 +23,7 @@ void quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &qu
 {
     int bit_depth = bitDepths[toChannelType(compID)];
 
-    icov::video::ICOV_QpParam cQP(qp, toChannelType(compID), encStruct.vec_icus[0].get_sourceX().chromaFormat, bit_depth, 0, 0);
+    icov::video::IcovQpParam cQP(qp, toChannelType(compID), encStruct.vec_icus[0].get_sourceX().chromaFormat, bit_depth, 0, 0);
     icov::video::ICOV_Quant quant;
 
     MyTransform2D transform2D;

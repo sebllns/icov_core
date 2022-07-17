@@ -17,7 +17,7 @@ file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
 #static library
 add_library(s_IcovVideoLayer STATIC ${SRC_FILES} ${INC_FILES})
 target_include_directories(s_IcovVideoLayer PRIVATE .)
-target_link_libraries(s_IcovVideoLayer s_IcovCoreLib ${Boost_LIBRARIES} Threads::Threads)
+target_link_libraries(s_IcovVideoLayer s_IcovCoreLib ${Boost_LIBRARIES} Threads::Threads CommonLib)
 set_target_properties(s_IcovVideoLayer PROPERTIES FOLDER "public/lib/static")
 
 

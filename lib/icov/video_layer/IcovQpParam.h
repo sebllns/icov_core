@@ -16,7 +16,7 @@ namespace video {
 /// QP struct
 /// cf. CommonLib/Quant.h:61
 //#include "CommonLib/Quant.h"
-struct ICOV_QpParam
+struct IcovQpParam
 {
     int Qp;
     int per;
@@ -25,7 +25,7 @@ struct ICOV_QpParam
     ChannelType channelType;
     ChromaFormat chromaFomat;
 
-    ICOV_QpParam(const int           qpy,
+    IcovQpParam(const int           qpy,
               const ChannelType   chType,
               const ChromaFormat  chFmt,
               const int channelBitDepth,

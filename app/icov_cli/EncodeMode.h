@@ -48,9 +48,12 @@
  *****************************************************************************/
 #pragma once
 
+#include <boost/program_options.hpp>
+
 #include "common.h"
 #include "ldpc_codec_layer/IcovCoder.h"
-#include <boost/program_options.hpp>
+#include "omnidirectional_layer/interface/IEncoder.h"
+
 namespace po = boost::program_options;
 
 
@@ -68,5 +71,6 @@ private:
     int encode();
     std::shared_ptr<AffInteractiveCoder> m_ycoder;
     std::shared_ptr<AffInteractiveCoder> m_uvcoder;
+    std::unique_ptr<IEncoder> m_encoder;
 };
 

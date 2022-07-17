@@ -14,6 +14,14 @@
 struct MyTransformUnit : public UnitArea
 {
 public:
+
+    //TO BE INITIALIZED
+    TransformUnit *vvc_tu;
+    TransformUnit& vvc()
+    {
+        return *vvc_tu;
+    }
+
     MyTransformUnit(const UnitArea& unit, bool createTransformBuffer, bool createQuantizedTransformBuffer, bool createInversetQuantizedTransformBuffer);
     MyTransformUnit(const ChromaFormat chromaFormat, const Area &lumaArea, bool createTransformBuffer, bool createQuantizedTransformBuffer, bool createInversetQuantizedTransformBuffer);
     ~MyTransformUnit();

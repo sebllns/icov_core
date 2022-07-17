@@ -1,7 +1,7 @@
-#include "QpParam.h"
+#include "IcovQpParam.h"
 #include "CommonLib/ChromaFormat.h"
 
-icov::video::ICOV_QpParam::ICOV_QpParam(const int qpy, const ChannelType chType, const ChromaFormat chFmt, const int channelBitDepth, const int chromaQPOffset, const int dqp)
+icov::video::IcovQpParam::IcovQpParam(const int qpy, const ChannelType chType, const ChromaFormat chFmt, const int channelBitDepth, const int chromaQPOffset, const int dqp)
 {
     channelType = chType;
     chromaFomat = chFmt;

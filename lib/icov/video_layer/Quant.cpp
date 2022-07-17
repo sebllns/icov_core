@@ -59,7 +59,7 @@ const Int quantInterDefault8x8[8*8] =
   24,25,28,33,41,54,71,91
 };
 
-const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(const Size& size,  const icov::video::ICOV_QpParam &cQP, const SliceType sliceType)
+const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(const Size& size,  const icov::video::IcovQpParam &cQP, const SliceType sliceType)
 {
     std::pair<Size, Int> key(size, cQP.rem);
     auto it = _mapQuantizerWeightingMatrix.find(key);
@@ -131,7 +131,7 @@ const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(c
 
 //}
 
-Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
 
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
@@ -189,7 +189,7 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TC
     }
 }
 
-Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
     CHECK( qWeightingMatrix.width!= pSrc.width || qWeightingMatrix.height!= pSrc.height, "Sizes do not match");
@@ -247,7 +247,7 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, co
     }
 }
 
-Void icov::video::ICOV_Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const icov::video::ICOV_QpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void icov::video::ICOV_Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const icov::video::IcovQpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
     CHECK( piQCoef.width!= piCoef.width || piQCoef.height!= piCoef.height, "Sizes do not match");
     const TCoeff          transformMinimum   = -(1 << maxLog2TrDynamicRange);

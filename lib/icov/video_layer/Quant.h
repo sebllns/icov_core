@@ -33,12 +33,12 @@ protected:
 public:
     ICOV_Quant();
     ~ICOV_Quant();
-    const AreaBuf<const int> getDefaultQuantizationMatrix(const Size& size,  const icov::video::ICOV_QpParam &cQP, const SliceType sliceType);
+    const AreaBuf<const int> getDefaultQuantizationMatrix(const Size& size,  const icov::video::IcovQpParam &cQP, const SliceType sliceType);
 //    const AreaBuf<const int> getDefaultDequantizationMatrix(const Size& size,  const icov::video::ICOV_QpParam &cQP, const SliceType sliceType);
     // quantization
-    virtual Void quant(CoeffBuf& piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP,  const SliceType sliceType, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
-    virtual Void quant(CoeffBuf& piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::ICOV_QpParam &cQP,  const SliceType sliceType, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
-    virtual Void dequant(CoeffBuf& piCoef, const CCoeffBuf &piQCoef, const icov::video::ICOV_QpParam &cQP, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
+    virtual Void quant(CoeffBuf& piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP,  const SliceType sliceType, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
+    virtual Void quant(CoeffBuf& piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP,  const SliceType sliceType, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
+    virtual Void dequant(CoeffBuf& piCoef, const CCoeffBuf &piQCoef, const icov::video::IcovQpParam &cQP, const int channelBitDepth, const int maxLog2TrDynamicRange =15);
 };
 }
 }
