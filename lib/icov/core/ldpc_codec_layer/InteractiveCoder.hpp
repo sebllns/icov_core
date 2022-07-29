@@ -4,7 +4,7 @@
 using namespace icov;
 
 template<class Matrix>
-bool InteractiveCoder<Matrix>::testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source)
+bool InteractiveCoder<Matrix>::testConvergence(const BitVec &decoded, const BitVec &source)
 {
     if(decoded.size() != source.size()) return false;
 
@@ -17,7 +17,7 @@ bool InteractiveCoder<Matrix>::testConvergence(const std::vector<CodedVal> &deco
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source)
+int InteractiveCoder<Matrix>::errorCount(const BitVec &decoded, const BitVec &source)
 {
     float numerrors = 0;
     for (int i = 0; i < decoded.size(); i++)
@@ -29,11 +29,11 @@ int InteractiveCoder<Matrix>::errorCount(const std::vector<CodedVal> &decoded, c
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source)
+int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, const BitVec &source)
 {
     o_stored_syndrome.resize(0);
 
-    std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());
+    BitVec decoded(m_psyndromeMgr->get_n());
 
     bool convergence = false;
     while(i < m_matrix_provider->getNumCodesCount() && !convergence)
@@ -55,11 +55,11 @@ int InteractiveCoder<Matrix>::encode(uint32_t &i,  Syndrome &o_stored_syndrome, 
 }
 
 template<class Matrix>
-int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step)
+int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_syndrome, const BitVec &source, uint32_t numcodeMax, uint32_t step)
 {
     int n = source.size();
 
-    std::vector<CodedVal> decoded(m_psyndromeMgr->get_n());
+    BitVec decoded(m_psyndromeMgr->get_n());
 
     uint32_t next_test_code = io_numcode;
 
@@ -87,7 +87,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,  Syndrome &o_stored_s
 }
 
 template<class Matrix>
-void InteractiveCoder<Matrix>::decode(std::vector<CodedVal> &o_decoded, uint32_t i, const Syndrome &stored_syndrome)
+void InteractiveCoder<Matrix>::decode(BitVec &o_decoded, uint32_t i, const Syndrome &stored_syndrome)
 {
     m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome, m_matrix_provider->getNumcode(i), *m_pllrProvider.get());
     m_pdecoder->decode(o_decoded, m_psyndromeMgr->get_n(), i, m_pllrProvider->llr(), *m_decodage_syndrome.get(), m_matrix_provider->getMatrix(i));

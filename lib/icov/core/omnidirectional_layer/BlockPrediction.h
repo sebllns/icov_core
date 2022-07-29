@@ -69,6 +69,7 @@ public:
     enum predType
     {
         NONE = 0,
+        /// @todo put -1 on block side
         RIGHT = (1 << Block::RIGHT),
         LEFT = (1 << Block::LEFT),
         TOP = (1 << Block::UP),

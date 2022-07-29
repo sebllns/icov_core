@@ -22,7 +22,7 @@ enum PictureType
 };
  */
 
-void MyPicture::destroy()
+Void MyPicture::destroy()
 {
 
     for(UInt i=0; i < NUM_PIC_TYPES; i++)
@@ -40,7 +40,7 @@ MyPicture::~MyPicture()
     destroy();
 }
 
-void MyPicture::create(const PictureType pictureType, const ChromaFormat &chromaFormat, const Size &lumaSize, const unsigned maxCUSize, const unsigned margin, const unsigned alignment, const bool scaleChromaMargin)
+Void MyPicture::create(const PictureType pictureType, const ChromaFormat &chromaFormat, const Size &lumaSize, const unsigned maxCUSize, const unsigned margin, const unsigned alignment, const bool scaleChromaMargin)
 {
     const Area lumaArea      = Area( Position(), lumaSize );
     CHECK( (pictureType < PIC_RECONSTRUCTION || pictureType > NUM_PIC_TYPES), "picture type not specified");
@@ -53,7 +53,7 @@ void MyPicture::create(const PictureType pictureType, const ChromaFormat &chroma
 
 }
 
-void MyPicture::create(const PictureType pictureType, const UnitArea &unit)
+Void MyPicture::create(const PictureType pictureType, const UnitArea &unit)
 {
     CHECK( (pictureType < PIC_RECONSTRUCTION || pictureType > NUM_PIC_TYPES), "picture type not specified");
 

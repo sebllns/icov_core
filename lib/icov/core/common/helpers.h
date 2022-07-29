@@ -165,8 +165,17 @@ namespace assert
 }\
     BOOST_ASSERT(cond);\
 }
+
+#define ICOV_WARNING_MSG(cond, msg) {\
+    if(!(cond))\
+{\
+    std::cerr << "*******************************************************" << std::endl << "WARNING: " << msg << std::endl;\
+}\
+}
+
 #else
 #define ICOV_ASSERT_MSG(...)
+#define ICOV_WARNING_MSG(...)
 #endif
 
 

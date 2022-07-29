@@ -102,7 +102,7 @@ void BinaryMode::run()
 
 void BinaryMode::fill_src()
 {
-    std::generate(m_src_bits.begin(), m_src_bits.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
+    std::generate(m_src_bits.begin(), m_src_bits.end(), [](){ return (BitVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
 }
 
 void BinaryMode::fill_pcrossover()

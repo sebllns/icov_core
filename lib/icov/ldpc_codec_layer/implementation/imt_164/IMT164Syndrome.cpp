@@ -95,14 +95,14 @@ void IMT164SyndromeManager::compute_doping_order(const LLRProvider &llr_provider
     if(!init_rateless) return;
     //std::cout << "compute doping" << std::endl;
     Aff3ctDecoder dec(0);
-    std::vector<CodedVal> o_decoded(this->get_n());
+    BitVec o_decoded(this->get_n());
     //int numcode = this->get_m_max();
     dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(), syndrome, h[this->get_level_count()-1]);
     init_rateless = false;
 }
 
 
-void IMT164SyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
+void IMT164SyndromeManager::init_accumulation(const BitVec& source_x)
 {
     //DebugTools::write_vector("./src.txt", source_x, ' ');
     //std::cout << "init_accumulation" << std::endl;

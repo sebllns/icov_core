@@ -22,7 +22,7 @@ icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr):
     std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
-void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const BitVec &src_bits)
 {
     m_src = src_bits;
     for(int i = 0; i < side_info.size() ; i++)
@@ -36,7 +36,7 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVa
     }
 }
 
-void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int>& sign,  const std::vector<int>& abs_predec, const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int>& sign,  const std::vector<int>& abs_predec, const BitVec &src_bits)
 {
     m_src = src_bits;
 
@@ -73,7 +73,7 @@ bool icov::LLRProvider::no_coding() const
     return nocoding;
 }
 
-void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "LLRProvider::initLLR: length of arrays are not equal";
 
@@ -88,7 +88,7 @@ void icov::LLRProvider::initLLR(float pcrossover, const std::vector<CodedVal> &s
 }
 
 
-void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info , const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info , const BitVec &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "ERROR: LLRProvider::initLLR: length of arrays are not equal";
 
@@ -113,7 +113,7 @@ void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info , const std:
     }
 }
 
-void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<CodedVal> &src_bits)
+void icov::LLRProvider::initLLRUniform(float pcrossover, const BitVec &src_bits)
 {
     if(m_llr.size() != src_bits.size()) throw "LLRProvider::initLLRUniform length of arrays are not equal";
 
@@ -142,10 +142,10 @@ void icov::LLRProvider::initLLRUniform(float pcrossover, const std::vector<Coded
     m_floor_type = !m_floor_type;
 }
 
-std::vector<icov::CodedVal> icov::LLRProvider::initSrcRand()
+std::vector<icov::BitVal> icov::LLRProvider::initSrcRand()
 {
-    std::vector<CodedVal> src(m_src.size(), 0);
-    std::generate(src.begin(), src.end(), [](){ return (CodedVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
+    BitVec src(m_src.size(), 0);
+    std::generate(src.begin(), src.end(), [](){ return (BitVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0); });
      return src;
 }
 

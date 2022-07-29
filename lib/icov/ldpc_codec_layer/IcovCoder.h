@@ -126,7 +126,7 @@ struct CoderParameters
     }
 
 
-    std::vector<int> getNumcodes() const
+    inline std::vector<int> getNumcodes() const
     {
         std::string path = icov::helpers::path::combine(icov::helpers::path::get_data_folder(database, n, false), numcode_file);
         std::vector<int> numcodes_v;

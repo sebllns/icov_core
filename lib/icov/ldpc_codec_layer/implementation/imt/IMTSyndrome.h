@@ -35,7 +35,7 @@ public:
     IMTSyndromeManager(int n);
     virtual ~IMTSyndromeManager() = default;
 
-    virtual void init_accumulation(const std::vector<CodedVal>& source_x) override;
+    virtual void init_accumulation(const BitVec& source_x) override;
 
     virtual void compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider) override;
 

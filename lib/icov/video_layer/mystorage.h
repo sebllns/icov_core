@@ -8,12 +8,7 @@
 #define MYSTORAGE_H
 #include "CommonLib/CommonDef.h"
 #include "CommonLib/Unit.h"
-#include "video_layer/video_common.h"
-#include "common.h"
-
-using namespace icov::video;
-
-
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 template<typename T>
 struct MyStorage : public UnitBuf<T>
 {

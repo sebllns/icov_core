@@ -5,6 +5,7 @@
 **   Inria research institute
 **************************************************************************/
 #include "icu_encoder.h"
+#include "vtm_utility.h"
 #include <math.h>
 
 
@@ -38,6 +39,7 @@ void ICU_Encoder::creatTUs(const UInt tuWidth_luma, const UInt tuHeight_luma)
         si.TUs.clear();
     }
 
+    using namespace VTM_Utility;
     div_t divresult;
     UInt nx_tus =  (_sourceX.Y().width  + tuWidth_luma  - 1) / tuWidth_luma;
     UInt ny_tus =  (_sourceX.Y().height + tuHeight_luma - 1) / tuHeight_luma;
@@ -47,7 +49,7 @@ void ICU_Encoder::creatTUs(const UInt tuWidth_luma, const UInt tuHeight_luma)
         divresult = div(Int(tuIndex), Int(nx_tus));
         UInt tuXPosTopLeft = divresult.rem;
         UInt tuYPosTopLeft = divresult.quot;
-        Area tuLumaArea = Area(tuXPosTopLeft*tuWidth_luma + _sourceX.Y().x, tuYPosTopLeft*tuHeight_luma + _sourceX.Y().y, tuWidth_luma, tuHeight_luma);// & (_sourceX.Y());
+        Area tuLumaArea = Area(tuXPosTopLeft*tuWidth_luma + _sourceX.Y().x, tuYPosTopLeft*tuHeight_luma + _sourceX.Y().y, tuWidth_luma, tuHeight_luma) & _sourceX.Y();
         addTU(UnitArea(_sourceX.chromaFormat, tuLumaArea ));
     }
 }

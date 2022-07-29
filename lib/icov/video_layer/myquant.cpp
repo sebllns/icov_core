@@ -4,17 +4,58 @@
 **   Supervisors: Aline ROUMY, Thomas MAUGEY
 **   Inria research institute
 **************************************************************************/
-#include "Quant.h"
+#include "myquant.h"
 #include "CommonLib/UnitTools.h"
 
-using namespace icov::video;
+MyQpParam::MyQpParam(const Int qpy, const ChannelType chType, const ChromaFormat chFmt, const Int channelBitDepth, const Int chromaQPOffset, const int dqp)
+{
 
-icov::video::ICOV_Quant::ICOV_Quant()
+    channelType = chType;
+    chromaFomat = chFmt;
+    /*
+        the quantizer step size is in the range of 0.630 ≤ Δq ≤ 228.1. Thereby, the maximum
+        quantizer step size is in the range of the maximum amplitude of the 8 bit input signal.
+        For higher bit-depths, a QP offset is specified, increasing the QP parameter range by
+        6 per additional bit of signal bit depth towards finer quantization (i.e. towards lower
+        QP values).
+     */
+    const Int qpBdOffset = 6 * (channelBitDepth - 8);
+    Int baseQp;
+
+    if(isLuma(chType))
+    {
+        baseQp = qpy + qpBdOffset;
+    }
+    else
+    {
+        baseQp = Clip3( -qpBdOffset, (chromaQPMappingTableSize - 1), qpy + chromaQPOffset );
+
+        if(baseQp < 0)
+        {
+            baseQp = baseQp + qpBdOffset;
+        }
+        else
+        {
+            baseQp = getScaledChromaQP(baseQp, chFmt) + qpBdOffset;
+        }
+    }
+
+    baseQp = Clip3( 0, MAX_QP+qpBdOffset, baseQp + dqp );
+
+    Qp =baseQp;
+    per=baseQp/6;
+    rem=baseQp%6;
+
+}
+
+
+
+MyQuant::MyQuant()
 {
 
 }
 
-icov::video::ICOV_Quant::~ICOV_Quant()
+MyQuant::~MyQuant()
 {
 
     for (auto& kv : _mapQuantizerWeightingMatrix)
@@ -59,8 +100,10 @@ const Int quantInterDefault8x8[8*8] =
   24,25,28,33,41,54,71,91
 };
 
-const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(const Size& size,  const icov::video::IcovQpParam &cQP, const SliceType sliceType)
+const AreaBuf<const Int> MyQuant::getDefaultQuantizationMatrix(const Size& size,  const MyQpParam &cQP, const SliceType sliceType)
 {
+//    std::map<std::pair<Size, Int>, AreaBuf<Int>,  WeightingMatrixComparator> _mapQuantizerWeightingMatrix; // quantization matrix for a specific size (UInt width, UInt height) and qp_rem (remainder (q)
+
     std::pair<Size, Int> key(size, cQP.rem);
     auto it = _mapQuantizerWeightingMatrix.find(key);
     if (it != _mapQuantizerWeightingMatrix.end())
@@ -90,7 +133,7 @@ const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(c
     int* dstBuf = (int*) xMalloc (int, size.area());
     AreaBuf<Int> areaBuf(dstBuf, size);
 
-    Int quantScales = g_quantScales[0][cQP.rem];
+    Int quantScales = g_quantScales[cQP.rem];
     quantScales = quantScales << LOG2_SCALING_LIST_NEUTRAL_VALUE;
     UInt ratio_x, ratio_y;  // it is on purpose that we used UInt, because later we need only integer part of division
     ratio_x = size.width  / sizeQuantMatrixBase;
@@ -126,19 +169,19 @@ const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultQuantizationMatrix(c
 
 }
 
-//const AreaBuf<const Int> icov::video::ICOV_Quant::getDefaultDequantizationMatrix(const Size &size, const icov::video::ICOV_QpParam &cQP, const SliceType sliceType)
-//{
+const AreaBuf<const Int> MyQuant::getDefaultDequantizationMatrix(const Size &size, const MyQpParam &cQP, const SliceType sliceType)
+{
 
-//}
+}
 
-Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const MyQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
 
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
     const TCoeff entropyCodingMinimum = -(1 << maxLog2TrDynamicRange);
     const TCoeff entropyCodingMaximum =  (1 << maxLog2TrDynamicRange) - 1;
 
-    const Int  defaultQuantisationCoefficient = g_quantScales[0][cQP.rem];
+    const Int  defaultQuantisationCoefficient = g_quantScales[cQP.rem];
     const Size& size = pSrc;
 
     /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
@@ -150,7 +193,7 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TC
     Int iTransformShift = getTransformShift(channelBitDepth, size, maxLog2TrDynamicRange);
 
     Int iWHScale = 1;
-    //if( TU::needsBlockSizeTrafoScale( size ) )
+    if( TU::needsBlockSizeTrafoScale( size ) )
     {
       iTransformShift += ADJ_QUANT_SHIFT;
       iWHScale = 181;
@@ -189,7 +232,7 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TC
     }
 }
 
-Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const icov::video::IcovQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void MyQuant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, const AreaBuf<const Int> &qWeightingMatrix, TCoeff &uiAbsSum, const MyQpParam &cQP, const SliceType sliceType, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
     CHECK( piQCoef.width!= pSrc.width || piQCoef.height!= pSrc.height, "Sizes do not match");
     CHECK( qWeightingMatrix.width!= pSrc.width || qWeightingMatrix.height!= pSrc.height, "Sizes do not match");
@@ -207,7 +250,7 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, co
     Int iTransformShift = getTransformShift(channelBitDepth, size, maxLog2TrDynamicRange);
 
     Int iWHScale = 1;
-    //if( TU::needsBlockSizeTrafoScale( size ) )
+    if( TU::needsBlockSizeTrafoScale( size ) )
     {
       iTransformShift += ADJ_QUANT_SHIFT;
       iWHScale = 181;
@@ -247,8 +290,9 @@ Void icov::video::ICOV_Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, co
     }
 }
 
-Void icov::video::ICOV_Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const icov::video::IcovQpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
+Void MyQuant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef, const MyQpParam &cQP, const Int channelBitDepth, const int maxLog2TrDynamicRange)
 {
+
     CHECK( piQCoef.width!= piCoef.width || piQCoef.height!= piCoef.height, "Sizes do not match");
     const TCoeff          transformMinimum   = -(1 << maxLog2TrDynamicRange);
     const TCoeff          transformMaximum   =  (1 << maxLog2TrDynamicRange) - 1;
@@ -259,11 +303,11 @@ Void icov::video::ICOV_Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef
     const Int QP_per = cQP.per;
     const Int QP_rem = cQP.rem;
 
-    const Bool needsScalingCorrection = true; // TU::needsBlockSizeTrafoScale( size );
-    const Int  NEScale    = 0;// TU::needsSqrt2Scale( size ) ? 181 : 1;
+    const Bool needsScalingCorrection = TU::needsBlockSizeTrafoScale( size );
+    const Int  NEScale    = TU::needsSqrt2Scale( size ) ? 181 : 1;
 
     const Int  rightShift = (needsScalingCorrection ?   8 : 0 ) + (IQUANT_SHIFT - (iTransformShift + QP_per));
-    const Int scale     = g_invQuantScales[0][QP_rem] * NEScale;
+    const Int scale     = g_invQuantScales[QP_rem] * NEScale;
 
     const Int scaleBits = ( IQUANT_SHIFT + 1 );
 

@@ -6,14 +6,7 @@
 **************************************************************************/
 #ifndef MYPICTURE_H
 #define MYPICTURE_H
-//#include "CommonLib/Picture.h"
-
-//#include "CommonLib/CommonDef.h"
-//#include "CommonLib/Common.h"
-//#include "CommonLib/Unit.h"
-//#include "CommonLib/Buffer.h"
-#include "CommonLib/CodingStructure.h"
-
+#include "CommonLib/Picture.h"
 #include "mystorage.h"
 
 /*
@@ -37,11 +30,11 @@ protected:
     UInt _margins[NUM_PIC_TYPES];
 public:
     MyPicture();
-    void destroy();
+    Void destroy();
     ~MyPicture();
 
-    void create(const PictureType pictureType, const ChromaFormat &chromaFormat, const Size &lumaSize, const unsigned maxCUSize, const unsigned margin, const unsigned alignment = 0, const bool scaleChromaMargin = true);
-    void create(const PictureType pictureType, const UnitArea &unit);
+    Void create(const PictureType pictureType, const ChromaFormat &chromaFormat, const Size &lumaSize, const unsigned maxCUSize, const unsigned margin, const unsigned alignment = 0, const bool scaleChromaMargin = true);
+    Void create(const PictureType pictureType, const UnitArea &unit);
 
 
 

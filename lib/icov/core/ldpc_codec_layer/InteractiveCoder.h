@@ -38,15 +38,15 @@ public:
 
     ~InteractiveCoder() = default;
 
-    bool testConvergence(const std::vector<CodedVal> &decoded, const std::vector<CodedVal> &source);
+    bool testConvergence(const BitVec &decoded, const BitVec &source);
 
-    int errorCount(const std::vector<CodedVal>& decoded, const std::vector<CodedVal>& source);
+    int errorCount(const BitVec& decoded, const BitVec& source);
 
-    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source);
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const BitVec &source);
 
-    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const std::vector<CodedVal> &source, uint32_t numcodeMax, uint32_t step);
+    int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome, const BitVec &source, uint32_t numcodeMax, uint32_t step);
 
-    void decode(std::vector<CodedVal>& o_decoded, uint32_t numcode, const Syndrome& syndrome);
+    void decode(BitVec& o_decoded, uint32_t numcode, const Syndrome& syndrome);
 
     IMatrixProvider_sp matrixProvider() const {return  this->m_matrix_provider;}
     IDecoder_sp decoder() const {return  this->m_pdecoder;}

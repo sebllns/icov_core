@@ -72,8 +72,8 @@ private:
     void write_results();
 
     std::shared_ptr<AffInteractiveCoder> m_coder;
-    std::vector<CodedVal> m_src_bits;
-    std::vector<CodedVal> m_dec_bits;
+    BitVec m_src_bits;
+    BitVec m_dec_bits;
     std::vector<double> m_pcrossover;
     Syndrome m_stored_syndrome;
     uint32_t m_numcodeIdx;

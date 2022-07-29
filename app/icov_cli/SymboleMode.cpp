@@ -17,7 +17,7 @@ namespace fs = boost::filesystem;
 //estimate probability and rate
 //    std::vector<std::pair<float,float>> sim_result;
 //float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] : zero_vec, b.sim_result);
-float estimate_rate(const std::vector<CodedVal> &src, const std::vector<CodedVal> &si, const std::vector<std::pair<float, float>> &sim_result)
+float estimate_rate(const BitVec &src, const BitVec &si, const std::vector<std::pair<float, float>> &sim_result)
 {
     //    for(int i = 0 ; i < src.size() ; i++)
     //    {
@@ -336,7 +336,7 @@ void SymboleMode::compute_si_bits()
     int ly = lx;
 
     //init bit planes of Y
-    si_bits = std::vector<std::vector<CodedVal>>(ly, std::vector<CodedVal>(n, 0));
+    si_bits = Bitplanes(ly, BitVec(n, 0));
     for(int i = 0 ; i < n ; i++)
     {
 

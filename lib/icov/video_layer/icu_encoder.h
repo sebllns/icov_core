@@ -7,7 +7,6 @@
 #ifndef ICU_ENCODER_H
 #define ICU_ENCODER_H
 #include "myunits.h"
-#include "video_common.h"
 
 class ICU_Encoder
 {

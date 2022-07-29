@@ -7,7 +7,6 @@
 #ifndef MYINTRAPREDICTION_H
 #define MYINTRAPREDICTION_H
 #include "CommonLib/IntraPrediction.h"
-#include "video_common.h"
 #include "mystorage.h"
 
 

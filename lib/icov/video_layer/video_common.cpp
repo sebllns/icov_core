@@ -1,11 +1,12 @@
 #include "video_common.h"
 #include "CommonLib/version.h"
 #include "Utilities/program_options_lite.h"
+#include "CommonLib/version.h"
 
 void icov::video::init_video_lib(int argc, char *argv[])
 {
     std::cout << "VVCSoftware: VTM Encoder Version "
-    << VTM_VERSION
+    << NEXT_SOFTWARE_VERSION
     << std::endl
     << NVM_ONOS
     << std::endl;
@@ -19,7 +20,7 @@ void icov::video::init_video_lib(int argc, char *argv[])
     std::string SIMD;
     df::program_options_lite::Options opts;
     opts.addOptions()
-            ( "SIMD", SIMD, string( "" ), "" )
+        ( "SIMD", SIMD, std::string( "" ), "" )
             ( "c", df::program_options_lite::parseConfigFile, "" );
     df::program_options_lite::SilentReporter err;
     df::program_options_lite::scanArgv( opts, argc, ( const char** ) argv, err );

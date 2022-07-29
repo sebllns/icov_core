@@ -67,10 +67,15 @@ public:
 
     static void AddProgramOptions(po::options_description &desc);
 
+    static const std::string s_inputFile_id;
+
 private:
     int encode();
     std::shared_ptr<AffInteractiveCoder> m_ycoder;
     std::shared_ptr<AffInteractiveCoder> m_uvcoder;
     std::unique_ptr<IEncoder> m_encoder;
+
+    /// @todo replace with Media class
+    std::string m_inputFile;
 };
 

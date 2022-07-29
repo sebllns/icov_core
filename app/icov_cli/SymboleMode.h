@@ -50,79 +50,77 @@
 
 #include "common.h"
 #include "ldpc_codec_layer/IcovCoder.h"
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-
 class SymboleMode
 {
 public:
-    SymboleMode(const po::variables_map &args);
-    ~SymboleMode() = default;
+  SymboleMode(const po::variables_map& args);
+  ~SymboleMode() = default;
 
-    void run();
+  void run();
 
-    static void AddProgramOptions(po::options_description &desc);
+  static void AddProgramOptions(po::options_description& desc);
 
 private:
+  void encode();
+  void write_results(const std::string& filename);
+  void process_input_list(const std::string& file);
+  void process_input_file(const std::string& file);
+  void compute_src_bits();
+  void process_si();
+  void compute_si_bits();
+  void init_bsp();
+  void encode_bitplane(int i, std::vector<std::vector<float>>& result);
+  bool check_decoding(int i);
+  void fill_predec(int i);
 
-    void encode();
-    void write_results(const std::string& filename);
-    void process_input_list(const std::string& file);
-    void process_input_file(const std::string& file);
-    void compute_src_bits();
-    void process_si();
-    void compute_si_bits();
-    void init_bsp();
-    void encode_bitplane(int i, std::vector<std::vector<float>>& result);
-    bool check_decoding(int i);
-    void fill_predec(int i);
+  int quantize(int value, int step, int min, int max);
+  int quantize(float value, const std::vector<float>& v);
 
-    int quantize(int value, int step, int min, int max);
-    int quantize(float value, const std::vector<float>& v);
+  std::shared_ptr<AffInteractiveCoder> m_coder;
+  int n;
 
-    std::shared_ptr<AffInteractiveCoder> m_coder;
-    int n;
+  fs::path m_dataset_dir;
+  fs::path m_references_dir;
+  fs::path m_result_dir;
 
-    fs::path m_dataset_dir;
-    fs::path m_references_dir;
-    fs::path m_result_dir;
+  SymboleVec src_symbols;
+  Bitplanes src_bits;
 
-    std::vector<CodedVal> src_symbols;
-    std::vector<std::vector<CodedVal>> src_bits;
+  std::vector<SIVal> side_info;
+  Bitplanes si_bits;
 
-    std::vector<SIVal> side_info;
-    std::vector<std::vector<CodedVal>> si_bits;
+  std::vector<LLRVal> llr;
+  BitVec dec_bits;
+  BitVec dec_signs;
+  BitVec dec_symbols;
+  std::vector<std::pair<float, float>> sim_result;
+  std::vector<float> q_values;
+  BitSymbolProvider bsp;
+  std::vector<int> predec;
+  std::vector<std::vector<std::vector<float>>> rate_results;
 
-    std::vector<LLRVal> llr;
-    std::vector<CodedVal> dec_bits;
-    std::vector<CodedVal> dec_signs;
-    std::vector<CodedVal> dec_symbols;
-    std::vector<std::pair<float,float>> sim_result;
-    std::vector<float> q_values;
-    BitSymbolProvider bsp;
-    std::vector<int> predec;    
-    std::vector<std::vector<std::vector<float>>> rate_results;
+  std::ofstream measure_file;
 
-    std::ofstream measure_file;
+  int lx;
+  Syndrome stored_synd;
+  int max_si_count;
 
-    int lx;
-    Syndrome stored_synd;
-    int max_si_count;
+  bool enable_q_quantization;
+  bool enable_z_quantization;
 
-    bool enable_q_quantization;
-    bool enable_z_quantization;
+  uint32_t numcode;
+  int numerrors;
 
-    uint32_t numcode;
-    int numerrors;
-
-    static const std::string dataset_dir_id;
-    static const std::string result_dir_id;
-    static const std::string reference_dir_id;
-    static const std::string max_si_count_id;
-    static const std::string enable_q_quantization_id;
-    static const std::string enable_z_quantization_id;
+  static const std::string dataset_dir_id;
+  static const std::string result_dir_id;
+  static const std::string reference_dir_id;
+  static const std::string max_si_count_id;
+  static const std::string enable_q_quantization_id;
+  static const std::string enable_z_quantization_id;
 };

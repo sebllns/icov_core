@@ -1,0 +1,295 @@
+/**************************************************************************
+**   Copyright (C): 2018
+**   Author: Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
+**   Supervisors: Aline ROUMY, Thomas MAUGEY
+**   Inria research institute
+**************************************************************************/
+#include "vtm_utility.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "mydistorsioncost.h"
+#include "myquant.h"
+#include "mytransform2d.h"
+
+Area&
+VTM_Utility::operator&=(Area& a, const Area& b)
+{
+  Int x1 = std::max(a.x, b.x);
+  Int y1 = std::max(a.y, b.y);
+  a.width = std::min(a.x + a.width, b.x + b.width) - x1;
+  a.height = std::min(a.y + a.height, b.y + b.height) - y1;
+  a.x = x1;
+  a.y = y1;
+  if (a.width <= 0 || a.height <= 0)
+    a = Area();
+  return a;
+}
+
+Area
+VTM_Utility::operator&(const Area& a, const Area& b)
+{
+  Area c = a;
+  return c &= b;
+}
+
+Void
+VTM_Utility::positionRelativeTo(UnitArea& inputOutput, const Position& origin)
+{
+  for (UInt i = 0; i < inputOutput.blocks.size(); i++) {
+    inputOutput.blocks[i].relativeTo(origin);
+  }
+}
+
+// int dx_snake[4] = {1,-1, 0, 0};
+// int dy_snake[4] = {0, 0, -1, 1};
+static const int dx[4] = { 1, -1, 0, 0 };
+static const int dy[4] = { 0, 0, -1, 1 };
+void
+dfs_360(AreaBuf<bool>& inputOutput,
+        std::vector<Position>& currentComponentBlocks,
+        int x,
+        int y)
+{
+  currentComponentBlocks.push_back(Position(x, y));
+  inputOutput.at(x, y) = false;
+  int iWidth =
+    int(inputOutput
+          .width); // if we do not convert to int, the traversing equation for
+                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+                   // iWidth) converts everything to UInt
+  int iHeight = int(inputOutput.height);
+  for (int i = 0; i < 4; i++) {
+    int neighbor_x = x + dx[i];
+    neighbor_x =
+      (iWidth + (neighbor_x % iWidth)) %
+      iWidth; // to generate circular traversing for 360 video in x direction
+    int neighbor_y = y + dy[i];
+    if (neighbor_y < 0 ||
+        neighbor_y >= iHeight) // do not check outside image in y direction
+      continue;
+    if (inputOutput.at(neighbor_x, neighbor_y))
+      dfs_360(inputOutput, currentComponentBlocks, neighbor_x, neighbor_y);
+  }
+}
+
+void
+VTM_Utility::findConnectedComponents_360(
+  AreaBuf<bool>& inputOutput,
+  std::vector<std::vector<Position>>& connectedComponents)
+{
+  connectedComponents.clear();
+
+  for (UInt y = 0; y < inputOutput.height;
+       y++) // TODO if we had something like continous, then we could easily to
+            // the trick if(pSrc.isCountinous && piQCoef.isContinous) then :
+            // iWdith =iHeight*iWdith, iHeight=1 (similar trick that we use in
+            // OpenCV)
+  {
+    Bool* rowPtr = &inputOutput.at(0, y);
+    for (UInt x = 0; x < inputOutput.width; x++) {
+      if (rowPtr[x]) {
+        connectedComponents.push_back(std::vector<Position>());
+        dfs_360(inputOutput, connectedComponents.back(), x, y);
+      }
+    }
+  }
+}
+
+// void VTM_Utility::findRequestedICUsComponents_360(AreaBuf<bool>
+// &inputOutput_requestedICUs, AreaBuf<bool> &inputOutput_alreadyDecodedICUs,
+// std::vector<std::vector<Position> > &notDecodedRequestedICUs,
+// std::vector<std::vector<Position> > &neighborDecodedBlocksInTheComponent)
+//{
+//    notDecodedRequestedICUs.clear();
+//    neighborDecodedBlocksInTheComponent.clear();
+//    CHECK((inputOutput_requestedICUs.width !=
+//    inputOutput_alreadyDecodedICUs.width) || inputOutput_requestedICUs.height
+//    != inputOutput_alreadyDecodedICUs.height, "size do not match");
+
+//    for(UInt y=0; y < inputOutput_requestedICUs.height; y++)
+//    {
+//        bool* requested_rowPtr = &inputOutput_requestedICUs.at(0,y);
+//        bool* previous_rowPtr = &inputOutput_alreadyDecodedICUs.at(0,y);
+//        for(UInt x=0; x < inputOutput_requestedICUs.width; x++)
+//        {
+
+//            if(n_nonzero && (!previous_rowPtr[x]))  // if it is requested but
+//            it is not already decoded
+//                requested_rowPtr[x] = true;
+
+//            x1=x2;
+//        }
+//        x1=0;
+//        y1=y2;
+//    }
+//}
+
+double
+VTM_Utility::calculatePSNR(const CPelUnitBuf& org,
+                           const CPelUnitBuf& cur,
+                           const Int internalBitDepth[],
+                           double* mse_ptr,
+                           uint* maxval_ptr)
+{
+  CHECK((org.chromaFormat != cur.chromaFormat),
+        "chroma format must be similar between org and cur");
+
+  ChromaFormat chromaFormatIDC = org.chromaFormat;
+
+  const UInt numCh = getNumberValidComponents(chromaFormatIDC);
+
+  Int maximumBitDepth = internalBitDepth[CHANNEL_TYPE_LUMA];
+  if (numCh > 1)
+    maximumBitDepth =
+      std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
+
+  MyDistortionCost distCost;
+
+  double mse_frame = 0.;
+  Int scale = 0;
+
+  for (UInt ch = 0; ch < numCh; ch++) {
+    const ComponentID compID = ComponentID(ch);
+    const UInt csx = getComponentScaleX(compID, chromaFormatIDC);
+    const UInt csy = getComponentScaleY(compID, chromaFormatIDC);
+    const Int scaleChan = (4 >> (csx + csy));
+    const UInt bitDepthShift =
+      2 * (maximumBitDepth - internalBitDepth[toChannelType(
+                               compID)]); //*2 because this is a squared number
+
+    uint64_t dist_frame =
+      distCost.getDistPart(org.get(compID),
+                           cur.get(compID),
+                           internalBitDepth[toChannelType(compID)],
+                           compID,
+                           DF_SSE);
+
+    Double channelMSE = double(dist_frame) / double(org.get(compID).area());
+    channelMSE *= Double(1 << bitDepthShift);
+
+    scale += scaleChan;
+    mse_frame += scaleChan * channelMSE;
+  }
+  mse_frame /= Double(scale); // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
+
+  const UInt maxval = 255 << (maximumBitDepth - 8);
+
+  if (maxval_ptr)
+    *maxval_ptr = maxval;
+
+  if (mse_ptr)
+    *mse_ptr = mse_frame;
+
+  return (mse_frame == 0) ? 999.99
+                          : 10.0 * log10((maxval * maxval) / mse_frame);
+}
+
+void
+VTM_Utility::quantizeFrame(const int qp,
+                           const PelUnitBuf& originalImage,
+                           PelUnitBuf& quantizedImage,
+                           EncodingStructure& encStruct,
+                           const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+                           int maxLog2TrDynamicRange)
+{
+  if (originalImage.chromaFormat != quantizedImage.chromaFormat)
+    throw std::runtime_error(
+      "The original image and the quantized image should have similar chroma");
+
+  const UInt numCh = getNumberValidComponents(originalImage.chromaFormat);
+
+  for (UInt ch = 0; ch < numCh; ch++) {
+    const ComponentID compID = ComponentID(ch);
+    VTM_Utility::quantizeFrame(
+      qp,
+      originalImage,
+      quantizedImage,
+      encStruct,
+      compID,
+      bitDepths,
+      maxLog2TrDynamicRange); // give the whole extended image ( .getOrigBuf()
+                              // and .getRecoBuf() ) to the function because
+                              // vector icues_enc is based on extended frames
+  }
+}
+
+void
+VTM_Utility::quantizeFrame(const int qp,
+                           const PelUnitBuf& originalImage,
+                           PelUnitBuf& quantizedImage,
+                           EncodingStructure& encStruct,
+                           const ComponentID compID,
+                           const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+                           int maxLog2TrDynamicRange)
+{
+  ChannelType channelType = toChannelType(compID);
+  int bit_depth = bitDepths[channelType];
+  ChromaFormat chFrmt = encStruct.getICU(0).get_sourceX().chromaFormat;
+
+  MyQpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
+
+  MyTransform2D transform2D;
+  MyQuant quant;
+  TCoeff uiAbsSum;
+
+  for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
+    InteractiveCodingUnit& curr_icu = encStruct.getICU(i).get_sourceX();
+    for (UInt j = 0; j < curr_icu.TUs.size(); j++) {
+      MyTransformUnit& curr_tu = curr_icu.TUs[j];
+
+      // DCT
+      transform2D.transformNxN(curr_tu.getTransformCoeffs(compID),
+                               originalImage,
+                               curr_tu.block(compID),
+                               bit_depth,
+                               maxLog2TrDynamicRange);
+
+      // Q
+      quant.quant(curr_tu.getQuantizedTransformCoeffs(compID),
+                  curr_tu.getTransformCoeffs(compID),
+                  uiAbsSum,
+                  cQP,
+                  SliceType::I_SLICE,
+                  bit_depth,
+                  maxLog2TrDynamicRange);
+
+      // BP
+      icov::SymboleVal* quantizedBuf = static_cast<icov::SymboleVal*>(
+        curr_tu.getQuantizedTransformCoeffs(compID).buf);
+      auto quantizedBufSize =
+        curr_tu.getQuantizedTransformCoeffs(compID).area();
+      icov::SymboleVec quantizedVec(quantizedBuf,
+                                    quantizedBuf + quantizedBufSize);
+      curr_tu.getBitplanes(compID) =
+        icov::BitSymbolProvider::compute_bits(quantizedVec);
+
+      // iBP
+      icov::SymboleVec inverseBitplane =
+        icov::BitSymbolProvider::compute_symboles(curr_tu.getBitplanes(compID));
+
+      ICOV_ASSERT_MSG(inverseBitplane == quantizedVec, "symboles not equal");
+
+      // iQ
+      quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID),
+                    curr_tu.getQuantizedTransformCoeffs(compID),
+                    cQP,
+                    bit_depth,
+                    maxLog2TrDynamicRange);
+
+      // iDCT
+      transform2D.invTransformNxN(
+        quantizedImage,
+        curr_tu.block(compID),
+        curr_tu.getInverseQuantizedTransformCoeffs(compID),
+        bit_depth,
+        maxLog2TrDynamicRange);
+
+      //            totalDist +=
+      //            distCost.getDistPart(VTM_Utility::getAreaBuf(originalImage,
+      //            curr_tu.block(compID)),
+      //                                              VTM_Utility::getAreaBuf(quantizedImage,
+      //                                              curr_tu.block(compID)),
+      //                                              bit_depth, compID,
+      //                                              DF_SSE);
+    }
+  }
+}

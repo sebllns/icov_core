@@ -5,6 +5,7 @@
 **   Inria research institute
 **************************************************************************/
 #include "myintraprediction.h"
+#include "vtm_utility.h"
 
 Void MyIntraPrediction::destroy()
 {
@@ -526,8 +527,8 @@ Void MyIntraPrediction::xPredIntraPlanar(const CPelBuf &pSrc, PelBuf &pDst)
 {
     const UInt width  = pDst.width;
     const UInt height = pDst.height;
-    const UInt log2W = floorLog2( width );
-    const UInt log2H = floorLog2( height );
+    const UInt log2W  = g_aucLog2[ width ];
+    const UInt log2H  = g_aucLog2[ height ];
 
     Int leftColumn[MAX_CU_SIZE + 1], topRow[MAX_CU_SIZE + 1], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];
     const UInt offset = width * height;
@@ -955,10 +956,10 @@ void MyIntraPrediction::predIntraAng(PelBuf &piPred, const UInt dirMode)
 //    }
 
 
-//    if(m_flipVert)
-//        VTM_Utility::flipVert<Pel>(piPred, piPred);
+    if(m_flipVert)
+        VTM_Utility::flipVert<Pel>(piPred, piPred);
 
-//    if(m_flipHoriz)
-//        VTM_Utility::flipHoriz<Pel>(piPred, piPred);
+    if(m_flipHoriz)
+        VTM_Utility::flipHoriz<Pel>(piPred, piPred);
 
 }

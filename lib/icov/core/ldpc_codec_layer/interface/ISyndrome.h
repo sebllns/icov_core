@@ -65,7 +65,7 @@ public:
     /*!
       \param source_x Source to be encoded.
     */
-    virtual void init_accumulation(const std::vector<CodedVal>& source_x) = 0;
+    virtual void init_accumulation(const BitVec& source_x) = 0;
 
     //! Compute an incremental syndrome for given code number.
     /*!

@@ -38,7 +38,7 @@ void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider)
    // std::cout << "compute doping" << std::endl;
     std::iota(doping_idx.begin(), doping_idx.end(), 0);
     Aff3ctDecoder dec(0);
-    std::vector<CodedVal> o_decoded(this->get_n());
+    BitVec o_decoded(this->get_n());
     //int numcode = this->get_n()/2;
     dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(), syndrome12, *h12_ord);
     init_rateless = false;
@@ -50,7 +50,7 @@ std::string IMTSyndromeManager::get_type() const
 }
 
 
-void IMTSyndromeManager::init_accumulation(const std::vector<CodedVal>& source_x)
+void IMTSyndromeManager::init_accumulation(const BitVec& source_x)
 {
     reset_doping();
 

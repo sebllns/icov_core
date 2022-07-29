@@ -63,8 +63,16 @@ public:
     void export_matrices();
     void export_numcode();
 
-    std::shared_ptr<AffInteractiveCoder> m_coder;
 
+    static const std::string rate_min_id;
+    static const std::string rate_max_id;
+    static const std::string rate_doping_id;
+    static const std::string export_matrix_id;
+    static const std::string export_numcode_id;
+
+
+private:
+    std::shared_ptr<AffInteractiveCoder> m_coder;
 
     bool export_matrix_enabled;
     int export_numcode_mode;
@@ -73,11 +81,5 @@ public:
     po::variables_map m_options_map;
     std::string datapath;
     std::string numcodes_file;
-
-    static const std::string rate_min_id;
-    static const std::string rate_max_id;
-    static const std::string rate_doping_id;
-    static const std::string export_matrix_id;
-    static const std::string export_numcode_id;
 };
 

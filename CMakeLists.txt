@@ -83,6 +83,14 @@ message("-----------------------------------------------------------------------
 message(STATUS "Checking dependencies...\n") #cf https://cmake.org/cmake/help/latest/command/message.html
 
 #---------------------------------------------------------------------
+# Link with the "Threads library (required to link with AFF3CT after)
+message(STATUS "[INFO] Checking Threads support...")
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+message("\n")
+
+#---------------------------------------------------------------------
 
 #Link with Boost
 message(STATUS "[INFO] Checking Boost support...")
@@ -112,6 +120,7 @@ if( CCACHE_FOUND )
 endif()
 
 add_subdirectory("third-party/vvc/source/Lib/CommonLib")
+add_subdirectory("third-party/vvc/source/Lib/Utilities")
 
 # enable sse4.1 build for all source files for gcc and clang
 if( UNIX OR MINGW )
@@ -128,13 +137,6 @@ include_directories(SYSTEM third-party/vvc/source/Lib)
 set_target_properties(CommonLib PROPERTIES FOLDER "third-party" )
 message("\n")
 
-#---------------------------------------------------------------------
-# Link with the "Threads library (required to link with AFF3CT after)
-message(STATUS "[INFO] Checking Threads support...")
-set(CMAKE_THREAD_PREFER_PTHREAD ON)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-message("\n")
 
 #---------------------------------------------------------------------
 # Link with AFF3CT

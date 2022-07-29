@@ -7,8 +7,9 @@
 #ifndef ENCODINGSTRUCTURE_H
 #define ENCODINGSTRUCTURE_H
 #include "icu_encoder.h"
-#include "video_common.h"
-//#include <opencv2/core.hpp>
+#include "helpers.h"
+
+#include <opencv2/core.hpp>
 struct EncodingStructure
 {
 
@@ -25,28 +26,37 @@ struct EncodingStructure
     UInt n_icusPerRow, n_icusPerCol;
 
 
-    inline ICU_Encoder& getICU(const UInt icu_index) {return vec_icus[icu_index];}
-    inline const ICU_Encoder& getICU(const UInt icu_index) const {return vec_icus[icu_index];}
-    inline ICU_Encoder& getICU(const UInt x_index, const UInt y_index) {return vec_icus[y_index * n_icusPerRow + x_index];}
+    inline ICU_Encoder& getICU(const UInt icu_index);
 
-    inline bool isLeftVerticalBorder(const UInt icu_index) const {return (icu_index < vec_icus.size()) && (icu_index % n_icusPerRow==0);}
-    inline bool isRightVerticalBorder(const UInt icu_index) const {return (icu_index < vec_icus.size()) && (icu_index % n_icusPerRow==n_icusPerRow-1);}
+    inline ICU_Encoder& getICU(const UInt x_index, const UInt y_index);
 
-    inline UInt get_icuIndex(const Position& pos) const {return UInt(pos.y) * n_icusPerRow + UInt(pos.x);}
+    inline const ICU_Encoder& getICU(const UInt icu_index) const;
+
+    inline bool isLeftVerticalBorder(const UInt icu_index) const;
+    inline bool isRightVerticalBorder(const UInt icu_index) const;
+
+    inline UInt get_icuIndex(const Position& pos) const;
     Position get_icuPosition(const UInt icu_index) const;
-    /*
-     *
-     */
 
-    inline void resetDecodedICUs() {_decodedICUs.fill(false); _vec_decodedICUs.clear();}
+    inline void resetDecodedICUs();
 
+    void updateRequestedICUs(const cv::Mat &maskRequestedPixels, std::vector<std::vector<Position> > &requestedICUs_closeToDecodedICUs,
+                             std::vector<std::vector<Position> > &requestedICUs_closeTocheckPoints, std::vector< Position> & neighborcheckPointInTheComponent, double* usefulness_percent = nullptr);
+
+
+    void updateRequestedICUs(const cv::Mat &maskRequestedPixels, std::vector<std::vector<Position> >& requestedICUs_closeToDecodedICUs,
+                             std::vector<std::vector<Position> >& requestedICUs_closeTocheckPoints, std::vector< Position>& neighborcheckPointInTheComponent,
+                             std::vector< Position>& closestCheckPointToTheRemainingICUs, std::vector<std::vector<Position> >& remainingICUS_afterClosestCheckPointToBeDecoded,
+                             std::vector<std::vector<Position> >& remainingICUS_afterAlreadyProcessedICUsToBeDecoded);
 
     void reorderBlockDecodingBasedOnStartingAccessBlock(std::vector<std::vector<Position> >& in_out_requested_icus, const std::vector<Position>& accessBlockInsideAsStartingPosition);
+    void get_decodedICUsInRequestedICUs(const cv::Mat &maskRequestedPixels, std::vector<std::vector<Position> > &requestedICUs_closeToDecodedICUs, std::vector<std::vector<Position> > &decodedICUs_inRequestedICUs);
+    void updateDecodedICU(const Position& ICU_position);
+    void updateDecodedICUs(const std::vector<std::vector< Position> >& connectedComponents);
+    inline bool isICUAlreadyDecoded(const Position& ICU_position) const;
+    inline const std::vector<Position>& get_vecDecodedICUs() const;
 
-    inline bool isICUAlreadyDecoded(const Position& ICU_position) const {return _decodedICUs.at(ICU_position.x, ICU_position.y);}
-    inline const std::vector<Position>& get_vecDecodedICUs() const {return _vec_decodedICUs;}
-
-    inline const std::vector<Position>& get_vecCheckpoints() const {return vec_checkPoints;}
+    inline const std::vector<Position>& get_vecCheckpoints() const;
     /** returns an integer which its last 4 least significant bits show which sides are available. For more information refer to enum REFERENCE_SAMPLE_SIDE
      * Also the bit levels [5-8] (zero-based index) is 1 if the corner point is also available:
      * bit level 4 = (not used) to avoid conflict of corner usage in REFERENCE_SAMPLE_SIDE.
@@ -58,13 +68,18 @@ struct EncodingStructure
     int getAvailableDecodedSides_regularImage(const Position& icuPos) const;
     int getAvailableDecodedSides_360Image(const Position& icuPos) const;
 
+    void create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(ChromaFormat chFmt, const UInt sourceWidth_luma, const UInt sourceHeight_luma, const UInt sourceMargin_x_luma, const UInt icuWidth_luma, const UInt icuHeight_luma, const UInt tuWidth_luma, const UInt tuHeight_luma);
+
+
 
 protected:
-    inline void resetAlreadyProcessedICUs() {_tmp_alreadyProcessedICUs.fill(false); _vec_tmp_alreadyProcessedICUs.clear();}
+    inline void resetAlreadyProcessedICUs();
     void updateAlreadyProccessedICU(const Position& ICU_position);
-    inline void copyProccessedICUsFromDecodedICUs() {for (unsigned int block_id=0; block_id < _vec_decodedICUs.size(); block_id++) updateAlreadyProccessedICU(_vec_decodedICUs[block_id]);}
-    inline bool isICUAlreadyProcessed(const Position& ICU_position) {return _tmp_alreadyProcessedICUs.at(ICU_position.x, ICU_position.y);}
-protected:
+    inline void copyProccessedICUsFromDecodedICUs();
+    inline bool isICUAlreadyProcessed(const Position& ICU_position);
+
+    cv::Mat _integralImageMask;
+    cv::Mat _maskThresholded;
     std::vector<int> _vec_pixelsRequestedPerICU;
     std::vector<Position> _vec_decodedICUs;
     AreaBuf<bool> _requestedICUs, _decodedICUs;

@@ -1,25 +1,7 @@
 #include <iostream>
-#include <memory>
-#include <vector>
-#include <string>
-#include <chrono>
-
-#include <aff3ct.hpp>
-
-#include "tools/DebugTools.h"
-#include "ldpc_codec_layer/InteractiveCoder.h"
-#include "ldpc_codec_layer/implementation/imt/IMTSyndrome.h"
-#include "ldpc_codec_layer/implementation/imt/IMTMatrixProvider.h"
-#include "ldpc_codec_layer/aff3ct/Aff3ctDecoder.h"
-#include "ldpc_codec_layer/LLRProvider.h"
-
-
+#include "video_layer/video_common.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include "ProgramController.h"
-
-using namespace aff3ct;
-using namespace icov;
-
 
 
 /****************************************************************************************/
@@ -33,6 +15,7 @@ int main(int argc,  char* argv[])
 
     try
     {
+        icov::video::init_video_lib(argc, argv);
         pc.processCommandLine(argc, argv);
         pc.launchProgram();
     }

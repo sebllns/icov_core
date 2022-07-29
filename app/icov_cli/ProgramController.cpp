@@ -18,7 +18,7 @@ ProgramController::ProgramController():
                 ((std::string(OPT_DATA_PATH)+",d").c_str(),   po::value<std::string>()->required(),             "set the data path")
                 ((std::string(OPT_CODE_LENGTH)+",n").c_str(),   po::value<int>()->required(),             "set the code length")
                 ((std::string(OPT_BP_ITE)+",it").c_str(),   po::value<int>()->default_value(100),             "set iteration count for BP LDPC coder")
-                (OPT_NUMCODES,   po::value<std::string>()->default_value("numcodes.txt"),             "set the data path")
+                (OPT_NUMCODES,   po::value<std::string>()->default_value("numcodes.txt"),             "set the numcodes steps for iterative coder")
                 ;
 
         BinaryMode::AddProgramOptions(m_options_desc);
@@ -50,39 +50,46 @@ void ProgramController::launchProgram()
         po::notify(m_options_map);
     }
 
-    auto mode = programMode(m_options_map);
+    auto mode_id = programMode(m_options_map);
 
-    if(mode == "binary")
+    if(mode_id == "binary")
     {
         std::cout << "binary mode started" << std::endl;
         BinaryMode mode(m_options_map);
         mode.run();
         std::cout << "end binary\n";
     }
-    else if(mode == "symbole")
+    else if(mode_id == "symbole")
     {
         std::cout << "symbole mode started" << std::endl;
         SymboleMode mode(m_options_map);
         mode.run();
         std::cout << "end symbole\n";
     }
-    else if(mode == "export")
+    else if(mode_id == "export")
     {
         std::cout << "export mode started" << std::endl;
         ExportMode mode(m_options_map, codeLength(m_options_map), dataPath(m_options_map));
         mode.run();
         std::cout << "end export\n";
     }
-    else if(mode == "check")
+    else if(mode_id == "check")
     {
         std::cout << "check mode started" << std::endl;
         CheckMode mode(m_options_map, dataPath(m_options_map));
         mode.run();
         std::cout << "end check\n";
     }
+    else if(mode_id == "encode")
+    {
+        std::cout << "encode mode started" << std::endl;
+        EncodeMode mode(m_options_map);
+        mode.run();
+        std::cout << "end encode\n";
+    }
     else
     {
-        ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode);
+        ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
     }
 
     std::cout << "end program\n";

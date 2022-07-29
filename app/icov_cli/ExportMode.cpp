@@ -6,6 +6,12 @@
 
 namespace fs = boost::filesystem;
 
+const std::string ExportMode::rate_min_id = "export-min-rate";
+const std::string ExportMode::rate_max_id = "export-max-rate";
+const std::string ExportMode::rate_doping_id = "export-doping-rate";
+const std::string ExportMode::export_matrix_id = "export-matrix";
+const std::string ExportMode::export_numcode_id = "export-numcode";
+
 void ExportMode::AddProgramOptions(boost::program_options::options_description &desc)
 {
     desc.add_options()
@@ -115,12 +121,6 @@ void ExportMode::export_numcode()
     std::cout << "Writing numcodes in " << path << std::endl;
     icov::helpers::io::write_vector(path.string(), numcodes, '\n');
 }
-
-const std::string ExportMode::rate_min_id = "export-min-rate";
-const std::string ExportMode::rate_max_id = "export-max-rate";
-const std::string ExportMode::rate_doping_id = "export-doping-rate";
-const std::string ExportMode::export_matrix_id = "export-matrix";
-const std::string ExportMode::export_numcode_id = "export-numcode";
 
 
 
