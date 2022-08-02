@@ -77,7 +77,7 @@
 #include "common_types.h"
 //#include "version.h"
 //#include "helpers.h"
-//#include "options.h"
+//#include "icov_program_options.h"
 
 //#include <boost/throw_exception.hpp>
 

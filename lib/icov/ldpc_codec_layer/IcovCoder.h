@@ -48,14 +48,13 @@
  *****************************************************************************/
 #pragma once
 
-
 #include "common.h"
 
 #include "InteractiveCoder.h"
-#include "aff3ct/Aff3ctDecoder.h"
 #include "LLRProvider.h"
-#include "options.h"
+#include "aff3ct/Aff3ctDecoder.h"
 #include "helpers.h"
+#include "icov_program_options.h"
 
 //#include "implementation/imt/IMTSyndrome.h"
 //#include "implementation/imt/IMTMatrixProvider.h"
@@ -74,66 +73,67 @@ namespace po = boost::program_options;
 
 using namespace icov;
 
-namespace icov
-{
+namespace icov {
 struct CoderParameters
 {
-    std::string type;
-    std::string database;
-    std::string numcode_file;
-    int n;
-    int bp_ite;
+  std::string type;
+  std::string database;
+  std::string numcode_file;
+  int n;
+  int bp_ite;
 
-    CoderParameters() = default;
+  CoderParameters() = default;
 
-    static std::string parseType(const po::variables_map& args)
-    {
-        return args[OPT_CODER_TYPE].as<std::string>();
+  static std::string parseType(const po::variables_map& args)
+  {
+    return args[OPT_CODER_TYPE].as<std::string>();
+  }
+
+  static std::string parseDatabase(const po::variables_map& args)
+  {
+    return args[OPT_DATA_PATH].as<std::string>();
+  }
+
+  static int parseCodeLength(const po::variables_map& args)
+  {
+    return args[OPT_CODE_LENGTH].as<int>();
+  }
+
+  static int parseBpIte(const po::variables_map& args)
+  {
+    return args[OPT_BP_ITE].as<int>();
+  }
+
+  static std::string parseNumcodeFile(const po::variables_map& args)
+  {
+    return args[OPT_NUMCODES].as<std::string>();
+  }
+
+  CoderParameters(const po::variables_map& args,
+                  const std::string& intented_type)
+  {
+    type = parseType(args);
+    database = parseDatabase(args);
+    n = parseCodeLength(args);
+    bp_ite = parseBpIte(args);
+    numcode_file = parseNumcodeFile(args);
+
+    if (this->type != intented_type) {
+      throw std::invalid_argument("Given type was \'" + type +
+                                  "\' but intended type was \'" +
+                                  intented_type + "\'\n");
     }
+  }
 
-    static std::string parseDatabase(const po::variables_map& args)
-    {
-        return args[OPT_DATA_PATH].as<std::string>();
-    }
+  inline std::vector<int> getNumcodes() const
+  {
+    std::string path = icov::helpers::path::combine(
+      icov::helpers::path::get_data_folder(database, n, false), numcode_file);
+    std::vector<int> numcodes_v;
+    icov::helpers::io::read_vector(path, numcodes_v);
+    return numcodes_v;
+  }
 
-    static int parseCodeLength(const po::variables_map& args)
-    {
-        return args[OPT_CODE_LENGTH].as<int>();
-    }
-
-    static int parseBpIte(const po::variables_map& args)
-    {
-        return args[OPT_BP_ITE].as<int>();
-    }
-
-    static std::string parseNumcodeFile(const po::variables_map& args)
-    {
-        return args[OPT_NUMCODES].as<std::string>();
-    }
-
-    CoderParameters(const po::variables_map& args, const std::string&intented_type)
-    {
-        type = parseType(args);
-        database = parseDatabase(args);
-        n = parseCodeLength(args);
-        bp_ite = parseBpIte(args);
-        numcode_file = parseNumcodeFile(args);
-
-        if(this->type != intented_type)
-        {
-            throw std::invalid_argument("Given type was \'" + type + "\' but intended type was \'" + intented_type + "\'\n");
-        }
-    }
-
-
-    inline std::vector<int> getNumcodes() const
-    {
-        std::string path = icov::helpers::path::combine(icov::helpers::path::get_data_folder(database, n, false), numcode_file);
-        std::vector<int> numcodes_v;
-        icov::helpers::io::read_vector(path, numcodes_v);
-        return numcodes_v;
-    }
-
-    virtual ~CoderParameters() = default;
+  virtual ~CoderParameters() = default;
 };
 }

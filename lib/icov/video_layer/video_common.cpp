@@ -1,37 +1,32 @@
 #include "video_common.h"
 #include "CommonLib/version.h"
 #include "Utilities/program_options_lite.h"
-#include "CommonLib/version.h"
 
-void icov::video::init_video_lib(int argc, char *argv[])
+void
+icov::video::init_video_lib(int argc, char* argv[])
 {
-    std::cout << "VVCSoftware: VTM Encoder Version "
-    << NEXT_SOFTWARE_VERSION
-    << std::endl
-    << NVM_ONOS
-    << std::endl;
+  std::cout << "VVCSoftware: VTM Encoder Version " << NEXT_SOFTWARE_VERSION
+            << std::endl;
 
-    fprintf( stdout, NVM_ONOS );
-    fprintf( stdout, NVM_COMPILEDBY );
-    fprintf( stdout, NVM_BITS );
+  fprintf(stdout, NVM_ONOS);
+  fprintf(stdout, NVM_COMPILEDBY);
+  fprintf(stdout, NVM_BITS);
 
-
-#if ENABLE_SIMD_OPT //NEEDED FOR VVC
-    std::string SIMD;
-    df::program_options_lite::Options opts;
-    opts.addOptions()
-        ( "SIMD", SIMD, std::string( "" ), "" )
-            ( "c", df::program_options_lite::parseConfigFile, "" );
-    df::program_options_lite::SilentReporter err;
-    df::program_options_lite::scanArgv( opts, argc, ( const char** ) argv, err );
-    fprintf( stdout, "[SIMD=%s] ", read_x86_extension( SIMD ) );
+#if ENABLE_SIMD_OPT // NEEDED FOR VVC
+  std::string SIMD;
+  df::program_options_lite::Options opts;
+  opts.addOptions()("SIMD", SIMD, std::string(""), "")(
+    "c", df::program_options_lite::parseConfigFile, "");
+  df::program_options_lite::SilentReporter err;
+  df::program_options_lite::scanArgv(opts, argc, (const char**)argv, err);
+  fprintf(stdout, "[SIMD=%s] ", read_x86_extension(SIMD));
 #endif
 #if ENABLE_TRACING
-    fprintf( stdout, "[ENABLE_TRACING] " );
+  fprintf(stdout, "[ENABLE_TRACING] ");
 #endif
-    fprintf( stdout, "\n" );
+  fprintf(stdout, "\n");
 
-    // initialize global variables
-    initROM();  // really necessary, but it should be called once
-    //END NEEDED FOR VVC
+  // initialize global variables
+  initROM(); // really necessary, but it should be called once
+             // END NEEDED FOR VVC
 }

@@ -48,33 +48,16 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_program.h"
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-
-class ProgramController
+class ProgramController : public IcovProgramBase
 {
 public:
-    ProgramController();
-    ~ProgramController() = default;
+  ProgramController();
+  ~ProgramController() = default;
 
-    const po::options_description& optionsDesc() const;
-    void processCommandLine(int argc, char** argv);
-    void launchProgram();
-
-
-    static const std::string& programMode(const po::variables_map &args);
-    static const std::string& coderType(const po::variables_map &args);
-    static const std::string& dataPath(const po::variables_map &args);
-    static int codeLength(const po::variables_map &args);
-    static int bp_ite(const po::variables_map &args);
-
-
-private:
-
-    void launchBinaryMode();
-
-    po::options_description m_options_desc;
-    po::variables_map m_options_map;
+  // IcovProgramBase interface
+  void launchMode(const std::string& m) override;
 };
-

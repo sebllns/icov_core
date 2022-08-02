@@ -6,3 +6,4 @@
 #define OPT_DATA_PATH "data-path"
 #define OPT_CODER_TYPE "coder"
 #define OPT_HELP "help"
+#define OPT_MODE "mode"
