@@ -1,7 +1,7 @@
-#find_package(Boost 1.70.0
-#    COMPONENTS
-#    unit_test_framework
-#    REQUIRED)
+find_package(Boost 1.70.0
+    COMPONENTS
+    unit_test_framework
+    REQUIRED)
 
 
 message(STATUS "[INFO] Building ICOV core unit tests")
