@@ -190,7 +190,6 @@ if(BUILD_ICOV_TESTS OR (NOT DEFINED BUILD_ICOV_TESTS AND CMAKE_BUILD_TYPE MATCHE
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/benchmarks)
-    add_subdirectory(tests/icov_interactive_coder_bit_symbol)
 endif()
 
 if(BUILD_ICOV_APPS)
