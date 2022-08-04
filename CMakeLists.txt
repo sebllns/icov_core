@@ -124,8 +124,8 @@ add_subdirectory("third-party/vvc/source/Lib/Utilities")
 
 # enable sse4.1 build for all source files for gcc and clang
 if( UNIX OR MINGW )
-    target_compile_options(CommonLib PUBLIC "-w" "-Wno-register")
-    add_compile_options( "-msse4.1" )
+    target_compile_options(CommonLib PUBLIC -w -Wno-register -msse4.1)
+#    add_compile_options( "-msse4.1" )
 endif()
 # enable parallel build for Visual Studio
 if( MSVC )
