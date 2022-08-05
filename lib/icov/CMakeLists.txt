@@ -17,6 +17,7 @@ if(WITH_CPPCHECK)
 endif()
 
 if(WITH_CLANG_TIDY)
+    message(STATUS "[INFO] Use clang-tidy")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
     #,readability-*
 endif()
