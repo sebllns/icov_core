@@ -7,14 +7,11 @@
 #include "myunits.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 
-MyTransformUnit::MyTransformUnit(const UnitArea& unit,
+MyTransformUnit::MyTransformUnit(const UnitArea &unit,
                                  bool createTransformBuffer,
                                  bool createQuantizedTransformBuffer,
                                  bool createInversetQuantizedTransformBuffer)
-  : UnitArea(unit)
-  , next(nullptr)
-  , previous(nullptr)
-{
+    : UnitArea(unit), next(nullptr), previous(nullptr) {
   if (createTransformBuffer)
     _Tcoeffs.create(*this);
 
@@ -26,14 +23,11 @@ MyTransformUnit::MyTransformUnit(const UnitArea& unit,
 }
 
 MyTransformUnit::MyTransformUnit(const ChromaFormat chromaFormat,
-                                 const Area& lumaArea,
+                                 const Area &lumaArea,
                                  bool createTransformBuffer,
                                  bool createQuantizedTransformBuffer,
                                  bool createInversetQuantizedTransformBuffer)
-  : UnitArea(chromaFormat, lumaArea)
-  , next(nullptr)
-  , previous(nullptr)
-{
+    : UnitArea(chromaFormat, lumaArea), next(nullptr), previous(nullptr) {
   if (createTransformBuffer)
     _Tcoeffs.create(*this);
 
@@ -44,41 +38,33 @@ MyTransformUnit::MyTransformUnit(const ChromaFormat chromaFormat,
     _inverseQuantizedTcoeffs.create(*this);
 }
 
-MyTransformUnit::~MyTransformUnit()
-{
+MyTransformUnit::~MyTransformUnit() {
   _Tcoeffs.release();
   _quantizedTcoeffs.release();
   _inverseQuantizedTcoeffs.release();
 }
 
 InteractiveCodingUnit::InteractiveCodingUnit(
-  const UnitArea& unit,
-  bool createTransformBuffer,
-  bool createQuantizedTransformBuffer,
-  bool createInverseQuantizedTransformBuffer)
-  : UnitArea(unit)
-{
+    const UnitArea &unit, bool createTransformBuffer,
+    bool createQuantizedTransformBuffer,
+    bool createInverseQuantizedTransformBuffer)
+    : UnitArea(unit) {
   _needTransformBuffer = createTransformBuffer;
   _needQuantizedTransformBuffer = createQuantizedTransformBuffer;
   _needInverseQuantizedTransformBuffer = createInverseQuantizedTransformBuffer;
 }
 
 InteractiveCodingUnit::InteractiveCodingUnit(
-  const ChromaFormat chromaFormat,
-  const Area& lumaArea,
-  bool createTransformBuffer,
-  bool createQuantizedTransformBuffer,
-  bool createInverseQuantizedTransformBuffer)
-  : UnitArea(chromaFormat, lumaArea)
-{
+    const ChromaFormat chromaFormat, const Area &lumaArea,
+    bool createTransformBuffer, bool createQuantizedTransformBuffer,
+    bool createInverseQuantizedTransformBuffer)
+    : UnitArea(chromaFormat, lumaArea) {
   _needTransformBuffer = createTransformBuffer;
   _needQuantizedTransformBuffer = createQuantizedTransformBuffer;
   _needInverseQuantizedTransformBuffer = createInverseQuantizedTransformBuffer;
 }
 
-MyTransformUnit*
-InteractiveCodingUnit::addTU(const UnitArea& unit)
-{
+MyTransformUnit *InteractiveCodingUnit::addTU(const UnitArea &unit) {
   if (!this->contains(unit)) // if the Interactive Coding Unit doesn't contain
     // the unit areas
     return nullptr;
@@ -91,21 +77,19 @@ InteractiveCodingUnit::addTU(const UnitArea& unit)
     TUs.reserve(nBlocks_x *
                 nBlocks_y); // just to reserve TUs, even if it is not correct,
                             // in push_back it will be extended
-    TUs.push_back(MyTransformUnit(unit,
-                                  needTransformBuffer(),
+    TUs.push_back(MyTransformUnit(unit, needTransformBuffer(),
                                   needQuantizedTransformBuffer(),
                                   needInverseQuantizedTransformBuffer()));
     return &TUs[0];
   }
 
-  TUs.push_back(MyTransformUnit(unit,
-                                needTransformBuffer(),
+  TUs.push_back(MyTransformUnit(unit, needTransformBuffer(),
                                 needQuantizedTransformBuffer(),
                                 needInverseQuantizedTransformBuffer()));
   unsigned int lastIndex = TUs.size() - 1;
 
-  MyTransformUnit& previousTU = TUs[lastIndex - 1];
-  MyTransformUnit& currTU = TUs[lastIndex];
+  MyTransformUnit &previousTU = TUs[lastIndex - 1];
+  MyTransformUnit &currTU = TUs[lastIndex];
 
   currTU.previous = &previousTU;
   previousTU.next = &currTU;
@@ -133,9 +117,7 @@ InteractiveCodingUnit::addTU(const UnitArea& unit)
     */
 }
 
-MyTransformUnit*
-InteractiveCodingUnit::getTU(const UnitArea& unit)
-{
+MyTransformUnit *InteractiveCodingUnit::getTU(const UnitArea &unit) {
   //    if(!firstTU)
   //        return nullptr;
 
@@ -153,4 +135,41 @@ InteractiveCodingUnit::getTU(const UnitArea& unit)
       return &TUs[i];
   }
   return nullptr;
+}
+
+int SideInformationUnit::estimateSIRequiredBitsToCodeIntraMode(
+    const ComponentID compID, UInt dirMode,
+    const MyIntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide) const {
+  if (refSampSide ==
+      MyIntraPrediction::REFERENCE_SAMPLE_SIDE::
+          NO_SIDE) // When you have no_SIDE this means you are coding with no
+                   // prediction (like access block), so you do not need to
+                   // signal the intra mode.
+    return 0;
+
+  ChannelType chType = toChannelType(compID);
+
+  if (chType == CHANNEL_TYPE_LUMA) {
+    return std::ceil(std::log2(NUM_LUMA_MODE));
+  } else {
+
+    if (dirMode == intraDir[COMPONENT_Y]) {
+      return 1;
+    } else {
+      int chromaIntraMode = dirMode;
+
+      switch (chromaIntraMode) {
+      case PLANAR_IDX:
+      case DC_IDX:
+      case HOR_IDX:
+      case VER_IDX:
+        return 3;
+        break;
+      default:
+        throw std::logic_error("intra prediction mode for chroma channels "
+                               "should be one of 5 possible values");
+        break;
+      }
+    }
+  }
 }

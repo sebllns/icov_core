@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_SUITE(args_tests)
 
 BOOST_AUTO_TEST_CASE(no_arg)
 {
+  // DOES NOT WORK on WINDOWS
   // BOOST_CHECK_NE(WEXITSTATUS(std::system("./icov_cmd")), 0);
   // BOOST_CHECK_EQUAL(WEXITSTATUS(std::system("./icov_cmd -h")), 0);
   // BOOST_CHECK_EQUAL(WEXITSTATUS(std::system("./icov_cmd --help")), 0);

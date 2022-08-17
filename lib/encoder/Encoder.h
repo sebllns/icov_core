@@ -52,10 +52,9 @@
 #include "omnidirectional_layer/interface/IEncoder.h"
 #include <opencv2/opencv.hpp>
 
-class Encoder : public IEncoder
-{
+class Encoder : public IEncoder {
 protected:
-    cv::Mat m_img_src;
+  cv::Mat m_img_src;
 
 public:
   Encoder();
@@ -65,7 +64,10 @@ public:
 public:
   void openFile(const std::string &filename) override;
   void dispose() override;
-  void encode(std::ostream &output, const IPicture &picture, const IAccessBlockManager &access_blocks) override;
-  void encodeBlock(std::ostream &output, const Block &b, bool access_block) override;
-  void encodeBlockWithPrediction(std::ostream &output, const Block &b, uint16_t prediction) override;
+  void encode(std::ostream &output, const IPicture &picture,
+              const IAccessBlockManager &access_blocks) override;
+  void encodeBlock(std::ostream &output, const Block &b,
+                   bool access_block) override;
+  void encodeBlockWithPrediction(std::ostream &output, const Block &b,
+                                 uint16_t prediction) override;
 };
