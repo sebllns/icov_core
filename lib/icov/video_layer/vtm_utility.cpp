@@ -5,10 +5,10 @@
 **   Inria research institute
 **************************************************************************/
 #include "vtm_utility.h"
+#include "ICOV_DistorsionCost.h"
+#include "ICOV_Quant.h"
+#include "ICOV_Transform2d.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
-#include "mydistorsioncost.h"
-#include "myquant.h"
-#include "mytransform2d.h"
 
 Area &VTM_Utility::operator&=(Area &a, const Area &b) {
   Int x1 = std::max(a.x, b.x);
@@ -128,7 +128,62 @@ double VTM_Utility::calculatePSNR(const CPelUnitBuf &org,
     maximumBitDepth =
         std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
 
-  MyDistortionCost distCost;
+  icov::video::DistortionCost distCost;
+
+  double mse_frame = 0.;
+  Int scale = 0;
+
+  for (UInt ch = 0; ch < numCh; ch++) {
+    const ComponentID compID = ComponentID(ch);
+    const UInt csx = getComponentScaleX(compID, chromaFormatIDC);
+    const UInt csy = getComponentScaleY(compID, chromaFormatIDC);
+    const Int scaleChan = (4 >> (csx + csy));
+    const UInt bitDepthShift =
+        2 *
+        (maximumBitDepth - internalBitDepth[toChannelType(
+                               compID)]); //*2 because this is a squared number
+
+    uint64_t dist_frame = distCost.getDistPart(
+        org.get(compID), cur.get(compID),
+        internalBitDepth[toChannelType(compID)], compID, DF_SSE);
+
+    Double channelMSE = double(dist_frame) / double(org.get(compID).area());
+    channelMSE *= Double(1 << bitDepthShift);
+
+    scale += scaleChan;
+    mse_frame += scaleChan * channelMSE;
+  }
+  mse_frame /= Double(scale); // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
+
+  const UInt maxval = 255 << (maximumBitDepth - 8);
+
+  if (maxval_ptr)
+    *maxval_ptr = maxval;
+
+  if (mse_ptr)
+    *mse_ptr = mse_frame;
+
+  return (mse_frame == 0) ? 999.99
+                          : 10.0 * log10((maxval * maxval) / mse_frame);
+}
+
+double VTM_Utility::calculatePSNR(const CCoeffUnitBuf &org,
+                                  const CCoeffUnitBuf &cur,
+                                  const Int internalBitDepth[], double *mse_ptr,
+                                  uint *maxval_ptr) {
+  CHECK((org.chromaFormat != cur.chromaFormat),
+        "chroma format must be similar between org and cur");
+
+  ChromaFormat chromaFormatIDC = org.chromaFormat;
+
+  const UInt numCh = getNumberValidComponents(chromaFormatIDC);
+
+  Int maximumBitDepth = internalBitDepth[CHANNEL_TYPE_LUMA];
+  if (numCh > 1)
+    maximumBitDepth =
+        std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
+
+  icov::video::DistortionCost distCost;
 
   double mse_frame = 0.;
   Int scale = 0;
@@ -169,7 +224,7 @@ double VTM_Utility::calculatePSNR(const CPelUnitBuf &org,
 
 void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
                                 PelUnitBuf &quantizedImage,
-                                EncodingStructure &encStruct,
+                                icov::video::EncodingStructure &encStruct,
                                 const int bitDepths[MAX_NUM_CHANNEL_TYPE],
                                 int maxLog2TrDynamicRange) {
   if (originalImage.chromaFormat != quantizedImage.chromaFormat)
@@ -190,7 +245,7 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
 
 void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
                                 PelUnitBuf &quantizedImage,
-                                EncodingStructure &encStruct,
+                                icov::video::EncodingStructure &encStruct,
                                 const ComponentID compID,
                                 const int bitDepths[MAX_NUM_CHANNEL_TYPE],
                                 int maxLog2TrDynamicRange) {
@@ -198,16 +253,17 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
   int bit_depth = bitDepths[channelType];
   ChromaFormat chFrmt = encStruct.getICU(0).get_sourceX().chromaFormat;
 
-  MyQpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
+  icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
 
-  MyTransform2D transform2D;
-  MyQuant quant;
+  icov::video::Transform2D transform2D;
+  icov::video::Quant quant;
   TCoeff uiAbsSum;
 
   for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
-    InteractiveCodingUnit &curr_icu = encStruct.getICU(i).get_sourceX();
+    icov::video::InteractiveCodingUnit &curr_icu =
+        encStruct.getICU(i).get_sourceX();
     for (UInt j = 0; j < curr_icu.TUs.size(); j++) {
-      MyTransformUnit &curr_tu = curr_icu.TUs[j];
+      icov::video::TransformUnit &curr_tu = curr_icu.TUs[j];
 
       // DCT
       transform2D.transformNxN(curr_tu.getTransformCoeffs(compID),

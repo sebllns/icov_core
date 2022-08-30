@@ -1,30 +1,25 @@
-/**************************************************************************
-**   Copyright (C): 2018
-**   Author: Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
-**   Supervisors: Aline ROUMY, Thomas MAUGEY
-**   Inria research institute
-**************************************************************************/
-#include "encodingstructure.h"
+#include "Encodingstructure.h"
 
 #include <opencv2/imgproc.hpp>
 
-#include "myintraprediction.h"
-#include "myquant.h"
-#include "mytransform2d.h"
+#include "ICOV_Quant.h"
+#include "ICOV_Transform2d.h"
+#include "IntraPrediction.h"
 #include "vtm_utility.h"
 
-EncodingStructure::EncodingStructure() { deallocate(); }
+icov::video::EncodingStructure::EncodingStructure() { deallocate(); }
 
-EncodingStructure::EncodingStructure(const std::vector<ICU_Encoder> &icus,
-                                     const UInt icusPerRow,
-                                     const UInt icusPerColumn) {
+icov::video::EncodingStructure::EncodingStructure(
+    const std::vector<IcuEncoder> &icus, const UInt icusPerRow,
+    const UInt icusPerColumn) {
   set(icus, icusPerRow, icusPerColumn);
 }
 
-EncodingStructure::~EncodingStructure() { deallocate(); }
+icov::video::EncodingStructure::~EncodingStructure() { deallocate(); }
 
-void EncodingStructure::set(const std::vector<ICU_Encoder> &icus,
-                            const UInt icusPerRow, const UInt icusPerColumn) {
+void icov::video::EncodingStructure::set(const std::vector<IcuEncoder> &icus,
+                                         const UInt icusPerRow,
+                                         const UInt icusPerColumn) {
   deallocate();
 
   vec_icus = icus;
@@ -51,13 +46,13 @@ void EncodingStructure::set(const std::vector<ICU_Encoder> &icus,
       AreaBuf<bool>(alreadyProPtr, n_icusPerRow, n_icusPerRow, n_icusPerCol);
 }
 
-void EncodingStructure::setCheckPoints(
+void icov::video::EncodingStructure::setCheckPoints(
     const std::vector<Position> &checkPoints) {
   for (unsigned int i = 0; i < checkPoints.size(); i++)
     setCheckPoint(checkPoints[i]);
 }
 
-void EncodingStructure::setCheckPoint(const Position &checkPoint) {
+void icov::video::EncodingStructure::setCheckPoint(const Position &checkPoint) {
   CHECK((checkPoint.x < 0) || (checkPoint.x >= int(n_icusPerRow)) ||
             (checkPoint.y < 0) || (checkPoint.y >= int(n_icusPerCol)),
         "check point is not inside the image");
@@ -71,7 +66,8 @@ void EncodingStructure::setCheckPoint(const Position &checkPoint) {
   vec_checkPoints.push_back(checkPoint);
 }
 
-bool EncodingStructure::isAccessBlock(const Position &accessBlockPoint) {
+bool icov::video::EncodingStructure::isAccessBlock(
+    const Position &accessBlockPoint) {
   for (unsigned int ab_ind = 0; ab_ind < vec_checkPoints.size(); ab_ind++)
     if (vec_checkPoints[ab_ind].x == accessBlockPoint.x &&
         vec_checkPoints[ab_ind].y == accessBlockPoint.y)
@@ -80,7 +76,8 @@ bool EncodingStructure::isAccessBlock(const Position &accessBlockPoint) {
   return false;
 }
 
-Position EncodingStructure::get_icuPosition(const UInt icu_index) const {
+Position
+icov::video::EncodingStructure::get_icuPosition(const UInt icu_index) const {
   div_t divresult;
   divresult = div(icu_index, Int(n_icusPerRow));
   UInt icu_x = divresult.rem;
@@ -214,7 +211,7 @@ static void fillHolesHorizontally_360(AreaBuf<bool> &requestedIcus,
   }
 }
 
-void EncodingStructure::
+void icov::video::EncodingStructure::
     create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
         ChromaFormat chFmt, const UInt sourceWidth_luma,
         const UInt sourceHeight_luma, const UInt sourceMargin_x_luma,
@@ -225,19 +222,16 @@ void EncodingStructure::
   const bool si_createQuantizedTransformBuffer = true;
   const bool si_createInverseQuantizedTransformBuffer = true;
 
-  std::map<int, MyIntraPrediction::REFERENCE_SAMPLE_SIDE> mapOfSidesCondition;
-  mapOfSidesCondition[0] = MyIntraPrediction::LEFT;
-  mapOfSidesCondition[1] = MyIntraPrediction::RIGHT;
-  mapOfSidesCondition[2] = MyIntraPrediction::TOP;
-  mapOfSidesCondition[3] = MyIntraPrediction::DOWN;
-  mapOfSidesCondition[4] = MyIntraPrediction::LEFT_TOP;
-  mapOfSidesCondition[5] = MyIntraPrediction::LEFT_DOWN;
-  mapOfSidesCondition[6] = MyIntraPrediction::RIGHT_DOWN;
-  mapOfSidesCondition[7] = MyIntraPrediction::RIGHT_TOP;
-  mapOfSidesCondition[8] = MyIntraPrediction::LEFT_TOPLEFT_TOP;
-  mapOfSidesCondition[9] = MyIntraPrediction::LEFT_DOWNLEFT_DOWN;
-  mapOfSidesCondition[10] = MyIntraPrediction::RIGHT_DOWNRIGHT_DOWN;
-  mapOfSidesCondition[11] = MyIntraPrediction::RIGHT_TOPRIGHT_TOP;
+  std::map<int, icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE>
+      mapOfSidesCondition;
+  mapOfSidesCondition[0] = BlockPrediction::LEFT;
+  mapOfSidesCondition[1] = BlockPrediction::RIGHT;
+  mapOfSidesCondition[2] = BlockPrediction::TOP;
+  mapOfSidesCondition[3] = BlockPrediction::BOTTOM;
+  mapOfSidesCondition[4] = BlockPrediction::TOP_LEFT;
+  mapOfSidesCondition[5] = BlockPrediction::BOTTOM_LEFT;
+  mapOfSidesCondition[6] = BlockPrediction::BOTTOM_RIGHT;
+  mapOfSidesCondition[7] = BlockPrediction::TOP_RIGHT;
 
   unsigned int mapSize = mapOfSidesCondition.size();
 
@@ -245,7 +239,7 @@ void EncodingStructure::
   UInt ny_icus = (sourceHeight_luma + icuHeight_luma - 1) / icuHeight_luma;
   UInt n_icus = nx_icus * ny_icus;
 
-  std::vector<ICU_Encoder> icus_enc;
+  std::vector<IcuEncoder> icus_enc;
 
   icus_enc.reserve(n_icus);
   div_t divresult;
@@ -256,6 +250,9 @@ void EncodingStructure::
     divresult = div(Int(icuIndex), Int(nx_icus));
     UInt icuXPosTopLeft = divresult.rem;
     UInt icuYPosTopLeft = divresult.quot;
+
+    std::cout << "create ICU #" << icuIndex << " (" << icuXPosTopLeft << ", "
+              << icuYPosTopLeft << ")" << std::endl;
 
     Area icuLumaArea =
         Area(icuXPosTopLeft * icuWidth_luma + sourceMargin_x_luma,
@@ -271,122 +268,91 @@ void EncodingStructure::
       return;
     }
 
-    icus_enc.push_back(ICU_Encoder(chFmt, icuLumaArea));
-    ICU_Encoder &icu_enc = icus_enc.back();
-    icu_enc.creatTUs(tuWidth_luma, tuHeight_luma);
+    icus_enc.push_back(IcuEncoder(chFmt, icuLumaArea));
+    IcuEncoder &icu_enc = icus_enc.back();
+    icu_enc.createTUs(tuWidth_luma, tuHeight_luma);
 
-    // give all possible SIs for non-border ICUs
-    if ((icuYPosTopLeft > 0) &&
-        (icuYPosTopLeft < ny_icus - 1)) // all icus excep top and bottom
-    {
-      for (UInt i = 0; i < mapSize; i++) {
-        MyIntraPrediction::REFERENCE_SAMPLE_SIDE refSamp =
-            mapOfSidesCondition[i];
+    using SI_SIDE = icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE;
+
+    for (UInt i = 0; i < mapSize; i++) {
+      SI_SIDE refSamp = mapOfSidesCondition[i];
+
+      if (
+          // TOP
+          !(icuYPosTopLeft == 0 && (refSamp & SI_SIDE::TOP)) &&
+          // BOTTOM
+          !(icuYPosTopLeft == (ny_icus - 1) && (refSamp & SI_SIDE::BOTTOM))
+
+      ) {
+
         icu_enc.addIntraSI(refSamp, si_createTransformBuffer,
                            si_createQuantizedTransformBuffer,
                            si_createInverseQuantizedTransformBuffer);
       }
-    } else {
-      if (icuYPosTopLeft == 0) // top icus
-      {
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::TOP,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::DOWN, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::LEFT_TOP,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT_DOWN,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT_DOWN,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::RIGHT_TOP,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::LEFT_TOPLEFT_TOP,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT_DOWNLEFT_DOWN,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT_DOWNRIGHT_DOWN,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::RIGHT_TOPRIGHT_TOP,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-      } else {
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::TOP, si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::DOWN,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT_TOP,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::LEFT_DOWN,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::RIGHT_DOWN,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT_TOP,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::LEFT_TOPLEFT_TOP,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::LEFT_DOWNLEFT_DOWN,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        //                icu_enc.addIntraSI(MyIntraPrediction::RIGHT_DOWNRIGHT_DOWN,
-        //                si_createTransformBuffer,
-        //                si_createQuantizedTransformBuffer,
-        //                si_createInverseQuantizedTransformBuffer);
-        icu_enc.addIntraSI(MyIntraPrediction::RIGHT_TOPRIGHT_TOP,
-                           si_createTransformBuffer,
-                           si_createQuantizedTransformBuffer,
-                           si_createInverseQuantizedTransformBuffer);
-      }
     }
+
+    // give all possible SIs for non-border ICUs
+    //    if ((icuYPosTopLeft > 0) &&
+    //        (icuYPosTopLeft < ny_icus - 1)) // all icus except top and bottom
+    //    {
+    //      for (UInt i = 0; i < mapSize; i++) {
+    //        icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE refSamp =
+    //            mapOfSidesCondition[i];
+    //        icu_enc.addIntraSI(refSamp, si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //      }
+    //    } else {
+    //      if (icuYPosTopLeft == 0) // top icus
+    //      {
+    //        icu_enc.addIntraSI(
+    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT,
+    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
+    //            si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(
+    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT,
+    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
+    //            si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(
+    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM,
+    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
+    //            si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM_LEFT,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM_RIGHT,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //      } else {
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::LEFT,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(
+    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT,
+    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
+    //            si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::TOP,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::LEFT_TOP,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //        icu_enc.addIntraSI(icov::video::IntraPrediction::RIGHT_TOP,
+    //                           si_createTransformBuffer,
+    //                           si_createQuantizedTransformBuffer,
+    //                           si_createInverseQuantizedTransformBuffer);
+    //      }
+    //    }
   }
   set(icus_enc, nx_icus, ny_icus);
 }
 
-void EncodingStructure::updateRequestedICUs(
+void icov::video::EncodingStructure::updateRequestedICUs(
     const cv::Mat &maskRequestedPixels,
     std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
     std::vector<std::vector<Position>> &requestedICUs_closeTocheckPoints,
@@ -681,7 +647,7 @@ void EncodingStructure::updateRequestedICUs(
   }
 }
 
-void EncodingStructure::updateRequestedICUs(
+void icov::video::EncodingStructure::updateRequestedICUs(
     const cv::Mat &maskRequestedPixels,
     std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
     std::vector<std::vector<Position>> &requestedICUs_closeTocheckPoints,
@@ -1220,9 +1186,10 @@ void EncodingStructure::updateRequestedICUs(
   CHECK(n_remainingRequestedICUs != 0, "not enough check points");
 }
 
-void EncodingStructure::reorderBlockDecodingBasedOnStartingAccessBlock(
-    std::vector<std::vector<Position>> &in_out_requested_icus,
-    const std::vector<Position> &accessBlockInsideAsStartingPosition) {
+void icov::video::EncodingStructure::
+    reorderBlockDecodingBasedOnStartingAccessBlock(
+        std::vector<std::vector<Position>> &in_out_requested_icus,
+        const std::vector<Position> &accessBlockInsideAsStartingPosition) {
   CHECK(in_out_requested_icus.size() !=
             accessBlockInsideAsStartingPosition.size(),
         "Size of the vector must be equal.");
@@ -1296,9 +1263,10 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
   }
 }
 
-void EncodingStructure::applyPredictionBasedOnEntropy(
+/*******************************************************************************/
+void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     const PelUnitBuf &reconstructionUnitBuffer, PelUnitBuf &predictionUnitBuf,
-    MyIntraPrediction &intraPred, const ComponentID compID,
+    icov::video::IntraPrediction &intraPred, const ComponentID compID,
     const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
     const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
     const int qp, int maxLog2TrDynamicRange) {
@@ -1319,24 +1287,24 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
   ChannelType chType = toChannelType(compID);
   double entropy, currEntropy;
 
-  MyTransform2D transform2D;
-  MyQuant quant;
+  Transform2D transform2D;
+  Quant quant;
   TCoeff uiAbsSum;
-  MyQpParam cQP(qp, toChannelType(compID), getICU(0).get_sourceX().chromaFormat,
-                bitDepths[chType], 0, 0);
+  QpParam cQP(qp, toChannelType(compID), getICU(0).get_sourceX().chromaFormat,
+              bitDepths[chType], 0, 0);
 
-  std::vector<UInt> availabaleDirModes;
+  std::vector<UInt> availableDirModes;
   if (chType == CHANNEL_TYPE_LUMA) {
-    availabaleDirModes.reserve(NUM_LUMA_MODE);
+    availableDirModes.reserve(NUM_LUMA_MODE);
     for (UInt dirMode = 0; dirMode < NUM_LUMA_MODE; dirMode++)
-      availabaleDirModes.push_back(dirMode);
+      availableDirModes.push_back(dirMode);
   } else
-    availabaleDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
+    availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
 
   for (UInt i = 0; i < vec_icus.size(); i++) {
-    ICU_Encoder &icu_enc = vec_icus[i];
-    std::map<MyIntraPrediction::REFERENCE_SAMPLE_SIDE, SideInformationUnit>
-        &currICUintraMap = icu_enc.get_intraSIsMap();
+    IcuEncoder &icu_enc = vec_icus[i];
+    std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
+             SideInformationUnit> &currICUintraMap = icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);
     PelBuf roiComp_predictionFrameBuff =
@@ -1347,13 +1315,14 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
          ++it) // loop over all intra side information
     {
       SideInformationUnit &si = it->second;
-      const MyIntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide = it->first;
+      const icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide =
+          it->first;
 
-      std::vector<MyTransformUnit> &si_TUs = si.TUs;
+      std::vector<TransformUnit> &si_TUs = si.TUs;
       unsigned int n_tus = si_TUs.size();
 
       if (chType == CHANNEL_TYPE_CHROMA)
-        availabaleDirModes[0] =
+        availableDirModes[0] =
             si.intraDir[COMPONENT_Y]; // set the direct mode for current SI
                                       // chroma channel
 
@@ -1361,13 +1330,14 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
                                        compArea, bitDepths[chType], false);
 
       entropy = std::numeric_limits<double>::max();
-      for (const UInt &dirMode :
-           availabaleDirModes) // access by const reference
+
+      // SEARCH BEST DIRMODE FOR INTRA PRED
+      for (const UInt &dirMode : availableDirModes) // access by const reference
       {
 
         intraPred.predIntraAng(roiComp_predictionFrameBuff, dirMode);
         for (UInt j = 0; j < n_tus; j++) {
-          MyTransformUnit &curr_tu_si = si_TUs[j];
+          TransformUnit &curr_tu_si = si_TUs[j];
 
           transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
                                    predictionUnitBuf, curr_tu_si.block(compID),
@@ -1434,6 +1404,7 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
                   maxLog2TrDynamicRange + 1);
         }
 
+        // IF CURRENT DIRMODE IS BETTER
         if (currEntropy < entropy) {
           entropy = currEntropy;
           si.intraDir[compID] = dirMode;
@@ -1451,7 +1422,7 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
       //                cout << "entropy= " << entropy << endl;
       intraPred.predIntraAng(roiComp_predictionFrameBuff, si.intraDir[compID]);
       for (UInt j = 0; j < n_tus; j++) {
-        MyTransformUnit &curr_tu_si = si_TUs[j];
+        TransformUnit &curr_tu_si = si_TUs[j];
         transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
                                  predictionUnitBuf, curr_tu_si.block(compID),
                                  bitDepths[chType], maxLog2TrDynamicRange);
@@ -1464,7 +1435,7 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
   }
 }
 
-void EncodingStructure::get_decodedICUsInRequestedICUs(
+void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
     const cv::Mat &maskRequestedPixels,
     std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
     std::vector<std::vector<Position>> &decodedICUs_inRequestedICUs) {
@@ -1553,7 +1524,8 @@ void EncodingStructure::get_decodedICUsInRequestedICUs(
   }
 }
 
-void EncodingStructure::updateDecodedICU(const Position &ICU_position) {
+void icov::video::EncodingStructure::updateDecodedICU(
+    const Position &ICU_position) {
   CHECK(ICU_position.x < 0 || ICU_position.x >= Int(n_icusPerRow) ||
             ICU_position.y < 0 || ICU_position.y >= Int(n_icusPerCol),
         "out of range");
@@ -1564,7 +1536,7 @@ void EncodingStructure::updateDecodedICU(const Position &ICU_position) {
   }
 }
 
-void EncodingStructure::updateDecodedICUs(
+void icov::video::EncodingStructure::updateDecodedICUs(
     const std::vector<std::vector<Position>> &connectedComponents) {
   for (UInt i = 0; i < connectedComponents.size(); i++) {
     for (UInt j = 0; j < connectedComponents[i].size(); j++) {
@@ -1573,7 +1545,7 @@ void EncodingStructure::updateDecodedICUs(
   }
 }
 
-int EncodingStructure::getAvailableDecodedSides_regularImage(
+int icov::video::EncodingStructure::getAvailableDecodedSides_regularImage(
     const Position &icuPos) const {
   int availableSides = 0;
 
@@ -1594,7 +1566,8 @@ int EncodingStructure::getAvailableDecodedSides_regularImage(
       availableSides |= 0b001000000;
 
     if (rowPtr[icuPos.x] == true)
-      availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::TOP;
+      availableSides |=
+          icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::TOP;
   }
 
   // check bottom side
@@ -1609,22 +1582,24 @@ int EncodingStructure::getAvailableDecodedSides_regularImage(
       availableSides |= 0b100000000;
 
     if (rowPtr[icuPos.x] == true)
-      availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::DOWN;
+      availableSides |=
+          icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM;
   }
 
   rowPtr = &_decodedICUs.at(0, icuPos.y);
 
   if ((icuPos.x - 1 >= 0) && (rowPtr[icuPos.x - 1] == true)) // check left side
-    availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT;
+    availableSides |= icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT;
 
   if ((icuPos.x + 1 < int(n_icusPerRow)) &&
       (rowPtr[icuPos.x + 1] == true)) // check right side
-    availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT;
+    availableSides |=
+        icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT;
 
   return availableSides;
 }
 
-int EncodingStructure::getAvailableDecodedSides_360Image(
+int icov::video::EncodingStructure::getAvailableDecodedSides_360Image(
     const Position &icuPos) const {
   int availableSides = 0;
   //        neighbor_x = (iWidth + (neighbor_x%iWidth)) % iWidth;  // to
@@ -1652,7 +1627,8 @@ int EncodingStructure::getAvailableDecodedSides_360Image(
       availableSides |= 0b001000000;
 
     if (rowPtr[icuPos.x] == true)
-      availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::TOP;
+      availableSides |=
+          icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::TOP;
   }
 
   // check bottom side
@@ -1671,7 +1647,8 @@ int EncodingStructure::getAvailableDecodedSides_360Image(
       availableSides |= 0b100000000;
 
     if (rowPtr[icuPos.x] == true)
-      availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::DOWN;
+      availableSides |=
+          icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM;
   }
 
   rowPtr = &_decodedICUs.at(0, icuPos.y);
@@ -1679,17 +1656,18 @@ int EncodingStructure::getAvailableDecodedSides_360Image(
   x = (iWidth + ((icuPos.x - 1) % iWidth)) %
       iWidth; // to generate circular traversing for 360 video in x direction
   if (rowPtr[x] == true) // check left side
-    availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT;
+    availableSides |= icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT;
 
   x = (iWidth + ((icuPos.x + 1) % iWidth)) %
       iWidth; // to generate circular traversing for 360 video in x direction
   if (rowPtr[x] == true) // check right side
-    availableSides |= MyIntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT;
+    availableSides |=
+        icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT;
 
   return availableSides;
 }
 
-void EncodingStructure::updateAlreadyProccessedICU(
+void icov::video::EncodingStructure::updateAlreadyProccessedICU(
     const Position &ICU_position) {
   CHECK(ICU_position.x < 0 || ICU_position.x >= Int(n_icusPerRow) ||
             ICU_position.y < 0 || ICU_position.y >= Int(n_icusPerCol),
@@ -1701,7 +1679,7 @@ void EncodingStructure::updateAlreadyProccessedICU(
   }
 }
 
-void EncodingStructure::deallocate() {
+void icov::video::EncodingStructure::deallocate() {
   if (_requestedICUs.buf) {
     std::cout << "deallocating encoding structure" << std::endl;
     xFree(_requestedICUs.buf);
@@ -1733,7 +1711,8 @@ void EncodingStructure::deallocate() {
   n_icusPerCol = 0;
 }
 
-ICU_Encoder &EncodingStructure::getICU(const UInt icu_index) {
+icov::video::IcuEncoder &
+icov::video::EncodingStructure::getICU(const UInt icu_index) {
   ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < vec_icus.size(),
                   "Cannot retrieve ICU " + std::to_string(icu_index) +
                       " from vector of size " +
@@ -1741,11 +1720,13 @@ ICU_Encoder &EncodingStructure::getICU(const UInt icu_index) {
   return vec_icus[icu_index];
 }
 
-ICU_Encoder &EncodingStructure::getICU(const UInt x_index, const UInt y_index) {
+icov::video::IcuEncoder &
+icov::video::EncodingStructure::getICU(const UInt x_index, const UInt y_index) {
   return getICU(y_index * n_icusPerRow + x_index);
 }
 
-const ICU_Encoder &EncodingStructure::getICU(const UInt icu_index) const {
+const icov::video::IcuEncoder &
+icov::video::EncodingStructure::getICU(const UInt icu_index) const {
   ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < vec_icus.size(),
                   "Cannot retrieve ICU " + std::to_string(icu_index) +
                       " from vector of size " +
@@ -1753,48 +1734,53 @@ const ICU_Encoder &EncodingStructure::getICU(const UInt icu_index) const {
   return vec_icus[icu_index];
 }
 
-bool EncodingStructure::isLeftVerticalBorder(const UInt icu_index) const {
+bool icov::video::EncodingStructure::isLeftVerticalBorder(
+    const UInt icu_index) const {
   return (icu_index < vec_icus.size()) && (icu_index % n_icusPerRow == 0);
 }
 
-bool EncodingStructure::isRightVerticalBorder(const UInt icu_index) const {
+bool icov::video::EncodingStructure::isRightVerticalBorder(
+    const UInt icu_index) const {
   return (icu_index < vec_icus.size()) &&
          (icu_index % n_icusPerRow == n_icusPerRow - 1);
 }
 
-UInt EncodingStructure::get_icuIndex(const Position &pos) const {
+UInt icov::video::EncodingStructure::get_icuIndex(const Position &pos) const {
   return UInt(pos.y) * n_icusPerRow + UInt(pos.x);
 }
 
-void EncodingStructure::resetDecodedICUs() {
+void icov::video::EncodingStructure::resetDecodedICUs() {
   _decodedICUs.fill(false);
   _vec_decodedICUs.clear();
 }
 
-bool EncodingStructure::isICUAlreadyDecoded(
+bool icov::video::EncodingStructure::isICUAlreadyDecoded(
     const Position &ICU_position) const {
   return _decodedICUs.at(ICU_position.x, ICU_position.y);
 }
 
-const std::vector<Position> &EncodingStructure::get_vecDecodedICUs() const {
+const std::vector<Position> &
+icov::video::EncodingStructure::get_vecDecodedICUs() const {
   return _vec_decodedICUs;
 }
 
-const std::vector<Position> &EncodingStructure::get_vecCheckpoints() const {
+const std::vector<Position> &
+icov::video::EncodingStructure::get_vecCheckpoints() const {
   return vec_checkPoints;
 }
 
-void EncodingStructure::resetAlreadyProcessedICUs() {
+void icov::video::EncodingStructure::resetAlreadyProcessedICUs() {
   _tmp_alreadyProcessedICUs.fill(false);
   _vec_tmp_alreadyProcessedICUs.clear();
 }
 
-void EncodingStructure::copyProccessedICUsFromDecodedICUs() {
+void icov::video::EncodingStructure::copyProccessedICUsFromDecodedICUs() {
   for (unsigned int block_id = 0; block_id < _vec_decodedICUs.size();
        block_id++)
     updateAlreadyProccessedICU(_vec_decodedICUs[block_id]);
 }
 
-bool EncodingStructure::isICUAlreadyProcessed(const Position &ICU_position) {
+bool icov::video::EncodingStructure::isICUAlreadyProcessed(
+    const Position &ICU_position) {
   return _tmp_alreadyProcessedICUs.at(ICU_position.x, ICU_position.y);
 }

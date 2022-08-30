@@ -51,6 +51,8 @@
 
 #include "Block.h"
 
+using namespace icov;
+
 class IBlockOrdering;
 class IViewportManager;
 class IBlockProcessor;
@@ -62,37 +64,37 @@ class IBlockPrediction;
  *
  *  A RequestManager is
  */
-class RequestManager
-{
+class RequestManager {
 
 public:
-
-
 private:
-    std::shared_ptr<IAccessBlockManager> m_accessBlocks;
-    std::shared_ptr<IBlockOrdering> m_ordering;
-    std::shared_ptr<IViewportManager> m_viewport;
-    std::shared_ptr<IPicture> m_picture;
-    std::shared_ptr<IBlockProcessor> m_blockProcessor;
-    std::shared_ptr<IBlockPrediction> m_blockPrediction;
+  std::shared_ptr<IAccessBlockManager> m_accessBlocks;
+  std::shared_ptr<IBlockOrdering> m_ordering;
+  std::shared_ptr<IViewportManager> m_viewport;
+  std::shared_ptr<IPicture> m_picture;
+  std::shared_ptr<IBlockProcessor> m_blockProcessor;
+  std::shared_ptr<IBlockPrediction> m_blockPrediction;
 
 public:
-    RequestManager() = default;
-    ~RequestManager() = default;
+  RequestManager() = default;
+  ~RequestManager() = default;
 
-    void start();
-    void update(float angle_x, float angle_y);
+  void start();
+  void update(float angle_x, float angle_y);
 
-    const std::shared_ptr<IBlockOrdering> &ordering() const;
-    void setOrdering(const std::shared_ptr<IBlockOrdering> &newOrdering);
-    const std::shared_ptr<IViewportManager> &viewport() const;
-    void setViewport(const std::shared_ptr<IViewportManager> &newViewport);
-    const std::shared_ptr<IPicture> &picture() const;
-    void setPicture(const std::shared_ptr<IPicture> &newPicture);
-    const std::shared_ptr<IBlockProcessor> &blockProcessor() const;
-    void setBlockProcessor(const std::shared_ptr<IBlockProcessor> &newBlockProcessor);
-    const std::shared_ptr<IAccessBlockManager> &accessBlocks() const;
-    void setAccessBlocks(const std::shared_ptr<IAccessBlockManager> &newAccessBlocks);
-    const std::shared_ptr<IBlockPrediction> &blockPrediction() const;
-    void setBlockPrediction(const std::shared_ptr<IBlockPrediction> &newBlockPrediction);
+  const std::shared_ptr<IBlockOrdering> &ordering() const;
+  void setOrdering(const std::shared_ptr<IBlockOrdering> &newOrdering);
+  const std::shared_ptr<IViewportManager> &viewport() const;
+  void setViewport(const std::shared_ptr<IViewportManager> &newViewport);
+  const std::shared_ptr<IPicture> &picture() const;
+  void setPicture(const std::shared_ptr<IPicture> &newPicture);
+  const std::shared_ptr<IBlockProcessor> &blockProcessor() const;
+  void
+  setBlockProcessor(const std::shared_ptr<IBlockProcessor> &newBlockProcessor);
+  const std::shared_ptr<IAccessBlockManager> &accessBlocks() const;
+  void
+  setAccessBlocks(const std::shared_ptr<IAccessBlockManager> &newAccessBlocks);
+  const std::shared_ptr<IBlockPrediction> &blockPrediction() const;
+  void setBlockPrediction(
+      const std::shared_ptr<IBlockPrediction> &newBlockPrediction);
 };

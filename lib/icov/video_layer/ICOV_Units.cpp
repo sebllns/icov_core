@@ -4,13 +4,13 @@
 **   Supervisors: Aline ROUMY, Thomas MAUGEY
 **   Inria research institute
 **************************************************************************/
-#include "myunits.h"
+#include "ICOV_Units.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 
-MyTransformUnit::MyTransformUnit(const UnitArea &unit,
-                                 bool createTransformBuffer,
-                                 bool createQuantizedTransformBuffer,
-                                 bool createInversetQuantizedTransformBuffer)
+icov::video::TransformUnit::TransformUnit(
+    const UnitArea &unit, bool createTransformBuffer,
+    bool createQuantizedTransformBuffer,
+    bool createInversetQuantizedTransformBuffer)
     : UnitArea(unit), next(nullptr), previous(nullptr) {
   if (createTransformBuffer)
     _Tcoeffs.create(*this);
@@ -22,11 +22,10 @@ MyTransformUnit::MyTransformUnit(const UnitArea &unit,
     _inverseQuantizedTcoeffs.create(*this);
 }
 
-MyTransformUnit::MyTransformUnit(const ChromaFormat chromaFormat,
-                                 const Area &lumaArea,
-                                 bool createTransformBuffer,
-                                 bool createQuantizedTransformBuffer,
-                                 bool createInversetQuantizedTransformBuffer)
+icov::video::TransformUnit::TransformUnit(
+    const ChromaFormat chromaFormat, const Area &lumaArea,
+    bool createTransformBuffer, bool createQuantizedTransformBuffer,
+    bool createInversetQuantizedTransformBuffer)
     : UnitArea(chromaFormat, lumaArea), next(nullptr), previous(nullptr) {
   if (createTransformBuffer)
     _Tcoeffs.create(*this);
@@ -38,13 +37,13 @@ MyTransformUnit::MyTransformUnit(const ChromaFormat chromaFormat,
     _inverseQuantizedTcoeffs.create(*this);
 }
 
-MyTransformUnit::~MyTransformUnit() {
+icov::video::TransformUnit::~TransformUnit() {
   _Tcoeffs.release();
   _quantizedTcoeffs.release();
   _inverseQuantizedTcoeffs.release();
 }
 
-InteractiveCodingUnit::InteractiveCodingUnit(
+icov::video::InteractiveCodingUnit::InteractiveCodingUnit(
     const UnitArea &unit, bool createTransformBuffer,
     bool createQuantizedTransformBuffer,
     bool createInverseQuantizedTransformBuffer)
@@ -54,7 +53,7 @@ InteractiveCodingUnit::InteractiveCodingUnit(
   _needInverseQuantizedTransformBuffer = createInverseQuantizedTransformBuffer;
 }
 
-InteractiveCodingUnit::InteractiveCodingUnit(
+icov::video::InteractiveCodingUnit::InteractiveCodingUnit(
     const ChromaFormat chromaFormat, const Area &lumaArea,
     bool createTransformBuffer, bool createQuantizedTransformBuffer,
     bool createInverseQuantizedTransformBuffer)
@@ -64,32 +63,33 @@ InteractiveCodingUnit::InteractiveCodingUnit(
   _needInverseQuantizedTransformBuffer = createInverseQuantizedTransformBuffer;
 }
 
-MyTransformUnit *InteractiveCodingUnit::addTU(const UnitArea &unit) {
+icov::video::TransformUnit *
+icov::video::InteractiveCodingUnit::addTU(const UnitArea &unit) {
   if (!this->contains(unit)) // if the Interactive Coding Unit doesn't contain
     // the unit areas
     return nullptr;
 
-  std::map<MyIntraPrediction::REFERENCE_SAMPLE_SIDE,
-           std::vector<MyTransformUnit>>::iterator it;
+  std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
+           std::vector<TransformUnit>>::iterator it;
   if (TUs.empty()) {
     UInt nBlocks_x = (this->Y().width + unit.Y().width - 1) / unit.Y().width;
     UInt nBlocks_y = (this->Y().height + unit.Y().height - 1) / unit.Y().height;
     TUs.reserve(nBlocks_x *
                 nBlocks_y); // just to reserve TUs, even if it is not correct,
                             // in push_back it will be extended
-    TUs.push_back(MyTransformUnit(unit, needTransformBuffer(),
-                                  needQuantizedTransformBuffer(),
-                                  needInverseQuantizedTransformBuffer()));
+    TUs.push_back(TransformUnit(unit, needTransformBuffer(),
+                                needQuantizedTransformBuffer(),
+                                needInverseQuantizedTransformBuffer()));
     return &TUs[0];
   }
 
-  TUs.push_back(MyTransformUnit(unit, needTransformBuffer(),
-                                needQuantizedTransformBuffer(),
-                                needInverseQuantizedTransformBuffer()));
+  TUs.push_back(TransformUnit(unit, needTransformBuffer(),
+                              needQuantizedTransformBuffer(),
+                              needInverseQuantizedTransformBuffer()));
   unsigned int lastIndex = TUs.size() - 1;
 
-  MyTransformUnit &previousTU = TUs[lastIndex - 1];
-  MyTransformUnit &currTU = TUs[lastIndex];
+  TransformUnit &previousTU = TUs[lastIndex - 1];
+  TransformUnit &currTU = TUs[lastIndex];
 
   currTU.previous = &previousTU;
   previousTU.next = &currTU;
@@ -99,14 +99,14 @@ MyTransformUnit *InteractiveCodingUnit::addTU(const UnitArea &unit) {
 
     if(!firstTU)
     {
-        firstTU = std::make_shared<MyTransformUnit>(unit);
+        firstTU = std::make_shared<TransformUnit>(unit);
         lastTU = firstTU;
 //        _previousTU = firstTU;
         return firstTU;
     }
 
-    std::shared_ptr<MyTransformUnit> tu(new MyTransformUnit(unit));
-//    MyTransformUnit* tu = new MyTransformUnit(unit);
+    std::shared_ptr<TransformUnit> tu(new TransformUnit(unit));
+//    TransformUnit* tu = new TransformUnit(unit);
 
     tu->previous = lastTU.get();
     lastTU->next = tu.get();
@@ -117,12 +117,13 @@ MyTransformUnit *InteractiveCodingUnit::addTU(const UnitArea &unit) {
     */
 }
 
-MyTransformUnit *InteractiveCodingUnit::getTU(const UnitArea &unit) {
+icov::video::TransformUnit *
+icov::video::InteractiveCodingUnit::getTU(const UnitArea &unit) {
   //    if(!firstTU)
   //        return nullptr;
 
-  //    for(std::shared_ptr<MyTransformUnit> tu = firstTU; tu;
-  //    tu=std::shared_ptr<MyTransformUnit> (tu->next))
+  //    for(std::shared_ptr<TransformUnit> tu = firstTU; tu;
+  //    tu=std::shared_ptr<TransformUnit> (tu->next))
   //    {
   //        if(*tu==unit)
   //            return tu;
@@ -137,14 +138,14 @@ MyTransformUnit *InteractiveCodingUnit::getTU(const UnitArea &unit) {
   return nullptr;
 }
 
-int SideInformationUnit::estimateSIRequiredBitsToCodeIntraMode(
+int icov::video::SideInformationUnit::estimateSIRequiredBitsToCodeIntraMode(
     const ComponentID compID, UInt dirMode,
-    const MyIntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide) const {
-  if (refSampSide ==
-      MyIntraPrediction::REFERENCE_SAMPLE_SIDE::
-          NO_SIDE) // When you have no_SIDE this means you are coding with no
-                   // prediction (like access block), so you do not need to
-                   // signal the intra mode.
+    const icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide)
+    const {
+  if (refSampSide == icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::
+                         NONE) // When you have no_SIDE this means you are
+                               // coding with no prediction (like access block),
+                               // so you do not need to signal the intra mode.
     return 0;
 
   ChannelType chType = toChannelType(compID);

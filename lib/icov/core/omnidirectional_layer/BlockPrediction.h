@@ -48,14 +48,16 @@
 #pragma once
 
 #include "Block.h"
-#include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "helpers.h"
+#include "omnidirectional_layer/interface/IBlockOrdering.h"
 
-class IBlockPrediction
-{
+// namespace icov {
+
+class IBlockPrediction {
 public:
-    virtual ~IBlockPrediction() = default;
-    virtual uint16_t getPrediction(const Block &b, const IBlockOrdering &ordering) const = 0;
+  virtual ~IBlockPrediction() = default;
+  virtual uint16_t getPrediction(const Block &b,
+                                 const IBlockOrdering &ordering) const = 0;
 };
 
 /** @class BlockPrediction
@@ -63,73 +65,60 @@ public:
  *
  *  A BlockPrediction
  */
-class BlockPrediction : public IBlockPrediction
-{
-public: 
-    enum predType
-    {
-        NONE = 0,
-        /// @todo put -1 on block side
-        RIGHT = (1 << Block::RIGHT),
-        LEFT = (1 << Block::LEFT),
-        TOP = (1 << Block::UP),
-        BOTTOM = (1 << Block::DOWN),
-        TOP_RIGHT = (1 << Block::UP) | (1 << Block::RIGHT),
-        TOP_LEFT = (1 << Block::UP) | (1 << Block::LEFT),
-        BOTTOM_RIGHT = (1 << Block::DOWN) | (1 << Block::RIGHT),
-        BOTTOM_LEFT = (1 << Block::DOWN) | (1 << Block::LEFT),
-    };
+class BlockPrediction : public IBlockPrediction {
+public:
+  enum predType {
+    UNKNOWN = -1,
+    NONE = 0,
+    RIGHT = (1 << (Block::RIGHT - 1)),
+    LEFT = (1 << (Block::LEFT - 1)),
+    TOP = (1 << (Block::UP - 1)),
+    BOTTOM = (1 << (Block::DOWN - 1)),
+    TOP_RIGHT = TOP | RIGHT,
+    TOP_LEFT = TOP | LEFT,
+    BOTTOM_RIGHT = BOTTOM | RIGHT,
+    BOTTOM_LEFT = BOTTOM | LEFT,
+    INTER = BOTTOM_LEFT + 10,
+  };
 
-    BlockPrediction() = default;
-    ~BlockPrediction() = default;
-    uint16_t getPrediction(const Block &b, const IBlockOrdering &ordering) const override;
+  static const uint8_t SI_Count = 8;
+  static const uint8_t PredictionCount = SI_Count + 2;
 
+  BlockPrediction() = default;
+  ~BlockPrediction() = default;
+  uint16_t getPrediction(const Block &b,
+                         const IBlockOrdering &ordering) const override;
 };
 
-inline uint16_t BlockPrediction::getPrediction(const Block &b, const IBlockOrdering &ordering) const
-{
-    predType pred = NONE;
+inline uint16_t
+BlockPrediction::getPrediction(const Block &b,
+                               const IBlockOrdering &ordering) const {
+  predType pred = NONE;
 
-    if(ordering.isBlockProcessed(b.getId(Block::UP)))
-    {
-        if(ordering.isBlockProcessed(b.getId(Block::LEFT)))
-        {
-            pred = TOP_LEFT;
-        }
-        else if(ordering.isBlockProcessed(b.getId(Block::RIGHT)))
-        {
-            pred = TOP_RIGHT;
-        }
-        else
-        {
-            pred = TOP;
-        }
+  if (ordering.isBlockProcessed(b.getId(Block::UP))) {
+    if (ordering.isBlockProcessed(b.getId(Block::LEFT))) {
+      pred = TOP_LEFT;
+    } else if (ordering.isBlockProcessed(b.getId(Block::RIGHT))) {
+      pred = TOP_RIGHT;
+    } else {
+      pred = TOP;
     }
-    else if(ordering.isBlockProcessed(b.getId(Block::DOWN)))
-    {
-        if(ordering.isBlockProcessed(b.getId(Block::LEFT)))
-        {
-            pred = BOTTOM_LEFT;
-        }
-        else if(ordering.isBlockProcessed(b.getId(Block::RIGHT)))
-        {
-            pred = BOTTOM_RIGHT;
-        }
-        else
-        {
-            pred = BOTTOM;
-        }
+  } else if (ordering.isBlockProcessed(b.getId(Block::DOWN))) {
+    if (ordering.isBlockProcessed(b.getId(Block::LEFT))) {
+      pred = BOTTOM_LEFT;
+    } else if (ordering.isBlockProcessed(b.getId(Block::RIGHT))) {
+      pred = BOTTOM_RIGHT;
+    } else {
+      pred = BOTTOM;
     }
-    else if(ordering.isBlockProcessed(b.getId(Block::LEFT)))
-    {
-        pred = LEFT;
-    }
-    else if(ordering.isBlockProcessed(b.getId(Block::RIGHT)))
-    {
-        pred = RIGHT;
-    }
+  } else if (ordering.isBlockProcessed(b.getId(Block::LEFT))) {
+    pred = LEFT;
+  } else if (ordering.isBlockProcessed(b.getId(Block::RIGHT))) {
+    pred = RIGHT;
+  }
 
-    icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
+  icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
 
-    return static_cast<uint16_t>(pred);
+  return static_cast<uint16_t>(pred);
 }
+//} // namespace icov

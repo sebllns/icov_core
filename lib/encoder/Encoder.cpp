@@ -3,18 +3,22 @@
 #include "enc_helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "rgb888_ycrcb.h"
-#include "video_layer/encodingstructure.h"
-#include "video_layer/mypicture.h"
+#include "video_layer/ICOV_Picture.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
+
 #include <boost/filesystem.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
 namespace fs = boost::filesystem;
+using namespace icov;
+using SI_SIDE = BlockPrediction::predType;
 
-Encoder::Encoder() {}
+Encoder::Encoder()
+    : m_cvMat_intraPred(BlockPrediction::SI_Count), m_icuSize_luma(32, 32),
+      m_tuSize_luma(32, 32) {}
 
 Encoder::~Encoder() { std::cout << "destroy encoder" << std::endl; }
 
@@ -35,6 +39,114 @@ void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
   }
 }
 
+void callBackFunc(int event, int x, int y, int flags, void *userdata) {
+  static_cast<Encoder *>(userdata)->onMouse(event, x, y, flags);
+}
+
+void Encoder::onMouse(int event, int x, int y, int flags) {
+  if (event == cv::EVENT_LBUTTONDOWN) {
+    int bx = x / m_icuSize_luma.width;
+    int by = y / m_icuSize_luma.height;
+    if (bx < (int)m_enc_struc.n_icusPerRow &&
+        by < (int)m_enc_struc.n_icusPerCol)
+      onSelectBlock(bx * m_icuSize_luma.width, by * m_icuSize_luma.height);
+  }
+}
+
+void Encoder::onSelectBlock(int x, int y) {
+  cv::Point bp = cv::Point(x, y);
+
+  if (bp != m_currentBlockPosition) {
+
+    m_cvMat_blockSI(cv::Rect(m_icuSize_luma.width, m_icuSize_luma.height,
+                             m_icuSize_luma.width, m_icuSize_luma.height))
+        .copyTo(m_cvMat_reconstructedEquiImage(
+            cv::Rect(m_currentBlockPosition, m_icuSize_luma)));
+
+    int x_block = x, y_block = y;
+
+    auto &es = this->m_enc_struc;
+    uint icuIndex = es.get_icuIndex(Position(x_block / m_icuSize_luma.width,
+                                             y_block / m_icuSize_luma.height));
+    auto &icu_enc = es.getICU(icuIndex);
+    auto &si_map = icu_enc.get_intraSIsMap();
+
+    for (int bi = -1; bi < 2; bi++) {
+      int ybi = bi * m_icuSize_luma.height;
+
+      for (int bj = -1; bj < 2; bj++) {
+        int xbj = bj * m_icuSize_luma.width;
+
+        cv::Mat src;
+        SI_SIDE side = SI_SIDE::UNKNOWN;
+        if (bi < 0 && bj < 0) {
+          side = SI_SIDE::TOP_LEFT;
+        } else if (bi < 0 && bj == 0) {
+          side = SI_SIDE::TOP;
+        } else if (bi < 0 && bj > 0) {
+          side = SI_SIDE::TOP_RIGHT;
+        } else if (bi == 0 && bj < 0) {
+          side = SI_SIDE::LEFT;
+        } else if (bi == 0 && bj > 0) {
+          side = SI_SIDE::RIGHT;
+        } else if (bi > 0 && bj < 0) {
+          side = SI_SIDE::BOTTOM_LEFT;
+        } else if (bi > 0 && bj == 0) {
+          side = SI_SIDE::BOTTOM;
+        } else if (bi > 0 && bj > 0) {
+          side = SI_SIDE::BOTTOM_RIGHT;
+        } else if (bi == 0 && bj == 0) {
+          side = SI_SIDE::NONE;
+        } else {
+          side = SI_SIDE::UNKNOWN;
+        }
+
+        ICOV_ASSERT_MSG(side != SI_SIDE::UNKNOWN, "SI side is undefined");
+
+        if (side == SI_SIDE::NONE) {
+          src = m_cvMat_reconstructedEquiImage(
+              cv::Rect(xbj + x_block, ybi + y_block, m_icuSize_luma.width,
+                       m_icuSize_luma.height));
+        } else {
+
+          double mse_frame = -1.0, psnr = -1.0;
+          UInt maxval = 0;
+          const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
+
+          //          psnr = VTM_Utility::calculatePSNR(
+          //              icu_enc.get_sourceX().TUs[0].getQuantizedTcoeffs(),
+          //              si_map.at(side).TUs[0].getQuantizedTcoeffs(),
+          //              internalBitDepth, &mse_frame, &maxval);
+
+          psnr = VTM_Utility::calculatePSNR(
+              icu_enc.get_sourceX().TUs[0].getQuantizedTcoeffs(),
+              si_map.at(side).TUs[0].getQuantizedTcoeffs(), internalBitDepth,
+              &mse_frame, &maxval);
+
+          std::cout << "side(i,j) " << bi << ", " << bj << " psnr=" << psnr
+                    << " mse_frame=" << mse_frame << " maxval=" << maxval
+                    << std::endl;
+
+          VTM_OPENCV_Utility::toBGRMat(
+              si_map.at(side).TUs[0].getQuantizedTcoeffs(), src);
+        }
+
+        src.copyTo(m_cvMat_blockSI(
+            cv::Rect(xbj + m_icuSize_luma.width, ybi + m_icuSize_luma.height,
+                     m_icuSize_luma.width, m_icuSize_luma.height)));
+      }
+    }
+
+    m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_icuSize_luma))
+        .setTo(cv::Scalar(0, 255, 0));
+
+    cv::imshow("viewport RECONSTRUCTED", m_cvMat_reconstructedEquiImage);
+    cv::imshow("block view", m_cvMat_blockSI);
+
+    m_currentBlockPosition = bp;
+  }
+}
+
 void Encoder::openFile(const std::string &filename) {
   std::cout << "open file to encode " << filename << std::endl;
   fs::path filepath = fs::complete(fs::path(filename));
@@ -46,17 +158,24 @@ void Encoder::openFile(const std::string &filename) {
 
 void Encoder::dispose() {}
 
+///**************************************************************************************
+///
+/// \brief Encoder::encode
+/// \param output
+/// \param picture
+/// \param access_blocks
+///
 void Encoder::encode(std::ostream &output, const IPicture &picture,
                      const IAccessBlockManager &access_blocks) {
   ICOV_ASSERT_MSG(m_img_src.total() > 0, "Cannot encode empty image");
 
   double mse_frame = -1.0, psnr = -1.0;
-  ;
+
   UInt maxval = 0;
 
-  // constants
-  const Size icuSize_luma = Size(32, 32);
-  const Size tuSize_luma = Size(32, 32);
+  // CONSTANTS
+  const Size icuSize_luma = Size(m_icuSize_luma.width, m_icuSize_luma.height);
+  const Size tuSize_luma = Size(m_tuSize_luma.width, m_tuSize_luma.height);
   //    const Size icuSize_luma=Size(256, 256);
   //    const Size tuSize_luma=Size(256, 256);
   const Size tuSizeAfterRegrouping_luma = Size(1, 1);
@@ -67,48 +186,18 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   // margins per left and right side and this will be divided by 2 for
   // chroma.
 
-  //        qp= 17
-  //        1024=1024
-  //        512=512
-  //        PSNR=46.1
-
-  //        qp= 22
-  //        1024=1024
-  //        512=512
-  //        PSNR=41.5125
-
-  //        qp= 27
-  //        1024=1024
-  //        512=512
-  //        PSNR=37.2169
-
-  //        qp= 32
-  //        1024=1024
-  //        512=512
-  //        PSNR=33.0755
-
-  //        qp= 37
-  //        1024=1024
-  //        512=512
-  //        PSNR=29.5722
-
-  //        qp= 42
-  //        1024=1024
-  //        512=512
-  //        PSNR=26.8647
-
   const std::vector<int> qp_set = {22, 27, 32, 37, 42};
-  const int qp = 42;
+  const int qp = 32;
   std::cout << "qp= " << qp << std::endl;
 
   const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
-  // internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates
-  // at (input/output files will be converted). (default: MSBExtendedBitDepth).
-  // If different to MSBExtendedBitDepth, source data will be converted
-  // internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   // Bit-depth the codec
+  // internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec
   // operates at (input/output files will be converted). (default:
-  // MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will
-  // be converted
+  // MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data
+  // will be converted internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   //
+  // Bit-depth the codec operates at (input/output files will be converted).
+  // (default: MSBExtendedBitDepth). If different to MSBExtendedBitDepth,
+  // source data will be converted
 
   const ChromaFormat chromaFormatIDC = CHROMA_420;
 
@@ -118,7 +207,7 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
 
   const UInt numCh = getNumberValidComponents(chromaFormatIDC);
 
-  // end constants
+  // END CONSTANTS
 
   // resize
   cv::Size size_before = m_img_src.size();
@@ -137,76 +226,111 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   const int sourceHeight = m_img_src.rows;
   // end resize
 
+  // trick: extend for 360
   UnitArea extendedFrameArea(
       chromaFormatIDC,
       Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight));
   UnitArea mainFrameArea(chromaFormatIDC,
                          Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
-  PelStorage picTemp;
-  picTemp.create(extendedFrameArea);
+  // Create picture
+  icov::video::Picture encodingPicture;
+  encodingPicture.create(PIC_ORIGINAL, extendedFrameArea);
+  encodingPicture.create(PIC_RECONSTRUCTION, extendedFrameArea);
+  encodingPicture.create(PIC_PREDICTION, extendedFrameArea);
 
-  MyPicture encoderPicture;
-  encoderPicture.create(PIC_ORIGINAL, extendedFrameArea);
-  encoderPicture.create(PIC_RECONSTRUCTION, extendedFrameArea);
-  encoderPicture.create(PIC_PREDICTION, extendedFrameArea);
+  PelUnitBuf mainFrameOrig = encodingPicture.getOrigBuf(mainFrameArea);
 
-  PelUnitBuf mainFrameOrig = encoderPicture.getOrigBuf(mainFrameArea);
-  EncodingStructure enc_struc;
+  //  std::cout << mainFrameOrig.get(COMPONENT_Y).width << "=" <<
+  //  m_img_src.cols
+  //            << std::endl;
+  //  std::cout << mainFrameOrig.get(COMPONENT_Y).height << "=" <<
+  //  m_img_src.rows
+  //            << std::endl;
 
-  std::cout << mainFrameOrig.get(COMPONENT_Y).width << "=" << m_img_src.cols
-            << std::endl;
-  std::cout << mainFrameOrig.get(COMPONENT_Y).height << "=" << m_img_src.rows
-            << std::endl;
   cvMatToYUV(m_img_src, mainFrameOrig);
-  enc_struc.create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-      chromaFormatIDC, sourceWidth, sourceHeight, margin_x_360luma,
-      icuSize_luma.width, icuSize_luma.height, tuSize_luma.width,
-      tuSize_luma.height);
+  m_enc_struc
+      .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
+          chromaFormatIDC, sourceWidth, sourceHeight, margin_x_360luma,
+          icuSize_luma.width, icuSize_luma.height, tuSize_luma.width,
+          tuSize_luma.height);
 
   VTM_Utility::quantizeFrame(
-      qp, encoderPicture.getOrigBuf(), encoderPicture.getRecoBuf(), enc_struc,
-      internalBitDepth,
+      qp, encodingPicture.getOrigBuf(), encodingPicture.getRecoBuf(),
+      m_enc_struc, internalBitDepth,
       maxLog2TrDynamicRange); // give the whole extended image ( .getOrigBuf()
-                              // and
+  // and
   // .getRecoBuf() ) to the function because vector
   // icues_enc is based on extended frames
 
-  psnr = VTM_Utility::calculatePSNR(encoderPicture.getOrigBuf(),
-                                    encoderPicture.getRecoBuf(),
+  psnr = VTM_Utility::calculatePSNR(encodingPicture.getOrigBuf(),
+                                    encodingPicture.getRecoBuf(),
                                     internalBitDepth, &mse_frame, &maxval);
 
   std::cout << "PSNR=" << psnr << std::endl;
 
-  cv::Mat cvMat_reconstructedEquiImage;
-  VTM_OPENCV_Utility::toBGRMat(encoderPicture.getRecoBuf(mainFrameArea),
-                               cvMat_reconstructedEquiImage);
+  // draw lines on reco image
+  VTM_OPENCV_Utility::toBGRMat(encodingPicture.getRecoBuf(mainFrameArea),
+                               m_cvMat_reconstructedEquiImage);
+  for (uint bi = 0; bi <= m_enc_struc.n_icusPerCol; bi++) {
+    cv::line(m_cvMat_reconstructedEquiImage,
+             cv::Point(0, bi * icuSize_luma.height),
+             cv::Point(m_cvMat_reconstructedEquiImage.cols,
+                       bi * icuSize_luma.height),
+             cv::Scalar(0, 255, 0), 1);
+  }
+  for (uint bj = 0; bj <= m_enc_struc.n_icusPerRow; bj++) {
+    cv::line(
+        m_cvMat_reconstructedEquiImage, cv::Point(bj * icuSize_luma.width, 0),
+        cv::Point(bj * icuSize_luma.width, m_cvMat_reconstructedEquiImage.rows),
+        cv::Scalar(0, 255, 0), 1);
+  }
+  // end draw lines
 
   cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
   cv::imshow("viewport original", m_img_src);
 
   cv::namedWindow("viewport RECONSTRUCTED", cv::WINDOW_NORMAL);
-  cv::imshow("viewport RECONSTRUCTED", cvMat_reconstructedEquiImage);
+  cv::imshow("viewport RECONSTRUCTED", m_cvMat_reconstructedEquiImage);
+  cv::setMouseCallback("viewport RECONSTRUCTED", callBackFunc, this);
 
-  PelUnitBuf mainFrameReco = encoderPicture.getRecoBuf(mainFrameArea);
+  m_cvMat_blockSI.create(3 * icuSize_luma.height, 3 * icuSize_luma.width,
+                         m_cvMat_reconstructedEquiImage.type());
+
+  m_cvMat_blockSI.setTo(cv::Scalar(255, 0, 255));
+  m_cvMat_blockSI(cv::Rect(icuSize_luma.width, icuSize_luma.height,
+                           icuSize_luma.width, icuSize_luma.height))
+      .setTo(cv::Scalar(255, 0, 0));
+
+  PelUnitBuf mainFrameReco = encodingPicture.getRecoBuf(mainFrameArea);
   // Intra prediction setup
-  MyIntraPrediction intraPred;
+  icov::video::IntraPrediction intraPred;
   intraPred.init(chromaFormatIDC);
 
   for (UInt ch = 0; ch < numCh; ch++) {
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360(mainFrameReco, compID);
 
-    enc_struc.applyPredictionBasedOnEntropy(
-        encoderPicture.getRecoBuf(), encoderPicture.getPredBuf(), intraPred,
+    m_enc_struc.applyPredictionBasedOnEntropy(
+        encodingPicture.getRecoBuf(), encodingPicture.getPredBuf(), intraPred,
         compID, internalBitDepth, tuSizeAfterRegrouping_luma.width,
         tuSizeAfterRegrouping_luma.height, false, qp, maxLog2TrDynamicRange);
 
-    //    storageInBit += MyUtility::computeRatesAndCalculateStorageInBit(
-    //        enc_struc, compID, tuSizeAfterRegrouping_luma, &tempIntraModeBits,
-    //        maxLog2TrDynamicRange + 1);
+    //    storageInBit += Utility::computeRatesAndCalculateStorageInBit(
+    //        enc_struc, compID, tuSizeAfterRegrouping_luma,
+    //        &tempIntraModeBits, maxLog2TrDynamicRange + 1);
     //    totalRequiredBitsToCodeIntraModes += tempIntraModeBits;
   }
+
+  cv::namedWindow("block view", cv::WINDOW_NORMAL);
+  onSelectBlock(m_cvMat_reconstructedEquiImage.cols / 2,
+                m_cvMat_reconstructedEquiImage.rows / 2);
+
+  cv::Mat cvMat_intrapred;
+  VTM_OPENCV_Utility::toBGRMat(encodingPicture.getPredBuf(mainFrameArea),
+                               cvMat_intrapred);
+  cv::namedWindow("cvMat_intrapred", cv::WINDOW_NORMAL);
+  cv::imshow("cvMat_intrapred", cvMat_intrapred);
 
   cv::waitKey(0);
   //     //encode the blocks
