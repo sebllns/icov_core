@@ -5,6 +5,7 @@
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
 #include "IntraPrediction.h"
+#include "vtm_opencv_utility.h"
 #include "vtm_utility.h"
 
 icov::video::EncodingStructure::EncodingStructure() { deallocate(); }
@@ -1269,7 +1270,8 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     icov::video::IntraPrediction &intraPred, const ComponentID compID,
     const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
     const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
-    const int qp, int maxLog2TrDynamicRange) {
+    const int qp, int maxLog2TrDynamicRange,
+    std::map<BlockPrediction::predType, cv::Mat> *oSiResult) {
   ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
   UInt tuWidth_component =
       tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC);
@@ -1430,6 +1432,12 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
                     curr_tu_si.getTransformCoeffs(compID), uiAbsSum, cQP,
                     SliceType::I_SLICE, bitDepths[chType],
                     maxLog2TrDynamicRange);
+      }
+
+      if (oSiResult != nullptr) {
+        cv::Mat predMat;
+        VTM_OPENCV_Utility::toBGRMat(predictionUnitBuf, predMat);
+        oSiResult->insert_or_assign(refSampSide, predMat);
       }
     }
   }

@@ -49,16 +49,18 @@
 
 #pragma once
 
-#include <opencv2/opencv.hpp>
-
+#include "BlockPrediction.h"
 #include "omnidirectional_layer/interface/IEncoder.h"
 #include "video_layer/Encodingstructure.h"
+
+#include <map>
+#include <opencv2/opencv.hpp>
 
 class Encoder : public IEncoder {
 protected:
   cv::Mat m_img_src;
   cv::Mat m_cvMat_reconstructedEquiImage;
-  std::vector<cv::Mat> m_cvMat_intraPred;
+  std::map<BlockPrediction::predType, cv::Mat> m_cvMat_intraPred;
   cv::Mat m_cvMat_blockSI;
   cv::Size m_icuSize_luma;
   cv::Size m_tuSize_luma;
