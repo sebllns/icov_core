@@ -314,15 +314,15 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   std::map<BlockPrediction::predType, cv::Mat> siMat;
 
   for (UInt ch = 0; ch < numCh; ch++) {
+
+    std::cout << "channel " << ch << std::endl;
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
-        encodingPicture.get(PIC_RECONSTRUCTION),
-        encodingPicture.get(PIC_PREDICTION), intraPred, compID,
-        internalBitDepth, tuSizeAfterRegrouping_luma.width,
-        tuSizeAfterRegrouping_luma.height, false, qp, maxLog2TrDynamicRange,
-        &siMat);
+        encodingPicture, intraPred, compID, internalBitDepth,
+        tuSizeAfterRegrouping_luma.width, tuSizeAfterRegrouping_luma.height,
+        false, qp, maxLog2TrDynamicRange, &siMat);
 
     //    storageInBit += Utility::computeRatesAndCalculateStorageInBit(
     //        enc_struc, compID, tuSizeAfterRegrouping_luma,
@@ -338,11 +338,11 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   //  VTM_OPENCV_Utility::toBGRMat(encodingPicture.getPredBuf(mainFrameArea),
   //                               cvMat_intrapred);
 
-  for (const auto &si : siMat) {
-    cv::namedWindow("cvMat_intrapred_" + std::to_string(si.first),
-                    cv::WINDOW_NORMAL);
-    cv::imshow("cvMat_intrapred_" + std::to_string(si.first), si.second);
-  }
+  //  for (const auto &si : siMat) {
+  //    cv::namedWindow("cvMat_intrapred_" + std::to_string(si.first),
+  //                    cv::WINDOW_NORMAL);
+  //    cv::imshow("cvMat_intrapred_" + std::to_string(si.first), si.second);
+  //  }
 
   cv::waitKey(0);
   //     //encode the blocks

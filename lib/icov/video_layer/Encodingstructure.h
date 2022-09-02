@@ -49,6 +49,7 @@
 #pragma once
 #include <opencv2/core.hpp>
 
+#include "ICOV_Picture.h"
 #include "IcuEncoder.h"
 #include "IntraPrediction.h"
 #include "helpers.h"
@@ -134,11 +135,11 @@ struct EncodingStructure {
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
   void applyPredictionBasedOnEntropy(
-      const PelUnitBuf &reconstructionUnitBuffer, PelUnitBuf &predictionUnitBuf,
-      icov::video::IntraPrediction &intraPred, const ComponentID compID,
-      const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
-      const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
-      const int qp, int maxLog2TrDynamicRange,
+      icov::video::Picture pic, icov::video::IntraPrediction &intraPred,
+      const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+      const UInt tuWidth_luma, const UInt tuHeight_luma,
+      bool encodeFrequencyTableInBitStream, const int qp,
+      int maxLog2TrDynamicRange,
       std::map<BlockPrediction::predType, cv::Mat> *oSiResult = nullptr);
 
 protected:

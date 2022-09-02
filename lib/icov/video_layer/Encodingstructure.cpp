@@ -1266,12 +1266,15 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
 
 /*******************************************************************************/
 void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
-    const PelUnitBuf &reconstructionUnitBuffer, PelUnitBuf &predictionUnitBuf,
-    icov::video::IntraPrediction &intraPred, const ComponentID compID,
-    const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
-    const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
-    const int qp, int maxLog2TrDynamicRange,
+    icov::video::Picture pic, icov::video::IntraPrediction &intraPred,
+    const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+    const UInt tuWidth_luma, const UInt tuHeight_luma,
+    bool encodeFrequencyTableInBitStream, const int qp,
+    int maxLog2TrDynamicRange,
     std::map<BlockPrediction::predType, cv::Mat> *oSiResult) {
+
+  const PelUnitBuf reconstructionUnitBuffer = pic.get(PIC_RECONSTRUCTION);
+
   ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
   UInt tuWidth_component =
       tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC);
@@ -1304,13 +1307,12 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
 
   for (UInt i = 0; i < vec_icus.size(); i++) {
+    std::cout << "-- block is " << i << std::endl;
     IcuEncoder &icu_enc = vec_icus[i];
     std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
              SideInformationUnit> &currICUintraMap = icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);
-    PelBuf roiComp_predictionFrameBuff =
-        VTM_Utility::getAreaBuf(predictionUnitBuf, compArea);
 
     // Iterate through all elements in std::map
     for (auto it = currICUintraMap.begin(); it != currICUintraMap.end();
@@ -1319,6 +1321,13 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
       SideInformationUnit &si = it->second;
       const icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide =
           it->first;
+
+      uint picId = PIC_PREDICTION + refSampSide;
+      std::cout << "---- pred pic is " << picId << std::endl;
+      const PelUnitBuf predictionUnitBuf = pic.get(picId);
+
+      PelBuf roiComp_predictionFrameBuff =
+          VTM_Utility::getAreaBuf(predictionUnitBuf, compArea);
 
       std::vector<TransformUnit> &si_TUs = si.TUs;
       unsigned int n_tus = si_TUs.size();
@@ -1434,11 +1443,11 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
                     maxLog2TrDynamicRange);
       }
 
-      if (oSiResult != nullptr) {
-        cv::Mat predMat;
-        VTM_OPENCV_Utility::toBGRMat(predictionUnitBuf, predMat);
-        oSiResult->insert_or_assign(refSampSide, predMat);
-      }
+      //      if (oSiResult != nullptr) {
+      //        cv::Mat predMat;
+      //        VTM_OPENCV_Utility::toBGRMat(predictionUnitBuf, predMat);
+      //        oSiResult->insert_or_assign(refSampSide, predMat);
+      //      }
     }
   }
 }
