@@ -79,16 +79,40 @@ public:
     BOTTOM_RIGHT = BOTTOM | RIGHT,
     BOTTOM_LEFT = BOTTOM | LEFT,
     INTER = BOTTOM_LEFT + 10,
+    ERROR
   };
 
   static const uint8_t SI_Count = 8;
   static const uint8_t PredictionCount = SI_Count + 2;
+  static predType toPredType(uint num);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
   uint16_t getPrediction(const Block &b,
                          const IBlockOrdering &ordering) const override;
 };
+
+inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
+  predType res = static_cast<predType>(num);
+
+  switch (res) {
+  case BlockPrediction::UNKNOWN:
+  case BlockPrediction::NONE:
+  case BlockPrediction::RIGHT:
+  case BlockPrediction::LEFT:
+  case BlockPrediction::TOP:
+  case BlockPrediction::BOTTOM:
+  case BlockPrediction::TOP_RIGHT:
+  case BlockPrediction::TOP_LEFT:
+  case BlockPrediction::BOTTOM_RIGHT:
+  case BlockPrediction::BOTTOM_LEFT:
+  case BlockPrediction::INTER:
+  case BlockPrediction::ERROR:
+    return res;
+  default:
+    return ERROR;
+  }
+}
 
 inline uint16_t
 BlockPrediction::getPrediction(const Block &b,

@@ -237,7 +237,9 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   encodingPicture.create(PIC_RECONSTRUCTION, extendedFrameArea);
 
   for (uint pk = BlockPrediction::NONE; pk < BlockPrediction::INTER; pk++) {
-    encodingPicture.create(PIC_PREDICTION + pk, extendedFrameArea);
+    if (BlockPrediction::toPredType(pk) != BlockPrediction::ERROR) {
+      encodingPicture.create(PIC_PREDICTION + pk, extendedFrameArea);
+    }
   }
 
   PelUnitBuf mainFrameOrig =
@@ -311,18 +313,20 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   icov::video::IntraPrediction intraPred;
   intraPred.init(chromaFormatIDC);
 
-  std::map<BlockPrediction::predType, cv::Mat> siMat;
+  for (UInt ch = 0; ch < numCh; ch++) {
+    std::cout << "channel " << ch << std::endl;
+    copyBordersFor360(mainFrameReco, ComponentID(ch));
+  }
 
   for (UInt ch = 0; ch < numCh; ch++) {
 
     std::cout << "channel " << ch << std::endl;
     const ComponentID compID = ComponentID(ch);
-    copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
         encodingPicture, intraPred, compID, internalBitDepth,
         tuSizeAfterRegrouping_luma.width, tuSizeAfterRegrouping_luma.height,
-        false, qp, maxLog2TrDynamicRange, &siMat);
+        false, qp, maxLog2TrDynamicRange);
 
     //    storageInBit += Utility::computeRatesAndCalculateStorageInBit(
     //        enc_struc, compID, tuSizeAfterRegrouping_luma,

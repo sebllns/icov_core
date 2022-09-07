@@ -116,11 +116,6 @@ public:
                      const QpParam &cQP, const SliceType sliceType,
                      const Int channelBitDepth,
                      const int maxLog2TrDynamicRange = 15);
-  virtual Void quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc,
-                     const AreaBuf<const Int> &qWeightingMatrix,
-                     TCoeff &uiAbsSum, const QpParam &cQP,
-                     const SliceType sliceType, const Int channelBitDepth,
-                     const int maxLog2TrDynamicRange = 15);
   virtual Void dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
                        const QpParam &cQP, const Int channelBitDepth,
                        const int maxLog2TrDynamicRange = 15);
