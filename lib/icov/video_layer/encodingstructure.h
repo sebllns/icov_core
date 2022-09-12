@@ -91,8 +91,7 @@ struct EncodingStructure {
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
   void applyPredictionBasedOnEntropy(
-      const PelUnitBuf &reconstructionUnitBuffer, MyPicture &encpic,
-      MyIntraPrediction &intraPred, const ComponentID compID,
+      MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
       const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
       const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
       const int qp, int maxLog2TrDynamicRange);

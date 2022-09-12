@@ -54,7 +54,7 @@
 
 class Encoder : public IEncoder {
 protected:
-  cv::Mat m_img_src;
+  std::map<int, cv::Mat> m_cvmat;
 
 public:
   Encoder();

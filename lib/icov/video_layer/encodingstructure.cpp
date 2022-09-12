@@ -1300,11 +1300,12 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
 }
 
 void EncodingStructure::applyPredictionBasedOnEntropy(
-    const PelUnitBuf &reconstructionUnitBuffer, MyPicture &encpic,
-    MyIntraPrediction &intraPred, const ComponentID compID,
+    MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
     const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
     const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
     const int qp, int maxLog2TrDynamicRange) {
+
+  auto reconstructionUnitBuffer = encpic.getBuf(PIC_RECONSTRUCTION);
   ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
   UInt tuWidth_component =
       tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC);
