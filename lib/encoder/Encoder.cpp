@@ -149,7 +149,20 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   MyPicture encoderPicture;
   encoderPicture.create(PIC_ORIGINAL, extendedFrameArea);
   encoderPicture.create(PIC_RECONSTRUCTION, extendedFrameArea);
-  encoderPicture.create(PIC_PREDICTION, extendedFrameArea);
+  //  encoderPicture.create(PIC_PREDICTION, extendedFrameArea);
+
+  std::vector<MyIntraPrediction::REFERENCE_SAMPLE_SIDE> predVec = {
+      MyIntraPrediction::NO_SIDE,    MyIntraPrediction::LEFT,
+      MyIntraPrediction::RIGHT,      MyIntraPrediction::TOP,
+      MyIntraPrediction::DOWN,
+      MyIntraPrediction::LEFT_TOP,   // 0b00101
+      MyIntraPrediction::LEFT_DOWN,  // 0b01001
+      MyIntraPrediction::RIGHT_DOWN, // 0b01010
+      MyIntraPrediction::RIGHT_TOP};
+
+  for (auto pk : predVec) {
+    encoderPicture.create(PIC_PREDICTION + pk, extendedFrameArea);
+  }
 
   PelUnitBuf mainFrameOrig = encoderPicture.getOrigBuf(mainFrameArea);
   EncodingStructure enc_struc;
@@ -193,13 +206,15 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   MyIntraPrediction intraPred;
   intraPred.init(chromaFormatIDC);
 
+  std::cout << "Compute intra predictions" << std::endl;
   for (UInt ch = 0; ch < numCh; ch++) {
+    std::cout << "Channel " << ch << std::endl << std::endl;
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360(mainFrameReco, compID);
 
     enc_struc.applyPredictionBasedOnEntropy(
-        encoderPicture.getRecoBuf(), encoderPicture.getPredBuf(), intraPred,
-        compID, internalBitDepth, tuSizeAfterRegrouping_luma.width,
+        encoderPicture.getRecoBuf(), encoderPicture, intraPred, compID,
+        internalBitDepth, tuSizeAfterRegrouping_luma.width,
         tuSizeAfterRegrouping_luma.height, false, qp, maxLog2TrDynamicRange);
 
     //    storageInBit += MyUtility::computeRatesAndCalculateStorageInBit(
@@ -207,8 +222,19 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
     //        maxLog2TrDynamicRange + 1);
     //    totalRequiredBitsToCodeIntraModes += tempIntraModeBits;
   }
+  std::cout << "END of Compute intra predictions" << std::endl;
+
+  for (auto pk : predVec) {
+
+    cv::Mat intraMat;
+    VTM_OPENCV_Utility::toBGRMat(encoderPicture.getBuf(PIC_PREDICTION + pk),
+                                 intraMat);
+    cv::namedWindow("intra_" + std::to_string(pk), cv::WINDOW_NORMAL);
+    cv::imshow("intra_" + std::to_string(pk), intraMat);
+  }
 
   cv::waitKey(0);
+
   //     //encode the blocks
   //     for(const auto& b: picture.icus())
   //     {

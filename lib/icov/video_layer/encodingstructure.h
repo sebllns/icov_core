@@ -10,6 +10,8 @@
 
 #include "helpers.h"
 #include "icu_encoder.h"
+#include "mypicture.h"
+
 struct EncodingStructure {
   EncodingStructure();
   EncodingStructure(const std::vector<ICU_Encoder> &icus, const UInt icusPerRow,
@@ -89,7 +91,7 @@ struct EncodingStructure {
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
   void applyPredictionBasedOnEntropy(
-      const PelUnitBuf &reconstructionUnitBuffer, PelUnitBuf &predictionUnitBuf,
+      const PelUnitBuf &reconstructionUnitBuffer, MyPicture &encpic,
       MyIntraPrediction &intraPred, const ComponentID compID,
       const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
       const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
