@@ -50,13 +50,22 @@
 #pragma once
 
 #include "omnidirectional_layer/interface/IEncoder.h"
+#include "video_layer/encodingstructure.h"
 #include <opencv2/opencv.hpp>
 
 class Encoder : public IEncoder {
 protected:
   std::map<int, cv::Mat> m_cvmat;
+  bool m_firstDisplayBlocks;
+
+  cv::Size m_icuSize_luma;
+  cv::Size m_tuSize_luma;
+  EncodingStructure m_enc_struc;
+  cv::Point m_currentBlockPosition;
 
 public:
+  const static int BlockZoomID;
+
   Encoder();
   ~Encoder();
 
@@ -70,4 +79,8 @@ public:
                    bool access_block) override;
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
+  void onMouse(int event, int x, int y, int flags);
+
+private:
+  void onSelectBlock(int x, int y);
 };

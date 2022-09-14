@@ -18,9 +18,10 @@ public:
     TOP = 0b000100,
     DOWN = 0b001000,
     LEFT_TOP = TOP | LEFT,     // 0b00101
+    RIGHT_TOP = TOP | RIGHT,   // 0b00101
     LEFT_DOWN = DOWN | LEFT,   // 0b01001
     RIGHT_DOWN = DOWN | RIGHT, // 0b01010
-    RIGHT_TOP = TOP | RIGHT,   // 0b00101
+    MAX,
     //        LEFT_TOPLEFT_TOP          = LEFT_TOP    | 0b010000,  // it will
     //        not be used for the compression, I just added them to emphasize
     //        that the corner point is not included in the previous states
