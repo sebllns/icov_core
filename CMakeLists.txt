@@ -104,6 +104,10 @@ find_package(Boost 1.70.0
     filesystem
 #    OPTIONAL_COMPONENTS
 #    unit_test_framework
+#stacktrace_basic
+#stacktrace_backtrace
+#stacktrace_addr2line
+#stacktrace_noop
     REQUIRED)
 include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIR})
 message(STATUS "Include boost dir: ${Boost_INCLUDE_DIR}")
@@ -168,7 +172,11 @@ option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 
 if(ICOV_CORE_DEBUG_TRACE_ENABLED)
     message(STATUS "[INFO] ICOV core debug trace is ENABLED")
-    add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED")
+    add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED" "BOOST_STACKTRACE_USE_ADDR2LINE")
+    if(CMAKE_DL_LIBS)
+        message(DEBUG "Linking with ${CMAKE_DL_LIBS}")
+        link_libraries(${CMAKE_DL_LIBS})
+    endif()
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})

@@ -62,9 +62,12 @@ protected:
   cv::Size m_tuSize_luma;
   EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
+  ChromaFormat m_chromaFormatIDC;
+  uint m_numComp;
 
 public:
   const static int BlockZoomID;
+  const static int RecoViewID;
 
   Encoder();
   ~Encoder();
