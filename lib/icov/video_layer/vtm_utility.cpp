@@ -226,15 +226,16 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
           curr_tu.getQuantizedTransformCoeffs(compID).area();
       icov::SymboleVec quantizedVec(quantizedBuf,
                                     quantizedBuf + quantizedBufSize);
-      curr_tu.getBitplanes(compID) =
-          icov::BitSymbolProvider::compute_bits(quantizedVec);
+      //      curr_tu.getBitplanes(compID) =
+      //          icov::BitSymbolProvider::compute_bits(quantizedVec);
 
-      // iBP
-      icov::SymboleVec inverseBitplane =
-          icov::BitSymbolProvider::compute_symboles(
-              curr_tu.getBitplanes(compID));
+      //      // iBP
+      //      icov::SymboleVec inverseBitplane =
+      //          icov::BitSymbolProvider::compute_symboles(
+      //              curr_tu.getBitplanes(compID));
 
-      ICOV_ASSERT_MSG(inverseBitplane == quantizedVec, "symboles not equal");
+      //      ICOV_ASSERT_MSG(inverseBitplane == quantizedVec, "symboles not
+      //      equal");
 
       // iQ
       quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID),
@@ -291,6 +292,10 @@ double VTM_Utility::
   freqTable[n_range]++;
 
   int n_bits2EncodePosition = std::ceil(std::log2(n_range));
+
+  ICOV_ASSERT_MSG(maximumOccurance > 0,
+                  "maximumOccurance=" + std::to_string(maximumOccurance));
+
   uint32_t n_bitsPerFrequencyTableVal = std::ceil(std::log2(maximumOccurance));
   if (n_bitsPerFrequencyTableVal == 0) // to handle the case log(1)=0
     n_bitsPerFrequencyTableVal = 1;

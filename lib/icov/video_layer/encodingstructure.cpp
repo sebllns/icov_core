@@ -1338,7 +1338,9 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
     availabaleDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
 
   for (UInt i = 0; i < vec_icus.size(); i++) {
-    std::cout << "-- block is " << i << std::endl;
+    //    std::cout << "-- block is " << i << std::endl;
+    int progress = (i * 100) / (vec_icus.size() - 1);
+    std::cout << "    " << progress << "%                \r" << std::flush;
     ICU_Encoder &icu_enc = vec_icus[i];
     std::map<MyIntraPrediction::REFERENCE_SAMPLE_SIDE, SideInformationUnit>
         &currICUintraMap = icu_enc.get_intraSIsMap();
@@ -1354,8 +1356,8 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
 
       auto predictionUnitBuf = encpic.getBuf(PIC_PREDICTION + refSampSide);
 
-      uint picId = refSampSide;
-      std::cout << "---- pred pic is " << picId << std::endl;
+      //      uint picId = refSampSide;
+      //      std::cout << "---- pred pic is " << picId << std::endl;
 
       PelBuf roiComp_predictionFrameBuff =
           VTM_Utility::getAreaBuf(predictionUnitBuf, compArea);

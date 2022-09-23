@@ -51,19 +51,19 @@ public:
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
 
-  icov::Bitplanes &getBitplanes(const ComponentID id) {
-    return m_bitplanes[id];
-  }
+  //  icov::Bitplanes &getBitplanes(const ComponentID id) {
+  //    return m_bitplanes[id];
+  //  }
 
-  const icov::Bitplanes getBitplanes(const ComponentID id) const {
-    return m_bitplanes[id];
-  }
+  //  const icov::Bitplanes getBitplanes(const ComponentID id) const {
+  //    return m_bitplanes[id];
+  //  }
 
 protected:
   TCoeffStorage _Tcoeffs;
   QTCoeffStorage _quantizedTcoeffs;
   IQTCoeffStorage _inverseQuantizedTcoeffs;
-  icov::Bitplanes m_bitplanes[MAX_NUM_COMPONENT];
+  //  icov::Bitplanes m_bitplanes[MAX_NUM_COMPONENT];
 };
 
 struct InteractiveCodingUnit : public UnitArea {

@@ -184,7 +184,7 @@ template <typename T> void range(T val, T min, T max) {
         std::to_string(min) + ", " + std::to_string(max) + "]"));
 }
 
-void not_null(void *p);
+void not_null(const void *p);
 
 void check(bool expr, const std::string &msg);
 
@@ -196,7 +196,9 @@ uint32_t binary_length(int val);
 float normalize(float val, float min, float max);
 float wrap(float val, float min, float max);
 float repeat(float val, float min, float max);
-double psnr(double mse);
+int quantize(int value, int step, int min, int max);
+int quantize(float value, const std::vector<float> &v);
+
 } // namespace maths
 
 namespace rand {

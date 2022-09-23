@@ -129,11 +129,28 @@ void assert::check(bool expr, const std::string &msg) {
     ICOV_THROW_INVALID_ARGUMENT("Assertion is invalid: " + msg);
 }
 
-void assert::not_null(void *p) {
+void assert::not_null(const void *p) {
   if (!p || p == nullptr)
     ICOV_THROW_NULLPTR("Nullptr is forbidden");
 }
 
-double maths::psnr(double mse) {}
+int maths::quantize(int value, int step, int min, int max) {
+  return value == 0
+             ? 0
+             : std::clamp((int)((std::abs(value) / value) * step *
+                                std::ceil((1.0 * std::abs(value)) / step)),
+                          min, max);
+}
+
+int maths::quantize(float value, const std::vector<float> &v) {
+  int idx = std::upper_bound(v.begin(), v.end(), value) - v.begin();
+  idx = std::clamp(idx, 0, (int)v.size() - 1);
+  int idx_prev = std::clamp(idx - 1, 0, (int)v.size() - 1);
+
+  if (std::abs(value - v[idx_prev]) < std::abs(value - v[idx])) {
+    idx = idx_prev;
+  }
+  return idx;
+}
 
 } // namespace icov::helpers

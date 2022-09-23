@@ -7,6 +7,7 @@
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -98,20 +99,22 @@ void Encoder::onSelectBlock(int x, int y) {
 
       int bi = 0, bj = 0;
 
+      std::stringstream predStr;
+
       if (si.first & MyIntraPrediction::TOP) {
-        std::cout << "TOP ";
+        predStr << "TOP ";
         bi = -1;
       }
       if (si.first & MyIntraPrediction::DOWN) {
-        std::cout << "BOTTOM ";
+        predStr << "BOTTOM ";
         bi = 1;
       }
       if (si.first & MyIntraPrediction::LEFT) {
-        std::cout << "LEFT ";
+        predStr << "LEFT ";
         bj = -1;
       }
       if (si.first & MyIntraPrediction::RIGHT) {
-        std::cout << "RIGHT ";
+        predStr << "RIGHT ";
         bj = 1;
       }
 
@@ -119,10 +122,13 @@ void Encoder::onSelectBlock(int x, int y) {
       int xbj = bj * m_icuSize_luma.width;
 
       double psnr = VTM_OPENCV_Utility::psnr(src_block, si_block);
-      std::cout << "| " << psnr;
+      //      std::cout << "\t\t\t| " << psnr;
+
+      std::cout << boost::format("%_20s  | %-8.2f ") % predStr.str() % psnr;
 
       for (uint i = 0; i < m_numComp; i++) {
-        std::cout << " | " << (uint)(si.second.intraDir[i]);
+        std::cout << boost::format("| %-8d") % (uint)(si.second.intraDir[i]);
+        //        std::cout << "\t|\t" << (uint)(si.second.intraDir[i]);
       }
 
       std::cout << std::endl;
@@ -137,7 +143,9 @@ void Encoder::onSelectBlock(int x, int y) {
       //          cv::Scalar(0, 0, 255), 3);
     }
 
-    std::cout << "-----------------------------------------------" << std::endl;
+    std::cout
+        << "-------------------------------------------------------------------"
+        << std::endl;
 
     m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_icuSize_luma))
         .setTo(cv::Scalar(0, 255, 0));
@@ -281,7 +289,8 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
 
   std::cout << "Compute intra predictions" << std::endl;
   for (UInt ch = 0; ch < m_numComp; ch++) {
-    std::cout << "Channel " << ch << std::endl << std::endl;
+    std::cout << "Channel " << ch + 1 << " / " << m_numComp << std::endl
+              << std::endl;
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360(mainFrameReco, compID);
 

@@ -94,17 +94,20 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
     pg.processCommandLine(argc, argv);
     pg.launchProgram();
   } catch (std::exception &e) {
-    std::cerr << "Error: program execution has stopped prematurely"
+    std::cerr << pg.optionsDesc() << std::endl;
+    std::cerr << std::endl
+              << "Error: program execution has stopped prematurely"
               << std::endl;
     std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-    std::cerr << pg.optionsDesc() << std::endl;
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
     std::cout << boost::stacktrace::stacktrace();
 #endif
     return 1;
   } catch (...) {
+    std::cerr << pg.optionsDesc() << std::endl;
     std::cerr << "Fatal error" << std::endl;
-    std::cerr << boost::current_exception_diagnostic_information() << std::endl;
+    std::cerr << std::endl
+              << boost::current_exception_diagnostic_information() << std::endl;
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
     std::cout << boost::stacktrace::stacktrace();
 #endif
