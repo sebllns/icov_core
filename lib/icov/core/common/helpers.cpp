@@ -48,112 +48,109 @@
  *****************************************************************************/
 #include "helpers.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
-namespace icov::helpers
-{
-int maths::pow2(int k)
-{
-    return 1 << k;
+namespace icov::helpers {
+int maths::pow2(int k) { return 1 << k; }
+
+std::string path::get_data_folder(const std::string &root, int code_size,
+                                  bool auto_create) {
+  fs::path path(root);
+  path /= std::to_string(code_size);
+
+  path = fs::absolute(path).make_preferred();
+  if (auto_create) {
+    try_create_directories(path.string());
+  }
+  return path.string();
 }
 
-std::string path::get_data_folder(const std::string &root, int code_size, bool auto_create)
-{
-    fs::path path(root);
-    path /= std::to_string(code_size);
-
-    path = fs::absolute(path).make_preferred();
-    if(auto_create)
-    {
-        try_create_directories(path.string());
-    }
-    return path.string();
+bool path::try_create_directories(const std::string &path) {
+  bool created = false;
+  try {
+    created = fs::create_directories(path);
+  } catch (...) {
+    created = false;
+    std::cerr << "Error: could not create directory " << path << std::endl;
+    std::cerr << boost::current_exception_diagnostic_information() << std::endl;
+  }
+  return created;
 }
 
-bool path::try_create_directories(const std::string &path)
-{
-    bool created = false;
-    try
-    {
-        created = fs::create_directories(path);
-    }
-    catch (...)
-    {
-        created = false;
-        std::cerr << "Error: could not create directory " << path << std::endl;
-        std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-    }
-    return created;
+std::string path::combine(const std::string &path1, const std::string &path2) {
+  return fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
 }
 
-std::string path::combine(const std::string &path1, const std::string &path2)
-{
-    return  fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
+void path::assert_directory_exists(const std::string &path) {
+  if (!fs::is_directory(fs::absolute(path).make_preferred())) {
+    BOOST_THROW_EXCEPTION(
+        std::invalid_argument("Is not a valid directory: " + path));
+  }
 }
 
-
-
-void path::assert_directory_exists(const std::string& path)
-{
-    if(!fs::is_directory(fs::absolute(path).make_preferred()))
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Is not a valid directory: " + path));
-    }
+uint32_t maths::binary_length(int val) {
+  return std::floor(std::log2f(std::abs(val))) + 1;
 }
 
-uint32_t maths::binary_length(int val)
-{
-    return  std::floor(std::log2f(std::abs(val))) + 1;
+int rand::range(int min_included, int max_included) {
+  return min_included +
+         (std::rand() % static_cast<int>(max_included - min_included + 1));
 }
 
-int rand::range(int min_included, int max_included)
-{
-    return  min_included + (std::rand() % static_cast<int>(max_included - min_included + 1));
+void rand::init() { srand((unsigned)time(0)); }
+
+float rand::normalized() {
+  return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 }
 
-void rand::init()
-{
-    srand((unsigned) time(0));
+float maths::normalize(float val, float min, float max) {
+  return (val - min) / (max - min);
 }
 
-float rand::normalized()
-{
-    return static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+float maths::wrap(float val, float min, float max) {
+  while (val < min) {
+    val += (max - min);
+  }
+
+  while (val > max) {
+    val -= (max - min);
+  }
+
+  return val;
+
+  // return val - (min - max) * floor(val / (max - min));
 }
 
-float maths::normalize(float val, float min, float max)
-{
-    return (val-min) / (max-min);
+void assert::check(bool expr, const std::string &msg) {
+  if (!expr)
+    ICOV_THROW_INVALID_ARGUMENT("Assertion is invalid: " + msg);
 }
 
-float maths::wrap(float val, float min, float max)
-{
-    while (val < min)
-    {
-        val += (max-min);
-    }
-
-    while (val > max)
-    {
-        val -= (max-min);
-    }
-
-    return val;
-
-    //return val - (min - max) * floor(val / (max - min));
+void assert::not_null(const void *p) {
+  if (!p || p == nullptr)
+    ICOV_THROW_NULLPTR("Nullptr is forbidden");
 }
 
-void assert::check(bool expr, const std::string& msg)
-{
-    if(!expr) ICOV_THROW_INVALID_ARGUMENT("Assertion is invalid: " + msg);
+int maths::quantize(int value, int step, int min, int max) {
+  return value == 0
+             ? 0
+             : std::clamp((int)((std::abs(value) / value) * step *
+                                std::ceil((1.0 * std::abs(value)) / step)),
+                          min, max);
 }
 
-void assert::not_null(void *p)
-{
-    if(!p || p == nullptr) ICOV_THROW_NULLPTR("Nullptr is forbidden");
+int maths::quantize(float value, const std::vector<float> &v) {
+  int idx = std::upper_bound(v.begin(), v.end(), value) - v.begin();
+  idx = std::clamp(idx, 0, (int)v.size() - 1);
+  int idx_prev = std::clamp(idx - 1, 0, (int)v.size() - 1);
+
+  if (std::abs(value - v[idx_prev]) < std::abs(value - v[idx])) {
+    idx = idx_prev;
+  }
+  return idx;
 }
 
-}
+} // namespace icov::helpers

@@ -11,7 +11,7 @@
  *  @brief BlockPrediction conveying BlockPrediction Units (VPU) for VCL data
  *  @ingroup common
  *  @author Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sï¿½bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.0
  *  @date 2018, 2022
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
@@ -53,7 +53,8 @@
 #include "IcuEncoder.h"
 #include "IntraPrediction.h"
 #include "helpers.h"
-
+#include "icu_encoder.h"
+#include "mypicture.h"
 namespace icov::video {
 
 struct EncodingStructure {
@@ -71,19 +72,19 @@ struct EncodingStructure {
   std::vector<Position> vec_checkPoints;
   UInt n_icusPerRow, n_icusPerCol;
 
-  inline IcuEncoder &getICU(const UInt icu_index);
+  ICU_Encoder &getICU(const UInt icu_index);
 
-  inline IcuEncoder &getICU(const UInt x_index, const UInt y_index);
+  ICU_Encoder &getICU(const UInt x_index, const UInt y_index);
 
-  inline const IcuEncoder &getICU(const UInt icu_index) const;
+  const ICU_Encoder &getICU(const UInt icu_index) const;
 
-  inline bool isLeftVerticalBorder(const UInt icu_index) const;
-  inline bool isRightVerticalBorder(const UInt icu_index) const;
+  bool isLeftVerticalBorder(const UInt icu_index) const;
+  bool isRightVerticalBorder(const UInt icu_index) const;
 
-  inline UInt get_icuIndex(const Position &pos) const;
+  UInt get_icuIndex(const Position &pos) const;
   Position get_icuPosition(const UInt icu_index) const;
 
-  inline void resetDecodedICUs();
+  void resetDecodedICUs();
 
   void updateRequestedICUs(
       const cv::Mat &maskRequestedPixels,
@@ -113,10 +114,10 @@ struct EncodingStructure {
   void updateDecodedICU(const Position &ICU_position);
   void updateDecodedICUs(
       const std::vector<std::vector<Position>> &connectedComponents);
-  inline bool isICUAlreadyDecoded(const Position &ICU_position) const;
-  inline const std::vector<Position> &get_vecDecodedICUs() const;
+  bool isICUAlreadyDecoded(const Position &ICU_position) const;
+  const std::vector<Position> &get_vecDecodedICUs() const;
 
-  inline const std::vector<Position> &get_vecCheckpoints() const;
+  const std::vector<Position> &get_vecCheckpoints() const;
   /** returns an integer which its last 4 least significant bits show which
    * sides are available. For more information refer to enum
    * REFERENCE_SAMPLE_SIDE Also the bit levels [5-8] (zero-based index) is 1 if
@@ -134,20 +135,17 @@ struct EncodingStructure {
       const UInt icuWidth_luma, const UInt icuHeight_luma,
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
-  void applyPredictionBasedOnEntropy(icov::video::Picture pic,
-                                     icov::video::IntraPrediction &intraPred,
-                                     const ComponentID compID,
-                                     const int bitDepths[MAX_NUM_CHANNEL_TYPE],
-                                     const UInt tuWidth_luma,
-                                     const UInt tuHeight_luma,
-                                     bool encodeFrequencyTableInBitStream,
-                                     const int qp, int maxLog2TrDynamicRange);
+  void applyPredictionBasedOnEntropy(
+      MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
+      const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
+      const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
+      const int qp, int maxLog2TrDynamicRange);
 
 protected:
-  inline void resetAlreadyProcessedICUs();
+  void resetAlreadyProcessedICUs();
   void updateAlreadyProccessedICU(const Position &ICU_position);
-  inline void copyProccessedICUsFromDecodedICUs();
-  inline bool isICUAlreadyProcessed(const Position &ICU_position);
+  void copyProccessedICUsFromDecodedICUs();
+  bool isICUAlreadyProcessed(const Position &ICU_position);
 
   cv::Mat _integralImageMask;
   cv::Mat _maskThresholded;

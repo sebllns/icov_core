@@ -11,7 +11,7 @@
 /** @file Encoder.h
  *  @brief Defines an actual ICOV Encoder.
  *  @ingroup Encoder
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sï¿½bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
@@ -58,17 +58,20 @@
 
 class Encoder : public IEncoder {
 protected:
-  cv::Mat m_img_src;
-  cv::Mat m_cvMat_reconstructedEquiImage;
-  std::map<BlockPrediction::predType, cv::Mat> m_cvMat_intraPred;
-  cv::Mat m_cvMat_blockSI;
+  std::map<int, cv::Mat> m_cvmat;
+  bool m_firstDisplayBlocks;
+
   cv::Size m_icuSize_luma;
   cv::Size m_tuSize_luma;
-  icov::video::EncodingStructure m_enc_struc;
-
+  EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
+  ChromaFormat m_chromaFormatIDC;
+  uint m_numComp;
 
 public:
+  const static int BlockZoomID;
+  const static int RecoViewID;
+
   Encoder();
   ~Encoder();
 

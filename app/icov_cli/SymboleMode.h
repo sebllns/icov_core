@@ -56,31 +56,27 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-class SymboleMode
-{
+class SymboleMode {
 public:
-  SymboleMode(const po::variables_map& args);
+  SymboleMode(const po::variables_map &args);
   ~SymboleMode() = default;
 
   void run();
 
-  static void AddProgramOptions(po::options_description& desc);
+  static void AddProgramOptions(po::options_description &desc);
 
 private:
   void encode();
-  void write_results(const std::string& filename);
-  void process_input_list(const std::string& file);
-  void process_input_file(const std::string& file);
+  void write_results(const std::string &filename);
+  void process_input_list(const std::string &file);
+  void process_input_file(const std::string &file);
   void compute_src_bits();
   void process_si();
   void compute_si_bits();
   void init_bsp();
-  void encode_bitplane(int i, std::vector<std::vector<float>>& result);
+  void encode_bitplane(int i, std::vector<std::vector<float>> &result);
   bool check_decoding(int i);
   void fill_predec(int i);
-
-  int quantize(int value, int step, int min, int max);
-  int quantize(float value, const std::vector<float>& v);
 
   std::shared_ptr<AffInteractiveCoder> m_coder;
   int n;
@@ -92,10 +88,10 @@ private:
   SymboleVec src_symbols;
   Bitplanes src_bits;
 
-  std::vector<SIVal> side_info;
+  SIVec side_info;
   Bitplanes si_bits;
 
-  std::vector<LLRVal> llr;
+  LLRVec llr;
   BitVec dec_bits;
   BitVec dec_signs;
   BitVec dec_symbols;

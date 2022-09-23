@@ -106,8 +106,8 @@ static void dfs_360(AreaBuf<bool> &requestedIcus,
   int iWidth = int(
       requestedIcus
           .width); // if we do not convert to int, the traversing equation for
-                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-                   // iWidth) converts everything to UInt
+  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+  // iWidth) converts everything to UInt
   int iHeight = int(requestedIcus.height);
   for (int i = 0; i < 4; i++) {
     int neighbor_x = x + dx[i];
@@ -136,8 +136,8 @@ static void dfs_360(AreaBuf<bool> &requestedIcus,
   int iWidth = int(
       requestedIcus
           .width); // if we do not convert to int, the traversing equation for
-                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-                   // iWidth) converts everything to UInt
+  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+  // iWidth) converts everything to UInt
   int iHeight = int(requestedIcus.height);
   for (int i = 0; i < 4; i++) {
     int neighbor_x = x + dx[i];
@@ -166,8 +166,8 @@ static void dfs_360(AreaBuf<bool> &requestedIcus,
   int iWidth = int(
       requestedIcus
           .width); // if we do not convert to int, the traversing equation for
-                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-                   // iWidth) converts everything to UInt
+  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+  // iWidth) converts everything to UInt
   int iHeight = int(requestedIcus.height);
   for (int i = 0; i < 4; i++) {
     int neighbor_x = x + dx[i];
@@ -189,8 +189,8 @@ static void fillHolesHorizontally_360(AreaBuf<bool> &requestedIcus,
   int iWidth = int(
       requestedIcus
           .width); // if we do not convert to int, the traversing equation for
-                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-                   // iWidth) converts everything to UInt
+  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+  // iWidth) converts everything to UInt
 
   bool *requested_rowPtr = &requestedIcus.at(0, rowIndex);
   int x_pre, x_next;
@@ -202,7 +202,7 @@ static void fillHolesHorizontally_360(AreaBuf<bool> &requestedIcus,
         (iWidth + (int(x + 1) % iWidth)) %
         iWidth; // to generate circular traversing for 360 video in x direction
     if (!requested_rowPtr[x]) // if the icu is false, but the previous icu and
-                              // the next icu are true, then fill the hole
+    // the next icu are true, then fill the hole
     {
       if (requested_rowPtr[x_pre] && requested_rowPtr[x_next]) {
         requested_rowPtr[x] = true;
@@ -375,10 +375,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   _maskThresholded.setTo(
       1,
       maskRequestedPixels); // This is done because in maskRequestedPixels
-                            // nonzero pixels have value 255, so in the next
-                            // cv::integral function overflow can happen for
-                            // very large images. That's why I changed nonzero
-                            // pixels to 1
+  // nonzero pixels have value 255, so in the next
+  // cv::integral function overflow can happen for
+  // very large images. That's why I changed nonzero
+  // pixels to 1
 
   cv::integral(_maskThresholded, _integralImageMask, CV_32SC1);
 
@@ -410,7 +410,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       _vec_pixelsRequestedPerICU[i] = n_nonzero;
 
       if (n_nonzero /*&& (!previous_rowPtr[x])*/) // if it is requested but it
-                                                  // is not already decoded
+      // is not already decoded
       {
         requested_rowPtr[x] = true;
         n_requestedICUs++;
@@ -454,19 +454,19 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   int n_remainingRequestedICUs = n_requestedICUs;
   for (UInt y = 0; y < n_icusPerCol;
        y++) // check for requested ICUs where there is at least an already
-            // decoded ICU there
+  // decoded ICU there
   {
     const bool *requested_rowPtr = &_requestedICUs.at(0, y);
     const bool *decoded_rowPtr = &_decodedICUs.at(0, y);
     for (UInt x = 0; x < n_icusPerRow; x++) {
       if (requested_rowPtr[x] &&
           decoded_rowPtr[x]) // I used || (or) instead of && (and) because I
-                             // saw some situations where a block beside the
-                             // requested blocks (not inside the requested
-                             // blocks) has been already decoded but there is
-                             // no decoded block inside. next line afte dfs_360
-                             // if there was no requested block in the
-                             // connected component I pop_back the empty vector
+      // saw some situations where a block beside the
+      // requested blocks (not inside the requested
+      // blocks) has been already decoded but there is
+      // no decoded block inside. next line afte dfs_360
+      // if there was no requested block in the
+      // connected component I pop_back the empty vector
       {
         requestedICUs_closeToDecodedICUs.push_back(std::vector<Position>());
         dfs_360(_requestedICUs, _decodedICUs,
@@ -483,7 +483,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             int neighbor_x = x + dx[i];
             neighbor_x = (iWidth + (neighbor_x % iWidth)) %
                          iWidth; // to generate circular traversing for 360
-                                 // video in x direction
+            // video in x direction
             int neighbor_y = y + dy[i];
             if (neighbor_y < 0 ||
                 neighbor_y >=
@@ -522,7 +522,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   requestedICUs_closeTocheckPoints.clear();
   neighborcheckPointInTheComponent.clear();
   if (n_remainingRequestedICUs > 0) // look for the remaining requested blocks
-                                    // which there is a check point there
+  // which there is a check point there
   {
     // the number of check points is less than number of pixels. so it is better
     // to traveresed through checkpoints this time
@@ -560,10 +560,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       bool *requested_rowPtrTop = &_requestedICUs.at(0, y);
       for (UInt x = 0; x < n_icusPerRow; x++) {
         if (requested_rowPtrTop[x]) // if on the top row there is a block which
-                                    // is not assigned to any of
-                                    // requestedICUs_closeToDecodedICUs,
-                                    // requestedICUs_closeTocheckPoints,
-                                    // neighborcheckPointInTheComponent
+        // is not assigned to any of
+        // requestedICUs_closeToDecodedICUs,
+        // requestedICUs_closeTocheckPoints,
+        // neighborcheckPointInTheComponent
         {
           icu_index = y * n_icusPerRow + x;
           if (_vec_pixelsRequestedPerICU[icu_index] < thresholdToNeglectICU) {
@@ -586,10 +586,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       bool *requested_rowPtrBottom = &_requestedICUs.at(0, y);
       for (UInt x = 0; x < n_icusPerRow; x++) {
         if (requested_rowPtrBottom[x]) // if on the top row there is a block
-                                       // which is not assigned to any of
-                                       // requestedICUs_closeToDecodedICUs,
-                                       // requestedICUs_closeTocheckPoints,
-                                       // neighborcheckPointInTheComponent
+        // which is not assigned to any of
+        // requestedICUs_closeToDecodedICUs,
+        // requestedICUs_closeTocheckPoints,
+        // neighborcheckPointInTheComponent
         {
           icu_index = y * n_icusPerRow + x;
           if (_vec_pixelsRequestedPerICU[icu_index] < thresholdToNeglectICU) {
@@ -676,10 +676,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   _maskThresholded.setTo(
       1,
       maskRequestedPixels); // This is done because in maskRequestedPixels
-                            // nonzero pixels have value 255, so in the next
-                            // cv::integral function overflow can happen for
-                            // very large images. That's why I changed nonzero
-                            // pixels to 1
+  // nonzero pixels have value 255, so in the next
+  // cv::integral function overflow can happen for
+  // very large images. That's why I changed nonzero
+  // pixels to 1
 
   cv::integral(_maskThresholded, _integralImageMask, CV_32SC1);
 
@@ -711,7 +711,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       _vec_pixelsRequestedPerICU[i] = n_nonzero;
 
       if (n_nonzero /*&& (!previous_rowPtr[x])*/) // if it is requested but it
-                                                  // is not already decoded
+      // is not already decoded
       {
         requested_rowPtr[x] = true;
         n_requestedICUs++;
@@ -755,19 +755,19 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   int n_remainingRequestedICUs = n_requestedICUs;
   for (UInt y = 0; y < n_icusPerCol;
        y++) // check for requested ICUs where there is at least an already
-            // decoded ICU there
+  // decoded ICU there
   {
     const bool *requested_rowPtr = &_requestedICUs.at(0, y);
     const bool *decoded_rowPtr = &_decodedICUs.at(0, y);
     for (UInt x = 0; x < n_icusPerRow; x++) {
       if (requested_rowPtr[x] &&
           decoded_rowPtr[x]) // I used || (or) instead of && (and) because I
-                             // saw some situations where a block beside the
-                             // requested blocks (not inside the requested
-                             // blocks) has been already decoded but there is
-                             // no decoded block inside. next line afte dfs_360
-                             // if there was no requested block in the
-                             // connected component I pop_back the empty vector
+      // saw some situations where a block beside the
+      // requested blocks (not inside the requested
+      // blocks) has been already decoded but there is
+      // no decoded block inside. next line afte dfs_360
+      // if there was no requested block in the
+      // connected component I pop_back the empty vector
       {
         requestedICUs_closeToDecodedICUs.push_back(std::vector<Position>());
         dfs_360(_requestedICUs, _decodedICUs,
@@ -789,7 +789,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             int neighbor_x = x + dx[i];
             neighbor_x = (iWidth + (neighbor_x % iWidth)) %
                          iWidth; // to generate circular traversing for 360
-                                 // video in x direction
+            // video in x direction
             int neighbor_y = y + dy[i];
             if (neighbor_y < 0 ||
                 neighbor_y >=
@@ -833,7 +833,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   requestedICUs_closeTocheckPoints.clear();
   neighborcheckPointInTheComponent.clear();
   if (n_remainingRequestedICUs > 0) // look for the remaining requested blocks
-                                    // which there is a check point there
+  // which there is a check point there
   {
     // the number of check points is less than number of pixels. so it is better
     // to traveresed through checkpoints this time
@@ -867,9 +867,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   remainingICUS_afterAlreadyProcessedICUsToBeDecoded.clear();
   if (n_remainingRequestedICUs >
       0) // look for the remaining requested blocks to see which already
-         // proccessed blocks are closest to requested connected blocks and
-         // then add the blocks in between to arrive to the requested region of
-         // blocks
+  // proccessed blocks are closest to requested connected blocks and
+  // then add the blocks in between to arrive to the requested region of
+  // blocks
   {
     int n_remainingRequestedICUs_temp = n_remainingRequestedICUs;
     std::vector<std::vector<Position>> remaining_connected_blocks;
@@ -947,10 +947,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       }
 
       if (!a_processed_block_in_the_requested_region) // No already processed
-                                                      // block in the requested
-                                                      // region. So start
-                                                      // looking for the
-                                                      // closest access block
+      // block in the requested
+      // region. So start
+      // looking for the
+      // closest access block
       {
         const unsigned int &patch_id = unprocessedCC_ids[0];
         const std::vector<Position> &currentCC =
@@ -987,12 +987,12 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             (diff_chosen_blocks.x < 0)
                 ? -1
                 : 1; // direction x to go from chosen requested block to the
-                     // chosen access block
+        // chosen access block
         const int dir_y_to_access_block =
             (diff_chosen_blocks.y < 0)
                 ? -1
                 : 1; // direction y to go from chosen requested block to the
-                     // chosen access block
+        // chosen access block
         Position abs_diff_chosen_block(abs(diff_chosen_blocks.x),
                                        abs(diff_chosen_blocks.y));
 
@@ -1012,14 +1012,14 @@ void icov::video::EncodingStructure::updateRequestedICUs(
           }
         }
         if (!isAnyProccessedBlockInBetween) // if no already processed in the
-                                            // horizontal direction, then check
-                                            // the vertical direction to arrive
-                                            // to access block
+        // horizontal direction, then check
+        // the vertical direction to arrive
+        // to access block
         {
           for (int abs_diff_y = 1; abs_diff_y <= abs_diff_chosen_block.y;
                abs_diff_y++) // <=: because = means if the chosen access block
-                             // is already decoded, there is no need to send it
-                             // as an access block
+          // is already decoded, there is no need to send it
+          // as an access block
           {
             int diff_y = dir_y_to_access_block * abs_diff_y;
             Position current_pos(chosen_access_block_pos.x,
@@ -1058,9 +1058,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
           for (int abs_diff_x = 1;
                abs_diff_x < abs_diff_processed_to_requested_blocks.x;
                abs_diff_x++) // less than "<" for
-                             // abs_diff_processed_to_requested_blocks.x rather
-                             // than less than or equal "=<", because the next
-                             // block is in the requested region
+          // abs_diff_processed_to_requested_blocks.x rather
+          // than less than or equal "=<", because the next
+          // block is in the requested region
           {
             int diff_x = dir_x_to_requested_block * abs_diff_x;
             Position current_pos(processedBlock.x + diff_x, chosen_block_pos.y);
@@ -1082,7 +1082,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             int neighbor_x = chosen_access_block_pos.x + dx[ii];
             neighbor_x = (iWidth + (neighbor_x % iWidth)) %
                          iWidth; // to generate circular traversing for 360
-                                 // video in x direction
+            // video in x direction
             int neighbor_y = chosen_access_block_pos.y + dy[ii];
             if (neighbor_y < 0 ||
                 neighbor_y >=
@@ -1096,10 +1096,10 @@ void icov::video::EncodingStructure::updateRequestedICUs(
 
           const int dir_x_to_requested_block =
               -dir_x_to_access_block; // direction x to go from the chosen
-                                      // access block to the requested block
+          // access block to the requested block
           const int dir_y_to_requested_block =
               -dir_y_to_access_block; // direction y to go from the chosen
-                                      // access block to the requested block
+          // access block to the requested block
 
           if (neighboringOfAccessBlockAlreadyDecoded) {
             remainingICUS_afterAlreadyProcessedICUsToBeDecoded.push_back(
@@ -1118,9 +1118,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             }
             for (int abs_diff_x = 1; abs_diff_x < abs_diff_chosen_block.x;
                  abs_diff_x++) // less than "<" for
-                               // abs_diff_processed_to_requested_blocks.x
-                               // rather than less than or equal "=<", because
-                               // the next block is in the requested region
+            // abs_diff_processed_to_requested_blocks.x
+            // rather than less than or equal "=<", because
+            // the next block is in the requested region
             {
               int diff_x = dir_x_to_requested_block * abs_diff_x;
               Position current_pos(chosen_access_block_pos.x + diff_x,
@@ -1155,9 +1155,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
             }
             for (int abs_diff_x = 1; abs_diff_x < abs_diff_chosen_block.x;
                  abs_diff_x++) // less than "<" for
-                               // abs_diff_processed_to_requested_blocks.x
-                               // rather than less than or equal "=<", because
-                               // the next block is in the requested region
+            // abs_diff_processed_to_requested_blocks.x
+            // rather than less than or equal "=<", because
+            // the next block is in the requested region
             {
               int diff_x = dir_x_to_requested_block * abs_diff_x;
               Position current_pos(chosen_access_block_pos.x + diff_x,
@@ -1245,8 +1245,8 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
   int iWidth = int(
       requestedIcus
           .width); // if we do not convert to int, the traversing equation for
-                   // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-                   // iWidth) converts everything to UInt
+  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
+  // iWidth) converts everything to UInt
   int iHeight = int(requestedIcus.height);
   for (int i = 0; i < 4; i++) {
     int neighbor_x = x + dx[i];
@@ -1264,16 +1264,13 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
   }
 }
 
-/*******************************************************************************/
-void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
-    icov::video::Picture pic, icov::video::IntraPrediction &intraPred,
-    const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
-    const UInt tuWidth_luma, const UInt tuHeight_luma,
-    bool encodeFrequencyTableInBitStream, const int qp,
-    int maxLog2TrDynamicRange) {
+void EncodingStructure::applyPredictionBasedOnEntropy(
+    MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
+    const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
+    const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
+    const int qp, int maxLog2TrDynamicRange) {
 
-  const PelUnitBuf reconstructionUnitBuffer = pic.get(PIC_RECONSTRUCTION);
-
+  auto reconstructionUnitBuffer = encpic.getBuf(PIC_RECONSTRUCTION);
   ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
   UInt tuWidth_component =
       tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC);
@@ -1306,10 +1303,12 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
 
   for (UInt i = 0; i < vec_icus.size(); i++) {
-    std::cout << "-- block is " << i << std::endl;
-    IcuEncoder &icu_enc = vec_icus[i];
-    std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
-             SideInformationUnit> &currICUintraMap = icu_enc.get_intraSIsMap();
+    //    std::cout << "-- block is " << i << std::endl;
+    int progress = (i * 100) / (vec_icus.size() - 1);
+    std::cout << "    " << progress << "%                \r" << std::flush;
+    ICU_Encoder &icu_enc = vec_icus[i];
+    std::map<MyIntraPrediction::REFERENCE_SAMPLE_SIDE, SideInformationUnit>
+        &currICUintraMap = icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);
 
@@ -1325,10 +1324,17 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
       std::cout << "---- pred pic is " << picId << std::endl;
       const PelUnitBuf predictionUnitBuf = pic.get(picId);
 
+      const MyIntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide = it->first;
+
+      auto predictionUnitBuf = encpic.getBuf(PIC_PREDICTION + refSampSide);
+
+      //      uint picId = refSampSide;
+      //      std::cout << "---- pred pic is " << picId << std::endl;
+
       PelBuf roiComp_predictionFrameBuff =
           VTM_Utility::getAreaBuf(predictionUnitBuf, compArea);
 
-      std::vector<TransformUnit> &si_TUs = si.TUs;
+      std::vector<MyTransformUnit> &si_TUs = si.TUs;
       unsigned int n_tus = si_TUs.size();
 
       if (chType == CHANNEL_TYPE_CHROMA)
@@ -1471,10 +1477,10 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
   _maskThresholded.setTo(
       1,
       maskRequestedPixels); // This is done because in maskRequestedPixels
-                            // nonzero pixels have value 255, so in the next
-                            // cv::integral function overflow can happen for
-                            // very large images. That's why I changed nonzero
-                            // pixels to 1
+  // nonzero pixels have value 255, so in the next
+  // cv::integral function overflow can happen for
+  // very large images. That's why I changed nonzero
+  // pixels to 1
 
   cv::integral(_maskThresholded, _integralImageMask, CV_32SC1);
 
@@ -1504,7 +1510,7 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
                   _integralImageMask.at<int>(y1, x1);
 
       if (n_nonzero /*&& (!previous_rowPtr[x])*/) // if it is requested but it
-                                                  // is not already decoded
+      // is not already decoded
       {
         requested_rowPtr[x] = true;
         n_requestedICUs++;
@@ -1521,14 +1527,14 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
 
   for (UInt y = 0; y < n_icusPerCol;
        y++) // check for requested ICUs where there is at least an already
-            // decoded ICU there
+  // decoded ICU there
   {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
     for (UInt x = 0; x < n_icusPerRow; x++) {
       if (requested_rowPtr[x]) // checking toghether, we are sure that the
-                               // first starting point of
-                               // requestedICUs_connectedComponents is close an
-                               // already decoded ICU
+      // first starting point of
+      // requestedICUs_connectedComponents is close an
+      // already decoded ICU
       {
         requestedICUs_closeToDecodedICUs.push_back(std::vector<Position>());
         decodedICUs_inRequestedICUs.push_back(std::vector<Position>());
