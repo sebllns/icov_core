@@ -102,11 +102,11 @@ find_package(Boost 1.70.0
     COMPONENTS
     program_options
     filesystem
+    stacktrace_basic
+    stacktrace_addr2line
 #    OPTIONAL_COMPONENTS
 #    unit_test_framework
-#stacktrace_basic
 #stacktrace_backtrace
-#stacktrace_addr2line
 #stacktrace_noop
     REQUIRED)
 include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIR})
@@ -129,7 +129,7 @@ add_subdirectory("third-party/vvc/source/Lib/Utilities")
 # enable sse4.1 build for all source files for gcc and clang
 if( UNIX OR MINGW )
     target_compile_options(CommonLib PUBLIC -w -Wno-register -msse4.1)
-#    add_compile_options( "-msse4.1" )
+    add_compile_options( "-msse4.1" )
 endif()
 # enable parallel build for Visual Studio
 if( MSVC )
@@ -165,8 +165,8 @@ message("-----------------------------------------------------------------------
 #               ICOV                   #
 ########################################
 set(ICOV_CORE_VERSION_MAJOR "0")
-set(ICOV_CORE_VERSION_MINOR "8")
-set(ICOV_CORE_VERSION_PATCH "6")
+set(ICOV_CORE_VERSION_MINOR "9")
+set(ICOV_CORE_VERSION_PATCH "0")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 
@@ -180,6 +180,12 @@ if(ICOV_CORE_DEBUG_TRACE_ENABLED)
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
+file (WRITE "${CMAKE_CURRENT_SOURCE_DIR}/lib/icov/core/common/version.h"
+    "/* This file is auto-generated from Cmake. You should not modify it directly*/\n"
+    "#define ICOV_CORE_VERSION_MAJOR ${ICOV_CORE_VERSION_MAJOR}\n"
+    "#define ICOV_CORE_VERSION_MINOR ${ICOV_CORE_VERSION_MINOR}\n"
+    "#define ICOV_CORE_VERSION_PATCH ${ICOV_CORE_VERSION_PATCH}\n"
+    "#define ICOV_CORE_VERSION \"${ICOV_CORE_VERSION}\"")
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
 #REQUIRED
