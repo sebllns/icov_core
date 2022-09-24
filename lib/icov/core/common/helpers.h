@@ -48,9 +48,17 @@
  *****************************************************************************/
 #pragma once
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
+#endif
+
+#ifndef BOOST_ENABLE_ASSERT_DEBUG_HANDLER
 #define BOOST_ENABLE_ASSERT_DEBUG_HANDLER
+#endif
+
+#ifndef BOOST_STACKTRACE_USE_ADDR2LINE
 #define BOOST_STACKTRACE_USE_ADDR2LINE
+#endif
 
 #include <algorithm>
 #include <cmath>
