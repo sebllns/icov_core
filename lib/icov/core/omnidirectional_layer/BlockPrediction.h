@@ -79,6 +79,7 @@ public:
     BOTTOM_RIGHT = BOTTOM | RIGHT,
     BOTTOM_LEFT = BOTTOM | LEFT,
     INTER = BOTTOM_LEFT + 10,
+    MAX,
     ERROR
   };
 
@@ -107,7 +108,7 @@ inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
   case BlockPrediction::BOTTOM_RIGHT:
   case BlockPrediction::BOTTOM_LEFT:
   case BlockPrediction::INTER:
-  case BlockPrediction::ERROR:
+  case BlockPrediction::MAX:
     return res;
   default:
     return ERROR;

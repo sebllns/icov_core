@@ -56,6 +56,7 @@
 #include <map>
 #include <opencv2/opencv.hpp>
 
+namespace icov {
 class Encoder : public IEncoder {
 protected:
   std::map<int, cv::Mat> m_cvmat;
@@ -63,7 +64,7 @@ protected:
 
   cv::Size m_icuSize_luma;
   cv::Size m_tuSize_luma;
-  EncodingStructure m_enc_struc;
+  icov::video::EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
   ChromaFormat m_chromaFormatIDC;
   uint m_numComp;
@@ -90,3 +91,4 @@ public:
 private:
   void onSelectBlock(int x, int y);
 };
+} // namespace icov

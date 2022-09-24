@@ -1264,11 +1264,12 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
   }
 }
 
-void EncodingStructure::applyPredictionBasedOnEntropy(
-    MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
-    const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
-    const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
-    const int qp, int maxLog2TrDynamicRange) {
+void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
+    icov::video::Picture &encpic, icov::video::IntraPrediction &intraPred,
+    const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+    const UInt tuWidth_luma, const UInt tuHeight_luma,
+    bool encodeFrequencyTableInBitStream, const int qp,
+    int maxLog2TrDynamicRange) {
 
   auto reconstructionUnitBuffer = encpic.getBuf(PIC_RECONSTRUCTION);
   ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
@@ -1306,9 +1307,9 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
     //    std::cout << "-- block is " << i << std::endl;
     int progress = (i * 100) / (vec_icus.size() - 1);
     std::cout << "    " << progress << "%                \r" << std::flush;
-    ICU_Encoder &icu_enc = vec_icus[i];
-    std::map<MyIntraPrediction::REFERENCE_SAMPLE_SIDE, SideInformationUnit>
-        &currICUintraMap = icu_enc.get_intraSIsMap();
+    IcuEncoder &icu_enc = vec_icus[i];
+    std::map<BlockPrediction::predType, SideInformationUnit> &currICUintraMap =
+        icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);
 
@@ -1316,17 +1317,12 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
     for (auto it = currICUintraMap.begin(); it != currICUintraMap.end();
          ++it) // loop over all intra side information
     {
-      SideInformationUnit &si = it->second;
-      const icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide =
-          it->first;
+      auto &si = it->second;
+      const auto &refSampSide = it->first;
 
       uint picId = PIC_PREDICTION + refSampSide;
-      std::cout << "---- pred pic is " << picId << std::endl;
-      const PelUnitBuf predictionUnitBuf = pic.get(picId);
-
-      const MyIntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide = it->first;
-
-      auto predictionUnitBuf = encpic.getBuf(PIC_PREDICTION + refSampSide);
+      //      std::cout << "---- pred pic is " << refSampSide << std::endl;
+      const PelUnitBuf predictionUnitBuf = encpic.get(picId);
 
       //      uint picId = refSampSide;
       //      std::cout << "---- pred pic is " << picId << std::endl;
@@ -1334,7 +1330,7 @@ void EncodingStructure::applyPredictionBasedOnEntropy(
       PelBuf roiComp_predictionFrameBuff =
           VTM_Utility::getAreaBuf(predictionUnitBuf, compArea);
 
-      std::vector<MyTransformUnit> &si_TUs = si.TUs;
+      auto &si_TUs = si.TUs;
       unsigned int n_tus = si_TUs.size();
 
       if (chType == CHANNEL_TYPE_CHROMA)

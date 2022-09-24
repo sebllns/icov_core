@@ -136,10 +136,8 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   uint numcode = 0;
   int numerrors = m_coder->encode(numcode, stored_synd, src_bits[bitplane_idx]);
 
-  double rate = (((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode))) /
-                 ((double)n));
-  rate = rate;
-
+  rate = (((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode))) /
+          ((double)n));
   // reset doping state and LLR
   syndromeMgr->reset_doping();
   for (int l = 0; l < n; l++) {

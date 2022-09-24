@@ -2,8 +2,6 @@
 
 #include "enc_helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
-#include "rgb888_ycrcb.h"
-#include "video_layer/mypicture.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 #include <boost/filesystem.hpp>
@@ -16,7 +14,7 @@
 namespace fs = boost::filesystem;
 using namespace icov;
 using SI_SIDE = BlockPrediction::predType;
-const int Encoder::BlockZoomID = PIC_PREDICTION + MyIntraPrediction::MAX;
+const int Encoder::BlockZoomID = PIC_PREDICTION + BlockPrediction::MAX;
 const int Encoder::RecoViewID = Encoder::BlockZoomID + 1;
 
 void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
@@ -101,19 +99,19 @@ void Encoder::onSelectBlock(int x, int y) {
 
       std::stringstream predStr;
 
-      if (si.first & MyIntraPrediction::TOP) {
+      if (si.first & BlockPrediction::TOP) {
         predStr << "TOP ";
         bi = -1;
       }
-      if (si.first & MyIntraPrediction::DOWN) {
+      if (si.first & BlockPrediction::BOTTOM) {
         predStr << "BOTTOM ";
         bi = 1;
       }
-      if (si.first & MyIntraPrediction::LEFT) {
+      if (si.first & BlockPrediction::LEFT) {
         predStr << "LEFT ";
         bj = -1;
       }
-      if (si.first & MyIntraPrediction::RIGHT) {
+      if (si.first & BlockPrediction::RIGHT) {
         predStr << "RIGHT ";
         bj = 1;
       }
@@ -236,18 +234,18 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   PelStorage picTemp;
   picTemp.create(extendedFrameArea);
 
-  MyPicture vvc_pic;
+  icov::video::Picture vvc_pic;
   vvc_pic.create(PIC_ORIGINAL, extendedFrameArea);
   vvc_pic.create(PIC_RECONSTRUCTION, extendedFrameArea);
   //  vvc_pic.create(PIC_PREDICTION, extendedFrameArea);
 
-  std::vector<MyIntraPrediction::REFERENCE_SAMPLE_SIDE> predVec = {
-      MyIntraPrediction::LEFT,       MyIntraPrediction::RIGHT,
-      MyIntraPrediction::TOP,        MyIntraPrediction::DOWN,
-      MyIntraPrediction::LEFT_TOP,   // 0b00101
-      MyIntraPrediction::LEFT_DOWN,  // 0b01001
-      MyIntraPrediction::RIGHT_DOWN, // 0b01010
-      MyIntraPrediction::RIGHT_TOP};
+  std::vector<BlockPrediction::predType> predVec = {
+      BlockPrediction::LEFT,         BlockPrediction::RIGHT,
+      BlockPrediction::TOP,          BlockPrediction::BOTTOM,
+      BlockPrediction::TOP_LEFT,     // 0b00101
+      BlockPrediction::BOTTOM_LEFT,  // 0b01001
+      BlockPrediction::BOTTOM_RIGHT, // 0b01010
+      BlockPrediction::TOP_RIGHT};
 
   for (auto pk : predVec) {
     vvc_pic.create(PIC_PREDICTION + pk, extendedFrameArea);
@@ -259,7 +257,7 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
             << std::endl;
   std::cout << mainFrameOrig.get(COMPONENT_Y).height << "=" << img_src.rows
             << std::endl;
-  cvMatToYUV(img_src, mainFrameOrig);
+  VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
           m_chromaFormatIDC, sourceWidth, sourceHeight, margin_x_360luma,
@@ -284,7 +282,7 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   PelUnitBuf mainFrameReco =
       vvc_pic.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
-  MyIntraPrediction intraPred;
+  icov::video::IntraPrediction intraPred;
   intraPred.init(m_chromaFormatIDC);
 
   std::cout << "Compute intra predictions" << std::endl;

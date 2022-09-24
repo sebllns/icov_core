@@ -62,138 +62,38 @@ class Picture {
     NUM_PIC_TYPES
   };
 
+  using const_iterator = std::map<int, PelStorage>::const_iterator;
+  using iterator = std::map<int, PelStorage>::iterator;
+
 protected:
   BoolStorage _recoFlagBuf;
 
-  std::map<uint, PelStorage> _bufs;
-  //  UInt _margins[NUM_PIC_TYPES];
+  std::map<int, PelStorage> _bufs;
+  //  UInt _margins[NUM_PIC_TYPES);
 
 public:
   Picture();
   Void destroy();
   ~Picture();
 
-  //  Void create(const PictureType pictureType, const ChromaFormat
-  //  &chromaFormat,
-  //              const Size &lumaSize, const unsigned maxCUSize,
-  //              const unsigned margin, const unsigned alignment = 0,
-  //              const bool scaleChromaMargin = true);
-  Void create(uint pictureType, const UnitArea &unit);
+  Void create(int pictureType, const ChromaFormat &chromaFormat,
+              const Size &lumaSize, const unsigned maxCUSize,
+              const unsigned margin, const unsigned alignment = 0,
+              const bool scaleChromaMargin = true);
+  Void create(int pictureType, const UnitArea &unit);
 
-  //  PelBuf getOrigBuf(const ComponentID compID) {
-  //    return _bufs.at(PIC_ORIGINAL).getBuf(compID);
-  //  }
-  //  const CPelBuf getOrigBuf(const ComponentID compID) const {
-  //    return _bufs.at(PIC_ORIGINAL).getBuf(compID);
-  //  }
-  //  PelBuf getOrigBuf(const CompArea &blk) {
-  //    return _bufs.at(PIC_ORIGINAL].getBuf(blk);
-  //  }
-  //  const CPelBuf getOrigBuf(const CompArea &blk) const {
-  //    return _bufs.at(PIC_ORIGINAL].getBuf(blk);
-  //  }
-  //  PelUnitBuf getOrigBuf(const UnitArea &unit) {
-  //    return _bufs.at(PIC_ORIGINAL].getBuf(unit);
-  //  }
-  //  const CPelUnitBuf getOrigBuf(const UnitArea &unit) const {
-  //    return _bufs[PIC_ORIGINAL].getBuf(unit);
-  //  }
-  //  PelStorage &getOrigBuf() { return _bufs[PIC_ORIGINAL]; }
-  //  const PelStorage &getOrigBuf() const { return _bufs[PIC_ORIGINAL]; }
+  inline const_iterator begin() const { return _bufs.begin(); }
+  inline const_iterator end() const { return _bufs.end(); }
 
-  //  PelBuf getRecoBuf(const ComponentID compID) {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(compID);
-  //  }
-  //  const CPelBuf getRecoBuf(const ComponentID compID) const {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(compID);
-  //  }
-  //  PelBuf getRecoBuf(const CompArea &blk) {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(blk);
-  //  }
-  //  const CPelBuf getRecoBuf(const CompArea &blk) const {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(blk);
-  //  }
-  //  PelUnitBuf getRecoBuf(const UnitArea &unit) {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(unit);
-  //  }
-  //  const CPelUnitBuf getRecoBuf(const UnitArea &unit) const {
-  //    return _bufs[PIC_RECONSTRUCTION].getBuf(unit);
-  //  }
-  //  PelStorage &getRecoBuf() { return _bufs[PIC_RECONSTRUCTION]; }
-  //  const PelStorage &getRecoBuf() const { return _bufs[PIC_RECONSTRUCTION]; }
+  inline iterator begin() { return _bufs.begin(); }
+  inline iterator end() { return _bufs.end(); }
 
-  //  BoolBuf getRecoFlagBuf(const ComponentID compID) {
-  //    return _recoFlagBuf.getBuf(compID);
-  //  }
-  //  const CBoolBuf getRecoFlagBuf(const ComponentID compID) const {
-  //    return _recoFlagBuf.getBuf(compID);
-  //  }
-  //  BoolBuf getRecoFlagBuf(const CompArea &blk) {
-  //    return _recoFlagBuf.getBuf(blk);
-  //  }
-  //  const CBoolBuf getRecoFlagBuf(const CompArea &blk) const {
-  //    return _recoFlagBuf.getBuf(blk);
-  //  }
-  //  BoolUnitBuf getRecoFlagBuf(const UnitArea &unit) {
-  //    return _recoFlagBuf.getBuf(unit);
-  //  }
-  //  const CBoolUnitBuf getRecoFlagBuf(const UnitArea &unit) const {
-  //    return _recoFlagBuf.getBuf(unit);
-  //  }
-  //  BoolStorage &getRecoFlagBuf() { return _recoFlagBuf; }
-  //  const BoolStorage &getRecoFlagBuf() const { return _recoFlagBuf; }
+  PelStorage &get(int pictureType) { return _bufs.at(pictureType); }
+  const PelStorage &get(int pictureType) const { return _bufs.at(pictureType); }
 
-  //  PelBuf getPredBuf(const ComponentID compID) {
-  //    return _bufs[PIC_PREDICTION].getBuf(compID);
-  //  }
-  //  const CPelBuf getPredBuf(const ComponentID compID) const {
-  //    return _bufs[PIC_PREDICTION].getBuf(compID);
-  //  }
-  //  PelBuf getPredBuf(const CompArea &blk) {
-  //    return _bufs[PIC_PREDICTION].getBuf(blk);
-  //  }
-  //  const CPelBuf getPredBuf(const CompArea &blk) const {
-  //    return _bufs[PIC_PREDICTION].getBuf(blk);
-  //  }
-  //  PelUnitBuf getPredBuf(const UnitArea &unit) {
-  //    return _bufs[PIC_PREDICTION].getBuf(unit);
-  //  }
-  //  const CPelUnitBuf getPredBuf(const UnitArea &unit) const {
-  //    return _bufs[PIC_PREDICTION].getBuf(unit);
-  //  }
-  //  PelStorage &getPredBuf() { return _bufs[PIC_PREDICTION]; }
-  //  const PelStorage &getPredBuf() const { return _bufs[PIC_PREDICTION]; }
-
-  //  PelBuf getBuf(const PictureType &pictureType, const ComponentID compID) {
-  //    return _bufs[pictureType].getBuf(compID);
-  //  }
-  //  const CPelBuf getBuf(const PictureType &pictureType,
-  //                       const ComponentID compID) const {
-  //    return _bufs[pictureType].getBuf(compID);
-  //  }
-  //  PelBuf getBuf(const PictureType &pictureType, const CompArea &blk) {
-  //    return _bufs[pictureType].getBuf(blk);
-  //  }
-  //  const CPelBuf getBuf(const PictureType &pictureType,
-  //                       const CompArea &blk) const {
-  //    return _bufs[pictureType].getBuf(blk);
-  //  }
-  //  PelUnitBuf getBuf(const PictureType &pictureType, const UnitArea &unit) {
-  //    return _bufs[pictureType].getBuf(unit);
-  //  }
-  //  const CPelUnitBuf getBuf(const PictureType &pictureType,
-  //                           const UnitArea &unit) const {
-  //    return _bufs[pictureType].getBuf(unit);
-  //  }
-  //  PelUnitBuf getBuf(const PictureType &pictureType) {
-  //    return _bufs[pictureType];
-  //  }
-  //  const CPelUnitBuf getBuf(const PictureType &pictureType) const {
-  //    return _bufs[pictureType];
-  //  }
-
-  inline const PelStorage &get(uint id) const { return _bufs.at(id); }
-  inline PelStorage &get(uint id) { return _bufs.at(id); }
+  PelUnitBuf &getBuf(int pictureType) { return _bufs.at(pictureType); }
+  const CPelUnitBuf getBuf(int pictureType) const {
+    return _bufs.at(pictureType);
+  }
 };
-
 } // namespace icov::video

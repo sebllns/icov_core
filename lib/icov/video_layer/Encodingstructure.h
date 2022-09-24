@@ -53,8 +53,6 @@
 #include "IcuEncoder.h"
 #include "IntraPrediction.h"
 #include "helpers.h"
-#include "icu_encoder.h"
-#include "mypicture.h"
 namespace icov::video {
 
 struct EncodingStructure {
@@ -72,11 +70,11 @@ struct EncodingStructure {
   std::vector<Position> vec_checkPoints;
   UInt n_icusPerRow, n_icusPerCol;
 
-  ICU_Encoder &getICU(const UInt icu_index);
+  IcuEncoder &getICU(const UInt icu_index);
 
-  ICU_Encoder &getICU(const UInt x_index, const UInt y_index);
+  IcuEncoder &getICU(const UInt x_index, const UInt y_index);
 
-  const ICU_Encoder &getICU(const UInt icu_index) const;
+  const IcuEncoder &getICU(const UInt icu_index) const;
 
   bool isLeftVerticalBorder(const UInt icu_index) const;
   bool isRightVerticalBorder(const UInt icu_index) const;
@@ -135,11 +133,14 @@ struct EncodingStructure {
       const UInt icuWidth_luma, const UInt icuHeight_luma,
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
-  void applyPredictionBasedOnEntropy(
-      MyPicture &encpic, MyIntraPrediction &intraPred, const ComponentID compID,
-      const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
-      const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
-      const int qp, int maxLog2TrDynamicRange);
+  void applyPredictionBasedOnEntropy(icov::video::Picture &encpic,
+                                     icov::video::IntraPrediction &intraPred,
+                                     const ComponentID compID,
+                                     const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+                                     const UInt tuWidth_luma,
+                                     const UInt tuHeight_luma,
+                                     bool encodeFrequencyTableInBitStream,
+                                     const int qp, int maxLog2TrDynamicRange);
 
 protected:
   void resetAlreadyProcessedICUs();
