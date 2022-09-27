@@ -47,16 +47,16 @@
  *****************************************************************************/
 #pragma once
 
-
 /** @class SequenceOfViewports
  *  @brief SequenceOfViewports
  *
- *  A SequenceOfViewports is a part of ICOV bitstream that is conveying a set of Viewport Units (VPU).
+ *  A SequenceOfViewports is a part of ICOV bitstream that is conveying a set of
+ * Viewport Units (VPU).
  */
-class SequenceOfViewports
-{
+class SequenceOfViewports {
 private:
   int m_num_viewports;
+
 public:
   SequenceOfViewports() = default;
 };

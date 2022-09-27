@@ -21,6 +21,14 @@ public:
 #else
       false;
 #endif
+  static const bool is_debug_build =
+#ifdef NDEBUG
+      false;
+#else
+      true;
+#endif
+
+  static const bool is_release_build = !is_debug_build;
 
   DebugTools() {}
 

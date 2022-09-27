@@ -69,7 +69,7 @@ typedef signed char SChar; // Signed 8-bit values
 // typedef       unsigned int        UInt;
 // typedef       int                 Int;
 // typedef       unsigned char       UChar; // Unsigned 8-bit values
-// typedef       void                Void;
+// typedef       void                void;
 // typedef       bool                Bool;
 // typedef       long long           Int64;
 // typedef       unsigned long long  UInt64;

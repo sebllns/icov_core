@@ -133,7 +133,7 @@ struct EncodingStructure {
       const UInt icuWidth_luma, const UInt icuHeight_luma,
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
-  void applyPredictionBasedOnEntropy(icov::video::Picture &encpic,
+  void applyPredictionBasedOnEntropy(icov::video::BufGroups &encpic,
                                      icov::video::IntraPrediction &intraPred,
                                      const ComponentID compID,
                                      const int bitDepths[MAX_NUM_CHANNEL_TYPE],

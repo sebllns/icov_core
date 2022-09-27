@@ -64,10 +64,12 @@ protected:
 
   cv::Size m_icuSize_luma;
   cv::Size m_tuSize_luma;
+  int m_qp;
   icov::video::EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
   ChromaFormat m_chromaFormatIDC;
   uint m_numComp;
+  icov::video::BufGroups vvc_pic;
 
 public:
   const static int BlockZoomID;

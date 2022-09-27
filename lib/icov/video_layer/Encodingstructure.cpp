@@ -1265,7 +1265,7 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
 }
 
 void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
-    icov::video::Picture &encpic, icov::video::IntraPrediction &intraPred,
+    icov::video::BufGroups &encpic, icov::video::IntraPrediction &intraPred,
     const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
     const UInt tuWidth_luma, const UInt tuHeight_luma,
     bool encodeFrequencyTableInBitStream, const int qp,

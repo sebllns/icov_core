@@ -60,6 +60,8 @@
 #define BOOST_STACKTRACE_USE_ADDR2LINE
 #endif
 
+#define stringify(name) #name
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -245,6 +247,14 @@ void read_vector(const std::string &filename, std::vector<T> &data) {
     data[i] = val;
   }
   file.close();
+}
+
+inline void cls(void) {
+  try {
+    system("cls||clear");
+  } catch (...) {
+  }
+  return;
 }
 
 } // namespace io

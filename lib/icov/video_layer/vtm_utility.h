@@ -138,7 +138,7 @@ setNotMaskTo(AreaBuf<T> &buff, const AreaBuf<bool> &buff_mask,
   }
 }
 
-Void positionRelativeTo(UnitArea &inputOutput, const Position &origin);
+void positionRelativeTo(UnitArea &inputOutput, const Position &origin);
 
 /*
  * Finds connected component for 360 image (traversing in x direction is

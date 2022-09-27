@@ -112,11 +112,11 @@ public:
   getDefaultDequantizationMatrix(const Size &size, const QpParam &cQP,
                                  const SliceType sliceType);
   // quantization
-  virtual Void quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum,
+  virtual void quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc, TCoeff &uiAbsSum,
                      const QpParam &cQP, const SliceType sliceType,
                      const Int channelBitDepth,
                      const int maxLog2TrDynamicRange = 15);
-  virtual Void dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
+  virtual void dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
                        const QpParam &cQP, const Int channelBitDepth,
                        const int maxLog2TrDynamicRange = 15);
 };

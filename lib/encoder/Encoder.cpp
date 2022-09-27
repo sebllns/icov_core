@@ -18,7 +18,7 @@ const int Encoder::BlockZoomID = PIC_PREDICTION + BlockPrediction::MAX;
 const int Encoder::RecoViewID = Encoder::BlockZoomID + 1;
 
 void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
-  PelBuf &compBuf = mainFrame_roi.get(compID);
+  const auto &compBuf = mainFrame_roi.get(compID);
 
   Pel *src1 = compBuf.buf;
   Pel *dst1 = compBuf.buf + compBuf.width;
@@ -40,7 +40,7 @@ void callBackFunc(int event, int x, int y, int flags, void *userdata) {
 
 Encoder::Encoder()
     : m_firstDisplayBlocks(true), m_icuSize_luma(32, 32), m_tuSize_luma(32, 32),
-      m_chromaFormatIDC(CHROMA_420),
+      m_qp(42), m_chromaFormatIDC(CHROMA_420),
       m_numComp(getNumberValidComponents(m_chromaFormatIDC)) {}
 
 Encoder::~Encoder() { std::cout << "destroy encoder" << std::endl; }
@@ -91,8 +91,32 @@ void Encoder::onSelectBlock(int x, int y) {
 
     src_block.copyTo(m_cvMat_blockSI(rect_dst));
 
-    for (const auto &si : si_map) {
+    std::stringstream sepstr;
+    sepstr << std::string(16, '-') << "|" << std::string(10, '-');
+    for (uint i = 0; i < m_numComp; i++) {
+      sepstr << "|" << std::string(9, '-');
+    }
+    sepstr << "--";
 
+    std::string innersep = sepstr.str();
+    std::string endsep = std::string(innersep.length(), '-');
+
+    if (icov::DebugTools::is_release_build)
+      icov::helpers::io::cls();
+
+    //    std::cout << endsep << std::endl;
+    // table header
+    // 2 spaces are required for alignment
+    std::cout << boost::format("%_15s   %-8s ") % "SI ID" % "PSNR";
+    for (uint i = 0; i < m_numComp; i++) {
+      std::cout << boost::format("  DIR_%-4d") % i;
+    }
+
+    std::cout << std::endl;
+    // end header
+
+    for (const auto &si : si_map) {
+      std::cout << innersep << std::endl;
       cv::Mat si_block = m_cvmat[PIC_PREDICTION + si.first](rect_src);
 
       int bi = 0, bj = 0;
@@ -122,11 +146,40 @@ void Encoder::onSelectBlock(int x, int y) {
       double psnr = VTM_OPENCV_Utility::psnr(src_block, si_block);
       //      std::cout << "\t\t\t| " << psnr;
 
-      std::cout << boost::format("%_20s  | %-8.2f ") % predStr.str() % psnr;
+      std::cout << boost::format("%_15s | %-8.2f ") % predStr.str() % psnr;
 
       for (uint i = 0; i < m_numComp; i++) {
-        std::cout << boost::format("| %-8d") % (uint)(si.second.intraDir[i]);
-        //        std::cout << "\t|\t" << (uint)(si.second.intraDir[i]);
+        uint dirmode = static_cast<uint>(si.second.intraDir[i]);
+
+        std::string dirstr;
+
+        switch (dirmode) {
+        case PLANAR_IDX:
+          dirstr = std::string("PLANAR");
+          break;
+        case DC_IDX:
+          dirstr = std::string("DC");
+          break;
+        case HOR_IDX:
+          dirstr = std::string("HOR");
+          break;
+        case DIA_IDX:
+          dirstr = std::string("DIA");
+          break;
+        case VER_IDX:
+          dirstr = std::string("VER");
+          break;
+        case VDIA_IDX:
+          dirstr = std::string("VDIA");
+          break;
+        case NOMODE_IDX:
+          dirstr = std::string("NOMODE");
+          break;
+        default:
+          dirstr = std::to_string(dirmode);
+          break;
+        }
+        std::cout << boost::format("| %-8s") % dirstr;
       }
 
       std::cout << std::endl;
@@ -135,15 +188,9 @@ void Encoder::onSelectBlock(int x, int y) {
                           rect_src.width, rect_src.height);
 
       si_block.copyTo(m_cvMat_blockSI(rect_dst));
-      //      cv::putText(
-      //          m_cvMat_blockSI, std::to_string(round(mse * 100) /
-      //          100).substr(0, 4), rect_dst.tl(), cv::FONT_HERSHEY_PLAIN, 1,
-      //          cv::Scalar(0, 0, 255), 3);
     }
 
-    std::cout
-        << "-------------------------------------------------------------------"
-        << std::endl;
+    std::cout << endsep << std::endl << std::endl;
 
     m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_icuSize_luma))
         .setTo(cv::Scalar(0, 255, 0));
@@ -189,8 +236,8 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   // margins per left and right side and this will be divided by 2 for
   // chroma.
 
-  const std::vector<int> qp_set = {22, 27, 32, 37, 42};
-  const int qp = 42;
+  //  const std::vector<int> qp_set = {22, 27, 32, 37, 42};
+  const int qp = m_qp;
   std::cout << "qp= " << qp << std::endl;
 
   const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
@@ -231,10 +278,9 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
   UnitArea mainFrameArea(m_chromaFormatIDC,
                          Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
-  PelStorage picTemp;
-  picTemp.create(extendedFrameArea);
+  //  PelStorage picTemp;
+  //  picTemp.create(extendedFrameArea);
 
-  icov::video::Picture vvc_pic;
   vvc_pic.create(PIC_ORIGINAL, extendedFrameArea);
   vvc_pic.create(PIC_RECONSTRUCTION, extendedFrameArea);
   //  vvc_pic.create(PIC_PREDICTION, extendedFrameArea);
@@ -374,20 +420,18 @@ void Encoder::encode(std::ostream &output, const IPicture &picture,
 
   cv::waitKey(0);
 
-  //     //encode the blocks
-  //     for(const auto& b: picture.icus())
-  //     {
-  //         encodeBlock(output, b,
-  //         access_blocks.isAccessBlock(b.getId(Block::THIS)));
-  //     }
+  // encode the blocks
+  for (const auto &b : picture.icus()) {
+    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
+  }
 }
 
 void Encoder::encodeBlock(std::ostream &output, const Block &b,
                           bool access_block) {
   std::cout << "-- block " << b.center_u() << ", " << b.center_v() << std::endl;
 
-  // if(access_block) encodeBlockWithPrediction(output, b,
-  // BlockPrediction::NONE);
+  if (access_block)
+    encodeBlockWithPrediction(output, b, BlockPrediction::NONE);
 
   std::vector<BlockPrediction::predType> pred_values = {
       BlockPrediction::RIGHT,        BlockPrediction::LEFT,

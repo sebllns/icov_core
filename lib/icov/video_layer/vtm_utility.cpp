@@ -27,7 +27,7 @@ Area VTM_Utility::operator&(const Area &a, const Area &b) {
   return c &= b;
 }
 
-Void VTM_Utility::positionRelativeTo(UnitArea &inputOutput,
+void VTM_Utility::positionRelativeTo(UnitArea &inputOutput,
                                      const Position &origin) {
   for (UInt i = 0; i < inputOutput.blocks.size(); i++) {
     inputOutput.blocks[i].relativeTo(origin);

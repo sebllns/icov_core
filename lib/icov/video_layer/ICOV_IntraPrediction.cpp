@@ -7,7 +7,7 @@
 #include "ICOV_IntraPrediction.h"
 #include "vtm_utility.h"
 
-Void icov::video::IntraPrediction::destroy() {
+void icov::video::IntraPrediction::destroy() {
   for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++) {
     for (UInt buf = 0; buf < NUM_PRED_BUF; buf++) {
       delete[] m_piYuvExt[ch][buf];
@@ -739,7 +739,7 @@ void icov::video::IntraPrediction::xFilterReferenceSamples(
   *piDestPtr = *piSrcPtr;
 }
 
-Void icov::video::IntraPrediction::xPredIntraPlanar(const CPelBuf &pSrc,
+void icov::video::IntraPrediction::xPredIntraPlanar(const CPelBuf &pSrc,
                                                     PelBuf &pDst) {
   const UInt width = pDst.width;
   const UInt height = pDst.height;
@@ -810,7 +810,7 @@ Pel icov::video::IntraPrediction::xGetPredValDc(const CPelBuf &pSrc,
   return pDcVal;
 }
 
-Void icov::video::IntraPrediction::xPredIntraAng(const CPelBuf &pSrc,
+void icov::video::IntraPrediction::xPredIntraAng(const CPelBuf &pSrc,
                                                  PelBuf &pDst,
                                                  const UInt dirMode) {
   Int width = Int(pDst.width);
@@ -936,7 +936,7 @@ icov::video::IntraPrediction::IntraPrediction()
 
 icov::video::IntraPrediction::~IntraPrediction() { destroy(); }
 
-Void icov::video::IntraPrediction::init(ChromaFormat chromaFormatIDC) {
+void icov::video::IntraPrediction::init(ChromaFormat chromaFormatIDC) {
   // if it has been initialised before, but the chroma format has changed,
   // release the memory and start again.
   if (m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] != nullptr &&
@@ -962,7 +962,7 @@ Void icov::video::IntraPrediction::init(ChromaFormat chromaFormatIDC) {
   std::cout << "pred init\n";
 }
 
-Void icov::video::IntraPrediction::initIntraPatternChType(
+void icov::video::IntraPrediction::initIntraPatternChType(
     const PelUnitBuf &recoUnitBuf,
     const BoolUnitBuf &flagUnitBufReconstructedPixels, const CompArea &area,
     const Int bitDepths, const Bool bFilterRefSamples) {
@@ -979,7 +979,7 @@ Void icov::video::IntraPrediction::initIntraPatternChType(
   }
 }
 
-Void icov::video::IntraPrediction::initIntraPatternChType(
+void icov::video::IntraPrediction::initIntraPatternChType(
     const PelUnitBuf &recoUnitBuf, const REFERENCE_SAMPLE_SIDE &refSampSide,
     const CompArea &area, const Int bitDepths, const Bool bFilterRefSamples) {
   Pel *refBufUnfiltered = m_piYuvExt[area.compID][PRED_BUF_UNFILTERED];
@@ -995,7 +995,7 @@ Void icov::video::IntraPrediction::initIntraPatternChType(
   }
 }
 
-Void icov::video::IntraPrediction::initIntraPatternChType(
+void icov::video::IntraPrediction::initIntraPatternChType(
     const PelUnitBuf &recoUnitBuf,
     const BoolUnitBuf &flagUnitBufReconstructedPixels,
     const icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE &refSampSide,

@@ -57,7 +57,7 @@ icov::video::Quant::~Quant() {
   }
 }
 
-Void icov::video::Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc,
+void icov::video::Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc,
                                TCoeff &uiAbsSum, const QpParam &cQP,
                                const SliceType sliceType,
                                const Int channelBitDepth,
@@ -132,7 +132,7 @@ Void icov::video::Quant::quant(CoeffBuf &piQCoef, const CCoeffBuf &pSrc,
   }
 }
 
-Void icov::video::Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
+void icov::video::Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
                                  const QpParam &cQP, const Int channelBitDepth,
                                  const int maxLog2TrDynamicRange) {
 

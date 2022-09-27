@@ -61,10 +61,10 @@ public:
   ~Transform2D();
 
   // forward Transform
-  Void transformNxN(CoeffBuf &transformCoeffBuff, const PelUnitBuf &resiUnitBuf,
+  void transformNxN(CoeffBuf &transformCoeffBuff, const PelUnitBuf &resiUnitBuf,
                     const CompArea &area, const Int bitDepths,
                     const int maxLog2TrDynamicRange = 15);
-  Void invTransformNxN(PelUnitBuf &resiUnitBuf, const CompArea &area,
+  void invTransformNxN(PelUnitBuf &resiUnitBuf, const CompArea &area,
                        const CCoeffBuf &transformCoeffBuff, const Int bitDepths,
                        const int maxLog2TrDynamicRange = 15);
 };

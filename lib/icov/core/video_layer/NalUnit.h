@@ -1,5 +1,5 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
@@ -8,7 +8,8 @@
  */
 
 /** @file NalUnit.h
- *  @brief Defines NAL structure needed to convey video (VCL) and non-video (NON-VCL) data
+ *  @brief Defines NAL structure needed to convey video (VCL) and non-video
+ *(NON-VCL) data
  * +---------------+---------------+
  * |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -19,13 +20,13 @@
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -53,31 +54,21 @@
 #pragma once
 #include "common.h"
 
-class NalUnit
-{
+class NalUnit {
 public:
   /** construct an NALunit structure with given header values. */
-  NalUnit(
-      icov::enum_t::NalUnitType nalUnitType,
-      int temporalId = 0,
-      uint32_t nuhReservedZeroBit = 0,
-      uint32_t forbiddenZeroBit = 0,
-      int nuhLayerId = 0)
+  NalUnit(icov::enum_t::NalUnitType nalUnitType, int temporalId = 0,
+          uint32_t nuhReservedZeroBit = 0, uint32_t forbiddenZeroBit = 0,
+          int nuhLayerId = 0)
       : m_nalUnitType(nalUnitType), m_temporalId(temporalId),
-        m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit), m_nuhReservedZeroBit(nuhReservedZeroBit),
-        m_rbsp(nullptr),
-        m_rbsp_length(0)
-  {
-  }
+        m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit),
+        m_nuhReservedZeroBit(nuhReservedZeroBit), m_rbsp(nullptr),
+        m_rbsp_length(0) {}
 
-
-    NalUnit()
-      : m_nalUnitType(icov::enum_t::NalUnitType::NAL_UNIT_INVALID), m_temporalId(0),
-        m_nuhLayerId(0), m_forbiddenZeroBit(0), m_nuhReservedZeroBit(0),
-        m_rbsp(nullptr),
-        m_rbsp_length(0)
-  {
-  }
+  NalUnit()
+      : m_nalUnitType(icov::enum_t::NalUnitType::NAL_UNIT_INVALID),
+        m_temporalId(0), m_nuhLayerId(0), m_forbiddenZeroBit(0),
+        m_nuhReservedZeroBit(0), m_rbsp(nullptr), m_rbsp_length(0) {}
 
   void serialize(icov::byte *&dst) const;
   void deserialize(icov::byte *src);

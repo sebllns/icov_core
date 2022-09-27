@@ -1,14 +1,8 @@
-/**************************************************************************
-**   Copyright (C): 2018
-**   Author: Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
-**   Supervisors: Aline ROUMY, Thomas MAUGEY
-**   Inria research institute
-**************************************************************************/
 #include "ICOV_Picture.h"
 
-icov::video::Picture::Picture() {}
+icov::video::BufGroups::BufGroups() {}
 
-Void icov::video::Picture::destroy() {
+void icov::video::BufGroups::destroy() {
 
   for (UInt i = 0; i < NUM_PIC_TYPES; i++) {
     _bufs[i].destroy();
@@ -18,9 +12,9 @@ Void icov::video::Picture::destroy() {
   _recoFlagBuf.destroy();
 }
 
-icov::video::Picture::~Picture() { destroy(); }
+icov::video::BufGroups::~BufGroups() { destroy(); }
 
-Void icov::video::Picture::create(
+void icov::video::BufGroups::create(
     int pictureType, const ChromaFormat &chromaFormat, const Size &lumaSize,
     const unsigned maxCUSize, const unsigned margin, const unsigned alignment,
     const bool scaleChromaMargin) {
@@ -37,7 +31,7 @@ Void icov::video::Picture::create(
                         scaleChromaMargin);
 }
 
-Void icov::video::Picture::create(int pictureType, const UnitArea &unit) {
+void icov::video::BufGroups::create(int pictureType, const UnitArea &unit) {
   //  CHECK((pictureType < PIC_RECONSTRUCTION || pictureType > NUM_PIC_TYPES),
   //        "picture type not specified");
 

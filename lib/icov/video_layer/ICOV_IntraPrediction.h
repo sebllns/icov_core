@@ -71,7 +71,7 @@ private:
 
 protected:
   ChromaFormat m_currChromaFormat;
-  Void destroy();
+  void destroy();
   void xFillReferenceSamples(const PelUnitBuf &recoUnitBuf,
                              const BoolUnitBuf &flagUnitBufReconstructedPixels,
                              Pel *refBufUnfiltered, const CompArea &area,
@@ -95,14 +95,14 @@ protected:
   /// 24-bit source
   /// \param pSrc source
   /// \param pDst destination
-  Void xPredIntraPlanar(const CPelBuf &pSrc, PelBuf &pDst);
+  void xPredIntraPlanar(const CPelBuf &pSrc, PelBuf &pDst);
 
   Pel xGetPredValDc(
       const CPelBuf &pSrc,
       const Size &dstSize); // Function for calculating DC value of the
                             // reference samples used in Intra prediction. NOTE:
                             // Bit-Limit - 25-bit source
-  inline Void xPredIntraDc(const CPelBuf &pSrc, PelBuf &pDst) {
+  inline void xPredIntraDc(const CPelBuf &pSrc, PelBuf &pDst) {
     pDst.fill(xGetPredValDc(pSrc, pDst));
   }
 
@@ -119,7 +119,7 @@ protected:
    * predicted value for the pixel is linearly interpolated from the reference
    * samples. All reference samples are taken from the extended main reference.
    */
-  Void xPredIntraAng(const CPelBuf &pSrc, PelBuf &pDst, const UInt dirMode);
+  void xPredIntraAng(const CPelBuf &pSrc, PelBuf &pDst, const UInt dirMode);
 
   Pel *getPredictorPtr(const ComponentID compID,
                        const Bool bUseFilteredPredictions = false) {
@@ -131,18 +131,18 @@ public:
   IntraPrediction();
   virtual ~IntraPrediction();
 
-  Void init(ChromaFormat chromaFormatIDC);
+  void init(ChromaFormat chromaFormatIDC);
 
   /// set parameters from CU data for accessing intra data
-  Void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
+  void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
                               const BoolUnitBuf &flagUnitBufReconstructedPixels,
                               const CompArea &area, const Int bitDepths,
                               const Bool bFilterRefSamples = false);
-  Void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
+  void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
                               const REFERENCE_SAMPLE_SIDE &refSampSide,
                               const CompArea &area, const Int bitDepths,
                               const Bool bFilterRefSamples = false);
-  Void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
+  void initIntraPatternChType(const PelUnitBuf &recoUnitBuf,
                               const BoolUnitBuf &flagUnitBufReconstructedPixels,
                               const REFERENCE_SAMPLE_SIDE &refSampSide,
                               const CompArea &area, const Int bitDepths,

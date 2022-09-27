@@ -66,17 +66,17 @@ public:
   Distortion getDistPart(const CCoeffBuf &org, const CCoeffBuf &cur,
                          Int bitDepth, const ComponentID compID, DFunc eDFunc);
 
-  Void setDistortionChromaWeight(const ComponentID compID,
+  void setDistortionChromaWeight(const ComponentID compID,
                                  const Double distortionWeight) {
     m_distortionWeight[compID] = distortionWeight;
   }
-  Void setDistortionChromaWeight(const ComponentID compID, const Int qpy,
+  void setDistortionChromaWeight(const ComponentID compID, const Int qpy,
                                  const ChromaFormat chFmt,
                                  const Int chromaQPOffset);
 
 private:
-  Void init();
-  Void initRdCostX86();
+  void init();
+  void initRdCostX86();
 
   static Distortion xGetSSEw(const DistParam &rcDtParam); // weighted SSD cost
   static Distortion xGetSSE(const DistParam &rcDtParam);

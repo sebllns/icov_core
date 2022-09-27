@@ -47,20 +47,13 @@
  *
  *****************************************************************************/
 #pragma once
-//#include "CommonLib/Picture.h"
+#include "CommonLib/Picture.h"
 #include "ICOV_Storage.h"
 #include <map>
 
 namespace icov::video {
 
-class Picture {
-
-  enum PictureType {
-    PIC_RECONSTRUCTION = 0,
-    PIC_ORIGINAL,
-    PIC_PREDICTION,
-    NUM_PIC_TYPES
-  };
+class BufGroups {
 
   using const_iterator = std::map<int, PelStorage>::const_iterator;
   using iterator = std::map<int, PelStorage>::iterator;
@@ -72,15 +65,15 @@ protected:
   //  UInt _margins[NUM_PIC_TYPES);
 
 public:
-  Picture();
-  Void destroy();
-  ~Picture();
+  BufGroups();
+  void destroy();
+  ~BufGroups();
 
-  Void create(int pictureType, const ChromaFormat &chromaFormat,
+  void create(int pictureType, const ChromaFormat &chromaFormat,
               const Size &lumaSize, const unsigned maxCUSize,
               const unsigned margin, const unsigned alignment = 0,
               const bool scaleChromaMargin = true);
-  Void create(int pictureType, const UnitArea &unit);
+  void create(int pictureType, const UnitArea &unit);
 
   inline const_iterator begin() const { return _bufs.begin(); }
   inline const_iterator end() const { return _bufs.end(); }

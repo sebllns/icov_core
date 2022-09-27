@@ -254,7 +254,7 @@ void my_xITrMxN(const int bitDepth, const TCoeff *coeff, Pel *residual,
   }
 }
 
-Void icov::video::Transform2D::transformNxN(CoeffBuf &transformCoeffBuff,
+void icov::video::Transform2D::transformNxN(CoeffBuf &transformCoeffBuff,
                                             const PelUnitBuf &resiUnitBuf,
                                             const CompArea &area,
                                             const Int bitDepths,
@@ -277,7 +277,7 @@ Void icov::video::Transform2D::transformNxN(CoeffBuf &transformCoeffBuff,
   transformCoeffBuff.copyFrom(tempCoeff);
 }
 
-Void icov::video::Transform2D::invTransformNxN(
+void icov::video::Transform2D::invTransformNxN(
     PelUnitBuf &resiUnitBuf, const CompArea &area,
     const CCoeffBuf &transformCoeffBuff, const Int bitDepths,
     const int maxLog2TrDynamicRange) {

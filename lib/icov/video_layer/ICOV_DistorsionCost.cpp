@@ -76,7 +76,7 @@ Distortion icov::video::DistortionCost::getDistPart(const CCoeffBuf &org,
   }
 }
 
-Void icov::video::DistortionCost::setDistortionChromaWeight(
+void icov::video::DistortionCost::setDistortionChromaWeight(
     const ComponentID compID, const Int qpy, const ChromaFormat chFmt,
     const Int chromaQPOffset) {
   CHECK(toChannelType(compID) != CHANNEL_TYPE_CHROMA,
@@ -93,7 +93,7 @@ Void icov::video::DistortionCost::setDistortionChromaWeight(
   setDistortionChromaWeight(compID, tmpWeight);
 }
 
-Void icov::video::DistortionCost::init() {
+void icov::video::DistortionCost::init() {
   m_afpDistortFunc[DF_SSE] = icov::video::DistortionCost::xGetSSE;
   m_afpDistortFunc[DF_SSE2] = icov::video::DistortionCost::xGetSSE;
   m_afpDistortFunc[DF_SSE4] = icov::video::DistortionCost::xGetSSE4;
@@ -177,7 +177,7 @@ Void icov::video::DistortionCost::init() {
   //    initRdCostX86();
 }
 
-Void icov::video::DistortionCost::initRdCostX86() {}
+void icov::video::DistortionCost::initRdCostX86() {}
 
 Distortion icov::video::DistortionCost::xGetSSEw(const DistParam &rcDtParam) {
   const Pel *piOrg = rcDtParam.org.buf;

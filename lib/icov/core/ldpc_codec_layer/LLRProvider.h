@@ -1,43 +1,46 @@
 #ifndef LLRPROVIDER_H
 #define LLRPROVIDER_H
 
-#include "common.h"
 #include "BitSymbolProvider.h"
+#include "common.h"
 
 namespace icov {
 
-class LLRProvider
-{
+class LLRProvider {
 public:
-    LLRProvider(int n);
-    LLRProvider(const std::vector<LLRVal> &llr);
+  LLRProvider(int n);
+  LLRProvider(const std::vector<LLRVal> &llr);
 
-    inline LLRVal& operator [] (int i) {return m_llr[i];}
-    inline LLRVal operator [] (int i) const {return m_llr[i];}
-    inline const std::vector<LLRVal>& llr() const {return m_llr;}
-    inline const BitVec& src() const {return m_src;}
-    inline const BitVal& src(int i) const {return m_src[i];}
+  inline LLRVal &operator[](int i) { return m_llr[i]; }
+  inline LLRVal operator[](int i) const { return m_llr[i]; }
+  inline const std::vector<LLRVal> &llr() const { return m_llr; }
+  inline const BitVec &src() const { return m_src; }
+  inline const BitVal &src(int i) const { return m_src[i]; }
 
-    void initLLR(const std::vector<SIVal> &side_info , const BitVec &src_bits);
-    void initLLR(float pCrossover, const BitVec& src);
-    void initLLRUniform(float pCrossover, const BitVec& src);
-    std::vector<icov::BitVal> initSrcRand();
+  void initLLR(const std::vector<SIVal> &side_info, const BitVec &src_bits);
+  void initLLR(float pCrossover, const BitVec &src);
+  void initLLRUniform(float pCrossover, const BitVec &src);
+  std::vector<icov::BitVal> initSrcRand();
 
-    uint32_t index_min() const;
-    static LLRVal limit_max();
+  uint32_t index_min() const;
+  static LLRVal limit_max();
 
-     void initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const BitVec &src_bits);
-     void initLLR_b(int b, BitSymbolProvider &bsp, const std::vector<SIVal> &side_info, const std::vector<int>& sign,  const std::vector<int>& abs_predec, const BitVec &src_bits);
+  void initLLR_s(BitSymbolProvider &bsp, const std::vector<SIVal> &side_info,
+                 const BitVec &src_bits);
+  void initLLR_b(int b, BitSymbolProvider &bsp,
+                 const std::vector<SIVal> &side_info,
+                 const std::vector<int> &sign,
+                 const std::vector<int> &abs_predec, const BitVec &src_bits);
 
-     bool no_coding() const;
+  bool no_coding() const;
 
 protected:
-    std::vector<LLRVal> m_llr;
-    BitVec m_src;
-    std::vector<size_t> doping_order;
-    bool m_floor_type;
+  std::vector<LLRVal> m_llr;
+  BitVec m_src;
+  std::vector<size_t> doping_order;
+  bool m_floor_type;
 };
 
-}
+} // namespace icov
 
 #endif // LLRPROVIDER_H
