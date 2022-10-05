@@ -49,33 +49,28 @@
 
 #include "omnidirectional_layer/interface/IPicture.h"
 
-
 /** @class EquiRectPicture
  *  @brief EquiRectPicture
  *
- *  A EquiRectPicture is the smallest unit of a EquiRectPicture or EquiRectPicture and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A EquiRectPicture is the smallest unit of a EquiRectPicture or
+ * EquiRectPicture and is conveying the pixels to be decoded and the pixels to
+ * be displayed.
  */
-class EquiRectPicture : public IPicture
-{
+class EquiRectPicture : public IPicture {
 private:
+  int block_rows;
+  int block_cols;
 
-    int block_rows;
-    int block_cols;
-
-    // IPicture interface
+  // IPicture interface
 public:
-    ~EquiRectPicture() = default;
+  ~EquiRectPicture() = default;
 
-    virtual size_t getId(int i, int j) const override;
-    virtual float u(float angle_x) const override;
-    virtual float v(float angle_y) const override;
-    virtual float angleX(float u) const override;
-    virtual float angleY(float v) const override;
+  virtual size_t getId(int i, int j) const override;
+  virtual float u(float angle_x) const override;
+  virtual float v(float angle_y) const override;
+  virtual float angleX(float u) const override;
+  virtual float angleY(float v) const override;
 
-
-
-    void buildConstantSizeBlocks(int pw, int ph);
-    EquiRectPicture(int pw, int ph);
-
-
+  void buildConstantSizeBlocks(int pw, int ph);
+  EquiRectPicture(int pw, int ph);
 };

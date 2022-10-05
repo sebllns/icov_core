@@ -1,8 +1,8 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup common
  *  @ingroup icov-core
  */
@@ -14,13 +14,13 @@
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -49,6 +49,7 @@
 #pragma once
 
 #include "common.h"
+#include <boost/any.hpp>
 
 /****************************************************************************/
 /** @ingroup common
@@ -57,51 +58,64 @@
 
 namespace icov {
 
-enum eMediaType
-{
-    UNKNOWN = -1,
-    IMAGE = 0,
-    VIDEO = 1,
-    MODEL_3D,
-    COUNT
+enum eMediaType {
+  UNKNOWN = -1,
+  IMAGE = 0,
+  VIDEO = 1,
+  MODEL_3D = 2,
+  ICOV = 3,
+  COUNT,
+  ERROR
 };
 
-class IMedia
-{   
+class IMedia {
 protected:
-  float m_width;
-  float m_height;
   int m_type;
   std::string m_path;
+  float m_width;
+  float m_height;
+  int m_frameCount;
 
-  IMedia(const std::string &path, int media_type = (int)eMediaType::UNKNOWN): m_type(media_type), m_path(path){}
+  IMedia(const std::string &path, int media_type = (int)eMediaType::UNKNOWN)
+      : m_type(media_type), m_path(path), m_width(0), m_height(0),
+        m_frameCount(0) {}
 
 public:
-  inline float getWidth() const {return m_width;}
-  inline float getHeight() const {return m_height;}
-  inline int getType() const {return m_type;}
-  inline const std::string getPath() const {return m_path;}
+  inline float getWidth() const { return m_width; }
+  inline float getHeight() const { return m_height; }
+  inline int getType() const { return m_type; }
+  inline int getFrameCount() const { return m_frameCount; }
+  inline const std::string getPath() const { return m_path; }
+  inline virtual const boost::any getProperty(std::string id) {
+    return boost::any(id);
+  }
 
+  virtual void setFrame(int frame) = 0;
   virtual ~IMedia() = default;
 };
 
-
-class IImage : public IMedia
-{
-    IImage(const std::string &path): IMedia(path, (int)eMediaType::IMAGE){}
-    virtual ~IImage() = default;
+class IImage : public IMedia {
+public:
+  IImage(const std::string &path) : IMedia(path, (int)eMediaType::IMAGE) {}
+  virtual ~IImage() = default;
 };
 
-class IVideo : public IMedia
-{
-    IVideo(const std::string &path): IMedia(path, (int)eMediaType::VIDEO){}
-    virtual ~IVideo() = default;
+class IVideo : public IMedia {
+public:
+  IVideo(const std::string &path) : IMedia(path, (int)eMediaType::VIDEO) {}
+  virtual ~IVideo() = default;
 };
 
-class IModel3D : public IMedia
-{
-    IModel3D(const std::string &path): IMedia(path, (int)eMediaType::MODEL_3D){}
-    virtual ~IModel3D() = default;
+class IModel3D : public IMedia {
+public:
+  IModel3D(const std::string &path) : IMedia(path, (int)eMediaType::MODEL_3D) {}
+  virtual ~IModel3D() = default;
 };
 
-}
+class IIcov : public IMedia {
+public:
+  IIcov(const std::string &path) : IMedia(path, (int)eMediaType::ICOV) {}
+  virtual ~IIcov() = default;
+};
+
+} // namespace icov

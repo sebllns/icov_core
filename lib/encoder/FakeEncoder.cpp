@@ -11,26 +11,28 @@ namespace fs = boost::filesystem;
 using namespace std;
 using namespace icov;
 
+namespace icov {
+
 FakeEncoder::FakeEncoder() { cout << "new encoder" << endl; }
 
 FakeEncoder::~FakeEncoder() {
   cout << "destroy encoder" << endl;
-  dispose();
+  //  dispose();
 }
 
-void FakeEncoder::openFile(const std::string &filename) {
-  cout << "open file to encode " << filename << std::endl;
-  fs::path filepath = fs::complete(fs::path(filename));
+// void FakeEncoder::openFile(const std::string &filename) {
+//  cout << "open file to encode " << filename << std::endl;
+//  fs::path filepath = fs::complete(fs::path(filename));
 
-  ICOV_ASSERT_MSG(fs::is_regular_file(filepath),
-                  "File not found: " + filepath.string());
-  m_img_src = cv::imread(filename, -1);
-}
+//  ICOV_ASSERT_MSG(fs::is_regular_file(filepath),
+//                  "File not found: " + filepath.string());
+//  m_img_src = cv::imread(filename, -1);
+//}
 
-void FakeEncoder::dispose() {
-  m_img_src.release();
-  cout << "dispose" << endl;
-}
+// void FakeEncoder::dispose() {
+//  m_img_src.release();
+//  cout << "dispose" << endl;
+//}
 
 void FakeEncoder::encode(std::ostream &output, const IPicture &picture,
                          const IAccessBlockManager &access_blocks) {
@@ -121,3 +123,4 @@ void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
 
   output.write((char *)pixels.data, rect_block.area() * pixels.elemSize());
 }
+} // namespace icov

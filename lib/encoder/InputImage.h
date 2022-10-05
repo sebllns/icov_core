@@ -1,17 +1,17 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup IEncoder
- * IEncoder package (client side).
+/** @addtogroup SourceMedia
+ * SourceMedia package (client side).
  *  @ingroup icov-core
  */
 
-/** @file IEncoder.h
- *  @brief Defines an abstract ICOV IEncoder.
- *  @ingroup IEncoder
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+/** @file SourceMedia.h
+ *  @brief Defines an actual ICOV SourceMedia.
+ *  @ingroup SourceMedia
+ *  @author Sï¿½bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
@@ -49,19 +49,24 @@
 
 #pragma once
 
-#include "common.h"
-#include "omnidirectional_layer/interface/IPicture.h"
-#include "omnidirectional_layer/interface/IAccessBlockManager.h"
+#include "Media.h"
+#include <opencv2/opencv.hpp>
 
-class IEncoder
-{
+namespace icov {
 
-public:               
-    virtual ~IEncoder() = default;
+class InputImage : public icov::IImage {
 
-    virtual void openFile(const std::string &filename) = 0;
-    virtual void dispose() = 0;
-    virtual void encode(std::ostream &output, const IPicture &picture, const IAccessBlockManager &access_blocks) = 0;
-    virtual void encodeBlock(std::ostream &output, const Block &b, bool access_block) = 0;
-    virtual void encodeBlockWithPrediction(std::ostream &output, const Block &b, uint16_t prediction) = 0;
+protected:
+  cv::Mat m_cvmat;
+
+public:
+  InputImage(const std::string &path);
+  ~InputImage() = default;
+  const cv::Mat &cvmat() const;
+
+  // IMedia interface
+public:
+  void setFrame(int frame) override;
 };
+
+} // namespace icov

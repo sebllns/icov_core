@@ -55,45 +55,42 @@ class IPicture;
 /** @class Block
  *  @brief Block
  *
- *  A Block is the smallest unit of a EquiRectPicture or Viewport and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A Block is the smallest unit of a EquiRectPicture or Viewport and is
+ * conveying the pixels to be decoded and the pixels to be displayed.
  */
-class Block
-{
+class Block {
 
 public:
-    enum NeighborDirection
-    {
-        SELF    = 0,
-        RIGHT    = 1,
-        LEFT   ,
-        UP     ,
-        DOWN  ,
-        COUNT,
-    };
+  enum NeighborDirection {
+    SELF = 0,
+    RIGHT = 1,
+    LEFT,
+    UP,
+    DOWN,
+    COUNT,
+  };
 
 protected:
+  IPicture *m_parent;
+  float m_u;
+  float m_v;
+  float m_w;
+  float m_h;
+  bool m_isAccessBlock;
+  size_t uid[NeighborDirection::COUNT];
 
-    IPicture *m_parent;
-    float m_u;
-    float m_v;
-    float m_w;
-    float m_h;
-    bool m_isAccessBlock;  
-    size_t uid[NeighborDirection::COUNT];
-
-    //center, topleft, topright, bottomright, bottomleft
-    point3d cartesian_coords[5];
+  // center, topleft, topright, bottomright, bottomleft
+  point3d cartesian_coords[5];
 
 public:
-
-  Block(size_t id, IPicture *parent, float px, float py, float pw, float ph);
+  Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph);
   ~Block();
 
   const IPicture *parent() const;
 
   void setId(NeighborDirection index, size_t id);
   size_t getId(NeighborDirection index) const;
-  const point3d& getCartesianCoord(uint16_t i) const;
+  const point3d &getCartesianCoord(uint16_t i) const;
 
   float u() const;
   float v() const;
@@ -105,9 +102,7 @@ public:
 
   bool isAccessBlock() const;
 
-
-
-//  bool isVisible(const viewport_geometry &vpg) const;
+  //  bool isVisible(const viewport_geometry &vpg) const;
 };
 
 using sp_Block = std::shared_ptr<Block>;

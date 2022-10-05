@@ -1,5 +1,5 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  * ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
@@ -14,13 +14,13 @@
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -54,28 +54,30 @@
 #define _HAS_STD_BYTE 0
 #define _USE_MATH_DEFINES
 #endif
-#ifndef NOMINMAX 
+#ifndef NOMINMAX
 #define NOMINMAX
 #endif
 //#include <Windows.h>
 #endif
 
-#include <ctype.h>
-#include <locale>
-#include <locale.h>
-#include <string>
-#include <algorithm>
-#include <iomanip>
-#include <limits>
-#include <memory>
-#include <fstream>
-#include <iostream>
-#include <cstdio>
-#include <stdexcept>
-#include "tools/DebugTools.h"
-#include "typedef.h"
 #include "common_types.h"
-//#include "version.h"
+#include "typedef.h"
+#include "version.h"
+
+#include "tools/DebugTools.h"
+#include <algorithm>
+#include <cstdio>
+#include <ctype.h>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <locale.h>
+#include <locale>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 //#include "helpers.h"
 //#include "icov_program_options.h"
 

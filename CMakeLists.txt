@@ -182,6 +182,7 @@ endif()
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
 file (WRITE "${CMAKE_CURRENT_SOURCE_DIR}/lib/icov/core/common/version.h"
     "/* This file is auto-generated from Cmake. You should not modify it directly*/\n"
+    "#pragma once\n"
     "#define ICOV_CORE_VERSION_MAJOR ${ICOV_CORE_VERSION_MAJOR}\n"
     "#define ICOV_CORE_VERSION_MINOR ${ICOV_CORE_VERSION_MINOR}\n"
     "#define ICOV_CORE_VERSION_PATCH ${ICOV_CORE_VERSION_PATCH}\n"

@@ -51,31 +51,28 @@
 #include <boost/program_options.hpp>
 
 #include "common.h"
+#include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
-#include "omnidirectional_layer/interface/IEncoder.h"
 
 namespace po = boost::program_options;
 
-
-class EncodeMode
-{
+class EncodeMode {
 public:
-    EncodeMode(const po::variables_map &args);
-    ~EncodeMode() = default;
+  EncodeMode(const po::variables_map &args);
+  ~EncodeMode() = default;
 
-    void run();
+  void run();
 
-    static void AddProgramOptions(po::options_description &desc);
+  static void AddProgramOptions(po::options_description &desc);
 
-    static const std::string s_inputFile_id;
+  static const std::string s_inputFile_id;
 
 private:
-    int encode();
-    std::shared_ptr<AffInteractiveCoder> m_ycoder;
-    std::shared_ptr<AffInteractiveCoder> m_uvcoder;
-    std::unique_ptr<IEncoder> m_encoder;
+  int encode();
+  std::shared_ptr<AffInteractiveCoder> m_ycoder;
+  std::shared_ptr<AffInteractiveCoder> m_uvcoder;
+  std::unique_ptr<IEncoder> m_encoder;
 
-    /// @todo replace with Media class
-    std::string m_inputFile;
+  /// @todo replace with Media class
+  std::string m_inputFile;
 };
-
