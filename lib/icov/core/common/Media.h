@@ -49,12 +49,10 @@
 #pragma once
 
 #include "common.h"
+#include "helpers.h"
 #include <boost/any.hpp>
-
-/****************************************************************************/
-/** @ingroup common
- *  @brief Defines the interface for any IMedia object sent to extractor.
- */
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 
 namespace icov {
 
@@ -68,53 +66,77 @@ enum eMediaType {
   ERROR
 };
 
-class IMedia {
+/****************************************************************************/
+/** @ingroup common
+ *  @brief Defines the interface for any IMedia object sent to extractor.
+ */
+template <typename T> class IMedia {
+private:
+  IMedia() = default;
+  IMedia(const IMedia &) = default;
+
 protected:
   int m_type;
-  std::string m_path;
-  float m_width;
-  float m_height;
+  fs::path m_path;
+  size_t m_width;
+  size_t m_height;
   int m_frameCount;
+  T m_frame;
 
-  IMedia(const std::string &path, int media_type = (int)eMediaType::UNKNOWN)
-      : m_type(media_type), m_path(path), m_width(0), m_height(0),
-        m_frameCount(0) {}
+  IMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
+      : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
+        m_frameCount(0)
+
+  {
+    ICOV_ASSERT_MSG(fs::is_regular_file(m_path),
+                    "File not found: " + m_path.string());
+  }
 
 public:
-  inline float getWidth() const { return m_width; }
-  inline float getHeight() const { return m_height; }
+  inline size_t getWidth() const { return m_width; }
+  inline size_t getHeight() const { return m_height; }
   inline int getType() const { return m_type; }
   inline int getFrameCount() const { return m_frameCount; }
-  inline const std::string getPath() const { return m_path; }
+  inline size_t getPixelCount() const { return m_width * m_height; }
+  inline const T &getCurrentFrame() const { return m_frame; }
+  inline const fs::path getPath() const { return m_path; }
   inline virtual const boost::any getProperty(std::string id) {
     return boost::any(id);
   }
 
   virtual void setFrame(int frame) = 0;
+  virtual void writeInfos(std::ofstream &output, int key) = 0;
   virtual ~IMedia() = default;
 };
 
-class IImage : public IMedia {
+template <typename T> class IImage : public IMedia<T> {
 public:
-  IImage(const std::string &path) : IMedia(path, (int)eMediaType::IMAGE) {}
-  virtual ~IImage() = default;
+  IImage(const fs::path &path) : IMedia<T>(path, (int)eMediaType::IMAGE) {
+    /*image = 1 frame only*/
+    this->m_frameCount = 1;
+  }
+
+  // IMedia interface
+public:
+  void setFrame(int frame) override {
+    this->m_frame = 0; /*image = 1 frame only*/
+  }
 };
 
-class IVideo : public IMedia {
+template <typename T> class IVideo : public IMedia<T> {
 public:
-  IVideo(const std::string &path) : IMedia(path, (int)eMediaType::VIDEO) {}
-  virtual ~IVideo() = default;
+  IVideo(const fs::path &path) : IMedia<T>(path, (int)eMediaType::VIDEO) {}
 };
 
-class IModel3D : public IMedia {
+template <typename T> class IModel3D : public IMedia<T> {
 public:
-  IModel3D(const std::string &path) : IMedia(path, (int)eMediaType::MODEL_3D) {}
+  IModel3D(const fs::path &path) : IMedia<T>(path, (int)eMediaType::MODEL_3D) {}
   virtual ~IModel3D() = default;
 };
 
-class IIcov : public IMedia {
+template <typename T> class IIcov : public IMedia<T> {
 public:
-  IIcov(const std::string &path) : IMedia(path, (int)eMediaType::ICOV) {}
+  IIcov(const fs::path &path) : IMedia<T>(path, (int)eMediaType::ICOV) {}
   virtual ~IIcov() = default;
 };
 

@@ -7,8 +7,8 @@
  *  @ingroup icov-core
  */
 
-/** @file ICOV_Picture.h
- *  @brief ICOV_Picture
+/** @file ICOV_BufGroups.h
+ *  @brief ICOV_BufGroups
  *  @ingroup video_layer
  *  @author Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>

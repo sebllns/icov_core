@@ -9,7 +9,7 @@ file(GLOB SRC_FILES "*.cpp")
 # get include files
 file(GLOB INC_FILES "*.h")
 
-if(WITH_CLANG_TIDY)
+if(ICOV_WITH_CLANG_TIDY)
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
 endif()
 

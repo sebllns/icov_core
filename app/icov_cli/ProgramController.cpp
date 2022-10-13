@@ -8,8 +8,7 @@
 #include "SymboleMode.h"
 #include "helpers.h"
 
-ProgramController::ProgramController()
-{
+ProgramController::ProgramController() {
   BinaryMode::AddProgramOptions(m_options_desc);
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
@@ -17,9 +16,7 @@ ProgramController::ProgramController()
   EncodeMode::AddProgramOptions(m_options_desc);
 }
 
-void
-ProgramController::launchMode(const std::string& mode_id)
-{
+void ProgramController::launchMode(const std::string &mode_id) {
   if (mode_id == "binary") {
     std::cout << "binary mode started" << std::endl;
     BinaryMode mode(m_options_map);

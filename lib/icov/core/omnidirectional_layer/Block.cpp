@@ -12,6 +12,9 @@ void Block::setId(NeighborDirection index, size_t id) {
   uid[index] = id;
 }
 
+/// \brief Block::getId
+/// \param index
+/// \return 0 if not exist, id else
 size_t Block::getId(NeighborDirection index) const {
   if (index < NeighborDirection::SELF || index >= NeighborDirection::COUNT)
     return 0;

@@ -13,66 +13,9 @@ using namespace icov;
 
 namespace icov {
 
-FakeEncoder::FakeEncoder() { cout << "new encoder" << endl; }
+namespace encoder {
 
-FakeEncoder::~FakeEncoder() {
-  cout << "destroy encoder" << endl;
-  //  dispose();
-}
-
-// void FakeEncoder::openFile(const std::string &filename) {
-//  cout << "open file to encode " << filename << std::endl;
-//  fs::path filepath = fs::complete(fs::path(filename));
-
-//  ICOV_ASSERT_MSG(fs::is_regular_file(filepath),
-//                  "File not found: " + filepath.string());
-//  m_img_src = cv::imread(filename, -1);
-//}
-
-// void FakeEncoder::dispose() {
-//  m_img_src.release();
-//  cout << "dispose" << endl;
-//}
-
-void FakeEncoder::encode(std::ostream &output, const IPicture &picture,
-                         const IAccessBlockManager &access_blocks) {
-  ICOV_ASSERT_MSG(m_img_src.total() > 0, "Cannot encode empty image");
-  ICOV_ASSERT_MSG((size_t)m_img_src.rows == picture.height() &&
-                      (size_t)m_img_src.cols == picture.width(),
-                  "Picture is not the right size");
-
-  // output << m_img_src.rows << " " << m_img_src.cols << " " <<
-  // m_img_src.type() << " " << m_img_src.channels();
-
-  int values[] = {m_img_src.rows, m_img_src.cols, m_img_src.type(),
-                  m_img_src.channels()};
-  output.write(reinterpret_cast<const char *>(&values), sizeof(values));
-
-  // encode the blocks
-  cout << "encode the blocks" << std::endl;
-  for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
-  }
-}
-
-void FakeEncoder::encodeBlock(std::ostream &output, const Block &b,
-                              bool access_block) {
-  cout << "-- block " << b.center_u() << ", " << b.center_v() << std::endl;
-
-  // if(access_block) encodeBlockWithPrediction(output, b,
-  // BlockPrediction::NONE);
-
-  std::vector<BlockPrediction::predType> pred_values = {
-      BlockPrediction::RIGHT,        BlockPrediction::LEFT,
-      BlockPrediction::TOP,          BlockPrediction::BOTTOM,
-      BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
-      BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
-  };
-
-  for (auto pred : pred_values) {
-    encodeBlockWithPrediction(output, b, static_cast<uint16_t>(pred));
-  }
-}
+FakeEncoder::~FakeEncoder() { std::cout << "destroy FakeEncoder" << std::endl; }
 
 void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
                                             const Block &b,
@@ -116,11 +59,30 @@ void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
   case BlockPrediction::BOTTOM_LEFT:
     color = cv::Scalar(65, 124, 64);
     break;
+  default:
+    ICOV_THROW_LOGICAL_EXCEPTION("Bad value");
   }
 
-  cv::Mat pixels = m_img_src(rect_block).clone();
+  cv::Mat pixels = m_frame(rect_block).clone();
   cv::add(0.5 * pixels, 0.5 * color, pixels);
 
   output.write((char *)pixels.data, rect_block.area() * pixels.elemSize());
 }
+
+void FakeEncoder::processInput(std::ostream &output,
+                               const IMedia<cv::Mat> &input) {
+
+  m_frame = input.getCurrentFrame().clone();
+  int values[] = {m_frame.rows, m_frame.cols, m_frame.type(),
+                  m_frame.channels()};
+  output.write(reinterpret_cast<const char *>(&values), sizeof(values));
+}
+
+std::vector<uint16_t>
+FakeEncoder::getAvailablePredictions(const Block &b, bool access_block,
+                                     const IBlockPrediction &block_prediction) {
+  auto v = BlockPrediction::getAvailablePredictions();
+  return std::vector<uint16_t>(v.begin(), v.end());
+}
+} // namespace encoder
 } // namespace icov

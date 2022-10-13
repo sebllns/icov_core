@@ -50,21 +50,32 @@
 #include "Block.h"
 #include "helpers.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
+#include "omnidirectional_layer/interface/IPicture.h"
 
 // namespace icov {
 
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IBlockPrediction
+/// @todo COMMENT !
+///
+///////////////////////////////////////////////////////////////////////////////
 class IBlockPrediction {
 public:
   virtual ~IBlockPrediction() = default;
   virtual uint16_t getPrediction(const Block &b,
                                  const IBlockOrdering &ordering) const = 0;
+  virtual std::vector<uint16_t>
+  getAvailablePredictions(const Block &b,
+                          bool is_access_block = false) const = 0;
 };
 
-/** @class BlockPrediction
- *  @brief BlockPrediction
- *
- *  A BlockPrediction
- */
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class BlockPrediction
+/// @todo COMMENT !
+///
+///////////////////////////////////////////////////////////////////////////////
 class BlockPrediction : public IBlockPrediction {
 public:
   enum predType {
@@ -80,18 +91,56 @@ public:
     BOTTOM_LEFT = BOTTOM | LEFT,
     INTER = BOTTOM_LEFT + 10,
     MAX,
-    ERROR
+    ERROR_PRED
+  };
+
+  enum borderType {
+    BORDER_UNKNOWN = -1,
+    BORDER_NONE = 0,
+    BORDER_TOP,
+    BORDER_BOTTOM,
+    COUNT
   };
 
   static const uint8_t SI_Count = 8;
   static const uint8_t PredictionCount = SI_Count + 2;
   static predType toPredType(uint num);
+  static std::vector<BlockPrediction::predType>
+  getAvailablePredictions(borderType b = BORDER_NONE);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
+
+  // IBlockPrediction interface
+public:
   uint16_t getPrediction(const Block &b,
                          const IBlockOrdering &ordering) const override;
+  std::vector<uint16_t>
+  getAvailablePredictions(const Block &b,
+                          bool is_access_block = false) const override;
 };
+
+inline std::vector<uint16_t>
+BlockPrediction::getAvailablePredictions(const Block &b,
+                                         bool is_access_block) const {
+
+  borderType border = borderType::BORDER_NONE;
+
+  if (!b.parent()->blockExists(b.getId(Block::UP))) {
+    border = borderType::BORDER_TOP;
+  } else if (!b.parent()->blockExists(b.getId(Block::DOWN))) {
+    border = borderType::BORDER_BOTTOM;
+  }
+
+  auto v0 = BlockPrediction::getAvailablePredictions(border);
+
+  std::vector<uint16_t> v(v0.begin(), v0.end());
+
+  if (is_access_block)
+    v.insert(v.begin(), predType::NONE);
+
+  return v;
+}
 
 inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
   predType res = static_cast<predType>(num);
@@ -111,8 +160,42 @@ inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
   case BlockPrediction::MAX:
     return res;
   default:
-    return ERROR;
+    return ERROR_PRED;
   }
+}
+
+inline std::vector<BlockPrediction::predType>
+BlockPrediction::getAvailablePredictions(borderType b) {
+  std::vector<BlockPrediction::predType> v;
+
+  switch (b) {
+  case BORDER_NONE:
+    v = {
+        BlockPrediction::RIGHT,        BlockPrediction::LEFT,
+        BlockPrediction::TOP,          BlockPrediction::BOTTOM,
+        BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
+        BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
+    };
+    break;
+  case BlockPrediction::BORDER_TOP:
+    v = {
+        BlockPrediction::RIGHT,       BlockPrediction::LEFT,
+        BlockPrediction::BOTTOM,      BlockPrediction::BOTTOM_RIGHT,
+        BlockPrediction::BOTTOM_LEFT,
+    };
+    break;
+  case BlockPrediction::BORDER_BOTTOM:
+    v = {
+        BlockPrediction::RIGHT,    BlockPrediction::LEFT,
+        BlockPrediction::TOP,      BlockPrediction::TOP_RIGHT,
+        BlockPrediction::TOP_LEFT,
+    };
+    break;
+  default:
+    ICOV_THROW_INVALID_ARGUMENT("Bad border type " + std::to_string(b));
+    break;
+  }
+  return v;
 }
 
 inline uint16_t

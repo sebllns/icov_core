@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 #add_compile_options(-Wall)
 
-if(WITH_CPPCHECK)
+if(ICOV_WITH_CPPCHECK)
     find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
     if (CMAKE_CXX_CPPCHECK STREQUAL "CMAKE_CXX_CPPCHECK-NOTFOUND")
         message(FATAL_ERROR "[FATAL] ENABLE_CPPCHECK is set to TRUE but cppcheck not found. Please regenerate with ENABLE_CPPCHECK=FALSE")
@@ -16,7 +16,7 @@ if(WITH_CPPCHECK)
     endif()
 endif()
 
-if(WITH_CLANG_TIDY)
+if(ICOV_WITH_CLANG_TIDY)
     message(STATUS "[INFO] Use clang-tidy")
     set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*")
     #,readability-*

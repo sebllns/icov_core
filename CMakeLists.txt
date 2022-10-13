@@ -6,11 +6,23 @@ cmake_minimum_required(VERSION 3.2)
 project(icov_core LANGUAGES CXX)
 message(STATUS "BUILD ICOV CORE PROJECT")
 
-set(BUILD_ICOV_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
-set(BUILD_ICOV_ENCODER ON CACHE BOOL "Build the icov encoder lib")
-set(BUILD_ICOV_APPS ON CACHE BOOL "Build ICOV apps")
-set(WITH_CPPCHECK OFF CACHE BOOL "ENABLE CPPCHECK")
-set(WITH_CLANG_TIDY OFF CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
+########################################
+#      GLOBAL VARIABLES FOR ICOV       #
+########################################
+set(ICOV_BUILD_STATIC ON CACHE BOOL "Build static libraries for ICOV")
+set(ICOV_BUILD_SHARED ON CACHE BOOL "Build shared libraries for ICOV")
+set(ICOV_BUILD_ENCODER ON CACHE BOOL "Build the icov encoder lib")
+set(ICOV_BUILD_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
+set(ICOV_BUILD_APPS ON CACHE BOOL "Build ICOV apps")
+set(ICOV_WITH_CPPCHECK OFF CACHE BOOL "ENABLE CPPCHECK")
+set(ICOV_WITH_CLANG_TIDY OFF CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
+set(ICOV_BYPASS_SETUP OFF CACHE BOOL "In case you REALLY want to bypass the default setup. May cause severe issues.")
+
+if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(ICOV_BUILD_TESTS ON CACHE BOOL "Force ICOV tests to be built. ")
+else()
+     set(ICOV_BUILD_TESTS OFF CACHE BOOL "Force ICOV tests to be built. ")
+endif()
 
 # use folders in IDEs for projects (e.g. lib sample app test)
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
@@ -24,15 +36,19 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 message(VERBOSE "Includes")
 include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
 include(ExternalProject)
+
+if(NOT ICOV_BYPASS_SETUP)
+ message(DEBUG "Initial setup")
+#some flags needed to build for windows
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
 endif()
-
 if(MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
 # set address sanitizer compiler arguments
+# https://github.com/google/sanitizers/wiki/AddressSanitizer
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
         if( USE_ADDRESS_SANITIZER )
@@ -44,6 +60,18 @@ if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
         add_compile_options( "-fabi-version=6" )
     endif()
+else()
+    message(WARNING "Initial setup is BYPASSED !")
+endif()
+
+# use ccache if available to compile faster
+# https://ccache.dev/
+find_program( CCACHE_FOUND ccache )
+if( CCACHE_FOUND )
+    message( STATUS "ccache found. using it." )
+    set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
+    set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
+endif()
 endif()
 
 ########################################
@@ -115,13 +143,6 @@ message("\n")
 
 #---------------------------------------------------------------------
 #LINK WITH VVC
-# use ccache
-find_program( CCACHE_FOUND ccache )
-if( CCACHE_FOUND )
-    message( STATUS "ccache found. using it." )
-    set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
-    set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
-endif()
 
 add_subdirectory("third-party/vvc/source/Lib/CommonLib")
 add_subdirectory("third-party/vvc/source/Lib/Utilities")
@@ -165,7 +186,7 @@ message("-----------------------------------------------------------------------
 #               ICOV                   #
 ########################################
 set(ICOV_CORE_VERSION_MAJOR "0")
-set(ICOV_CORE_VERSION_MINOR "9")
+set(ICOV_CORE_VERSION_MINOR "10")
 set(ICOV_CORE_VERSION_PATCH "0")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
@@ -193,23 +214,23 @@ message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 include_directories(. lib lib/icov)
 add_subdirectory(lib/icov)
 
-if(BUILD_ICOV_ENCODER)
+if(ICOV_BUILD_ENCODER)
     add_subdirectory(lib/encoder)
 endif()
 
-if(BUILD_ICOV_EXTENSIONS)
+if(ICOV_BUILD_EXTENSIONS)
     add_subdirectory(lib/extensions)
 endif()
 
-if(BUILD_ICOV_TESTS OR (NOT DEFINED BUILD_ICOV_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug))
+if(ICOV_BUILD_TESTS)
     message(STATUS "[INFO] Building ICOV core tests")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/benchmarks)
 endif()
 
-if(BUILD_ICOV_APPS)
+if(ICOV_BUILD_APPS)
     add_subdirectory(app)
-endif(BUILD_ICOV_APPS)
+endif(ICOV_BUILD_APPS)
 
 #INSTALL DEMO
 if(INSTALL_DEMO)

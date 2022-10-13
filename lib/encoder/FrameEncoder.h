@@ -57,7 +57,8 @@
 #include <opencv2/opencv.hpp>
 
 namespace icov {
-class FrameEncoder : public IFrameEncoder {
+namespace encoder {
+class FrameEncoder : public IFrameEncoder<cv::Mat> {
 protected:
   std::map<int, cv::Mat> m_cvmat;
   bool m_firstDisplayBlocks;
@@ -75,7 +76,8 @@ public:
   const static int BlockZoomID;
   const static int RecoViewID;
 
-  FrameEncoder(int frame);
+  FrameEncoder(int frame, int qp, ChromaFormat ch, const cv::Size &icuSize_luma,
+               const cv::Size &tuSize_luma);
   ~FrameEncoder();
 
   // IFrameEncoder interface
@@ -83,14 +85,13 @@ public:
   void onMouse(int event, int x, int y, int flags);
 
 protected:
-  void encodeBlock(std::ostream &output, const Block &b,
-                   bool access_block) override;
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
-  std::vector<uint16_t> getAvailablePredictions(const Block &b,
-                                                bool access_block) override;
+  void processInput(std::ostream &output,
+                    const IMedia<cv::Mat> &input) override;
 
 private:
   void onSelectBlock(int x, int y);
 };
+} // namespace encoder
 } // namespace icov

@@ -20,6 +20,7 @@
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 
 #include "encoder/FakeEncoder.h"
+#include "encoder/InputMedia.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/geometry.h"
@@ -305,12 +306,15 @@ void run(int argc, char *argv[]) {
   req_mgr.start();
 
   boost::filesystem::path encoded_file_path("./encoded.icov");
-  FakeEncoder encoder;
-  encoder.openFile(fileAddr);
+
+  icov::encoder::FakeEncoder encoder(0);
+  icov::encoder::InputImage input(fileAddr);
+  BlockPrediction predMgr;
 
   std::ofstream encoded_file(encoded_file_path.string(),
                              std::ios::out | std::ios::binary);
-  encoder.encode(encoded_file, *picture, *req_mgr.accessBlocks());
+  encoder.encode(encoded_file, input, *picture, *req_mgr.accessBlocks(),
+                 predMgr);
   encoded_file.close();
 
   auto blockprocessor =

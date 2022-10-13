@@ -53,23 +53,27 @@
 #include <opencv2/opencv.hpp>
 
 namespace icov {
-
-class FakeEncoder : public IMediaEncoder {
-
-protected:
-  cv::Mat m_img_src;
+namespace encoder {
+class FakeEncoder : public IFrameEncoder<cv::Mat> {
+  using IFrameEncoder<cv::Mat>::IFrameEncoder;
 
 public:
-  FakeEncoder();
   ~FakeEncoder();
 
   // IEncoder interface
-  //  void openFile(const std::string &filename) override;
-  //  void dispose() override;
-  void encode(std::ostream &output, const IPicture &picture,
-              const IAccessBlockManager &access_blocks) override;
-  void encodeBlock(std::ostream &output, const Block &b, bool) override;
+protected:
+  cv::Mat m_frame;
+
+  void processInput(std::ostream &output,
+                    const IMedia<cv::Mat> &input) override;
+
+  // IFrameEncoder interface
+protected:
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
+  std::vector<uint16_t>
+  getAvailablePredictions(const Block &b, bool access_block,
+                          const IBlockPrediction &block_prediction) override;
 };
+} // namespace encoder
 } // namespace icov

@@ -52,12 +52,11 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-class ProgramController : public IcovProgramBase
-{
+class ProgramController : public IcovProgramBase {
 public:
   ProgramController();
   ~ProgramController() = default;
 
   // IcovProgramBase interface
-  void launchMode(const std::string& m) override;
+  void launchMode(const std::string &m) override;
 };

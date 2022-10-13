@@ -12,11 +12,12 @@
 #include <opencv2/opencv.hpp>
 
 namespace fs = boost::filesystem;
-using namespace icov;
+using namespace icov::encoder;
 using SI_SIDE = BlockPrediction::predType;
 const int FrameEncoder::BlockZoomID = PIC_PREDICTION + BlockPrediction::MAX;
 const int FrameEncoder::RecoViewID = FrameEncoder::BlockZoomID + 1;
 
+/*****************************************************************************/
 void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
   const auto &compBuf = mainFrame_roi.get(compID);
 
@@ -34,19 +35,26 @@ void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
   }
 }
 
+/*****************************************************************************/
 void callBackFunc(int event, int x, int y, int flags, void *userdata) {
   static_cast<FrameEncoder *>(userdata)->onMouse(event, x, y, flags);
 }
 
-FrameEncoder::FrameEncoder(int frame)
-    : IFrameEncoder(frame), m_firstDisplayBlocks(true), m_icuSize_luma(32, 32),
-      m_tuSize_luma(32, 32), m_qp(42), m_chromaFormatIDC(CHROMA_420),
+/*****************************************************************************/
+FrameEncoder::FrameEncoder(int frame, int qp, ChromaFormat ch,
+                           const cv::Size &icuSize_luma,
+                           const cv::Size &tuSize_luma)
+    : IFrameEncoder(frame), m_firstDisplayBlocks(true),
+      m_icuSize_luma(icuSize_luma), m_tuSize_luma(tuSize_luma), m_qp(qp),
+      m_chromaFormatIDC(ch),
       m_numComp(getNumberValidComponents(m_chromaFormatIDC)) {}
 
+/*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
   std::cout << "destroy FrameEncoder" << std::endl;
 }
 
+/*****************************************************************************/
 void FrameEncoder::onMouse(int event, int x, int y, int flags) {
   if (event == cv::EVENT_LBUTTONDOWN) {
     int bx = x / m_icuSize_luma.width;
@@ -57,6 +65,7 @@ void FrameEncoder::onMouse(int event, int x, int y, int flags) {
   }
 }
 
+/*****************************************************************************/
 void FrameEncoder::onSelectBlock(int x, int y) {
   cv::Point bp = cv::Point(x, y);
 
@@ -204,21 +213,14 @@ void FrameEncoder::onSelectBlock(int x, int y) {
   }
 }
 
-// void FrameEncoder::openFile(const std::string &filename) {
-//  std::cout << "open file to encode " << filename << std::endl;
-//  fs::path filepath = fs::complete(fs::path(filename));
-//  ICOV_ASSERT_MSG(fs::is_regular_file(filepath),
-//                  "File not found: " + filepath.string());
-//  cv::Mat &img_src = m_cvmat[PIC_ORIGINAL];
-//  img_src = cv::imread(filename, -1);
-//  ICOV_WARNING_MSG(img_src.total() > 0, "Empty image");
-//}
+/*****************************************************************************/
+void FrameEncoder::processInput(std::ostream &output,
+                                const IMedia<cv::Mat> &input) {
 
-void FrameEncoder::encode(std::ostream &output, const IPicture &picture,
-                          const IAccessBlockManager &access_blocks) {
-
+  std::cout << input.getPath() << std::endl;
   cv::Mat &img_src = m_cvmat[PIC_ORIGINAL];
-
+  img_src = input.getCurrentFrame()
+                .clone(); // todo: find a way to do without cloning the frame
   ICOV_ASSERT_MSG(img_src.total() > 0, "Cannot encode empty image");
 
   double mse_frame = -1.0, psnr = -1.0;
@@ -248,10 +250,6 @@ void FrameEncoder::encode(std::ostream &output, const IPicture &picture,
   // operates at (input/output files will be converted). (default:
   // MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will
   // be converted
-
-  const int values[] = {img_src.rows, img_src.cols, img_src.type(),
-                        img_src.channels()};
-  output.write(reinterpret_cast<const char *>(&values), sizeof(values));
 
   // end constants
 
@@ -324,11 +322,8 @@ void FrameEncoder::encode(std::ostream &output, const IPicture &picture,
 
   std::cout << "PSNR=" << psnr << std::endl;
 
-  // encode the blocks
-  for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
-  }
-
+  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
+  cv::imshow("viewport original", input.getCurrentFrame());
   cv::waitKey(0);
 
   // INTRA PRED
@@ -395,7 +390,7 @@ void FrameEncoder::encode(std::ostream &output, const IPicture &picture,
 
   //  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
   //  cv::imshow("viewport original", img_src);
-
+  //  cv::waitKey(0);
   cv::namedWindow("viewport RECONSTRUCTED", cv::WINDOW_NORMAL);
 
   // ERROR HERE
@@ -426,16 +421,14 @@ void FrameEncoder::encode(std::ostream &output, const IPicture &picture,
   cv::imwrite("reco_preds_output.tiff", reco_preds_output);
 
   cv::waitKey(0);
-
-  // encode the blocks
-  for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
-  }
 }
 
-void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
-                               bool access_block) {
-  std::cout << "-- block " << b.u() << ", " << b.v() << std::endl;
+/*****************************************************************************/
+void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
+                                             const Block &b,
+                                             uint16_t prediction) {
+
+  std::cout << "---- prediction " << prediction << std::endl;
 
   // SENS DE V ?? + TO PIXELS
   int x_block = b.u(), y_block = b.w();
@@ -446,34 +439,10 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
-  //  if (access_block)
-  //    encodeBlockWithPrediction(output, b, BlockPrediction::NONE);
-
-  //  std::vector<BlockPrediction::predType> pred_values = {
-  //      BlockPrediction::RIGHT,        BlockPrediction::LEFT,
-  //      BlockPrediction::TOP,          BlockPrediction::BOTTOM,
-  //      BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
-  //      BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
-  //  };
-
-  //  for (auto pred : pred_values) {
-  //    encodeBlockWithPrediction(output, b, static_cast<uint16_t>(pred));
-  //  }
-}
-
-void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
-                                             const Block &b,
-                                             uint16_t prediction) {
-  std::cout << "---- prediction " << prediction << std::endl;
-
   const IPicture &p = *(b.parent());
   int bw = (int)(b.w() * p.width());
   int bh = (int)(b.h() * p.height());
   int bx = (int)(p.u(p.angleX(b.u())) * p.width());
   int by = (int)(p.v(p.angleY(b.v())) * p.height());
   auto rect_block = cv::Rect(bx, by, bw, bh);
-}
-
-std::vector<uint16_t> FrameEncoder::getAvailablePredictions(const Block &b,
-                                                            bool access_block) {
 }

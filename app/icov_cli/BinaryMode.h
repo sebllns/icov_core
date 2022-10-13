@@ -53,38 +53,34 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-
-class BinaryMode
-{
+class BinaryMode {
 public:
-    BinaryMode(const po::variables_map &args);
-    ~BinaryMode() = default;
+  BinaryMode(const po::variables_map &args);
+  ~BinaryMode() = default;
 
-    void run();
+  void run();
 
-    static void AddProgramOptions(po::options_description &desc);
+  static void AddProgramOptions(po::options_description &desc);
 
 private:
-    int encode();
-    void fill_src();
-    void fill_pcrossover();
-    bool check_decoding();
-    void write_results();
+  int encode();
+  void fill_src();
+  void fill_pcrossover();
+  bool check_decoding();
+  void write_results();
 
-    std::shared_ptr<AffInteractiveCoder> m_coder;
-    BitVec m_src_bits;
-    BitVec m_dec_bits;
-    std::vector<double> m_pcrossover;
-    Syndrome m_stored_syndrome;
-    uint32_t m_numcodeIdx;
-    uint32_t m_error_count;
-    int m_nite;
+  std::shared_ptr<AffInteractiveCoder> m_coder;
+  BitVec m_src_bits;
+  BitVec m_dec_bits;
+  std::vector<double> m_pcrossover;
+  Syndrome m_stored_syndrome;
+  uint32_t m_numcodeIdx;
+  uint32_t m_error_count;
+  int m_nite;
 
-
-    std::vector<LLRVal> llr;
-    std::vector<double> time;
-    std::vector<double> decoding_time;
-    std::vector<double> numerrors;
-    std::vector<double> rate;
+  std::vector<LLRVal> llr;
+  std::vector<double> time;
+  std::vector<double> decoding_time;
+  std::vector<double> numerrors;
+  std::vector<double> rate;
 };
-

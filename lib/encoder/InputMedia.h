@@ -50,23 +50,38 @@
 #pragma once
 
 #include "Media.h"
+#include <boost/algorithm/string.hpp>
 #include <opencv2/opencv.hpp>
 
 namespace icov {
+namespace encoder {
 
-class InputImage : public icov::IImage {
+using InputMedia = icov::IMedia<cv::Mat>;
 
-protected:
-  cv::Mat m_cvmat;
-
+class InputImage : public icov::IImage<cv::Mat> {
 public:
-  InputImage(const std::string &path);
+  InputImage(const fs::path &path);
   ~InputImage() = default;
-  const cv::Mat &cvmat() const;
 
   // IMedia interface
-public:
-  void setFrame(int frame) override;
+  void writeInfos(std::ofstream &output, int key) override;
 };
 
+class InputVideo : public icov::IVideo<cv::Mat> {
+protected:
+  cv::VideoCapture videoCV;
+
+public:
+  InputVideo(const fs::path &path);
+  ~InputVideo() = default;
+
+  // IMedia interface
+  void setFrame(int frame) override;
+  void writeInfos(std::ofstream &output, int key) override;
+};
+
+void instantiateInputMedia(const fs::path &path,
+                           std::unique_ptr<InputMedia> &output);
+
+} // namespace encoder
 } // namespace icov

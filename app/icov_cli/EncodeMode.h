@@ -48,12 +48,14 @@
  *****************************************************************************/
 #pragma once
 
-#include <boost/program_options.hpp>
-
 #include "common.h"
+#include "encoder/InputMedia.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 class EncodeMode {
@@ -66,13 +68,14 @@ public:
   static void AddProgramOptions(po::options_description &desc);
 
   static const std::string s_inputFile_id;
+  static const std::string s_outputFile_id;
 
 private:
   int encode();
   std::shared_ptr<AffInteractiveCoder> m_ycoder;
   std::shared_ptr<AffInteractiveCoder> m_uvcoder;
-  std::unique_ptr<IEncoder> m_encoder;
+  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
 
-  /// @todo replace with Media class
-  std::string m_inputFile;
+  fs::path m_inputFile;
+  fs::path m_encodedFile;
 };

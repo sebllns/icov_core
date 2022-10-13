@@ -51,69 +51,48 @@
 #include "common.h"
 #include <map>
 
-enum result_data_type
-{
-    SCALAR = 0,
-    MATRIX = 1,
+enum result_data_type {
+  SCALAR = 0,
+  MATRIX = 1,
 };
 
-struct result_data
-{
-    typedef float data_type;
+struct result_data {
+  typedef float data_type;
 
-    std::string name;
-    result_data_type type;
-    int n_rows;
-    int n_cols;
-    std::vector<data_type> data;
+  std::string name;
+  result_data_type type;
+  int n_rows;
+  int n_cols;
+  std::vector<data_type> data;
 
-    float get_data(int row, int col)
-    {
-        return data[row * n_cols + col];
-    }
+  float get_data(int row, int col) { return data[row * n_cols + col]; }
 
-    bool operator==(const result_data& rhs) const
-    {
-       return (this->name == rhs.name)
-               && (this->type == rhs.type)
-               && (this->n_rows == rhs.n_rows)
-               && (this->n_cols == rhs.n_cols)
-               && (this->data == rhs.data);
-    }
+  bool operator==(const result_data &rhs) const {
+    return (this->name == rhs.name) && (this->type == rhs.type) &&
+           (this->n_rows == rhs.n_rows) && (this->n_cols == rhs.n_cols) &&
+           (this->data == rhs.data);
+  }
 
-    bool operator!=(const result_data& rhs) const
-    {
-      return !operator==(rhs);
-    }
+  bool operator!=(const result_data &rhs) const { return !operator==(rhs); }
 };
 
-class TestSequenceResult
-{
+class TestSequenceResult {
 public:
-    TestSequenceResult();
-    bool read_from_file(std::string filename);
+  TestSequenceResult();
+  bool read_from_file(std::string filename);
 
-    bool operator==(const TestSequenceResult& rhs) const
-    {
-       return (this->m_data == rhs.m_data);
-    }
+  bool operator==(const TestSequenceResult &rhs) const {
+    return (this->m_data == rhs.m_data);
+  }
 
-    bool operator!=(const TestSequenceResult& rhs) const
-    {
-      return !operator==(rhs);
-    }
+  bool operator!=(const TestSequenceResult &rhs) const {
+    return !operator==(rhs);
+  }
 
-    result_data& operator[](std::string id)
-    {
-        return m_data[id];
-    }
+  result_data &operator[](std::string id) { return m_data[id]; }
 
-    const result_data& operator[](std::string id) const
-    {
-        return m_data.at(id);
-    }
+  const result_data &operator[](std::string id) const { return m_data.at(id); }
 
 protected:
-    std::map<std::string, result_data> m_data;
+  std::map<std::string, result_data> m_data;
 };
-

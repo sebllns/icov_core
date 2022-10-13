@@ -51,81 +51,123 @@
 
 #include "Media.h"
 #include "common.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 
 namespace icov {
+namespace encoder {
 
-class IEncoder {
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IEncoder
+/// @todo COMMENT !
+///
+///////////////////////////////////////////////////////////////////////////////
+template <typename T> class IEncoder {
 public:
   virtual ~IEncoder() = default;
-  virtual void processInput(std::ostream &output, const IMedia &input) = 0;
-  virtual void encode(std::ostream &output, IMedia &input,
+  virtual void encode(std::ostream &output, IMedia<T> &input,
                       const IPicture &picture,
-                      const IAccessBlockManager &access_blocks) = 0;
+                      const IAccessBlockManager &access_blocks,
+                      const IBlockPrediction &block_prediction) = 0;
+
+protected:
+  virtual void processInput(std::ostream &output, const IMedia<T> &input) = 0;
 };
 
-class IFrameEncoder : IEncoder {
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IFrameEncoder
+/// @todo COMMENT !
+///
+///////////////////////////////////////////////////////////////////////////////
+template <typename T> class IFrameEncoder : public IEncoder<T> {
 protected:
   int m_frame;
 
 public:
   IFrameEncoder(int frame) : m_frame(frame) {}
-  virtual void encode(std::ostream &output, IMedia &input,
+  virtual void encode(std::ostream &output, IMedia<T> &input,
                       const IPicture &picture,
-                      const IAccessBlockManager &access_blocks);
+                      const IAccessBlockManager &access_blocks,
+                      const IBlockPrediction &block_prediction);
 
 protected:
   virtual void encodeBlock(std::ostream &output, const Block &b,
-                           bool access_block);
+                           bool access_block,
+                           const IBlockPrediction &block_prediction);
   virtual void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                          uint16_t prediction) = 0;
-  virtual std::vector<uint16_t> getAvailablePredictions(const Block &b,
-                                                        bool access_block) = 0;
+  virtual std::vector<uint16_t>
+  getAvailablePredictions(const Block &b, bool access_block,
+                          const IBlockPrediction &block_prediction) {
+    return block_prediction.getAvailablePredictions(b, access_block);
+  }
 
 private:
   IFrameEncoder() = default;
   IFrameEncoder(const IFrameEncoder &) = default;
 };
 
-inline void IFrameEncoder::encode(std::ostream &output, IMedia &input,
-                                  const IPicture &picture,
-                                  const IAccessBlockManager &access_blocks) {
+template <typename T>
+void IFrameEncoder<T>::encode(std::ostream &output, IMedia<T> &input,
+                              const IPicture &picture,
+                              const IAccessBlockManager &access_blocks,
+                              const IBlockPrediction &block_prediction) {
 
   input.setFrame(m_frame);
-  processInput(output, input);
+
+  ICOV_ASSERT_MSG(input.getPixelCount() > 0, "Cannot encode empty frame");
+  ICOV_ASSERT_MSG(input.getHeight() == picture.height() &&
+                      input.getWidth() == picture.width(),
+                  "Picture is not the right size");
+
+  this->processInput(output, input);
   for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)));
+    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)),
+                block_prediction);
   }
 }
 
-inline void IFrameEncoder::encodeBlock(std::ostream &output, const Block &b,
-                                       bool access_block) {
-  for (uint16_t p : getAvailablePredictions(b, access_block))
+template <typename T>
+void IFrameEncoder<T>::encodeBlock(std::ostream &output, const Block &b,
+                                   bool access_block,
+                                   const IBlockPrediction &block_prediction) {
+  for (uint16_t p : getAvailablePredictions(b, access_block, block_prediction))
     encodeBlockWithPrediction(output, b, p);
 }
 
-class IMediaEncoder : IEncoder {
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IMediaEncoder
+/// @todo COMMENT !
+///
+///////////////////////////////////////////////////////////////////////////////
+template <typename T> class IMediaEncoder : public IEncoder<T> {
 
 public:
-  virtual void encode(std::ostream &output, IMedia &input,
+  virtual void encode(std::ostream &output, IMedia<T> &input,
                       const IPicture &picture,
-                      const IAccessBlockManager &access_blocks);
+                      const IAccessBlockManager &access_blocks,
+                      const IBlockPrediction &block_prediction);
 
 protected:
-  virtual std::unique_ptr<IFrameEncoder> createFrameEncoder(int frame) = 0;
+  virtual std::unique_ptr<IFrameEncoder<T>> createFrameEncoder(int frame) = 0;
 };
 
-inline void IMediaEncoder::encode(std::ostream &output, IMedia &input,
-                                  const IPicture &picture,
-                                  const IAccessBlockManager &access_blocks) {
+template <typename T>
+void IMediaEncoder<T>::encode(std::ostream &output, IMedia<T> &input,
+                              const IPicture &picture,
+                              const IAccessBlockManager &access_blocks,
+                              const IBlockPrediction &block_prediction) {
   processInput(output, input);
   int frameCount = input.getFrameCount();
 
   for (int i = 0; i < frameCount; i++) {
     auto pFrameEnc = createFrameEncoder(i);
-    pFrameEnc->encode(output, input, picture, access_blocks);
+    pFrameEnc->encode(output, input, picture, access_blocks, block_prediction);
   }
 }
-
+} // namespace encoder
 } // namespace icov

@@ -53,33 +53,30 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-class ExportMode
-{
+class ExportMode {
 public:
-    static void         AddProgramOptions(po::options_description &desc);
-    ExportMode(const boost::program_options::variables_map &args, int code_length, const std::string& data_path);
-    ~ExportMode() = default;
-    void run();
-    void export_matrices();
-    void export_numcode();
+  static void AddProgramOptions(po::options_description &desc);
+  ExportMode(const boost::program_options::variables_map &args, int code_length,
+             const std::string &data_path);
+  ~ExportMode() = default;
+  void run();
+  void export_matrices();
+  void export_numcode();
 
-
-    static const std::string rate_min_id;
-    static const std::string rate_max_id;
-    static const std::string rate_doping_id;
-    static const std::string export_matrix_id;
-    static const std::string export_numcode_id;
-
+  static const std::string rate_min_id;
+  static const std::string rate_max_id;
+  static const std::string rate_doping_id;
+  static const std::string export_matrix_id;
+  static const std::string export_numcode_id;
 
 private:
-    std::shared_ptr<AffInteractiveCoder> m_coder;
+  std::shared_ptr<AffInteractiveCoder> m_coder;
 
-    bool export_matrix_enabled;
-    int export_numcode_mode;
-    float min_rate, max_rate, doping_rate;
-    int n;
-    po::variables_map m_options_map;
-    std::string datapath;
-    std::string numcodes_file;
+  bool export_matrix_enabled;
+  int export_numcode_mode;
+  float min_rate, max_rate, doping_rate;
+  int n;
+  po::variables_map m_options_map;
+  std::string datapath;
+  std::string numcodes_file;
 };
-

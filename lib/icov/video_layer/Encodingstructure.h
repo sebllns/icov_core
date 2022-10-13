@@ -49,9 +49,9 @@
 #pragma once
 #include <opencv2/core.hpp>
 
-#include "ICOV_Picture.h"
+#include "ICOV_BufGroups.h"
+#include "ICOV_IntraPrediction.h"
 #include "IcuEncoder.h"
-#include "IntraPrediction.h"
 #include "helpers.h"
 namespace icov::video {
 
