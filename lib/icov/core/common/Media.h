@@ -98,14 +98,14 @@ public:
   inline int getType() const { return m_type; }
   inline int getFrameCount() const { return m_frameCount; }
   inline size_t getPixelCount() const { return m_width * m_height; }
-  inline const T &getCurrentFrame() const { return m_frame; }
+  virtual inline const T &getCurrentFrame() const { return m_frame; }
   inline const fs::path getPath() const { return m_path; }
   inline virtual const boost::any getProperty(std::string id) {
     return boost::any(id);
   }
 
   virtual void setFrame(int frame) = 0;
-  virtual void writeInfos(std::ofstream &output, int key) = 0;
+  virtual void writeInfos(std::ofstream &output, int key) = 0; //@todo : const ?
   virtual ~IMedia() = default;
 };
 
@@ -118,8 +118,7 @@ public:
 
   // IMedia interface
 public:
-  void setFrame(int frame) override {
-    this->m_frame = 0; /*image = 1 frame only*/
+  void setFrame(int frame) override { /*image = 1 frame only*/
   }
 };
 
