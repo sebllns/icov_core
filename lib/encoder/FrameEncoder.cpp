@@ -445,4 +445,8 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   int bx = (int)(p.u(p.angleX(b.u())) * p.width());
   int by = (int)(p.v(p.angleY(b.v())) * p.height());
   auto rect_block = cv::Rect(bx, by, bw, bh);
+
+  m_cvmat[PIC_RECONSTRUCTION](rect_block).setTo(cv::Scalar(255, 0, 0));
+  cv::imshow("viewport RECONSTRUCTED", m_cvmat[PIC_RECONSTRUCTION]);
+  cv::waitKey(0);
 }

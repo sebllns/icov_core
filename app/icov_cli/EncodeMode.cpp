@@ -45,12 +45,8 @@ void EncodeMode::run() {
 
   icov::encoder::instantiateInputMedia(m_inputFile, input);
 
-  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
-  cv::imshow("viewport original", input->getCurrentFrame());
-  cv::waitKey(0);
-
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
-  // picture->buildConstantSizeBlocks(block_size, block_size);
+  icov_pic.buildConstantSizeBlocks(32, 32);
 
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
