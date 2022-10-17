@@ -1,5 +1,5 @@
 #include "InteractiveCoder.h"
-#include "common.h"
+#include "helpers.h"
 
 using namespace icov;
 
@@ -101,8 +101,44 @@ void InteractiveCoder<Matrix>::decode(BitVec &o_decoded, uint32_t i,
 }
 
 template <class Matrix>
+void InteractiveCoder<Matrix>::encode(std::vector<SIRates> &rates,
+                                      std::vector<SISyndromes> &syndromes,
+                                      const std::vector<SIVec> &si,
+                                      const BitSymbolProvider::params &p,
+                                      const SymboleVec &src) {
+
+  BitSymbolProvider bsp(src);
+  for (size_t i = 0; i < si.size(); i++) {
+    std::cout << "si=" << i + 1 << "/" << si.size() << std::endl;
+    bsp.set_si(si[i], p);
+    this->encode_bitplanes(bsp, rates[i], syndromes[i]);
+  }
+}
+
+template <class Matrix>
+void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
+                                                SIRates &rate,
+                                                SISyndromes &stored_synd) {
+
+  auto syndromeMgr = this->syndromeMgr();
+  int n = syndromeMgr->get_n();
+  int lx = bsp.x_binary_length();
+
+  rate = std::vector<float>(lx, 0);
+  stored_synd = std::vector<Syndrome>(lx, Syndrome(n));
+
+  SymboleVec predec(n, 0);
+  for (int i = 0; i < lx; i++) {
+    encode_bitplane(bsp, i, rate[i], stored_synd[i], predec);
+  }
+
+  ICOV_ASSERT_MSG(predec == bsp.src_symboles(),
+                  "Symbole values are not recovered from encoding process");
+}
+
+template <class Matrix>
 void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
-                                               int bitplane_idx, float &rate,
+                                               int bitplane_idx, Rate &rate,
                                                Syndrome &stored_synd,
                                                SymboleVec &predec) {
 
@@ -144,6 +180,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
     llrProvider->operator[](l) = llr[l];
   }
 
+  // TODO handle error
   if (numerrors != 0) {
     std::cerr << "ERROR: No convergence for bitplane=" << bitplane_idx
               << std::endl;
@@ -153,15 +190,15 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   }
 
   if (bitplane_idx > 0) {
-
     // fill predecoded bit values
     for (int k = 0; k < n; k++) {
       predec[k] = std::abs(src_symbols[k]) >> bitplane;
       if (bitplane_idx == (lx - 1)) {
-        int x_reconstructed = (1 - 2 * src_bits[0][k]) * predec[k];
-        if (x_reconstructed != src_symbols[k])
-          std::cerr << "ERROR: X could not be reconstructed: "
-                    << x_reconstructed << " != " << src_symbols[k] << std::endl;
+        predec[k] *= (1 - 2 * src_bits[0][k]);
+        icov::helpers::assert::check(predec[k] == src_symbols[k],
+                                     "Expected " +
+                                         std::to_string(src_symbols[k]) +
+                                         " got " + std::to_string(predec[k]));
       }
     }
   }

@@ -209,6 +209,10 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
   //  m_si_bits = BitSymbolProvider::compute_bits(side_info);
 }
 
+void BitSymbolProvider::set_si(const SIVec &si, const params &p) {
+  return set_si(si, p.enable_z_quantization, p.q_values);
+}
+
 float BitSymbolProvider::z_min() const { return this->m_z_min; }
 
 float BitSymbolProvider::z_max() const { return this->m_z_max; }

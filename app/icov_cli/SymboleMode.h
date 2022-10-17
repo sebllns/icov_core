@@ -70,10 +70,10 @@ private:
   void write_results(const std::string &filename);
   void process_input_list(const std::string &file);
   void process_input_file(const std::string &file);
-  void compute_src_bits();
-  void process_si();
-  void compute_si_bits();
-  void init_bsp();
+  //  void compute_src_bits();
+  //  void process_si();
+  //  void compute_si_bits();
+  //  void init_bsp();
   void encode_bitplane(int i, std::vector<std::vector<float>> &result);
   bool check_decoding(int i);
   void fill_predec(int i);
@@ -85,11 +85,11 @@ private:
   fs::path m_references_dir;
   fs::path m_result_dir;
 
-  SymboleVec src_symbols;
-  Bitplanes src_bits;
+  //  SymboleVec src_symbols;
+  //  Bitplanes src_bits;
 
-  SIVec side_info;
-  Bitplanes si_bits;
+  // SIVec side_info;
+  // Bitplanes si_bits;
 
   LLRVec llr;
   BitVec dec_bits;
@@ -97,14 +97,14 @@ private:
   BitVec dec_symbols;
   std::vector<std::pair<float, float>> sim_result;
   std::vector<float> q_values;
-  BitSymbolProvider bsp;
-  std::vector<int> predec;
-  std::vector<std::vector<std::vector<float>>> rate_results;
+  //  BitSymbolProvider bsp;
+  //  std::vector<int> predec;
+  //  std::vector<SIRates> rate_results;
 
   std::ofstream measure_file;
 
-  int lx;
-  Syndrome stored_synd;
+  //  int lx;
+  //  Syndrome stored_synd;
   int max_si_count;
 
   bool enable_q_quantization;

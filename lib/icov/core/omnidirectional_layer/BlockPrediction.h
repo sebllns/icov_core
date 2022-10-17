@@ -104,6 +104,7 @@ public:
 
   static const uint8_t SI_Count = 8;
   static const uint8_t PredictionCount = SI_Count + 2;
+  static std::string toString(BlockPrediction::predType num);
   static predType toPredType(uint num);
   static std::vector<BlockPrediction::predType>
   getAvailablePredictions(borderType b = BORDER_NONE);
@@ -140,6 +141,40 @@ BlockPrediction::getAvailablePredictions(const Block &b,
     v.insert(v.begin(), predType::NONE);
 
   return v;
+}
+
+inline std::string BlockPrediction::toString(BlockPrediction::predType pred) {
+
+  switch (pred) {
+  case BlockPrediction::UNKNOWN:
+    return "UNKNOWN";
+  case BlockPrediction::NONE:
+    return "NONE";
+  case BlockPrediction::INTER:
+    return "INTER";
+  case BlockPrediction::MAX:
+    return "MAX";
+  case BlockPrediction::ERROR_PRED:
+    return "ERROR";
+  default: {
+    std::stringstream predStr;
+
+    if (pred & BlockPrediction::TOP) {
+      predStr << "TOP ";
+    }
+    if (pred & BlockPrediction::BOTTOM) {
+      predStr << "BOTTOM ";
+    }
+    if (pred & BlockPrediction::LEFT) {
+      predStr << "LEFT ";
+    }
+    if (pred & BlockPrediction::RIGHT) {
+      predStr << "RIGHT ";
+    }
+
+    return predStr.str();
+  } break;
+  }
 }
 
 inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {

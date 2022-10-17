@@ -61,6 +61,7 @@ bool icov::LLRProvider::no_coding() const {
   int i = -1;
 
   while (nocoding && ++i < (int)this->m_llr.size()) {
+    // b = 1 => llr < 0, b = 0 => llr >= 0
     nocoding = ((this->m_llr[i] < 0) == this->m_src[i]);
   }
 

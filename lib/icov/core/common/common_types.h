@@ -307,6 +307,11 @@ using SymboleVec = std::vector<SymboleVal>;
 using LLRVec = std::vector<LLRVal>;
 using SIVec = std::vector<SIVal>;
 using Bitplanes = std::vector<BitVec>;
+using Rate = float;
+
+// Bitplane
+using SISyndromes = std::vector<FastArray<bit>>;
+using SIRates = std::vector<Rate>;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v,

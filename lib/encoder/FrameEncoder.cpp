@@ -115,7 +115,6 @@ void FrameEncoder::onSelectBlock(int x, int y) {
     if (icov::DebugTools::is_release_build)
       icov::helpers::io::cls();
 
-    //    std::cout << endsep << std::endl;
     // table header
     // 2 spaces are required for alignment
     std::cout << boost::format("%_15s   %-8s ") % "SI ID" % "PSNR";
@@ -155,12 +154,10 @@ void FrameEncoder::onSelectBlock(int x, int y) {
       int xbj = bj * m_icuSize_luma.width;
 
       double psnr = VTM_OPENCV_Utility::psnr(src_block, si_block);
-      //      std::cout << "\t\t\t| " << psnr;
-
       std::cout << boost::format("%_15s | %-8.2f ") % predStr.str() % psnr;
 
-      for (uint i = 0; i < m_numComp; i++) {
-        uint dirmode = static_cast<uint>(si.second.intraDir[i]);
+      for (uint c = 0; c < m_numComp; c++) {
+        uint dirmode = static_cast<uint>(si.second.intraDir[c]);
 
         std::string dirstr;
 
@@ -428,9 +425,11 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                                              const Block &b,
                                              uint16_t prediction) {
 
-  std::cout << "---- prediction " << prediction << std::endl;
+  BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
-  // SENS DE V ?? + TO PIXELS
+  std::cout << "---- prediction " << BlockPrediction::toString(pred)
+            << std::endl;
+
   int x_block = b.u(), y_block = b.w();
 
   const auto &es = this->m_enc_struc;
@@ -439,13 +438,29 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
-  const IPicture &p = *(b.parent());
-  int bw = (int)(b.w() * p.width());
-  int bh = (int)(b.h() * p.height());
-  int bx = (int)(p.u(p.angleX(b.u())) * p.width());
-  int by = (int)(p.v(p.angleY(b.v())) * p.height());
-  auto rect_block = cv::Rect(bx, by, bw, bh);
+  ICOV_ASSERT_MSG(si_map.count(pred),
+                  "Prediction not found in computed data for the block: " +
+                      BlockPrediction::toString(pred));
 
+  // m_vvc_bufs.get(PIC_PREDICTION + prediction).getBuf(mainFrameArea)
+  auto si = icu_enc.get_sideInformation(pred);
+  icov::helpers::assert::not_null(si);
+
+  for (uint c = 0; c < m_numComp; c++) {
+    for (const auto &tu : si->TUs) {
+      auto tuCoeff =
+          tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
+      std::cout << std::endl;
+    }
+  }
+
+  const IPicture &p = *(b.parent());
+  int bw = std::ceil(b.w() * p.width());
+  int bh = std::ceil(b.h() * p.height());
+  int bx = std::ceil(p.u(p.angleX(b.u())) * p.width());
+  int by = std::ceil(p.v(p.angleY(b.v())) * p.height());
+  auto rect_block = cv::Rect(bx, by, bw, bh);
+  std::cout << rect_block << std::endl;
   m_cvmat[PIC_RECONSTRUCTION](rect_block).setTo(cv::Scalar(255, 0, 0));
   cv::imshow("viewport RECONSTRUCTED", m_cvmat[PIC_RECONSTRUCTION]);
   cv::waitKey(0);

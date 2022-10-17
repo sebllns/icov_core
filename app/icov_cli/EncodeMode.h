@@ -59,6 +59,17 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 class EncodeMode {
+  struct params {
+
+    static const char *inputFile_id;
+    static const char *outputFile_id;
+    static const char *icuSize_id;
+
+    fs::path inputFile;
+    fs::path encodedFile;
+    int icuSize;
+  };
+
 public:
   EncodeMode(const po::variables_map &args);
   ~EncodeMode() = default;
@@ -67,15 +78,10 @@ public:
 
   static void AddProgramOptions(po::options_description &desc);
 
-  static const std::string s_inputFile_id;
-  static const std::string s_outputFile_id;
-
 private:
   int encode();
   std::shared_ptr<AffInteractiveCoder> m_ycoder;
   std::shared_ptr<AffInteractiveCoder> m_uvcoder;
   std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-
-  fs::path m_inputFile;
-  fs::path m_encodedFile;
+  params m_parameters;
 };

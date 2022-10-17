@@ -6,6 +6,11 @@
 namespace icov {
 class BitSymbolProvider {
 public:
+  struct params {
+    bool enable_z_quantization;
+    std::vector<float> q_values;
+  };
+
   /**
    * @brief compute_bits
    * Compute bits from symboles
@@ -33,6 +38,8 @@ public:
 
   void set_si(const SIVec &si, bool enable_z_quantization,
               const std::vector<float> &q_values = std::vector<float>());
+
+  void set_si(const SIVec &si, const params &p);
 
   float z_min() const;
   float z_max() const;

@@ -7,48 +7,66 @@
 #include "tools/DebugTools.h"
 #include <boost/format.hpp>
 
-const std::string EncodeMode::s_inputFile_id = "encode-input-file";
-const std::string EncodeMode::s_outputFile_id = "encode-output-file";
+const char *EncodeMode::params::inputFile_id = "encode-input-file";
+const char *EncodeMode::params::outputFile_id = "encode-output-file";
+const char *EncodeMode::params::icuSize_id = "encode-icu-size";
 
 void EncodeMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
-  desc.add_options()(s_inputFile_id.c_str(),
-                     po::value<std::string>()->default_value("/tmp/video.mp4"),
-                     "File to encode")(
-      s_outputFile_id.c_str(),
-      po::value<std::string>()->default_value(std::string()),
-      "Path to output file");
+  desc.add_options()
+
+      (EncodeMode::params::inputFile_id,
+       po::value<std::string>()->default_value("/tmp/video.mp4"),
+       "File to encode")
+
+          (EncodeMode::params::outputFile_id,
+           po::value<std::string>()->default_value(std::string()),
+           "Path to output file")
+
+              (EncodeMode::params::icuSize_id,
+               po::value<int>()->default_value(32), "Size of ICUs blocks");
 }
 
-EncodeMode::EncodeMode(const po::variables_map &args)
-    : m_encoder(std::make_unique<icov::encoder::FrameEncoder>(
-          0, 42, CHROMA_420, cv::Size(32, 32), cv::Size(32, 32))),
-      m_inputFile(args[s_inputFile_id].as<std::string>()),
-      m_encodedFile(args[s_outputFile_id].as<std::string>()) {
+EncodeMode::EncodeMode(const po::variables_map &args) {
 
-  if (m_encodedFile.empty()) {
-    m_encodedFile = m_inputFile;
-    m_encodedFile.replace_extension(".icov");
+  m_parameters.inputFile =
+      args[EncodeMode::params::inputFile_id].as<std::string>();
+
+  m_parameters.encodedFile =
+      args[EncodeMode::params::outputFile_id].as<std::string>();
+  if (m_parameters.encodedFile.empty()) {
+    m_parameters.encodedFile = m_parameters.inputFile;
+    m_parameters.encodedFile.replace_extension(".icov");
+
+    m_parameters.icuSize = args[EncodeMode::params::icuSize_id].as<int>();
+
+    m_encoder = std::make_unique<icov::encoder::FrameEncoder>(
+        0, 42, CHROMA_420, cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+        cv::Size(m_parameters.icuSize, m_parameters.icuSize));
   }
 
   // CoderFactory::create_coder_yuv(args, m_ycoder, m_uvcoder);
 
-  std::cout << boost::format("%-15s %-s") % "Input File:" % m_inputFile
+  std::cout << boost::format("%-15s %-s") % "Input File:" %
+                   m_parameters.inputFile
             << std::endl;
-  std::cout << boost::format("%-15s %-s ") % "Output File:" % m_encodedFile
+  std::cout << boost::format("%-15s %-s ") % "Output File:" %
+                   m_parameters.encodedFile
             << std::endl;
 }
 
 void EncodeMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
-  std::ofstream output(m_encodedFile);
+  std::ofstream output(m_parameters.encodedFile);
 
-  icov::encoder::instantiateInputMedia(m_inputFile, input);
+  icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
 
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
-  icov_pic.buildConstantSizeBlocks(32, 32);
+  icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
 
+  // TODO INIT ACCESS BLOCKS !!
   IcovAccessBlockManager icov_accessblockMgr;
+
   BlockPrediction icov_blockPrediction;
   std::cout << "encode\n";
   m_encoder->encode(output, *input, icov_pic, icov_accessblockMgr,

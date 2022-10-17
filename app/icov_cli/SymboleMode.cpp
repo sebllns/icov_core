@@ -5,6 +5,7 @@
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
@@ -18,52 +19,53 @@ namespace fs = boost::filesystem;
 //    std::vector<std::pair<float,float>> sim_result;
 // float estimated_rate = estimate_rate(b.src_bits[i], i < ly ? b.si_bits[i] :
 // zero_vec, b.sim_result);
-float estimate_rate(const BitVec &src, const BitVec &si,
-                    const std::vector<std::pair<float, float>> &sim_result) {
-  //    for(int i = 0 ; i < src.size() ; i++)
-  //    {
-  //        std::cout << src[i] << ", ";
-  //    }
 
-  //    std::cout << std::endl;
+// float estimate_rate(const BitVec &src, const BitVec &si,
+//                    const std::vector<std::pair<float, float>> &sim_result) {
+//  //    for(int i = 0 ; i < src.size() ; i++)
+//  //    {
+//  //        std::cout << src[i] << ", ";
+//  //    }
 
-  //    for(int i = 0 ; i < si.size() ; i++)
-  //    {
-  //        std::cout << si[i] << ", ";
-  //    }
+//  //    std::cout << std::endl;
 
-  std::cout << std::endl;
+//  //    for(int i = 0 ; i < si.size() ; i++)
+//  //    {
+//  //        std::cout << si[i] << ", ";
+//  //    }
 
-  float r = 0.0;
-  float p = 0.0;
+//  std::cout << std::endl;
 
-  int lx = src.size();
-  int ly = si.size();
+//  float r = 0.0;
+//  float p = 0.0;
 
-  p = std::abs(lx - ly);
+//  int lx = src.size();
+//  int ly = si.size();
 
-  for (int i = 0; i < std::min(lx, ly); i++) {
-    if (src[i] != si[i]) {
-      p++;
-    }
-  }
+//  p = std::abs(lx - ly);
 
-  p /= src.size();
+//  for (int i = 0; i < std::min(lx, ly); i++) {
+//    if (src[i] != si[i]) {
+//      p++;
+//    }
+//  }
 
-  // std::cout << "p error = " << p << std::endl;
+//  p /= src.size();
 
-  int i = 0;
-  while (i < (int)sim_result.size() && sim_result[i].first < p) {
-    i++;
-  }
+//  // std::cout << "p error = " << p << std::endl;
 
-  // todo interpolation ?
-  r = sim_result[i].second;
+//  int i = 0;
+//  while (i < (int)sim_result.size() && sim_result[i].first < p) {
+//    i++;
+//  }
 
-  std::cout << "estimated rate=" << r << std::endl;
+//  // todo interpolation ?
+//  r = sim_result[i].second;
 
-  return r;
-}
+//  std::cout << "estimated rate=" << r << std::endl;
+
+//  return r;
+//}
 
 void SymboleMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
@@ -85,7 +87,7 @@ void SymboleMode::AddProgramOptions(
 SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
     : m_coder(CoderFactory::create_coder(args)),
       n(m_coder->syndromeMgr()->get_n()), bsp(0, 0, 0, 0, 0, 0), predec(n, 0),
-      stored_synd(n), lx(0), numcode(0) {
+      stored_synd(n), numcode(0) {
   if (!args.count(dataset_dir_id)) {
     throw std::invalid_argument(dataset_dir_id + " is missing");
   }
@@ -108,7 +110,9 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
   enable_q_quantization = args[enable_q_quantization_id].as<bool>();
   enable_z_quantization = args[enable_z_quantization_id].as<bool>();
 
-  q_values = {0.125, 0.375, 0.5625, 0.6875, 0.78125, 0.84375, 0.90625, 0.96875};
+  if (enable_q_quantization)
+    q_values = {0.125,   0.375,   0.5625,  0.6875,
+                0.78125, 0.84375, 0.90625, 0.96875};
 
   helpers::path::assert_directory_exists(m_dataset_dir.string());
   helpers::path::assert_directory_exists(m_references_dir.string());
@@ -130,52 +134,53 @@ void SymboleMode::run() {
 }
 
 void SymboleMode::encode() {
-  auto res = std::vector<std::vector<float>>(lx, std::vector<float>(2, 0.0));
-  for (int i = 0; i < lx; i++) {
-    try {
-      encode_bitplane(i, res);
-    } catch (...) {
-      std::cerr << "Error: Could not process bitplane " << i << std::endl;
-      std::cerr << boost::current_exception_diagnostic_information()
-                << std::endl;
-    }
-  }
-  rate_results.push_back(res);
+  //  auto res = std::vector<std::vector<float>>(lx, std::vector<float>(2,
+  //  0.0)); for (int i = 0; i < lx; i++) {
+  //    try {
+  //      encode_bitplane(i, res);
+  //    } catch (...) {
+  //      std::cerr << "Error: Could not process bitplane " << i << std::endl;
+  //      std::cerr << boost::current_exception_diagnostic_information()
+  //                << std::endl;
+  //    }
+  //  }
+  //  rate_results.push_back(res);
 }
 
-bool SymboleMode::check_decoding(int i) {
-  //    std::cout<<"Check decoding"<<std::endl;
-  auto start = std::chrono::steady_clock::now();
-  m_coder->decode(dec_bits, numcode, stored_synd);
-  auto end = std::chrono::steady_clock::now();
-  auto elapsed_seconds = end - start;
-  if (!m_coder->testConvergence(dec_bits, src_bits[i])) {
-    std::cerr << "ERROR: Decoding check failed for bitplane " << i << std::endl;
-    std::cerr << "dec_bits - src_bits = ";
-    for (size_t di = 0; di < dec_bits.size(); di++) {
-      std::cerr << dec_bits[di] - src_bits[i][di] << " ";
-    }
-    std::cerr << std::endl;
-    return false;
-  }
+// bool SymboleMode::check_decoding(int i) {
+//  //    std::cout<<"Check decoding"<<std::endl;
+//  auto start = std::chrono::steady_clock::now();
+//  m_coder->decode(dec_bits, numcode, stored_synd);
+//  auto end = std::chrono::steady_clock::now();
+//  auto elapsed_seconds = end - start;
+//  if (!m_coder->testConvergence(dec_bits, src_bits[i])) {
+//    std::cerr << "ERROR: Decoding check failed for bitplane " << i <<
+//    std::endl; std::cerr << "dec_bits - src_bits = "; for (size_t di = 0; di <
+//    dec_bits.size(); di++) {
+//      std::cerr << dec_bits[di] - src_bits[i][di] << " ";
+//    }
+//    std::cerr << std::endl;
+//    return false;
+//  }
 
-  return true;
-}
+//  return true;
+//}
 
-void SymboleMode::fill_predec(int i) {
-  int bitplane = (lx - i - 1);
+// void SymboleMode::fill_predec(int i) {
+//  int bitplane = (lx - i - 1);
 
-  // fill predecoded bit values
-  for (int k = 0; k < n; k++) {
-    predec[k] = std::abs(src_symbols[k]) >> bitplane;
-    if (i == (lx - 1)) {
-      int x_reconstructed = (1 - 2 * src_bits[0][k]) * predec[k];
-      if (x_reconstructed != src_symbols[k])
-        std::cerr << "ERROR: X could not be reconstructed: " << x_reconstructed
-                  << " != " << src_symbols[k] << std::endl;
-    }
-  }
-}
+//  // fill predecoded bit values
+//  for (int k = 0; k < n; k++) {
+//    predec[k] = std::abs(src_symbols[k]) >> bitplane;
+//    if (i == (lx - 1)) {
+//      int x_reconstructed = (1 - 2 * src_bits[0][k]) * predec[k];
+//      if (x_reconstructed != src_symbols[k])
+//        std::cerr << "ERROR: X could not be reconstructed: " <<
+//        x_reconstructed
+//                  << " != " << src_symbols[k] << std::endl;
+//    }
+//  }
+//}
 
 void SymboleMode::write_results(const std::string &sequence_name) {
   TestSequenceResult tsr;
@@ -255,17 +260,20 @@ void SymboleMode::process_input_list(const std::string &file) {
 
   std::string sequence_name;
   while (std::getline(seq_list, sequence_name)) {
-    try {
-      fs::path seq_path =
-          fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
+    boost::algorithm::trim(sequence_name);
+    if (!sequence_name.empty()) {
+      try {
+        fs::path seq_path =
+            fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
 
-      process_input_file(seq_path.string());
-      write_results(sequence_name);
-    } catch (...) {
-      std::cerr << "Error: Could not process sequence file " << sequence_name
-                << std::endl;
-      std::cerr << boost::current_exception_diagnostic_information()
-                << std::endl;
+        process_input_file(seq_path.string());
+        write_results(sequence_name);
+      } catch (...) {
+        std::cerr << "Error: Could not process sequence file " << sequence_name
+                  << std::endl;
+        std::cerr << boost::current_exception_diagnostic_information()
+                  << std::endl;
+      }
     }
   }
   seq_list.close();
@@ -282,155 +290,158 @@ void SymboleMode::process_input_file(const std::string &file) {
 
   TestSequenceInput tsi(n);
   tsi.read_from_file(file);
-  src_symbols = tsi.get_source();
+  // src_symbols = tsi.get_source();
 
-  compute_src_bits();
+  bsp = BitSymbolProvider(tsi.get_source());
+  // compute_src_bits();
 
   int si_count = std::min(tsi.get_side_info_count(), max_si_count);
 
   // encode for each SI
   for (int si = 0; si < si_count; si++) {
     std::cout << "si=" << si + 1 << "/" << si_count << std::endl;
-    side_info = tsi.get_side_info(si);
-    process_si();
+    // side_info = tsi.get_side_info(si);
+    // process_si();
+    bsp.set_si(tsi.get_side_info(si), enable_z_quantization, q_values);
     encode();
   }
 }
 
-void SymboleMode::compute_src_bits() {
-  // init bit planes of X
-  src_bits = BitSymbolProvider::compute_bits(src_symbols);
-  lx = src_bits.size();
-}
+// void SymboleMode::compute_src_bits() {
+//  // init bit planes of X
+//  src_bits = BitSymbolProvider::compute_bits(src_symbols);
+//  lx = src_bits.size();
+//}
 
-void SymboleMode::process_si() {
-  init_bsp();
-  compute_si_bits();
-}
+// void SymboleMode::process_si() {
+//  init_bsp();
+//  compute_si_bits();
+//}
 
-void SymboleMode::compute_si_bits() {
-  // get length for binary representation of Y
-  //    int ly =  std::floor(std::log2f(std::max(std::abs(y_min),
-  //    std::abs(y_max)))) + 2; ly = lx;
+// void SymboleMode::compute_si_bits() {
+//  // get length for binary representation of Y
+//  //    int ly =  std::floor(std::log2f(std::max(std::abs(y_min),
+//  //    std::abs(y_max)))) + 2; ly = lx;
 
-  int ly = lx;
+//  int ly = lx;
 
-  // init bit planes of Y
-  si_bits = Bitplanes(ly, BitVec(n, 0));
-  for (int i = 0; i < n; i++) {
+//  // init bit planes of Y
+//  si_bits = Bitplanes(ly, BitVec(n, 0));
+//  for (int i = 0; i < n; i++) {
 
-    si_bits[0][i] = (side_info[i] < 0);
+//    si_bits[0][i] = (side_info[i] < 0);
 
-    for (int j = 1; j < ly; j++) {
-      si_bits[ly - j][i] = (std::abs(side_info[i]) >> (j - 1)) & 1U;
-    }
-  }
-}
+//    for (int j = 1; j < ly; j++) {
+//      si_bits[ly - j][i] = (std::abs(side_info[i]) >> (j - 1)) & 1U;
+//    }
+//  }
+//}
 
-void SymboleMode::init_bsp() {
+// void SymboleMode::init_bsp() {
 
-  // init intrinsic SI parameters
-  float q = 0.0;
-  int z_min = 999999;
-  int z_max = -999999;
+//  // init intrinsic SI parameters
+//  float q = 0.0;
+//  int z_min = 999999;
+//  int z_max = -999999;
 
-  for (int i = 0; i < n; i++) {
-    int z = src_symbols[i] - side_info[i];
+//  for (int i = 0; i < n; i++) {
+//    int z = src_symbols[i] - side_info[i];
 
-    // q = N0/N
-    if (z == 0) {
-      q += 1.0 / n;
-    }
+//    // q = N0/N
+//    if (z == 0) {
+//      q += 1.0 / n;
+//    }
 
-    // z_min = min(Z[k], 0<=k<N)
-    if (z < z_min)
-      z_min = z;
+//    // z_min = min(Z[k], 0<=k<N)
+//    if (z < z_min)
+//      z_min = z;
 
-    // z_max = max(Z[k], 0<=k<N)
-    if (z > z_max)
-      z_max = z;
-  }
+//    // z_max = max(Z[k], 0<=k<N)
+//    if (z > z_max)
+//      z_max = z;
+//  }
 
-  // check zmax = xmax - ymin
-  // check zmin = xmin - ymax
+//  // check zmax = xmax - ymin
+//  // check zmin = xmin - ymax
 
-  if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max
-                        << std::endl;
+//  if (DebugTools::debug_trace_enabled)
+//    DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max
+//                        << std::endl;
 
-  if (enable_z_quantization) {
-    int z_step = 16;
-    int z_limit = 1024;
-    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
-    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
-    if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization zmin=" << z_min
-                          << " zmax=" << z_max << std::endl;
-  }
+//  if (enable_z_quantization) {
+//    int z_step = 16;
+//    int z_limit = 1024;
+//    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
+//    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
+//    if (DebugTools::debug_trace_enabled)
+//      DebugTools::logFile << "\t After quantization zmin=" << z_min
+//                          << " zmax=" << z_max << std::endl;
+//  }
 
-  if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t q=" << q << std::endl;
-  if (enable_q_quantization) {
-    q = q_values[icov::helpers::maths::quantize(q, q_values)];
-    if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization q=" << q << std::endl;
-  }
+//  if (DebugTools::debug_trace_enabled)
+//    DebugTools::logFile << "\t q=" << q << std::endl;
+//  if (enable_q_quantization) {
+//    q = q_values[icov::helpers::maths::quantize(q, q_values)];
+//    if (DebugTools::debug_trace_enabled)
+//      DebugTools::logFile << "\t After quantization q=" << q << std::endl;
+//  }
 
-  // y_min = min(Y[k], 0<=k<N)
-  int y_min = *std::min_element(side_info.begin(), side_info.end());
+//  // y_min = min(Y[k], 0<=k<N)
+//  int y_min = *std::min_element(side_info.begin(), side_info.end());'
 
-  // y_max = max(Y[k], 0<=k<N)
-  int y_max = *std::max_element(side_info.begin(), side_info.end());
+//  // y_max = max(Y[k], 0<=k<N)
+//  int y_max = *std::max_element(side_info.begin(), side_info.end());
 
-  bsp = BitSymbolProvider(z_min, z_max, y_min, y_max, q, lx);
-}
+//  bsp = BitSymbolProvider(z_min, z_max, y_min, y_max, q, lx);
+//}
 
-void SymboleMode::encode_bitplane(int i,
-                                  std::vector<std::vector<float>> &result) {
-  auto llrProvider = m_coder->llrProvider();
-  auto syndromeMgr = m_coder->syndromeMgr();
-  auto matrixPvdr = m_coder->matrixProvider();
+// void SymboleMode::encode_bitplane(int i,
+//                                  std::vector<std::vector<float>> &result) {
+//  auto llrProvider = m_coder->llrProvider();
+//  auto syndromeMgr = m_coder->syndromeMgr();
+//  auto matrixPvdr = m_coder->matrixProvider();
 
-  //    syndrome accumulation
-  syndromeMgr->init_accumulation(src_bits[i]);
+//  //    syndrome accumulation
+//  syndromeMgr->init_accumulation(src_bits[i]);
 
-  if (i == 0) {
-    // get LLR for first bitplane level i.e. sign
-    llrProvider->initLLR_s(bsp, side_info, src_bits[i]);
-  } else {
-    // get LLR for bitplane
-    llrProvider->initLLR_b(i - 1, bsp, side_info, src_bits[0], predec,
-                           src_bits[i]);
-  }
+//  if (i == 0) {
+//    // get LLR for first bitplane level i.e. sign
+//    llrProvider->initLLR_s(bsp, side_info, src_bits[i]);
+//  } else {
+//    // get LLR for bitplane
+//    llrProvider->initLLR_b(i - 1, bsp, side_info, src_bits[0], predec,
+//                           src_bits[i]);
+//  }
 
-  // save LLR (in case of doping)
-  llr = llrProvider->llr();
+//  // save LLR (in case of doping)
+//  llr = llrProvider->llr();
 
-  numcode = 0;
-  numerrors = m_coder->encode(numcode, stored_synd, src_bits[i]);
+//  numcode = 0;
+//  numerrors = m_coder->encode(numcode, stored_synd, src_bits[i]);
 
-  double rate = (((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode))) /
-                 ((double)n));
-  float estimated_rate = 0.0f;
-  result[i][0] = estimated_rate;
-  result[i][1] = rate;
+//  double rate = (((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode)))
+//  /
+//                 ((double)n));
+//  float estimated_rate = 0.0f;
+//  result[i][0] = estimated_rate;
+//  result[i][1] = rate;
 
-  // reset doping state and LLR
-  syndromeMgr->reset_doping();
-  for (int l = 0; l < n; l++) {
-    llrProvider->operator[](l) = llr[l];
-  }
+//  // reset doping state and LLR
+//  syndromeMgr->reset_doping();
+//  for (int l = 0; l < n; l++) {
+//    llrProvider->operator[](l) = llr[l];
+//  }
 
-  if (numerrors != 0) {
-    std::cerr << "ERROR: No convergence for bitplane=" << i << std::endl;
-  } else {
-    std::cout << "b=" << i << " rate=" << rate << std::endl;
-    check_decoding(i);
-  }
+//  if (numerrors != 0) {
+//    std::cerr << "ERROR: No convergence for bitplane=" << i << std::endl;
+//  } else {
+//    std::cout << "b=" << i << " rate=" << rate << std::endl;
+//    check_decoding(i);
+//  }
 
-  if (i > 0)
-    fill_predec(i);
-}
+//  if (i > 0)
+//    fill_predec(i);
+//}
 
 const std::string SymboleMode::dataset_dir_id = "symbole-data-dir";
 const std::string SymboleMode::reference_dir_id = "symbole-reference-dir";

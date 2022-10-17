@@ -48,10 +48,17 @@ public:
   int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source, uint32_t numcodeMax, uint32_t step);
 
-  void decode(BitVec &o_decoded, uint32_t numcode, const Syndrome &syndrome);
+  void encode(std::vector<SIRates> &rates, std::vector<SISyndromes> &syndromes,
+              const std::vector<SIVec> &si, const BitSymbolProvider::params &p,
+              const SymboleVec &src);
+
+  void encode_bitplanes(const BitSymbolProvider &bsp, SIRates &rate,
+                        SISyndromes &stored_synd);
 
   void encode_bitplane(const BitSymbolProvider &bsp, int bitplane_idx,
-                       float &rate, Syndrome &stored_synd, SymboleVec &predec);
+                       Rate &rate, Syndrome &stored_synd, SymboleVec &predec);
+
+  void decode(BitVec &o_decoded, uint32_t numcode, const Syndrome &syndrome);
 
   IMatrixProvider_sp matrixProvider() const { return this->m_matrix_provider; }
   IDecoder_sp decoder() const { return this->m_pdecoder; }

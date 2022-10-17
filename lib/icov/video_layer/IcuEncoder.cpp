@@ -12,21 +12,20 @@ bool icov::video::IcuEncoder::addIntraSI(
     icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE refSampSide,
     bool createTransformBuffer, bool createQuantizedTransformBuffer,
     bool createInverseQuantizedTransformBuffer) {
+
+  ICOV_ASSERT_MSG(_mapIntraSIs.count(refSampSide) == 0,
+                  "key already found " +
+                      BlockPrediction::toString(refSampSide));
+
   std::pair<std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
                      SideInformationUnit>::iterator,
             bool>
       ret;
+
   ret = _mapIntraSIs.insert(std::make_pair(
       refSampSide, SideInformationUnit(_sourceX, createTransformBuffer,
                                        createQuantizedTransformBuffer,
                                        createInverseQuantizedTransformBuffer)));
-  if (ret.second == false) {
-    std::cerr << "icov::video::IcuEncoder::addIntraSI Error: reference sample "
-                 "refSampSide "
-                 "already existed"
-              << std::endl;
-    return false;
-  }
 
   for (unsigned int i = 0; i < _sourceX.TUs.size(); i++) {
     SideInformationUnit &si = ret.first->second;
