@@ -41,13 +41,10 @@ void callBackFunc(int event, int x, int y, int flags, void *userdata) {
 }
 
 /*****************************************************************************/
-FrameEncoder::FrameEncoder(int frame, int qp, ChromaFormat ch,
-                           const cv::Size &icuSize_luma,
-                           const cv::Size &tuSize_luma)
-    : IFrameEncoder(frame), m_firstDisplayBlocks(true),
-      m_icuSize_luma(icuSize_luma), m_tuSize_luma(tuSize_luma), m_qp(qp),
-      m_chromaFormatIDC(ch),
-      m_numComp(getNumberValidComponents(m_chromaFormatIDC)) {}
+FrameEncoder::FrameEncoder(int frame, const params &p)
+    : IFrameEncoder(frame), m_params(p),
+      m_numComp(getNumberValidComponents(p.chFormat)),
+      m_firstDisplayBlocks(true) {}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
@@ -57,11 +54,12 @@ FrameEncoder::~FrameEncoder() {
 /*****************************************************************************/
 void FrameEncoder::onMouse(int event, int x, int y, int flags) {
   if (event == cv::EVENT_LBUTTONDOWN) {
-    int bx = x / m_icuSize_luma.width;
-    int by = y / m_icuSize_luma.height;
+    int bx = x / m_params.icuSize_luma.width;
+    int by = y / m_params.icuSize_luma.height;
     if (bx < (int)m_enc_struc.n_icusPerRow &&
         by < (int)m_enc_struc.n_icusPerCol)
-      onSelectBlock(bx * m_icuSize_luma.width, by * m_icuSize_luma.height);
+      onSelectBlock(bx * m_params.icuSize_luma.width,
+                    by * m_params.icuSize_luma.height);
   }
 }
 
@@ -75,12 +73,13 @@ void FrameEncoder::onSelectBlock(int x, int y) {
     auto &m_cvMat_blockSI = m_cvmat[BlockZoomID];
 
     if (!m_firstDisplayBlocks) {
-      m_cvMat_blockSI(
-          cv::Rect(m_icuSize_luma.width + 1, m_icuSize_luma.height + 1,
-                   m_icuSize_luma.width - 1, m_icuSize_luma.height - 1))
+      m_cvMat_blockSI(cv::Rect(m_params.icuSize_luma.width + 1,
+                               m_params.icuSize_luma.height + 1,
+                               m_params.icuSize_luma.width - 1,
+                               m_params.icuSize_luma.height - 1))
           .copyTo(m_cvMat_reconstructedEquiImage(
               cv::Rect(m_currentBlockPosition + cv::Point(1, 1),
-                       m_icuSize_luma - cv::Size(1, 1))));
+                       m_params.icuSize_luma - cv::Size(1, 1))));
     }
 
     m_cvMat_blockSI.setTo(0);
@@ -88,13 +87,14 @@ void FrameEncoder::onSelectBlock(int x, int y) {
     int x_block = x, y_block = y;
 
     const auto &es = this->m_enc_struc;
-    uint icuIndex = es.get_icuIndex(Position(x_block / m_icuSize_luma.width,
-                                             y_block / m_icuSize_luma.height));
+    uint icuIndex =
+        es.get_icuIndex(Position(x_block / m_params.icuSize_luma.width,
+                                 y_block / m_params.icuSize_luma.height));
     const auto &icu_enc = es.getICU(icuIndex);
     const auto &si_map = icu_enc.get_intraSIsMap();
 
-    cv::Rect rect_src(x_block, y_block, m_icuSize_luma.width,
-                      m_icuSize_luma.height);
+    cv::Rect rect_src(x_block, y_block, m_params.icuSize_luma.width,
+                      m_params.icuSize_luma.height);
     cv::Rect rect_dst(rect_src.width, rect_src.height, rect_src.width,
                       rect_src.height);
 
@@ -150,8 +150,8 @@ void FrameEncoder::onSelectBlock(int x, int y) {
         bj = 1;
       }
 
-      int ybi = bi * m_icuSize_luma.height;
-      int xbj = bj * m_icuSize_luma.width;
+      int ybi = bi * m_params.icuSize_luma.height;
+      int xbj = bj * m_params.icuSize_luma.width;
 
       double psnr = VTM_OPENCV_Utility::psnr(src_block, si_block);
       std::cout << boost::format("%_15s | %-8.2f ") % predStr.str() % psnr;
@@ -200,7 +200,7 @@ void FrameEncoder::onSelectBlock(int x, int y) {
 
     std::cout << endsep << std::endl << std::endl;
 
-    m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_icuSize_luma))
+    m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_params.icuSize_luma))
         .setTo(cv::Scalar(0, 255, 0));
 
     cv::imshow("viewport RECONSTRUCTED", m_cvMat_reconstructedEquiImage);
@@ -225,8 +225,10 @@ void FrameEncoder::processInput(std::ostream &output,
   UInt maxval = 0;
 
   // CONSTANTS
-  const Size icuSize_luma = Size(m_icuSize_luma.width, m_icuSize_luma.height);
-  const Size tuSize_luma = Size(m_tuSize_luma.width, m_tuSize_luma.height);
+  const Size icuSize_luma =
+      Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
+  const Size tuSize_luma =
+      Size(m_params.tuSize_luma.width, m_params.tuSize_luma.height);
   const Size tuSizeAfterRegrouping_luma = Size(1, 1);
   const int maxLog2TrDynamicRange = 15;
   const int margin_x_360luma = 2; // in fact we need 1 margin for each color
@@ -236,8 +238,8 @@ void FrameEncoder::processInput(std::ostream &output,
   // chroma.
 
   //  const std::vector<int> qp_set = {22, 27, 32, 37, 42};
-  const int qp = m_qp;
-  std::cout << "qp= " << qp << std::endl;
+  // const int qp = m_qp;
+  // std::cout << "qp= " << qp << std::endl;
 
   const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   // internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates
@@ -268,9 +270,9 @@ void FrameEncoder::processInput(std::ostream &output,
   // end resize
 
   UnitArea extendedFrameArea(
-      m_chromaFormatIDC,
+      m_params.chFormat,
       Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight));
-  UnitArea mainFrameArea(m_chromaFormatIDC,
+  UnitArea mainFrameArea(m_params.chFormat,
                          Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
   //  PelStorage picTemp;
@@ -301,13 +303,13 @@ void FrameEncoder::processInput(std::ostream &output,
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-          m_chromaFormatIDC, sourceWidth, sourceHeight, margin_x_360luma,
+          m_params.chFormat, sourceWidth, sourceHeight, margin_x_360luma,
           icuSize_luma.width, icuSize_luma.height, tuSize_luma.width,
           tuSize_luma.height);
 
   VTM_Utility::quantizeFrame(
-      qp, m_vvc_bufs.get(PIC_ORIGINAL), m_vvc_bufs.get(PIC_RECONSTRUCTION),
-      m_enc_struc, internalBitDepth,
+      m_params.qp, m_vvc_bufs.get(PIC_ORIGINAL),
+      m_vvc_bufs.get(PIC_RECONSTRUCTION), m_enc_struc, internalBitDepth,
       maxLog2TrDynamicRange); // give the whole extended image ( .getOrigBuf()
   // and
   // .getRecoBuf() ) to the function because vector
@@ -321,14 +323,13 @@ void FrameEncoder::processInput(std::ostream &output,
 
   cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
   cv::imshow("viewport original", input.getCurrentFrame());
-  cv::waitKey(0);
 
   // INTRA PRED
   PelUnitBuf mainFrameReco =
       m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
   icov::video::IntraPrediction intraPred;
-  intraPred.init(m_chromaFormatIDC);
+  intraPred.init(m_params.chFormat);
 
   std::cout << "Compute intra predictions" << std::endl;
   for (UInt ch = 0; ch < m_numComp; ch++) {
@@ -340,7 +341,7 @@ void FrameEncoder::processInput(std::ostream &output,
     m_enc_struc.applyPredictionBasedOnEntropy(
         m_vvc_bufs, intraPred, compID, internalBitDepth,
         tuSizeAfterRegrouping_luma.width, tuSizeAfterRegrouping_luma.height,
-        false, qp, maxLog2TrDynamicRange);
+        false, m_params.qp, maxLog2TrDynamicRange);
 
     //    storageInBit += MyUtility::computeRatesAndCalculateStorageInBit(
     //        m_enc_struc, compID, tuSizeAfterRegrouping_luma,
@@ -416,11 +417,37 @@ void FrameEncoder::processInput(std::ostream &output,
     reco_preds_output.push_back(m_cvmat[PIC_PREDICTION + pk]);
   }
   cv::imwrite("reco_preds_output.tiff", reco_preds_output);
-
-  cv::waitKey(0);
 }
 
 /*****************************************************************************/
+void icov::encoder::FrameEncoder::encode_si(
+    const icov::video::IcuEncoder &icu_enc,
+    BlockPrediction::predType pred) const {
+
+  auto si = icu_enc.get_sideInformation(pred);
+  icov::helpers::assert::not_null(si);
+
+  for (uint c = 0; c < m_numComp; c++) {
+    int tu_count = si->TUs.size();
+    for (int tu_index = 0; tu_index < tu_count; tu_index++) {
+      const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
+      auto x_tuCoeff =
+          x_tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
+
+      BitSymbolProvider bsp(
+          SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + x_tuCoeff.area()));
+
+      const auto &si_tu = si->TUs[tu_index];
+      auto si_tuCoeff =
+          si_tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
+      bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + si_tuCoeff.area()),
+                 m_params.bsp_params);
+
+      std::cout << x_tuCoeff.area() << ", " << si_tuCoeff.area() << std::endl;
+    }
+  }
+}
+
 void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                                              const Block &b,
                                              uint16_t prediction) {
@@ -433,8 +460,9 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   int x_block = b.u(), y_block = b.w();
 
   const auto &es = this->m_enc_struc;
-  uint icuIndex = es.get_icuIndex(Position(x_block / m_icuSize_luma.width,
-                                           y_block / m_icuSize_luma.height));
+  uint icuIndex =
+      es.get_icuIndex(Position(x_block / m_params.icuSize_luma.width,
+                               y_block / m_params.icuSize_luma.height));
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
@@ -443,16 +471,7 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                       BlockPrediction::toString(pred));
 
   // m_vvc_bufs.get(PIC_PREDICTION + prediction).getBuf(mainFrameArea)
-  auto si = icu_enc.get_sideInformation(pred);
-  icov::helpers::assert::not_null(si);
-
-  for (uint c = 0; c < m_numComp; c++) {
-    for (const auto &tu : si->TUs) {
-      auto tuCoeff =
-          tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
-      std::cout << std::endl;
-    }
-  }
+  encode_si(icu_enc, pred);
 
   const IPicture &p = *(b.parent());
   int bw = std::ceil(b.w() * p.width());

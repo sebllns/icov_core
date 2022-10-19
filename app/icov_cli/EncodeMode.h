@@ -80,8 +80,8 @@ public:
 
 private:
   int encode();
-  std::shared_ptr<AffInteractiveCoder> m_ycoder;
-  std::shared_ptr<AffInteractiveCoder> m_uvcoder;
+  std::unique_ptr<AffInteractiveCoder> m_ycoder;
+  std::unique_ptr<AffInteractiveCoder> m_uvcoder;
   std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
   params m_parameters;
 };

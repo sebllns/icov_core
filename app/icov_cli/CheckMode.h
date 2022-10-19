@@ -54,34 +54,31 @@
 
 namespace po = boost::program_options;
 
-
-class CheckMode
-{
+class CheckMode {
 public:
-    CheckMode(const po::variables_map &args, const std::string& data_path);
-    ~CheckMode() = default;
+  CheckMode(const po::variables_map &args, const std::string &data_path);
+  ~CheckMode() = default;
 
-    void run();
+  void run();
 
-    static void AddProgramOptions(po::options_description &desc);
+  static void AddProgramOptions(po::options_description &desc);
 
 private:
-    int encode();
-    void fill_src();
-    void fill_pcrossover();
-    bool check_decoding();
-    void write_results();
-    FastMatrix<icov::bit> getHighLevelMatrix();
-    FastMatrix<icov::bit> getHighLevelMatrixImt164();
-    FastMatrix<uint16_t> getMappingVector(int m);
-    int getNextLevel(int current);
-    int getMinLevel();
+  int encode();
+  void fill_src();
+  void fill_pcrossover();
+  bool check_decoding();
+  void write_results();
+  FastMatrix<icov::bit> getHighLevelMatrix();
+  FastMatrix<icov::bit> getHighLevelMatrixImt164();
+  FastMatrix<uint16_t> getMappingVector(int m);
+  int getNextLevel(int current);
+  int getMinLevel();
 
-    void compare_matrix(const AffMatrix& m, const icov::FastMatrix<icov::bit> &gt);
+  void compare_matrix(const AffMatrix &m,
+                      const icov::FastMatrix<icov::bit> &gt);
 
-    std::shared_ptr<AffInteractiveCoder> m_coder;
-    Syndrome m_stored_syndrome;
-    std::string datapath;
-
+  std::unique_ptr<AffInteractiveCoder> m_coder;
+  Syndrome m_stored_syndrome;
+  std::string datapath;
 };
-

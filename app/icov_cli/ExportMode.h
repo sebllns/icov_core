@@ -70,7 +70,7 @@ public:
   static const std::string export_numcode_id;
 
 private:
-  std::shared_ptr<AffInteractiveCoder> m_coder;
+  std::unique_ptr<AffInteractiveCoder> m_coder;
 
   bool export_matrix_enabled;
   int export_numcode_mode;

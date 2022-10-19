@@ -16,11 +16,11 @@ icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
   std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
-void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp,
+void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info,
                                   const BitVec &src_bits) {
   m_src = src_bits;
-  for (int i = 0; i < side_info.size(); i++) {
+  for (size_t i = 0; i < side_info.size(); i++) {
     double p = bsp.pqks(src_bits[i] > 0, side_info[i]);
 
     p = std::clamp(p, (double)0.000000001, (double)(1.0 - 0.000000001));
@@ -31,7 +31,7 @@ void icov::LLRProvider::initLLR_s(BitSymbolProvider &bsp,
   }
 }
 
-void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp,
+void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info,
                                   const std::vector<int> &sign,
                                   const std::vector<int> &abs_predec,
@@ -41,7 +41,7 @@ void icov::LLRProvider::initLLR_b(int b, BitSymbolProvider &bsp,
   int l = bsp.x_binary_length() - 1;
   float p = 0.0, p0 = 0.0, p1 = 0.0;
 
-  for (int i = 0; i < side_info.size(); i++) {
+  for (size_t i = 0; i < side_info.size(); i++) {
     bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);
     p = std::clamp(p, (float)0.000001, (float)(1.0 - 0.000001));
 

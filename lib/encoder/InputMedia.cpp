@@ -12,10 +12,6 @@ InputImage::InputImage(const fs::path &path) : icov::IImage<cv::Mat>(path) {
   ICOV_ASSERT_MSG(m_frame.total() > 0, "Empty image");
   m_width = m_frame.cols;
   m_height = m_frame.rows;
-
-  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
-  cv::imshow("viewport original", m_frame);
-  cv::waitKey(0);
 }
 
 void InputImage::writeInfos(std::ofstream &output, int key) {

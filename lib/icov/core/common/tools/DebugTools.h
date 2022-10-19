@@ -1,6 +1,7 @@
 #ifndef DEBUGTOOLS_H
 #define DEBUGTOOLS_H
 
+#include <boost/format.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -111,6 +112,41 @@ public:
 
     return sstr.str();
   }
+
+  //  template <typename T>
+  //  static void print_table(std::ostream &out,
+  //                          const std::vector<std::string> &header_col,
+  //                          const std::vector<std::string> &header_row,
+  //                          const std::vector<int> &col_width,
+  //                          const std::vector<std::vector<T>> &data,
+  //                          const std::string data_format) {
+
+  //    int ncol = header_row.size();
+  //    int nrow = header_col.size() - 1;
+
+  //    for (int j = 0; j <= ncol; j++) {
+
+  //      std::cout << boost::format("%=" + std::to_string(col_width[j])) %
+  //                       header_row[j];
+  //    }
+
+  //    for (int i = 0; i <= nrow; i++) {
+  //      for (int j = 0; j <= ncol; j++) {
+  //        if (i == 0 && j > 0) {
+  //          // header_row j - 1
+  //          std::cout << boost::format("%=" + std::to_string(col_width[j])) %
+  //                           header_row[j - 1];
+  //        } else if (j == 0 && i > 0) {
+  //          // header_col i - 1
+  //          std::cout << boost::format("%_" + std::to_string(col_width[j])) %
+  //                           header_row[j - 1];
+  //        } else if (i > 0 && j > 0) {
+  //          // data (i - 1) (j - 1)
+  //        } else {
+  //        }
+  //      }
+  //    }
+  //  }
 };
 
 } // namespace icov

@@ -86,8 +86,7 @@ void SymboleMode::AddProgramOptions(
 
 SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
     : m_coder(CoderFactory::create_coder(args)),
-      n(m_coder->syndromeMgr()->get_n()), bsp(0, 0, 0, 0, 0, 0), predec(n, 0),
-      stored_synd(n), numcode(0) {
+      n(m_coder->syndromeMgr()->get_n()) {
   if (!args.count(dataset_dir_id)) {
     throw std::invalid_argument(dataset_dir_id + " is missing");
   }
@@ -182,25 +181,23 @@ void SymboleMode::encode() {
 //  }
 //}
 
-void SymboleMode::write_results(const std::string &sequence_name) {
+void SymboleMode::write_results(const std::string &sequence_name,
+                                const std::vector<SIRates> &rate_results) {
   TestSequenceResult tsr;
   tsr.read_from_file((m_references_dir / (sequence_name + ".mat")).string());
 
   std::ofstream result_file(
       (fs::path(m_result_dir) / (sequence_name + ".txt")).string());
 
-  for (int i = 0; i < 2; i++) {
-    result_file << ((i == 0) ? "# estimated rate" : "# actual rate")
-                << std::endl;
-    for (auto &si : rate_results) {
-      for (auto &bp : si) {
-        result_file << std::fixed << std::setw(7) << std::setprecision(6)
-                    << std::setfill('0') << bp[i] << " ";
-      }
-      result_file << std::endl;
+  result_file << "# actual rate" << std::endl;
+  for (auto &si : rate_results) {
+    for (auto &bp_rate : si) {
+      result_file << std::fixed << std::setw(7) << std::setprecision(6)
+                  << std::setfill('0') << bp_rate << " ";
     }
     result_file << std::endl;
   }
+  result_file << std::endl;
 
   result_file << "# Fangping's rate" << std::endl;
   auto &frangping_rate = tsr["R"];
@@ -236,10 +233,9 @@ void SymboleMode::write_results(const std::string &sequence_name) {
   auto syndromeMgr = m_coder->syndromeMgr();
   float min_rate = (1.0 * syndromeMgr->get_m(0)) / syndromeMgr->get_n();
   for (size_t si = 0; si < rate_results.size(); si++) {
-    float icov_rate = 0.0, estim_rate = 0.0, fp_rate = 0.0;
+    float icov_rate = 0.0, fp_rate = 0.0;
     for (size_t bp = 0; bp < rate_results[si].size(); bp++) {
-      estim_rate += rate_results[si][bp][0];
-      icov_rate += rate_results[si][bp][1];
+      icov_rate += rate_results[si][bp];
       fp_rate += std::max(tsr["R"].get_data(si, frangping_rate.n_cols - 1 - bp),
                           min_rate);
     }
@@ -267,7 +263,7 @@ void SymboleMode::process_input_list(const std::string &file) {
             fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
 
         process_input_file(seq_path.string());
-        write_results(sequence_name);
+        //        write_results(sequence_name);
       } catch (...) {
         std::cerr << "Error: Could not process sequence file " << sequence_name
                   << std::endl;
@@ -282,7 +278,7 @@ void SymboleMode::process_input_list(const std::string &file) {
 void SymboleMode::process_input_file(const std::string &file) {
   std::cout << file << std::endl;
 
-  rate_results.clear();
+  //  rate_results.clear();
 
   //    std::ifstream seq(file);
   //    if(!seq.is_open()) BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot
@@ -292,19 +288,24 @@ void SymboleMode::process_input_file(const std::string &file) {
   tsi.read_from_file(file);
   // src_symbols = tsi.get_source();
 
-  bsp = BitSymbolProvider(tsi.get_source());
+  //  bsp = BitSymbolProvider(tsi.get_source());
   // compute_src_bits();
 
   int si_count = std::min(tsi.get_side_info_count(), max_si_count);
 
+  std::vector<SIVec> side_infos;
+
   // encode for each SI
-  for (int si = 0; si < si_count; si++) {
-    std::cout << "si=" << si + 1 << "/" << si_count << std::endl;
-    // side_info = tsi.get_side_info(si);
-    // process_si();
-    bsp.set_si(tsi.get_side_info(si), enable_z_quantization, q_values);
-    encode();
+  for (int k = 0; k < si_count; k++) {
+    side_infos.push_back(tsi.get_side_info(k));
   }
+
+  std::vector<SIRates> rates;
+  std::vector<SISyndromes> syndromes;
+  BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
+
+  m_coder->encode(rates, syndromes, side_infos, bsp_params, tsi.get_source());
+  write_results(fs::path(file).stem().string(), rates);
 }
 
 // void SymboleMode::compute_src_bits() {

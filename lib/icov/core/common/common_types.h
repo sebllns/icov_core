@@ -16,6 +16,10 @@
 
 namespace icov {
 
+///
+///
+/// @fixme seg fault when using the constructor
+/// std::vector<FastArray<T>>(m, FastArray<T>(n))
 template <typename T> class FastArray {
 public:
   FastArray() : m_capacity(0), m_size(0), m_data(nullptr) {
@@ -25,18 +29,18 @@ public:
   FastArray(const FastArray &f)
       : m_capacity(f.m_capacity), m_size(f.m_size),
         m_data(new T[f.m_capacity]) {
-    // std::cout<<"new copy " << m_size << std::endl;
+    std::cout << "new copy " << m_size << std::endl;
     std::memcpy(m_data, f.m_data, m_size * sizeof(T));
   }
 
   FastArray(size_t size) : m_capacity(size), m_size(size), m_data(new T[size]) {
-    // std::cout<<"new size " << size << std::endl;
+    std::cout << "new size " << size << std::endl;
 
     //(T*)malloc(size * sizeof (T))
   }
 
   virtual ~FastArray() {
-    // std::cout<<"delete\n";
+    std::cout << "delete\n";
 
     if (m_data != nullptr) {
       delete[] m_data;

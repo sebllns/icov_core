@@ -69,7 +69,7 @@ private:
   bool check_decoding();
   void write_results();
 
-  std::shared_ptr<AffInteractiveCoder> m_coder;
+  std::unique_ptr<AffInteractiveCoder> m_coder;
   BitVec m_src_bits;
   BitVec m_dec_bits;
   std::vector<double> m_pcrossover;

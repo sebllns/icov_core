@@ -51,6 +51,7 @@
 
 #include "BlockPrediction.h"
 #include "encoder/interface/IEncoder.h"
+#include "ldpc_codec_layer/IcovCoder.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <map>
@@ -59,29 +60,22 @@
 namespace icov {
 namespace encoder {
 class FrameEncoder : public IFrameEncoder<cv::Mat> {
-protected:
-  std::map<int, cv::Mat> m_cvmat;
-  bool m_firstDisplayBlocks;
-
-  cv::Size m_icuSize_luma;
-  cv::Size m_tuSize_luma;
-  int m_qp;
-  icov::video::EncodingStructure m_enc_struc;
-  cv::Point m_currentBlockPosition;
-  ChromaFormat m_chromaFormatIDC;
-  uint m_numComp;
-  icov::video::BufGroups m_vvc_bufs;
-
 public:
+  struct params {
+    int qp;
+    ChromaFormat chFormat;
+    cv::Size icuSize_luma;
+    cv::Size tuSize_luma;
+    BitSymbolProvider::params bsp_params;
+  };
+
   const static int BlockZoomID;
   const static int RecoViewID;
 
-  FrameEncoder(int frame, int qp, ChromaFormat ch, const cv::Size &icuSize_luma,
-               const cv::Size &tuSize_luma);
+  FrameEncoder(int frame, const params &p);
   ~FrameEncoder();
 
   // IFrameEncoder interface
-public:
   void onMouse(int event, int x, int y, int flags);
 
 protected:
@@ -92,6 +86,19 @@ protected:
 
 private:
   void onSelectBlock(int x, int y);
+
+  void encode_si(const icov::video::IcuEncoder &icu_enc,
+                 BlockPrediction::predType pred) const;
+
+protected:
+  params m_params;
+  uint m_numComp;
+  std::map<int, cv::Mat> m_cvmat;
+  std::map<int, std::unique_ptr<AffInteractiveCoder>> m_coders;
+  bool m_firstDisplayBlocks;
+  icov::video::EncodingStructure m_enc_struc;
+  cv::Point m_currentBlockPosition;
+  icov::video::BufGroups m_vvc_bufs;
 };
 } // namespace encoder
 } // namespace icov

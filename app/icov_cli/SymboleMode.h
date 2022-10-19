@@ -67,18 +67,19 @@ public:
 
 private:
   void encode();
-  void write_results(const std::string &filename);
+  void write_results(const std::string &sequence_name,
+                     const std::vector<SIRates> &rates);
   void process_input_list(const std::string &file);
   void process_input_file(const std::string &file);
   //  void compute_src_bits();
   //  void process_si();
   //  void compute_si_bits();
   //  void init_bsp();
-  void encode_bitplane(int i, std::vector<std::vector<float>> &result);
-  bool check_decoding(int i);
-  void fill_predec(int i);
+  //  void encode_bitplane(int i, std::vector<std::vector<float>> &result);
+  //  bool check_decoding(int i);
+  //  void fill_predec(int i);
 
-  std::shared_ptr<AffInteractiveCoder> m_coder;
+  std::unique_ptr<AffInteractiveCoder> m_coder;
   int n;
 
   fs::path m_dataset_dir;
@@ -91,11 +92,11 @@ private:
   // SIVec side_info;
   // Bitplanes si_bits;
 
-  LLRVec llr;
-  BitVec dec_bits;
-  BitVec dec_signs;
-  BitVec dec_symbols;
-  std::vector<std::pair<float, float>> sim_result;
+  //  LLRVec llr;
+  //  BitVec dec_bits;
+  //  BitVec dec_signs;
+  //  BitVec dec_symbols;
+  //  std::vector<std::pair<float, float>> sim_result;
   std::vector<float> q_values;
   //  BitSymbolProvider bsp;
   //  std::vector<int> predec;
@@ -109,9 +110,6 @@ private:
 
   bool enable_q_quantization;
   bool enable_z_quantization;
-
-  uint32_t numcode;
-  int numerrors;
 
   static const std::string dataset_dir_id;
   static const std::string result_dir_id;

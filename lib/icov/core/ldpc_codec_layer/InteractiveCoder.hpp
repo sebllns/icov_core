@@ -107,7 +107,16 @@ void InteractiveCoder<Matrix>::encode(std::vector<SIRates> &rates,
                                       const BitSymbolProvider::params &p,
                                       const SymboleVec &src) {
 
+  if (rates.size() != si.size()) {
+    rates.resize(si.size(), SIRates());
+  }
+
+  if (syndromes.size() != si.size()) {
+    syndromes.resize(si.size(), SISyndromes());
+  }
+
   BitSymbolProvider bsp(src);
+
   for (size_t i = 0; i < si.size(); i++) {
     std::cout << "si=" << i + 1 << "/" << si.size() << std::endl;
     bsp.set_si(si[i], p);
@@ -122,15 +131,26 @@ void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
 
   auto syndromeMgr = this->syndromeMgr();
   int n = syndromeMgr->get_n();
-  int lx = bsp.x_binary_length();
+  size_t lx = bsp.x_binary_length();
 
-  rate = std::vector<float>(lx, 0);
-  stored_synd = std::vector<Syndrome>(lx, Syndrome(n));
+  //  std::cout << "call 01" << std::endl;
+
+  rate = std::vector<Rate>(lx, 0.0);
+
+  if (stored_synd.size() != lx) {
+    stored_synd = std::vector<Syndrome>(lx, Syndrome(n));
+  }
+
+  //  std::cout << "call 02" << std::endl;
 
   SymboleVec predec(n, 0);
-  for (int i = 0; i < lx; i++) {
+  for (size_t i = 0; i < lx; i++) {
+    stored_synd[i].resize(n);
+    stored_synd[i].fill(0);
     encode_bitplane(bsp, i, rate[i], stored_synd[i], predec);
   }
+
+  //  std::cout << "call 03" << std::endl;
 
   ICOV_ASSERT_MSG(predec == bsp.src_symboles(),
                   "Symbole values are not recovered from encoding process");
@@ -142,17 +162,21 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                                Syndrome &stored_synd,
                                                SymboleVec &predec) {
 
+  //  std::cout << "call" << std::endl;
+
   auto m_coder = this;
   auto llrProvider = m_coder->llrProvider();
   auto syndromeMgr = m_coder->syndromeMgr();
   auto matrixPvdr = m_coder->matrixProvider();
-  auto src_symbols = bsp.si_symboles();
+  auto src_symbols = bsp.src_symboles();
   auto src_bits = bsp.src_bits();
   auto side_info = bsp.si_symboles();
 
   int n = syndromeMgr->get_n();
   int lx = bsp.x_binary_length();
   int bitplane = (lx - bitplane_idx - 1);
+
+  //  std::cout << "prepare" << std::endl;
 
   //    syndrome accumulation
   syndromeMgr->init_accumulation(src_bits[bitplane_idx]);
@@ -169,8 +193,12 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   // save LLR (in case of doping)
   auto llr = llrProvider->llr();
 
+  //  std::cout << "encode" << std::endl;
+
   uint numcode = 0;
   int numerrors = m_coder->encode(numcode, stored_synd, src_bits[bitplane_idx]);
+
+  //  std::cout << "done" << std::endl;
 
   rate = (((double)syndromeMgr->get_m(matrixPvdr->getNumcode(numcode))) /
           ((double)n));
@@ -179,6 +207,8 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   for (int l = 0; l < n; l++) {
     llrProvider->operator[](l) = llr[l];
   }
+
+  //  std::cout << "end" << std::endl;
 
   // TODO handle error
   if (numerrors != 0) {
