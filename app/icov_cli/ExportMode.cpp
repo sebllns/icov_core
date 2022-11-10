@@ -99,7 +99,7 @@ void ExportMode::export_numcode() {
   }
   }
 
-  numcodes.push_back((int)(doping_rate * n));
+  numcodes.push_back((int)(doping_rate * n)); // index for the start of doping
   fs::path path = icov::helpers::path::get_data_folder(datapath, n, true);
   path /= numcodes_file;
   std::cout << "Writing numcodes in " << path << std::endl;
