@@ -259,9 +259,12 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
   icov::video::Quant quant;
   TCoeff uiAbsSum;
 
+  // FOR EACH BLOCK (ICU)
   for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
     icov::video::InteractiveCodingUnit &curr_icu =
         encStruct.getICU(i).get_sourceX();
+
+    // FOR EACH TU IN THE BLOCK
     for (UInt j = 0; j < curr_icu.TUs.size(); j++) {
       icov::video::TransformUnit &curr_tu = curr_icu.TUs[j];
 
@@ -276,12 +279,12 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
                   SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
 
       // BP
-      icov::SymboleVal *quantizedBuf = static_cast<icov::SymboleVal *>(
-          curr_tu.getQuantizedTransformCoeffs(compID).buf);
-      auto quantizedBufSize =
-          curr_tu.getQuantizedTransformCoeffs(compID).area();
-      icov::SymboleVec quantizedVec(quantizedBuf,
-                                    quantizedBuf + quantizedBufSize);
+      //      icov::SymboleVal *quantizedBuf = static_cast<icov::SymboleVal *>(
+      //          curr_tu.getQuantizedTransformCoeffs(compID).buf);
+      //      auto quantizedBufSize =
+      //          curr_tu.getQuantizedTransformCoeffs(compID).area();
+      //      icov::SymboleVec quantizedVec(quantizedBuf,
+      //                                    quantizedBuf + quantizedBufSize);
       //      curr_tu.getBitplanes(compID) =
       //          icov::BitSymbolProvider::compute_bits(quantizedVec);
 
@@ -352,7 +355,8 @@ double VTM_Utility::
   ICOV_ASSERT_MSG(maximumOccurance > 0,
                   "maximumOccurance=" + std::to_string(maximumOccurance));
 
-  uint32_t n_bitsPerFrequencyTableVal = std::ceil(std::log2(maximumOccurance));
+  uint32_t n_bitsPerFrequencyTableVal =
+      maximumOccurance > 0 ? std::ceil(std::log2(maximumOccurance)) : 0;
   if (n_bitsPerFrequencyTableVal == 0) // to handle the case log(1)=0
     n_bitsPerFrequencyTableVal = 1;
 
