@@ -16,6 +16,7 @@ set(ICOV_BUILD_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
 set(ICOV_BUILD_APPS ON CACHE BOOL "Build ICOV apps")
 set(ICOV_WITH_CPPCHECK OFF CACHE BOOL "ENABLE CPPCHECK")
 set(ICOV_WITH_CLANG_TIDY OFF CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
+set(ICOV_USE_ADDRESS_SANITIZER ON CACHE BOOL "Use Sanitizer")
 set(ICOV_BYPASS_SETUP OFF CACHE BOOL "In case you REALLY want to bypass the default setup. May cause severe issues.")
 
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
@@ -51,10 +52,18 @@ endif()
 # https://github.com/google/sanitizers/wiki/AddressSanitizer
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
-        if( USE_ADDRESS_SANITIZER )
+        if(ICOV_USE_ADDRESS_SANITIZER)
             # add compile options
-            add_compile_options( "-fsanitize=address" )
-            add_link_options( "-fsanitize=address" )
+            message(STATUS "Use sanitizer")
+
+            SET(SANITIZE_OPTIONS -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment)
+
+            add_compile_options(${SANITIZE_OPTIONS})
+            link_libraries(${SANITIZE_OPTIONS})
+
+
+#            add_compile_options( "-fsanitize=address" )
+#            add_link_options( "-fsanitize=address" )
         endif()
     endif()
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
