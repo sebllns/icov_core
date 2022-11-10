@@ -68,7 +68,7 @@ public:
 private:
   void encode();
   void write_results(const std::string &sequence_name,
-                     const std::vector<SIRates> &rates);
+                     const std::vector<SINumcodeIdx> &numcodes);
   void process_input_list(const std::string &file);
   void process_input_file(const std::string &file);
   //  void compute_src_bits();

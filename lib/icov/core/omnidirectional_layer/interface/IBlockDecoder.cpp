@@ -1,5 +1,5 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
@@ -15,13 +15,13 @@
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -49,20 +49,15 @@
 
 #include "IBlockDecoder.h"
 
-void IBlockDecoder::setRenderer(IRenderer *r)
-{
+void IBlockDecoder::setRenderer(IRenderer *r) {
   std::cout << "Decoder::setRenderer" << std::endl;
   m_renderer = std::unique_ptr<IRenderer>(r);
 }
 
-const IRenderer &IBlockDecoder::getRenderer() const
-{
-  return *m_renderer;
-}
+const IRenderer &IBlockDecoder::getRenderer() const { return *m_renderer; }
 
-
-void IBlockDecoder::setTexture(unsigned char *pixels, int width, int height, int rowPitch)
-{
+void IBlockDecoder::setTexture(unsigned char *pixels, int width, int height,
+                               int rowPitch) {
   m_pixels = pixels;
   m_height = height;
   m_width = width;

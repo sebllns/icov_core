@@ -1,5 +1,5 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
@@ -15,13 +15,13 @@
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -47,15 +47,13 @@
  *
  *****************************************************************************/
 
-#ifndef IDECODER_H
-#define IDECODER_H
+#pragma once
 
 #include "common.h"
-#include "omnidirectional_layer/interface/IRenderer.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include "omnidirectional_layer/interface/IRenderer.h"
 
-class IBlockDecoder : IBlockProcessor
-{
+class IBlockDecoder : public IBlockProcessor {
 protected:
   std::unique_ptr<IRenderer> m_renderer;
   unsigned char *m_pixels;
@@ -64,16 +62,12 @@ protected:
   int m_rowPitch;
 
 public:
-  IBlockDecoder() : m_width(0),
-               m_height(0),
-               m_rowPitch(0),
-               m_pixels(nullptr) {}
-               
+  IBlockDecoder() : m_pixels(nullptr), m_width(0), m_height(0), m_rowPitch(0) {}
+
   virtual ~IBlockDecoder() = default;
   virtual void decode(/*stream*/) = 0;
-  void setTexture(unsigned char *pixels, int width, int height, int rowPitch);
+  virtual void setTexture(unsigned char *pixels, int width, int height,
+                          int rowPitch);
   void setRenderer(IRenderer *);
   const IRenderer &getRenderer() const;
 };
-
-#endif // IDECODER_H

@@ -23,24 +23,24 @@ namespace icov {
 template <typename T> class FastArray {
 public:
   FastArray() : m_capacity(0), m_size(0), m_data(nullptr) {
-    std::cout << "new empty " << m_size << std::endl;
+    //    std::cout << "new empty " << m_size << std::endl;
   }
 
   FastArray(const FastArray &f)
       : m_capacity(f.m_capacity), m_size(f.m_size),
         m_data(new T[f.m_capacity]) {
-    std::cout << "new copy " << m_size << std::endl;
+    //    std::cout << "new copy " << m_size << std::endl;
     std::memcpy(m_data, f.m_data, m_size * sizeof(T));
   }
 
   FastArray(size_t size) : m_capacity(size), m_size(size), m_data(new T[size]) {
-    std::cout << "new size " << size << std::endl;
+    //    std::cout << "new size " << size << std::endl;
 
     //(T*)malloc(size * sizeof (T))
   }
 
   virtual ~FastArray() {
-    std::cout << "delete\n";
+    //    std::cout << "delete\n";
 
     if (m_data != nullptr) {
       delete[] m_data;
@@ -59,7 +59,7 @@ public:
     m_data = new T[m_capacity];
     std::memcpy(m_data, f.m_data, m_size * sizeof(T));
 
-    std::cout << "copy " << m_capacity << " " << m_size << std::endl;
+    //    std::cout << "copy " << m_capacity << " " << m_size << std::endl;
 
     return *this;
   }
@@ -79,6 +79,14 @@ public:
   size_t size() const { return m_size; }
   size_t capacity() const { return m_capacity; }
 
+  const T *data() const { return m_data; }
+  std::vector<T> getDataVec() const {
+    return std::vector<T>(m_data, m_data + m_size);
+  }
+  template <typename T1> std::vector<T1> getDataVec() const {
+    return std::vector<T1>(m_data, m_data + m_size);
+  }
+
   void resize(size_t new_size) {
     if (new_size > m_capacity) {
       T *tmp = m_data;
@@ -94,7 +102,7 @@ public:
     m_size = new_size;
   }
 
-  std::string to_string() const {
+  std::string to_string(std::string sep = ", ") const {
     std::stringstream sstr;
 
     sstr << "Array " << typeid(T).name() << m_size << "; max" << m_capacity
@@ -102,12 +110,12 @@ public:
 
     sstr << "[ ";
 
-    for (int k = 0; k < m_size; k++) {
+    for (int k = 0; k < m_size - 1; k++) {
 
-      sstr << this->m_data[k] << ", ";
+      sstr << this->m_data[k] << sep;
     }
 
-    sstr << " ]" << std::endl;
+    sstr << this->m_data[m_size - 1] << " ]" << std::endl;
 
     return sstr.str();
   }
@@ -312,10 +320,11 @@ using LLRVec = std::vector<LLRVal>;
 using SIVec = std::vector<SIVal>;
 using Bitplanes = std::vector<BitVec>;
 using Rate = float;
+using NumcodeIdx = uint32_t;
 
 // Bitplane
 using SISyndromes = std::vector<FastArray<bit>>;
-using SIRates = std::vector<Rate>;
+using SINumcodeIdx = std::vector<NumcodeIdx>;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v,

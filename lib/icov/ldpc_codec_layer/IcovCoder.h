@@ -74,8 +74,7 @@ namespace po = boost::program_options;
 using namespace icov;
 
 namespace icov {
-struct CoderParameters
-{
+struct CoderParameters {
   std::string type;
   std::string database;
   std::string numcode_file;
@@ -84,34 +83,28 @@ struct CoderParameters
 
   CoderParameters() = default;
 
-  static std::string parseType(const po::variables_map& args)
-  {
+  static std::string parseType(const po::variables_map &args) {
     return args[OPT_CODER_TYPE].as<std::string>();
   }
 
-  static std::string parseDatabase(const po::variables_map& args)
-  {
+  static std::string parseDatabase(const po::variables_map &args) {
     return args[OPT_DATA_PATH].as<std::string>();
   }
 
-  static int parseCodeLength(const po::variables_map& args)
-  {
+  static int parseCodeLength(const po::variables_map &args) {
     return args[OPT_CODE_LENGTH].as<int>();
   }
 
-  static int parseBpIte(const po::variables_map& args)
-  {
+  static int parseBpIte(const po::variables_map &args) {
     return args[OPT_BP_ITE].as<int>();
   }
 
-  static std::string parseNumcodeFile(const po::variables_map& args)
-  {
+  static std::string parseNumcodeFile(const po::variables_map &args) {
     return args[OPT_NUMCODES].as<std::string>();
   }
 
-  CoderParameters(const po::variables_map& args,
-                  const std::string& intented_type)
-  {
+  CoderParameters(const po::variables_map &args,
+                  const std::string &intented_type) {
     type = parseType(args);
     database = parseDatabase(args);
     n = parseCodeLength(args);
@@ -125,15 +118,35 @@ struct CoderParameters
     }
   }
 
-  inline std::vector<int> getNumcodes() const
-  {
+  inline std::vector<int> getNumcodes(int n, int min_level,
+                                      int max_level) const {
     std::string path = icov::helpers::path::combine(
-      icov::helpers::path::get_data_folder(database, n, false), numcode_file);
+        icov::helpers::path::get_data_folder(database, n, false), numcode_file);
     std::vector<int> numcodes_v;
-    icov::helpers::io::read_vector(path, numcodes_v);
+
+    int min_n = std::ceil(n / max_level);
+    int max_n = std::floor(n / min_level);
+
+    if (icov::helpers::path::file_exists(path)) {
+      icov::helpers::io::read_vector(path, numcodes_v);
+      icov::helpers::assert::check(numcodes_v.front() >= min_n,
+                                   "First numcode must be greater than " +
+                                       std::to_string(min_n));
+      icov::helpers::assert::check(numcodes_v.back() <= max_n,
+                                   "Doping numcode must be less than " +
+                                       std::to_string(max_n));
+    } else {
+      std::cout << "Warning: numcodes file not found at " << path << std::endl
+                << "Creating default numcodes vector." << std::endl;
+
+      int max_doping_n = std::floor(1.5 * n);
+      numcodes_v.resize(max_doping_n - min_n + 1);
+      std::iota(numcodes_v.begin(), numcodes_v.end(), min_n);
+      numcodes_v.push_back(n / 2);
+    }
     return numcodes_v;
   }
 
   virtual ~CoderParameters() = default;
 };
-}
+} // namespace icov

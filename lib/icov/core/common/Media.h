@@ -66,14 +66,25 @@ enum eMediaType {
   ERROR
 };
 
-/****************************************************************************/
-/** @ingroup common
- *  @brief Defines the interface for any IMedia object sent to extractor.
- */
-template <typename T> class IMedia {
-private:
-  IMedia() = default;
-  IMedia(const IMedia &) = default;
+class IMedia {
+public:
+  virtual ~IMedia() = default;
+  IMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
+      : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
+        m_frameCount(0)
+
+  {
+    icov::helpers::path::assert_file_exists(path.string());
+    ICOV_ASSERT_MSG(m_type != eMediaType::COUNT && m_type != eMediaType::ERROR,
+                    "Media type is unsupported");
+    ICOV_WARNING_MSG(m_type != eMediaType::UNKNOWN, "Media type is unknown");
+  }
+
+  inline size_t getWidth() const { return m_width; }
+  inline size_t getHeight() const { return m_height; }
+  inline int getType() const { return m_type; }
+  inline int getFrameCount() const { return m_frameCount; }
+  inline size_t getPixelCount() const { return m_width * m_height; }
 
 protected:
   int m_type;
@@ -81,61 +92,87 @@ protected:
   size_t m_width;
   size_t m_height;
   int m_frameCount;
-  T m_frame;
 
-  IMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
-      : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
-        m_frameCount(0)
+private:
+  IMedia() = default;
+  //  IMedia(const IMedia &) = default;
+};
 
-  {
-    ICOV_ASSERT_MSG(fs::is_regular_file(m_path),
-                    "File not found: " + m_path.string());
-  }
+/****************************************************************************/
+/** @ingroup common
+ *  @brief Defines the interface for any IInputMedia.
+ */
+template <typename T> class IInputMedia : public IMedia {
+private:
+  IInputMedia() = default;
+  //  IInputMedia(const IInputMedia &) = default;
+
+protected:
+  T m_frameData;
+  int m_frameID;
 
 public:
-  inline size_t getWidth() const { return m_width; }
-  inline size_t getHeight() const { return m_height; }
-  inline int getType() const { return m_type; }
-  inline int getFrameCount() const { return m_frameCount; }
-  inline size_t getPixelCount() const { return m_width * m_height; }
-  virtual inline const T &getCurrentFrame() const { return m_frame; }
+  // using IMedia::IMedia;
+
+  IInputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
+      : IMedia(path, media_type), m_frameID(0) {}
+
+  virtual void setFrame(int frame) { m_frameID = frame; }
+  inline int getFrameID() const { return m_frameID; }
+
+  virtual inline const T &getCurrentFrame() const { return m_frameData; }
   inline const fs::path getPath() const { return m_path; }
   inline virtual const boost::any getProperty(std::string id) {
     return boost::any(id);
   }
 
-  virtual void setFrame(int frame) = 0;
-  virtual void writeInfos(std::ofstream &output, int key) = 0; //@todo : const ?
-  virtual ~IMedia() = default;
+  virtual void writeInfos(std::ofstream &output, int key,
+                          void *param = nullptr) = 0; //@todo : const ?
+  virtual ~IInputMedia() = default;
 };
 
-template <typename T> class IImage : public IMedia<T> {
+/****************************************************************************/
+/** @ingroup common
+ *  @brief Defines the interface for any IOutputMedia.
+ */
+class IOutputMedia : public IMedia {
+private:
+  IOutputMedia() = default;
+  //  IInputMedia(const IInputMedia &) = default;
+
+protected:
 public:
-  IImage(const fs::path &path) : IMedia<T>(path, (int)eMediaType::IMAGE) {
+};
+
+template <typename T> class IImage : public IInputMedia<T> {
+public:
+  IImage(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::IMAGE) {
     /*image = 1 frame only*/
     this->m_frameCount = 1;
   }
 
   // IMedia interface
 public:
-  void setFrame(int frame) override { /*image = 1 frame only*/
+  void setFrame(int frame = 0) override {
+    this->m_frameID = 0; /*image = 1 frame only*/
   }
 };
 
-template <typename T> class IVideo : public IMedia<T> {
+template <typename T> class IVideo : public IInputMedia<T> {
 public:
-  IVideo(const fs::path &path) : IMedia<T>(path, (int)eMediaType::VIDEO) {}
+  IVideo(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::VIDEO) {}
 };
 
-template <typename T> class IModel3D : public IMedia<T> {
+template <typename T> class IModel3D : public IInputMedia<T> {
 public:
-  IModel3D(const fs::path &path) : IMedia<T>(path, (int)eMediaType::MODEL_3D) {}
+  IModel3D(const fs::path &path)
+      : IInputMedia<T>(path, (int)eMediaType::MODEL_3D) {}
   virtual ~IModel3D() = default;
 };
 
-template <typename T> class IIcov : public IMedia<T> {
+template <typename T> class IIcov : public IInputMedia<T> {
 public:
-  IIcov(const fs::path &path) : IMedia<T>(path, (int)eMediaType::ICOV) {}
+  IIcov(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::ICOV) {}
   virtual ~IIcov() = default;
 };
 

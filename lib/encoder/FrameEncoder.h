@@ -67,38 +67,69 @@ public:
     cv::Size icuSize_luma;
     cv::Size tuSize_luma;
     BitSymbolProvider::params bsp_params;
+    po::variables_map program_args;
+    bool enable_block_encoding;
+    bool write_intra_pred_image;
+    bool check_decoding;
+
+    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
+    const int maxLog2TrDynamicRange = 15;
+    const int margin_x_360luma = 2; // in fact we need 1 margin for each color
+                                    // component, but since UnitArea
+    // handles division by 2 for chroma 420, it is easier to add 2 pixel
+    // margins per left and right side and this will be divided by 2 for
+    // chroma.
+
+    const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   };
 
-  const static int BlockZoomID;
+  const static int PredViewID;
   const static int RecoViewID;
+  const static int DecodedDebugViewID;
 
   FrameEncoder(int frame, const params &p);
   ~FrameEncoder();
 
-  // IFrameEncoder interface
-  void onMouse(int event, int x, int y, int flags);
+  void onMouseViewPred(int event, int x, int y, int flags);
+  void onMouseEncode(int event, int x, int y, int flags);
+
+  void encode(std::ostream &output, IInputMedia<cv::Mat> &input,
+              const IPicture &picture, const IAccessBlockManager &access_blocks,
+              const IBlockPrediction &block_prediction) override;
 
 protected:
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
   void processInput(std::ostream &output,
-                    const IMedia<cv::Mat> &input) override;
+                    const IInputMedia<cv::Mat> &input) override;
 
 private:
   void onSelectBlock(int x, int y);
+  void onEncodeBlock(int x, int y);
 
-  void encode_si(const icov::video::IcuEncoder &icu_enc,
-                 BlockPrediction::predType pred) const;
+  void encode_icu(std::ostream &output, const Block &b,
+                  const icov::video::IcuEncoder &icu_enc,
+                  BlockPrediction::predType pred);
+  void encode_si(std::ostream &output, const Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
+                 const icov::video::SideInformationUnit &si,
+                 BlockPrediction::predType pred, ComponentID comp);
+  void encode_tu(std::ostream &output, const Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
+                 const icov::video::SideInformationUnit &si,
+                 BlockPrediction::predType pred, ComponentID comp,
+                 int tu_index);
 
 protected:
   params m_params;
   uint m_numComp;
   std::map<int, cv::Mat> m_cvmat;
-  std::map<int, std::unique_ptr<AffInteractiveCoder>> m_coders;
+  std::map<size_t, std::unique_ptr<AffInteractiveCoder>> m_coders;
   bool m_firstDisplayBlocks;
   icov::video::EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
   icov::video::BufGroups m_vvc_bufs;
+  const IPicture *m_pic_ptr;
 };
 } // namespace encoder
 } // namespace icov

@@ -182,7 +182,7 @@ void SymboleMode::encode() {
 //}
 
 void SymboleMode::write_results(const std::string &sequence_name,
-                                const std::vector<SIRates> &rate_results) {
+                                const std::vector<SINumcodeIdx> &numcodes) {
   TestSequenceResult tsr;
   tsr.read_from_file((m_references_dir / (sequence_name + ".mat")).string());
 
@@ -190,7 +190,7 @@ void SymboleMode::write_results(const std::string &sequence_name,
       (fs::path(m_result_dir) / (sequence_name + ".txt")).string());
 
   result_file << "# actual rate" << std::endl;
-  for (auto &si : rate_results) {
+  for (auto &si : numcodes) {
     for (auto &bp_rate : si) {
       result_file << std::fixed << std::setw(7) << std::setprecision(6)
                   << std::setfill('0') << bp_rate << " ";
@@ -232,10 +232,10 @@ void SymboleMode::write_results(const std::string &sequence_name,
 
   auto syndromeMgr = m_coder->syndromeMgr();
   float min_rate = (1.0 * syndromeMgr->get_m(0)) / syndromeMgr->get_n();
-  for (size_t si = 0; si < rate_results.size(); si++) {
+  for (size_t si = 0; si < numcodes.size(); si++) {
     float icov_rate = 0.0, fp_rate = 0.0;
-    for (size_t bp = 0; bp < rate_results[si].size(); bp++) {
-      icov_rate += rate_results[si][bp];
+    for (size_t bp = 0; bp < numcodes[si].size(); bp++) {
+      icov_rate += m_coder->getRate(numcodes[si][bp]);
       fp_rate += std::max(tsr["R"].get_data(si, frangping_rate.n_cols - 1 - bp),
                           min_rate);
     }
@@ -300,12 +300,13 @@ void SymboleMode::process_input_file(const std::string &file) {
     side_infos.push_back(tsi.get_side_info(k));
   }
 
-  std::vector<SIRates> rates;
+  std::vector<SINumcodeIdx> numcodes;
   std::vector<SISyndromes> syndromes;
   BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
 
-  m_coder->encode(rates, syndromes, side_infos, bsp_params, tsi.get_source());
-  write_results(fs::path(file).stem().string(), rates);
+  m_coder->encode(numcodes, syndromes, side_infos, bsp_params,
+                  tsi.get_source());
+  write_results(fs::path(file).stem().string(), numcodes);
 }
 
 // void SymboleMode::compute_src_bits() {

@@ -53,6 +53,7 @@
 #include "ICOV_IntraPrediction.h"
 #include "IcuEncoder.h"
 #include "helpers.h"
+#include "omnidirectional_layer/Block.h"
 namespace icov::video {
 
 struct EncodingStructure {
@@ -80,6 +81,8 @@ struct EncodingStructure {
   bool isRightVerticalBorder(const UInt icu_index) const;
 
   UInt get_icuIndex(const Position &pos) const;
+  UInt get_icuIndex(const Block &b) const;
+
   Position get_icuPosition(const UInt icu_index) const;
 
   void resetDecodedICUs();

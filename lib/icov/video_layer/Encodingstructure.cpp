@@ -1767,6 +1767,8 @@ UInt icov::video::EncodingStructure::get_icuIndex(const Position &pos) const {
   return UInt(pos.y) * n_icusPerRow + UInt(pos.x);
 }
 
+UInt icov::video::EncodingStructure::get_icuIndex(const Block &b) const {}
+
 void icov::video::EncodingStructure::resetDecodedICUs() {
   _decodedICUs.fill(false);
   _vec_decodedICUs.clear();

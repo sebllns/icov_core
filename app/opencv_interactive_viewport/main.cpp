@@ -158,7 +158,7 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
                 cv::Point(bx, by + 0.5 * bh), cv::FONT_HERSHEY_PLAIN, 5.0,
                 cv::Scalar(0, 0, 255), 3);
 
-  cv::Point linePoint2(p.i(b.center_u()), p.j(b.center_v()));
+  cv::Point linePoint2(p.col(b.center_u()), p.row(b.center_v()));
 
   if (m_blockCount > 0 && b_show_path)
     cv::arrowedLine(BlockRequested, m_line_point, linePoint2,
@@ -268,6 +268,7 @@ void run(int argc, char *argv[]) {
 
   cv::namedWindow("viewport", cv::WINDOW_NORMAL);
   cv::namedWindow("requested blocks", cv::WINDOW_NORMAL);
+  //  cv::namedWindow("mask", cv::WINDOW_NORMAL);
 
   viewer.resetOrientation();
 
@@ -363,6 +364,7 @@ void run(int argc, char *argv[]) {
     // SHOW IMAGES
     cv::imshow("requested blocks", blockRequested);
     cv::imshow("viewport", blocksOverlay);
+    //    cv::imshow("mask", maskRequested);
 
     // viewport mesh method
 
@@ -445,6 +447,11 @@ void run(int argc, char *argv[]) {
 
     case -62:
       blockprocessor->b_show_block_grid = !blockprocessor->b_show_block_grid;
+      break;
+
+    case -61:
+      blockprocessor->b_use_encoded_stream =
+          !blockprocessor->b_use_encoded_stream;
       break;
 
       // RESET

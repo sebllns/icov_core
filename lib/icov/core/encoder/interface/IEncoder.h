@@ -67,13 +67,14 @@ namespace encoder {
 template <typename T> class IEncoder {
 public:
   virtual ~IEncoder() = default;
-  virtual void encode(std::ostream &output, IMedia<T> &input,
+  virtual void encode(std::ostream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
                       const IBlockPrediction &block_prediction) = 0;
 
 protected:
-  virtual void processInput(std::ostream &output, const IMedia<T> &input) = 0;
+  virtual void processInput(std::ostream &output,
+                            const IInputMedia<T> &input) = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,7 @@ protected:
 
 public:
   IFrameEncoder(int frame) : m_frame(frame) {}
-  virtual void encode(std::ostream &output, IMedia<T> &input,
+  virtual void encode(std::ostream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
                       const IBlockPrediction &block_prediction);
@@ -111,7 +112,7 @@ private:
 };
 
 template <typename T>
-void IFrameEncoder<T>::encode(std::ostream &output, IMedia<T> &input,
+void IFrameEncoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
                               const IPicture &picture,
                               const IAccessBlockManager &access_blocks,
                               const IBlockPrediction &block_prediction) {
@@ -147,7 +148,7 @@ void IFrameEncoder<T>::encodeBlock(std::ostream &output, const Block &b,
 template <typename T> class IMediaEncoder : public IEncoder<T> {
 
 public:
-  virtual void encode(std::ostream &output, IMedia<T> &input,
+  virtual void encode(std::ostream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
                       const IBlockPrediction &block_prediction);
@@ -157,7 +158,7 @@ protected:
 };
 
 template <typename T>
-void IMediaEncoder<T>::encode(std::ostream &output, IMedia<T> &input,
+void IMediaEncoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
                               const IPicture &picture,
                               const IAccessBlockManager &access_blocks,
                               const IBlockPrediction &block_prediction) {

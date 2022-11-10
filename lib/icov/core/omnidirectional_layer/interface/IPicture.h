@@ -50,77 +50,76 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/geometry.h"
 
-
 class RequestManager;
 
 /** @class IPicture
  *  @brief IPicture
  *
- *  A IPicture is the smallest unit of a IPicture or IPicture and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A IPicture is the smallest unit of a IPicture or IPicture and is conveying
+ * the pixels to be decoded and the pixels to be displayed.
  */
-class IPicture
-{
+class IPicture {
 protected:
-    size_t m_width;
-    size_t m_height;
-    size_t m_total_w;
-    size_t m_total_h;
-    float m_center_angle_x;
-    float m_center_angle_y;
-    float m_fov_x;
-    float m_fov_y;
+  size_t m_width;
+  size_t m_height;
+  size_t m_total_w;
+  size_t m_total_h;
+  float m_center_angle_x;
+  float m_center_angle_y;
+  float m_fov_x;
+  float m_fov_y;
 
-    BlockVector m_icus;
+  BlockVector m_icus;
 
-    RequestManager *m_requestManager;
+  RequestManager *m_requestManager;
 
 public:
+  IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y,
+           float fov_x, float fov_y);
 
-    IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y, float fov_x, float fov_y);
+  virtual ~IPicture() = default;
 
-    virtual ~IPicture() = default;
+  const BlockVector &icus() const;
 
-    const BlockVector& icus() const;
+  bool blockExists(size_t id) const;
 
-    bool blockExists(size_t id) const;
+  BlockVector::const_iterator getById(size_t id) const;
 
-    BlockVector::const_iterator getById(size_t id) const;
+  BlockVector::const_iterator getBlock(int i, int j) const;
 
-    BlockVector::const_iterator getBlock(int i, int j) const;
+  bool isValidBlock(BlockVector::const_iterator it) const;
 
-    bool isValidBlock(BlockVector::const_iterator it) const;
+  BlockVector::const_iterator invalidBlock() const;
 
-    BlockVector::const_iterator invalidBlock() const;
+  virtual void getPixelCoords(float u, float v, int &i, int &j) const;
+  virtual int row(float v) const;
+  virtual int col(float u) const;
 
-    virtual void getPixelCoords(float u, float v, int &i, int &j) const;
-    virtual int i(float u) const;
-    virtual int j(float v) const;
+  virtual float u(int i) const;
+  virtual float v(int j) const;
 
-    virtual float u(int i) const;
-    virtual float v(int j) const;
+  virtual size_t getId(int i, int j) const = 0;
+  virtual float u(float angle_x) const = 0;
+  virtual float v(float angle_y) const = 0;
+  virtual float angleX(float u) const = 0;
+  virtual float angleY(float v) const = 0;
 
-    virtual size_t getId(int i, int j) const = 0;
-    virtual float u(float angle_x) const = 0;
-    virtual float v(float angle_y) const = 0;
-    virtual float angleX(float u) const = 0;
-    virtual float angleY(float v) const = 0;
+  float minAngleX() const;
+  float maxAngleX() const;
+  float minAngleY() const;
+  float maxAngleY() const;
+  size_t width() const;
+  size_t height() const;
+  size_t total_w() const;
+  size_t total_h() const;
+  float center_angle_x() const;
+  float center_angle_y() const;
+  float fov_x() const;
+  float fov_y() const;
 
-    float minAngleX() const;
-    float maxAngleX() const;
-    float minAngleY() const;
-    float maxAngleY() const;
-    size_t width() const;
-    size_t height() const;
-    size_t total_w() const;
-    size_t total_h() const;
-    float center_angle_x() const;
-    float center_angle_y() const;
-    float fov_x() const;
-    float fov_y() const;
+  point3d getCartesianCoords(size_t id) const;
 
-    point3d getCartesianCoords(size_t id) const;
-
-    RequestManager *requestManager() const;
-    void setRequestManager(RequestManager *newRequestManager);
-    void releaseRequestManager();
+  RequestManager *requestManager() const;
+  void setRequestManager(RequestManager *newRequestManager);
+  void releaseRequestManager();
 };

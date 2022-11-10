@@ -70,7 +70,7 @@ void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
 }
 
 void FakeEncoder::processInput(std::ostream &output,
-                               const IMedia<cv::Mat> &input) {
+                               const IInputMedia<cv::Mat> &input) {
 
   m_frame = input.getCurrentFrame().clone();
   int values[] = {m_frame.rows, m_frame.cols, m_frame.type(),

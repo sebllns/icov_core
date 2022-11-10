@@ -25,6 +25,8 @@ public:
   uint32_t index_min() const;
   static LLRVal limit_max();
 
+  void reset();
+
   void initLLR_s(const BitSymbolProvider &bsp,
                  const std::vector<SIVal> &side_info, const BitVec &src_bits);
   void initLLR_b(int b, const BitSymbolProvider &bsp,

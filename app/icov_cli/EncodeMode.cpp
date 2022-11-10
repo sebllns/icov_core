@@ -45,13 +45,20 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
                                    0.78125, 0.84375, 0.90625, 0.96875};
     BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
     icov::encoder::FrameEncoder::params enc_params = {
-        42, CHROMA_420, cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-        cv::Size(m_parameters.icuSize, m_parameters.icuSize), bsp_params};
+        42,
+        CHROMA_420,
+        cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+        cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+        bsp_params,
+        args,
+        true,
+        false,
+        true};
 
     m_encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
   }
 
-  //  CoderFactory::create_coder_yuv(args, m_ycoder, m_uvcoder);
+  //    CoderFactory::create_coder_yuv(args, m_ycoder, m_uvcoder);
 
   std::cout << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.inputFile

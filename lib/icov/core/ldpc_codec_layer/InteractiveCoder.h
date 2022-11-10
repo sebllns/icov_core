@@ -38,27 +38,37 @@ public:
 
   ~InteractiveCoder() = default;
 
-  bool testConvergence(const BitVec &decoded, const BitVec &source);
+  size_t get_n() const;
 
-  int errorCount(const BitVec &decoded, const BitVec &source);
+  Rate getRate(const NumcodeIdx &numcodeIdx) const;
 
-  int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome,
+  bool testConvergence(const BitVec &decoded, const BitVec &source) const;
+
+  int errorCount(const BitVec &decoded, const BitVec &source) const;
+
+  int encode(NumcodeIdx &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source);
 
   int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source, uint32_t numcodeMax, uint32_t step);
 
-  void encode(std::vector<SIRates> &rates, std::vector<SISyndromes> &syndromes,
-              const std::vector<SIVec> &si, const BitSymbolProvider::params &p,
-              const SymboleVec &src);
+  void encode(std::vector<SINumcodeIdx> &rates,
+              std::vector<SISyndromes> &syndromes, const std::vector<SIVec> &si,
+              const BitSymbolProvider::params &p, const SymboleVec &src);
 
-  void encode_bitplanes(const BitSymbolProvider &bsp, SIRates &rate,
+  void encode_bitplanes(const BitSymbolProvider &bsp, SINumcodeIdx &rate,
                         SISyndromes &stored_synd);
 
   void encode_bitplane(const BitSymbolProvider &bsp, int bitplane_idx,
-                       Rate &rate, Syndrome &stored_synd, SymboleVec &predec);
+                       NumcodeIdx &numcodeIdx, Syndrome &stored_synd,
+                       SymboleVec &predec);
 
-  void decode(BitVec &o_decoded, uint32_t numcode, const Syndrome &syndrome);
+  void decode(BitVec &o_decoded, NumcodeIdx numcodeIdx,
+              const Syndrome &syndrome);
+  void decode_bitplanes(SymboleVec &output, const SINumcodeIdx &numcodes,
+                        const SISyndromes &stored_synd);
+
+  void init_LLR_bitplane(BitSymbolProvider bsp, int bitplane_idx);
 
   IMatrixProvider_sp matrixProvider() const { return this->m_matrix_provider; }
   IDecoder_sp decoder() const { return this->m_pdecoder; }
@@ -72,7 +82,9 @@ protected:
   LLRProvider_sp m_pllrProvider;
 
   std::unique_ptr<Syndrome> m_decodage_syndrome;
+  BitVec m_decoded_bits;
 };
+
 } // namespace icov
 
 #include "InteractiveCoder.hpp"

@@ -108,6 +108,7 @@ public:
   static predType toPredType(uint num);
   static std::vector<BlockPrediction::predType>
   getAvailablePredictions(borderType b = BORDER_NONE);
+  static borderType getBorder(const Block &b);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
@@ -116,6 +117,7 @@ public:
 public:
   uint16_t getPrediction(const Block &b,
                          const IBlockOrdering &ordering) const override;
+
   std::vector<uint16_t>
   getAvailablePredictions(const Block &b,
                           bool is_access_block = false) const override;
@@ -125,18 +127,8 @@ inline std::vector<uint16_t>
 BlockPrediction::getAvailablePredictions(const Block &b,
                                          bool is_access_block) const {
 
-  borderType border = borderType::BORDER_NONE;
-
-  if (!b.parent()->blockExists(b.getId(Block::UP))) {
-    border = borderType::BORDER_TOP;
-  } else if (!b.parent()->blockExists(b.getId(Block::DOWN))) {
-    border = borderType::BORDER_BOTTOM;
-  }
-
-  auto v0 = BlockPrediction::getAvailablePredictions(border);
-
+  auto v0 = BlockPrediction::getAvailablePredictions(getBorder(b));
   std::vector<uint16_t> v(v0.begin(), v0.end());
-
   if (is_access_block)
     v.insert(v.begin(), predType::NONE);
 
@@ -144,7 +136,6 @@ BlockPrediction::getAvailablePredictions(const Block &b,
 }
 
 inline std::string BlockPrediction::toString(BlockPrediction::predType pred) {
-
   switch (pred) {
   case BlockPrediction::UNKNOWN:
     return "UNKNOWN";
@@ -263,5 +254,15 @@ BlockPrediction::getPrediction(const Block &b,
   icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
 
   return static_cast<uint16_t>(pred);
+}
+
+inline BlockPrediction::borderType BlockPrediction::getBorder(const Block &b) {
+  borderType border = borderType::BORDER_NONE;
+  if (!b.parent()->blockExists(b.getId(Block::UP))) {
+    border = borderType::BORDER_TOP;
+  } else if (!b.parent()->blockExists(b.getId(Block::DOWN))) {
+    border = borderType::BORDER_BOTTOM;
+  }
+  return border;
 }
 //} // namespace icov

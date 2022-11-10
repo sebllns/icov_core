@@ -139,7 +139,7 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
                                bool enable_z_quantization,
                                const std::vector<float> &q_values) {
 
-  const SymboleVec src_symbols = src_symboles();
+  auto &src_symbols = m_src_symboles;
 
   ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
                   "Src and SI lengths are not equal")
@@ -259,9 +259,9 @@ int BitSymbolProvider::x_min_estimated() const { return m_z_min + m_y_max; }
 
 int BitSymbolProvider::x_binary_length() const {
   return m_l;
-  return std::floor(std::log2f(std::max(std::abs(x_min_estimated()),
-                                        std::abs(x_max_estimated())))) +
-         2;
+  // return std::floor(std::log2f(std::max(std::abs(x_min_estimated()),
+  //                                        std::abs(x_max_estimated())))) +
+  //         2;
 }
 
 bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
@@ -359,6 +359,7 @@ float BitSymbolProvider::pqks(bool negative, int yk) const {
   float p0 = 0.0f;
   float p1 = 0.0f;
 
+  // IMPLEMENTATION FANGPING
   for (int i = 0; i < imax; i++) {
 
     if ((i - yk) != 0 && (-i - yk) != 0) {
@@ -371,6 +372,15 @@ float BitSymbolProvider::pqks(bool negative, int yk) const {
       p0 += this->pz(0);
     }
   }
+  return p0 / (p0 + p1);
+
+  // IMPLEMENTATION SEBASTIEN
+  for (int i = 0; i < imax; i++) {
+    p0 += this->pz(i - yk);
+    if (i != 0)
+      p1 += this->pz(-i - yk);
+  }
+
   return p0 / (p0 + p1);
 }
 } // namespace icov

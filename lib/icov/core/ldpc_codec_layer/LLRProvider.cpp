@@ -160,3 +160,8 @@ uint32_t icov::LLRProvider::index_min() const {
 icov::LLRVal icov::LLRProvider::limit_max() {
   return std::numeric_limits<LLRVal>::max();
 }
+
+void icov::LLRProvider::reset() {
+  int n = m_llr.size();
+  m_llr = std::vector<LLRVal>(n, 0);
+}

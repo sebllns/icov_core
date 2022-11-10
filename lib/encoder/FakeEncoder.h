@@ -65,7 +65,7 @@ protected:
   cv::Mat m_frame;
 
   void processInput(std::ostream &output,
-                    const IMedia<cv::Mat> &input) override;
+                    const IInputMedia<cv::Mat> &input) override;
 
   // IFrameEncoder interface
 protected:

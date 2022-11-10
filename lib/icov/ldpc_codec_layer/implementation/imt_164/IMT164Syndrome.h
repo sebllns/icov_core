@@ -1,74 +1,76 @@
 #ifndef IMT164SYNDROME_H
 #define IMT164SYNDROME_H
 
-#include "interface/ISyndrome.h"
 #include "aff3ct/Aff3ctDecoder.h"
+#include "interface/ISyndrome.h"
 
 using index_t = uint16_t;
 
 namespace icov {
 
-class IMT164SyndromeManager : public ISyndromeManager
-{
+class IMT164SyndromeManager : public ISyndromeManager {
 
 public:
-    std::vector<uint8_t> m_levels;
+  std::vector<uint8_t> m_levels;
 
+  std::vector<AffMatrix> h_dec;
+  std::vector<AffMatrix> h;
+  std::vector<FastMatrix<index_t>> mapping_file;
 
-    std::vector<AffMatrix> h_dec;
-    std::vector<AffMatrix> h;
-    std::vector<FastMatrix<index_t>> mapping_file;
+  std::vector<int> h_indexes;
 
-    std::vector<int> h_indexes;
+  icov::bit *accumulated_syndrome;
+  std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
 
-    icov::bit *accumulated_syndrome;
-    std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
+  Syndrome doping_synd;
 
-    Syndrome doping_synd;
+  //    std::vector<syndrome_cell> syndrome_mapping;
 
-//    std::vector<syndrome_cell> syndrome_mapping;
+  std::vector<size_t> doping_idx;
 
-    std::vector<size_t> doping_idx;
+  bool init_rateless;
 
+  int m_min_level;
+  int m_max_level;
 
-    bool init_rateless;
+  int current_level;
 
-    int m_min_level;
-    int m_max_level;
+  // n = code length
+  // min encoded syndrome length is n/max_level
+  // max encoded syndrome length is n/min_level
+  IMT164SyndromeManager(int n, int min_level, int max_level);
+  virtual ~IMT164SyndromeManager();
 
-    int current_level;
+  virtual void init_accumulation(const BitVec &source_x) override;
 
-    IMT164SyndromeManager(int n, int min_level, int max_level);
-    virtual ~IMT164SyndromeManager();
+  virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
+                              const LLRProvider &llr_provider) override;
 
-    virtual void init_accumulation(const BitVec& source_x) override;
+  virtual void compute_deacc(Syndrome &o_syndrome, const Syndrome &acc_syndrome,
+                             int numcode, LLRProvider &llr_provider) override;
 
-    virtual void compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider) override;
+  virtual int get_m(int numcode) const override;
 
-    virtual void compute_deacc(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, LLRProvider& llr_provider) override;
+  std::string get_type() const override;
 
-    virtual int get_m(int numcode) const override;
+  void reset_doping() override;
 
-    std::string get_type() const override;
+  int get_m_max() const;
 
-    void reset_doping() override;
+  int get_m_min() const;
 
-    int get_m_max() const;
+  int get_m_level(int level) const;
 
-    int get_m_min() const;
+  int get_level_count() const;
 
-    int get_m_level(int level) const;
+  int get_numcode(int m) const;
 
-    int get_level_count() const;
+  int get_level(int k) const;
 
-    int get_numcode(int m) const;
+  int is_level(int m) const;
 
-    int get_level(int k) const;
-
-    int is_level(int m) const;
-
-    void compute_doping_order(const LLRProvider& llr_provider, Syndrome &syndrome);
-
+  void compute_doping_order(const LLRProvider &llr_provider,
+                            Syndrome &syndrome);
 };
-}
+} // namespace icov
 #endif // IMT164SYNDROME_H

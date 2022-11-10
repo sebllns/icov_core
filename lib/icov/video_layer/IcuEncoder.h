@@ -84,6 +84,11 @@ public:
     return _sourceX.TUs;
   }
 
+  inline TransformUnit &sourceX_TU(int i) { return _sourceX.TUs[i]; }
+  inline const TransformUnit &sourceX_TU(int i) const {
+    return _sourceX.TUs[i];
+  }
+
   void createTUs(const UInt tuWidth_luma, const UInt tuHeight_luma);
 
   SideInformationUnit *get_sideInformation(

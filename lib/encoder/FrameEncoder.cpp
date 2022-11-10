@@ -1,21 +1,33 @@
 #include "FrameEncoder.h"
 
 #include "enc_helpers.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/ICOV_Quant.h"
+#include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
+
+#include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
+#define WIN_ORIG "Original"
+#define WIN_RECO "Reconstruction"
+#define WIN_PRED "Predictions"
+#define WIN_DEBUG_DECODE "Decoded"
+
 namespace fs = boost::filesystem;
 using namespace icov::encoder;
 using SI_SIDE = BlockPrediction::predType;
-const int FrameEncoder::BlockZoomID = PIC_PREDICTION + BlockPrediction::MAX;
-const int FrameEncoder::RecoViewID = FrameEncoder::BlockZoomID + 1;
+const int FrameEncoder::PredViewID = PIC_PREDICTION + BlockPrediction::MAX;
+const int FrameEncoder::RecoViewID = FrameEncoder::PredViewID + 1;
+const int FrameEncoder::DecodedDebugViewID = FrameEncoder::RecoViewID + 1;
 
 /*****************************************************************************/
 void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
@@ -36,15 +48,26 @@ void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
 }
 
 /*****************************************************************************/
-void callBackFunc(int event, int x, int y, int flags, void *userdata) {
-  static_cast<FrameEncoder *>(userdata)->onMouse(event, x, y, flags);
+void callBackFuncViewPred(int event, int x, int y, int flags, void *userdata) {
+  static_cast<FrameEncoder *>(userdata)->onMouseViewPred(event, x, y, flags);
+}
+
+/*****************************************************************************/
+void callBackFuncEncoding(int event, int x, int y, int flags, void *userdata) {
+  static_cast<FrameEncoder *>(userdata)->onMouseEncode(event, x, y, flags);
 }
 
 /*****************************************************************************/
 FrameEncoder::FrameEncoder(int frame, const params &p)
     : IFrameEncoder(frame), m_params(p),
       m_numComp(getNumberValidComponents(p.chFormat)),
-      m_firstDisplayBlocks(true) {}
+      m_firstDisplayBlocks(true), m_pic_ptr(nullptr) {
+  std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
+  icov::CoderFactory::create_coder_yuv(p.program_args, ycoder, uvcoder);
+
+  m_coders[ycoder->get_n()] = std::move(ycoder);
+  m_coders[uvcoder->get_n()] = std::move(uvcoder);
+}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
@@ -52,7 +75,7 @@ FrameEncoder::~FrameEncoder() {
 }
 
 /*****************************************************************************/
-void FrameEncoder::onMouse(int event, int x, int y, int flags) {
+void FrameEncoder::onMouseViewPred(int event, int x, int y, int flags) {
   if (event == cv::EVENT_LBUTTONDOWN) {
     int bx = x / m_params.icuSize_luma.width;
     int by = y / m_params.icuSize_luma.height;
@@ -64,13 +87,60 @@ void FrameEncoder::onMouse(int event, int x, int y, int flags) {
 }
 
 /*****************************************************************************/
+void FrameEncoder::onMouseEncode(int event, int x, int y, int flags) {
+  if (event == cv::EVENT_LBUTTONDOWN) {
+    int bx = x / m_params.icuSize_luma.width;
+    int by = y / m_params.icuSize_luma.height;
+    if (bx >= 0 && by >= 0 && bx < 3 && by < 3)
+      onEncodeBlock(bx, by);
+  }
+}
+
+/*****************************************************************************/
+// TOP LEFT = 0, 0
+// BOTTOM RIGHT = 2, 2
+void FrameEncoder::onEncodeBlock(int x, int y) {
+  // select prediction from x, y
+
+  std::cout << x << ", " << y << std::endl;
+
+  uint predid = BlockPrediction::NONE;
+
+  if (x == 0)
+    predid |= BlockPrediction::LEFT;
+
+  if (x == 2)
+    predid |= BlockPrediction::RIGHT;
+
+  if (y == 0)
+    predid |= BlockPrediction::TOP;
+
+  if (y == 2)
+    predid |= BlockPrediction::BOTTOM;
+
+  BlockPrediction::predType pred = BlockPrediction::toPredType(predid);
+
+  std::cout << BlockPrediction::toString(pred) << std::endl;
+
+  // encode with prediction
+  auto b = m_pic_ptr->getBlock(
+      m_currentBlockPosition.y / m_params.icuSize_luma.height,
+      m_currentBlockPosition.x / m_params.icuSize_luma.width);
+
+  std::cout << b->getId(Block::SELF) << std::endl;
+
+  if (m_pic_ptr->isValidBlock(b))
+    encodeBlockWithPrediction(std::cout, *b, predid);
+}
+
+/*****************************************************************************/
 void FrameEncoder::onSelectBlock(int x, int y) {
   cv::Point bp = cv::Point(x, y);
 
   if (bp != m_currentBlockPosition) {
 
     auto &m_cvMat_reconstructedEquiImage = m_cvmat[RecoViewID];
-    auto &m_cvMat_blockSI = m_cvmat[BlockZoomID];
+    auto &m_cvMat_blockSI = m_cvmat[PredViewID];
 
     if (!m_firstDisplayBlocks) {
       m_cvMat_blockSI(cv::Rect(m_params.icuSize_luma.width + 1,
@@ -203,16 +273,22 @@ void FrameEncoder::onSelectBlock(int x, int y) {
     m_cvMat_reconstructedEquiImage(cv::Rect(bp, m_params.icuSize_luma))
         .setTo(cv::Scalar(0, 255, 0));
 
-    cv::imshow("viewport RECONSTRUCTED", m_cvMat_reconstructedEquiImage);
-    cv::imshow("block view", m_cvMat_blockSI);
+    cv::imshow(WIN_RECO, m_cvMat_reconstructedEquiImage);
+    cv::imshow(WIN_PRED, m_cvMat_blockSI);
 
     m_currentBlockPosition = bp;
+
+    if (m_params.enable_block_encoding) {
+      std::cout << "Click on any SI in " << WIN_PRED
+                << " window to encode block with the selected SI..."
+                << std::endl;
+    }
   }
 }
 
 /*****************************************************************************/
 void FrameEncoder::processInput(std::ostream &output,
-                                const IMedia<cv::Mat> &input) {
+                                const IInputMedia<cv::Mat> &input) {
 
   std::cout << input.getPath() << std::endl;
   cv::Mat &img_src = m_cvmat[PIC_ORIGINAL];
@@ -229,19 +305,11 @@ void FrameEncoder::processInput(std::ostream &output,
       Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
   const Size tuSize_luma =
       Size(m_params.tuSize_luma.width, m_params.tuSize_luma.height);
-  const Size tuSizeAfterRegrouping_luma = Size(1, 1);
-  const int maxLog2TrDynamicRange = 15;
-  const int margin_x_360luma = 2; // in fact we need 1 margin for each color
-                                  // component, but since UnitArea
-  // handles division by 2 for chroma 420, it is easier to add 2 pixel
-  // margins per left and right side and this will be divided by 2 for
-  // chroma.
 
   //  const std::vector<int> qp_set = {22, 27, 32, 37, 42};
   // const int qp = m_qp;
   // std::cout << "qp= " << qp << std::endl;
 
-  const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   // internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates
   // at (input/output files will be converted). (default: MSBExtendedBitDepth).
   // If different to MSBExtendedBitDepth, source data will be converted
@@ -271,9 +339,9 @@ void FrameEncoder::processInput(std::ostream &output,
 
   UnitArea extendedFrameArea(
       m_params.chFormat,
-      Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight));
-  UnitArea mainFrameArea(m_params.chFormat,
-                         Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
+      Area(0, 0, sourceWidth + 2 * m_params.margin_x_360luma, sourceHeight));
+  UnitArea mainFrameArea(m_params.chFormat, Area(m_params.margin_x_360luma, 0,
+                                                 sourceWidth, sourceHeight));
 
   //  PelStorage picTemp;
   //  picTemp.create(extendedFrameArea);
@@ -303,26 +371,25 @@ void FrameEncoder::processInput(std::ostream &output,
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-          m_params.chFormat, sourceWidth, sourceHeight, margin_x_360luma,
-          icuSize_luma.width, icuSize_luma.height, tuSize_luma.width,
-          tuSize_luma.height);
+          m_params.chFormat, sourceWidth, sourceHeight,
+          m_params.margin_x_360luma, icuSize_luma.width, icuSize_luma.height,
+          tuSize_luma.width, tuSize_luma.height);
 
   VTM_Utility::quantizeFrame(
       m_params.qp, m_vvc_bufs.get(PIC_ORIGINAL),
-      m_vvc_bufs.get(PIC_RECONSTRUCTION), m_enc_struc, internalBitDepth,
-      maxLog2TrDynamicRange); // give the whole extended image ( .getOrigBuf()
+      m_vvc_bufs.get(PIC_RECONSTRUCTION), m_enc_struc,
+      m_params.internalBitDepth,
+      m_params.maxLog2TrDynamicRange); // give the whole extended image (
+                                       // .getOrigBuf()
   // and
   // .getRecoBuf() ) to the function because vector
   // icues_enc is based on extended frames
 
-  psnr = VTM_Utility::calculatePSNR(m_vvc_bufs.getBuf(PIC_ORIGINAL),
-                                    m_vvc_bufs.getBuf(PIC_RECONSTRUCTION),
-                                    internalBitDepth, &mse_frame, &maxval);
+  psnr = VTM_Utility::calculatePSNR(
+      m_vvc_bufs.getBuf(PIC_ORIGINAL), m_vvc_bufs.getBuf(PIC_RECONSTRUCTION),
+      m_params.internalBitDepth, &mse_frame, &maxval);
 
   std::cout << "PSNR=" << psnr << std::endl;
-
-  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
-  cv::imshow("viewport original", input.getCurrentFrame());
 
   // INTRA PRED
   PelUnitBuf mainFrameReco =
@@ -339,9 +406,10 @@ void FrameEncoder::processInput(std::ostream &output,
     copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
-        m_vvc_bufs, intraPred, compID, internalBitDepth,
-        tuSizeAfterRegrouping_luma.width, tuSizeAfterRegrouping_luma.height,
-        false, m_params.qp, maxLog2TrDynamicRange);
+        m_vvc_bufs, intraPred, compID, m_params.internalBitDepth,
+        m_params.tuSizeAfterRegrouping_luma.width,
+        m_params.tuSizeAfterRegrouping_luma.height, false, m_params.qp,
+        m_params.maxLog2TrDynamicRange);
 
     //    storageInBit += MyUtility::computeRatesAndCalculateStorageInBit(
     //        m_enc_struc, compID, tuSizeAfterRegrouping_luma,
@@ -362,7 +430,7 @@ void FrameEncoder::processInput(std::ostream &output,
 
   // VIEWER
   auto &m_cvMat_reconstructedEquiImage = m_cvmat[RecoViewID];
-  auto &m_cvMat_blockSI = m_cvmat[BlockZoomID];
+  auto &m_cvMat_blockSI = m_cvmat[PredViewID];
 
   // draw lines on reco image
   VTM_OPENCV_Utility::toBGRMat(
@@ -386,14 +454,16 @@ void FrameEncoder::processInput(std::ostream &output,
   }
   // end draw lines
 
-  //  cv::namedWindow("viewport original", cv::WINDOW_NORMAL);
-  //  cv::imshow("viewport original", img_src);
-  //  cv::waitKey(0);
-  cv::namedWindow("viewport RECONSTRUCTED", cv::WINDOW_NORMAL);
+  cv::namedWindow(WIN_ORIG, cv::WINDOW_NORMAL);
+  cv::namedWindow(WIN_RECO, cv::WINDOW_NORMAL);
+  cv::namedWindow(WIN_PRED, cv::WINDOW_NORMAL);
 
-  // ERROR HERE
-  cv::imshow("viewport RECONSTRUCTED", m_cvMat_reconstructedEquiImage);
-  cv::setMouseCallback("viewport RECONSTRUCTED", callBackFunc, this);
+  cv::setMouseCallback(WIN_RECO, callBackFuncViewPred, this);
+  if (m_params.enable_block_encoding)
+    cv::setMouseCallback(WIN_PRED, callBackFuncEncoding, this);
+
+  cv::imshow(WIN_ORIG, input.getCurrentFrame());
+  cv::imshow(WIN_RECO, m_cvMat_reconstructedEquiImage);
 
   m_cvMat_blockSI.create(3 * icuSize_luma.height, 3 * icuSize_luma.width,
                          m_cvMat_reconstructedEquiImage.type());
@@ -402,8 +472,6 @@ void FrameEncoder::processInput(std::ostream &output,
   m_cvMat_blockSI(cv::Rect(icuSize_luma.width, icuSize_luma.height,
                            icuSize_luma.width, icuSize_luma.height))
       .setTo(cv::Scalar(255, 0, 0));
-
-  cv::namedWindow("block view", cv::WINDOW_NORMAL);
 
   onSelectBlock(m_cvMat_reconstructedEquiImage.cols / 2,
                 m_cvMat_reconstructedEquiImage.rows / 2);
@@ -416,71 +484,168 @@ void FrameEncoder::processInput(std::ostream &output,
   for (auto pk : predVec) {
     reco_preds_output.push_back(m_cvmat[PIC_PREDICTION + pk]);
   }
-  cv::imwrite("reco_preds_output.tiff", reco_preds_output);
+
+  if (m_params.write_intra_pred_image)
+    cv::imwrite("reco_preds_output.tiff", reco_preds_output);
+
+  //  m_params.enable_block_encoding = false;
+
+  m_cvmat[DecodedDebugViewID].create(icuSize_luma.height, icuSize_luma.width,
+                                     m_cvMat_reconstructedEquiImage.type());
+
+  cv::waitKey(0);
 }
 
 /*****************************************************************************/
-void icov::encoder::FrameEncoder::encode_si(
+void icov::encoder::FrameEncoder::encode_tu(
+    std::ostream &output, const Block &b,
     const icov::video::IcuEncoder &icu_enc,
-    BlockPrediction::predType pred) const {
+    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
+    ComponentID comp, int tu_index) {
+  const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
+  auto x_tuCoeff = x_tu.getQuantizedTransformCoeffs(comp);
 
-  auto si = icu_enc.get_sideInformation(pred);
-  icov::helpers::assert::not_null(si);
+  size_t tu_size = x_tuCoeff.area();
 
-  for (uint c = 0; c < m_numComp; c++) {
-    int tu_count = si->TUs.size();
-    for (int tu_index = 0; tu_index < tu_count; tu_index++) {
-      const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
-      auto x_tuCoeff =
-          x_tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
+  const auto &si_tu = si.TUs[tu_index];
+  auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(comp);
 
-      BitSymbolProvider bsp(
-          SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + x_tuCoeff.area()));
+  ICOV_ASSERT_MSG(
+      (size_t)si_tuCoeff.area() == tu_size,
+      "Transform units from Source and its SI must be the same size: " +
+          std::to_string(tu_size));
 
-      const auto &si_tu = si->TUs[tu_index];
-      auto si_tuCoeff =
-          si_tu.getQuantizedTransformCoeffs(static_cast<ComponentID>(c));
-      bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + si_tuCoeff.area()),
-                 m_params.bsp_params);
+  ICOV_ASSERT_MSG(m_coders.count(tu_size) > 0,
+                  "Coder not found for the given size: " +
+                      std::to_string(tu_size));
 
-      std::cout << x_tuCoeff.area() << ", " << si_tuCoeff.area() << std::endl;
+  BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+  bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size),
+             m_params.bsp_params);
+
+  icov::SINumcodeIdx si_numcodes;
+  icov::SISyndromes si_synd;
+  m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
+
+  for (size_t i = 0; i < si_numcodes.size(); i++) {
+    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
+           << b.parent()->col(b.u()) << "\t" << BlockPrediction::toString(pred)
+           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
+           << m_coders.at(tu_size)->getRate(si_numcodes[i]) << "\t"
+           << si_synd[i].to_string(" ") << "\t";
+    output << std::endl;
+
+    if (m_params.check_decoding) {
+
+      std::cout << "TEST DECODING " << i << std::endl;
+      std::cout << "NUMCODE " << si_numcodes[i] << std::endl;
+      std::cout << "SYND " << si_synd[i].to_string(" ") << std::endl;
+
+      BitVec decoded;
+      m_coders.at(tu_size)->decode(decoded, si_numcodes[i], si_synd[i]);
+      std::cout << "SOURCE [";
+      icov::helpers::io::write_vector(std::cout, bsp.src_bits()[i], ' ')
+          << "]" << std::endl;
+      std::cout << "DECODED [";
+      icov::helpers::io::write_vector(std::cout, decoded, ' ')
+          << "]" << std::endl;
+      icov::helpers::assert::check(decoded == bsp.src_bits()[i],
+                                   "Decoding BP check failed " +
+                                       std::to_string(i));
     }
+  }
+
+  if (m_params.check_decoding) {
+
+    SymboleVec decoded;
+    m_coders.at(tu_size)->decode_bitplanes(decoded, si_numcodes, si_synd);
+    icov::helpers::assert::check(decoded == bsp.src_symboles(),
+                                 "Decoding symbole check failed");
   }
 }
 
+void icov::encoder::FrameEncoder::encode_si(
+    std::ostream &output, const Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
+    ComponentID comp) {
+  for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
+    encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
+  }
+}
+
+void icov::encoder::FrameEncoder::encode_icu(
+    std::ostream &output, const Block &b,
+    const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
+
+  std::cout << "---- encode prediction " << BlockPrediction::toString(pred)
+            << std::endl;
+
+  auto si = icu_enc.get_sideInformation(pred);
+  icov::helpers::assert::not_null(si);
+  for (uint c = 0; c < m_numComp; c++) {
+    encode_si(output, b, icu_enc, *si, pred, static_cast<ComponentID>(c));
+  }
+}
+
+/*****************************************************************************/
 void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                                              const Block &b,
                                              uint16_t prediction) {
 
+  //  if (!m_params.enable_block_encoding)
+  //    return;
+
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- prediction " << BlockPrediction::toString(pred)
+  std::cout << "---- try encode prediction " << BlockPrediction::toString(pred)
             << std::endl;
 
-  int x_block = b.u(), y_block = b.w();
+  int x_block = b.parent()->col(b.u());
+  int y_block = b.parent()->row(b.v());
+
+  Position pos(static_cast<float>(x_block) /
+                   static_cast<float>(m_params.icuSize_luma.width),
+               static_cast<float>(y_block) /
+                   static_cast<float>(m_params.icuSize_luma.height));
+
+  std::cout << pos.x << std::endl;
+  std::cout << pos.y << std::endl;
 
   const auto &es = this->m_enc_struc;
-  uint icuIndex =
-      es.get_icuIndex(Position(x_block / m_params.icuSize_luma.width,
-                               y_block / m_params.icuSize_luma.height));
+  uint icuIndex = es.get_icuIndex(pos);
+
+  std::cout << icuIndex << std::endl;
+
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
-  ICOV_ASSERT_MSG(si_map.count(pred),
-                  "Prediction not found in computed data for the block: " +
-                      BlockPrediction::toString(pred));
+  //  icov::helpers::assert::check(
+  //      si_map.count(pred),
+  //      "Prediction not found in computed data for the block: " +
+  //          BlockPrediction::toString(pred));
 
-  // m_vvc_bufs.get(PIC_PREDICTION + prediction).getBuf(mainFrameArea)
-  encode_si(icu_enc, pred);
+  if (si_map.count(pred) > 0)
+    encode_icu(output, b, icu_enc, pred);
 
-  const IPicture &p = *(b.parent());
-  int bw = std::ceil(b.w() * p.width());
-  int bh = std::ceil(b.h() * p.height());
-  int bx = std::ceil(p.u(p.angleX(b.u())) * p.width());
-  int by = std::ceil(p.v(p.angleY(b.v())) * p.height());
-  auto rect_block = cv::Rect(bx, by, bw, bh);
-  std::cout << rect_block << std::endl;
-  m_cvmat[PIC_RECONSTRUCTION](rect_block).setTo(cv::Scalar(255, 0, 0));
-  cv::imshow("viewport RECONSTRUCTED", m_cvmat[PIC_RECONSTRUCTION]);
-  cv::waitKey(0);
+  //  const IPicture &p = *(b.parent());
+  //  int bw = std::ceil(b.w() * p.width());
+  //  int bh = std::ceil(b.h() * p.height());
+  //  int bx = std::ceil(p.u(p.angleX(b.u())) * p.width());
+  //  int by = std::ceil(p.v(p.angleY(b.v())) * p.height());
+  //  auto rect_block = cv::Rect(bx, by, bw, bh);
+  //  std::cout << rect_block << std::endl;
+  //  m_cvmat[PIC_RECONSTRUCTION](rect_block).setTo(cv::Scalar(255, 0, 0));
+  //  cv::imshow(WIN_RECO, m_cvmat[PIC_RECONSTRUCTION]);
+  //  cv::waitKey(0);
+}
+
+void icov::encoder::FrameEncoder::encode(
+    std::ostream &output, IInputMedia<cv::Mat> &input, const IPicture &picture,
+    const IAccessBlockManager &access_blocks,
+    const IBlockPrediction &block_prediction) {
+  m_pic_ptr = &picture;
+  IFrameEncoder::encode(output, input, picture, access_blocks,
+                        block_prediction);
+  m_pic_ptr = nullptr;
 }

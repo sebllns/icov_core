@@ -56,7 +56,7 @@
 namespace icov {
 namespace encoder {
 
-using InputMedia = icov::IMedia<cv::Mat>;
+using InputMedia = icov::IInputMedia<cv::Mat>;
 
 class InputImage : public icov::IImage<cv::Mat> {
 public:
@@ -64,7 +64,8 @@ public:
   ~InputImage() = default;
 
   // IMedia interface
-  void writeInfos(std::ofstream &output, int key) override;
+  void writeInfos(std::ofstream &output, int key,
+                  void *param = nullptr) override;
 };
 
 class InputVideo : public icov::IVideo<cv::Mat> {
@@ -77,7 +78,8 @@ public:
 
   // IMedia interface
   void setFrame(int frame) override;
-  void writeInfos(std::ofstream &output, int key) override;
+  void writeInfos(std::ofstream &output, int key,
+                  void *param = nullptr) override;
 };
 
 void instantiateInputMedia(const fs::path &path,
