@@ -84,11 +84,22 @@ std::string path::combine(const std::string &path1, const std::string &path2) {
   return fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
 }
 
+bool path::file_exists(const std::string &path) {
+  return fs::is_regular_file(fs::absolute(path).make_preferred());
+}
+
+bool path::directory_exists(const std::string &path) {
+  return fs::is_directory(fs::absolute(path).make_preferred());
+}
+
+void path::assert_file_exists(const std::string &path) {
+  icov::helpers::assert::check(file_exists(path),
+                               "Path is a valid file: " + path);
+}
+
 void path::assert_directory_exists(const std::string &path) {
-  if (!fs::is_directory(fs::absolute(path).make_preferred())) {
-    BOOST_THROW_EXCEPTION(
-        std::invalid_argument("Is not a valid directory: " + path));
-  }
+  icov::helpers::assert::check(directory_exists(path),
+                               "Path is a valid directory: " + path);
 }
 
 uint32_t maths::binary_length(int val) {

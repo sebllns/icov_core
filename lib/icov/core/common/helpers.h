@@ -104,6 +104,27 @@ void iota(ForwardIt first, ForwardIt last, T value, T step) {
   }
 }
 
+template <class T> std::vector<T> iota(T first, T last, T step) {
+  std::vector<T> v;
+
+  if (first < last)
+    assert(step > 0);
+  if (first > last)
+    assert(step < 0);
+
+  T value = first;
+  while (value != last) {
+    v.push_back(value);
+    value += step;
+  }
+  v.push_back(last);
+  return v;
+}
+
+template <class T> std::vector<T> iota(T first, T step, int count) {
+  return iota(first, first + step * (count - 1), step);
+}
+
 template <typename T>
 bool lazy_compare_vector(const std::vector<T> &v1, const std::vector<T> &v2) {
   if (v1.size() != v2.size()) {
@@ -218,14 +239,22 @@ float normalized();
 } // namespace rand
 
 namespace io {
+
+template <typename T>
+std::ostream &write_vector(std::ostream &out, const std::vector<T> &data,
+                           char sep) {
+  out << data.size();
+  for (int i = 0; i < data.size(); i++) {
+    out << sep << data[i];
+  }
+  return out;
+}
+
 template <typename T>
 void write_vector(const std::string &filename, const std::vector<T> &data,
                   char sep) {
   std::ofstream file(filename);
-  file << data.size();
-  for (int i = 0; i < data.size(); i++) {
-    file << sep << data[i];
-  }
+  write_vector(file, data, sep);
   file.close();
 }
 
@@ -260,7 +289,9 @@ inline void cls(void) {
 } // namespace io
 
 namespace path {
-
+bool file_exists(const std::string &path);
+bool directory_exists(const std::string &path);
+void assert_file_exists(const std::string &path);
 void assert_directory_exists(const std::string &path);
 bool try_create_directories(const std::string &path);
 std::string get_data_folder(const std::string &root, int code_size,
