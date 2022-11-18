@@ -228,11 +228,11 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
 void run(int argc, char *argv[]) {
   icov::helpers::rand::init();
 
-  icov::helpers::assert::check(argc > 2, "Missing args in command line");
+  icov::helpers::assert::check(argc > 3, "Missing args in command line");
 
-  std::string fileAddr = argv[1];
-  // 110
-  double fovX_degree = std::atof(argv[2]);
+  const std::string fileAddr = argv[1];
+  const double fovX_degree = std::atof(argv[2]);
+  const int block_size = std::atoi(argv[3]);
 
   // viewport parameters
   cv::Size outputResolution(1920, 1080);
@@ -271,8 +271,6 @@ void run(int argc, char *argv[]) {
   //  cv::namedWindow("mask", cv::WINDOW_NORMAL);
 
   viewer.resetOrientation();
-
-  int block_size = 202;
 
   // float pov_x = 180, pov_y = 90;
   float pov_x = 0, pov_y = 0;
