@@ -2,61 +2,64 @@
 #define Decoder_LDPCA_BP_flooding_SPA_HPP_
 
 #include <cstdint>
-#include <vector>
 #include <fstream>
+#include <vector>
 
-#include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
-#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 #include "Module/Decoder/LDPC/BP/Flooding/Decoder_LDPC_BP_flooding.hpp"
+#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
+#include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
 
 #include "common.h"
 
-namespace aff3ct
-{
-namespace module
-{
+namespace aff3ct {
+namespace module {
 template <typename B = int, typename R = float>
-class Decoder_LDPCA_BP_flooding_SPA : public Decoder_SISO<B,R>, public Decoder_LDPC_BP
-{
+class Decoder_LDPCA_BP_flooding_SPA : public Decoder_SISO<B, R>,
+                                      public Decoder_LDPC_BP {
 protected:
-	std::vector<R> values;
-    icov::Syndrome *m_syndrome;
+  std::vector<R> values;
+  icov::Syndrome *m_syndrome;
 
-    tools::Update_rule_SPA<R> up_rule;
+  tools::Update_rule_SPA<R> up_rule;
 
-    std::vector<uint32_t      > transpose;
-    std::vector<R             > post;       // a posteriori information
-    std::vector<std::vector<R>> msg_chk_to_var; // check    nodes to variable nodes messages
-    std::vector<std::vector<R>> msg_var_to_chk; // variable nodes to check    nodes messages
-
+  std::vector<uint32_t> transpose;
+  std::vector<R> post; // a posteriori information
+  std::vector<std::vector<R>>
+      msg_chk_to_var; // check    nodes to variable nodes messages
+  std::vector<std::vector<R>>
+      msg_var_to_chk; // variable nodes to check    nodes messages
 
 public:
+  Decoder_LDPCA_BP_flooding_SPA(const int N, const int n_ite,
+                                const tools::Sparse_matrix &H);
+  virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
 
-    Decoder_LDPCA_BP_flooding_SPA(const int N, const int n_ite,
-                                  const tools::Sparse_matrix &H);
-	virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
+  std::vector<size_t> get_llr_order(std::vector<size_t> &idx) const;
 
-    std::vector<size_t> get_llr_order(std::vector<size_t> &idx) const;
+  void setSyndrome(icov::Syndrome *synd) { m_syndrome = synd; }
 
-    void setSyndrome(icov::Syndrome *synd) {m_syndrome = synd;}
-
-    virtual Decoder_LDPCA_BP_flooding_SPA<B,R>* clone() const;
-    virtual void set_n_frames(const size_t n_frames);
+  virtual Decoder_LDPCA_BP_flooding_SPA<B, R> *clone() const;
+  virtual void set_n_frames(const size_t n_frames);
 
 protected:
-    void _reset(const size_t frame_id);
+  void _reset(const size_t frame_id);
 
-    int _decode_siso   (const R *Y_N1, R *Y_N2, const size_t frame_id);
-    int _decode_siho   (const R *Y_N, B *V_K,  const size_t frame_id);
-    int _decode_siho_cw(const R *Y_N, B *V_N,  const size_t frame_id);
+  int _decode_siso(const R *Y_N1, R *Y_N2, const size_t frame_id);
+  int _decode_siho(const R *Y_N, B *V_K, const size_t frame_id);
+  int _decode_siho_cw(const R *Y_N, B *V_N, const size_t frame_id);
 
-    void _decode(const R *Y_N, const int frame_id);
-    void _initialize_var_to_chk(const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &msg_var_to_chk);
-    void _decode_single_ite(const std::vector<R> &msg_var_to_chk, std::vector<R> &msg_chk_to_var);
-    void _compute_post         (const R *Y_N, const std::vector<R> &msg_chk_to_var, std::vector<R> &post);};
+  void _decode(const R *Y_N, const int frame_id);
+  void _initialize_var_to_chk(const R *Y_N,
+                              const std::vector<R> &msg_chk_to_var,
+                              std::vector<R> &msg_var_to_chk);
+  void _decode_single_ite(const std::vector<R> &msg_var_to_chk,
+                          std::vector<R> &msg_chk_to_var);
+  void _compute_post(const R *Y_N, const std::vector<R> &msg_chk_to_var,
+                     std::vector<R> &post);
+};
 
-}
-}
+} // namespace module
+} // namespace aff3ct
 
 #include "Decoder_LDPCA_BP_flooding_SPA.hxx"
 
