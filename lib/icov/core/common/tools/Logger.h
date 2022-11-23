@@ -1,5 +1,5 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup icov-core
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
@@ -8,19 +8,19 @@
  */
 
 /** @file Logger.h
- *  @brief Class used to manage log.
+ *  @brief Class used to manage a log that can be connected with Unity3D
  *  @ingroup common
  *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -46,8 +46,7 @@
  *
  *****************************************************************************/
 
-#ifndef CONTENTPARAMETERSET_H
-#define CONTENTPARAMETERSET_H
+#pragma once
 
 #include "common.h"
 #include <sstream>
@@ -60,179 +59,156 @@
 
 using namespace std;
 
-namespace icov
-{
-  extern "C"
-  {
-    //Create a callback delegate
-    typedef void (*LogCallBack)(const char *message, int length);
+namespace icov {
+extern "C" {
+// Create a callback delegate
+typedef void (*LogCallBack)(const char *message, int length);
+}
+
+class Logger : public std::streambuf {
+public:
+  enum_t::LogType logLevel;
+  enum_t::LogType logLevelFilter;
+
+  bool showTimestamp;
+  bool showLogLevel;
+  bool showLogConsole;
+
+  Logger(std::basic_ios<char> &out, bool showLogLevel_ = true,
+         bool addTimestamp_ = false,
+         enum_t::LogType logLevelFilter_ = enum_t::LogType::LOG_TYPE_INFO,
+         bool showLogConsole_ = true)
+      : m_out(out), m_sink(), m_newline(true), m_callback(nullptr),
+        showLogLevel(showLogLevel_), showTimestamp(addTimestamp_),
+        showLogConsole(showLogConsole_),
+        logLevel(enum_t::LogType::LOG_TYPE_INFO),
+        logLevelFilter(logLevelFilter_) {
+    setp(0, 0);
+    m_sink = m_out.rdbuf(this);
+    m_pstream = new std::ostream(m_sink);
+    assert(m_sink);
+  }
+  ~Logger() {
+    if (m_logfile.is_open())
+      m_logfile.close();
+
+    m_out.rdbuf(m_sink);
   }
 
-  class Logger : public std::streambuf
-  {
-  public:
-    enum_t::LogType logLevel;
-    enum_t::LogType logLevelFilter;
+  std::streambuf *getSink() { return m_sink; }
 
-    bool showTimestamp;
-    bool showLogLevel;
-    bool showLogConsole;
+  // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+  static const std::string getTime(const char *format = "%Y-%m-%d.%X") {
+    time_t now = time(0);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), format, &tstruct);
 
-    Logger(std::basic_ios<char> &out, bool showLogLevel_ = true, bool addTimestamp_ = false, enum_t::LogType logLevelFilter_ = enum_t::LogType::LOG_TYPE_INFO, bool showLogConsole_ = true)
-        : m_out(out), m_sink(), m_newline(true), m_callback(nullptr),
-          showLogLevel(showLogLevel_),
-          showTimestamp(addTimestamp_),
-          showLogConsole(showLogConsole_),
-          logLevel(enum_t::LogType::LOG_TYPE_INFO), logLevelFilter(logLevelFilter_)
-    {
-      setp(0, 0);
-      m_sink = m_out.rdbuf(this);
-      m_pstream = new std::ostream(m_sink);
-      assert(m_sink);
+    return buf;
+  }
+
+  void logToFile(const char *filename) { m_logfile.open(filename, ios::out); }
+
+  void redirect(LogCallBack callback) {
+    m_callback = callback;
+    if (m_pstream != nullptr) {
+      delete m_pstream;
     }
-    ~Logger()
-    {
-      if (m_logfile.is_open())
-        m_logfile.close();
+    m_pstream = &m_stringstream;
+  }
 
-      m_out.rdbuf(m_sink);
-    }
+  bool callbackEnabled() { return m_callback != nullptr; }
 
-    std::streambuf *getSink()
-    {
-      return m_sink;
-    }
-
-    // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-    static const std::string getTime(const char *format = "%Y-%m-%d.%X")
-    {
-      time_t now = time(0);
-      struct tm tstruct;
-      char buf[80];
-      tstruct = *localtime(&now);
-      // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-      // for more information about date/time format
-      strftime(buf, sizeof(buf), format, &tstruct);
-
-      return buf;
-    }
-
-    void logToFile(const char *filename)
-    {
-      m_logfile.open(filename, ios::out);
-    }
-
-    void redirect(LogCallBack callback)
-    {
-      m_callback = callback;
-      if (m_pstream != nullptr)
-      {
-        delete m_pstream;
-      }
-      m_pstream = &m_stringstream;
-    }
-
-    bool callbackEnabled()
-    {
-      return m_callback != nullptr;
-    }
-
-    std::string LogTypeStr(enum_t::LogType LogType)
-    {
-      switch (LogType)
-      {
-      case enum_t::LogType::LOG_TYPE_INFO:
-        return "INFO";
-      case enum_t::LogType::LOG_TYPE_DEBUG:
-        return "DEBUG";
-      case enum_t::LogType::LOG_TYPE_WARNING:
-        return "WARNING";
-      case enum_t::LogType::LOG_TYPE_ERROR:
-        return "ERROR";
-      default:
-        return "";
-      }
-
+  std::string LogTypeStr(enum_t::LogType LogType) {
+    switch (LogType) {
+    case enum_t::LogType::LOG_TYPE_INFO:
+      return "INFO";
+    case enum_t::LogType::LOG_TYPE_DEBUG:
+      return "DEBUG";
+    case enum_t::LogType::LOG_TYPE_WARNING:
+      return "WARNING";
+    case enum_t::LogType::LOG_TYPE_ERROR:
+      return "ERROR";
+    default:
       return "";
     }
 
-  protected:
-    bool writeHeader(std::ostream &str)
-    {
-      bool result = true;
+    return "";
+  }
 
-      // --   add timestamp level here
-      if (showTimestamp && !(str << "[" << getTime() << "] "))
-        result = false;
+protected:
+  bool writeHeader(std::ostream &str) {
+    bool result = true;
 
-      // --   add log level here
-      if (showLogLevel && logLevel > 0 && logLevel < 6 && !(str << "[" << LogTypeStr(logLevel) << "] "))
-        result = false;
+    // --   add timestamp level here
+    if (showTimestamp && !(str << "[" << getTime() << "] "))
+      result = false;
 
-      return result;
+    // --   add log level here
+    if (showLogLevel && logLevel > 0 && logLevel < 6 &&
+        !(str << "[" << LogTypeStr(logLevel) << "] "))
+      result = false;
+
+    return result;
+  }
+
+  int_type overflow(int_type m = traits_type::eof()) {
+    if (traits_type::eq_int_type(m, traits_type::eof()))
+      return m_sink->pubsync() == -1 ? m : traits_type::not_eof(m);
+
+    if (logLevel < logLevelFilter)
+      return traits_type::eof();
+
+    if (m_newline && (showLogConsole || callbackEnabled())) {
+      std::ostream &str = *m_pstream;
+
+      if (!writeHeader(str)) {
+        traits_type::eof(); // Error
+      }
     }
 
-    int_type overflow(int_type m = traits_type::eof())
-    {
-      if (traits_type::eq_int_type(m, traits_type::eof()))
-        return m_sink->pubsync() == -1 ? m : traits_type::not_eof(m);
+    if (m_logfile.is_open()) {
+      if (m_newline)
+        writeHeader(m_logfile);
+      m_logfile.put(traits_type::to_char_type(m));
+    }
 
-      if (logLevel < logLevelFilter)
-        return traits_type::eof();
+    m_newline = traits_type::to_char_type(m) == '\n';
 
-      if (m_newline && (showLogConsole || callbackEnabled()))
-      {
-        std::ostream &str = *m_pstream;
+    if (callbackEnabled()) {
 
-        if (!writeHeader(str))
-        {
-          traits_type::eof(); // Error
-        }
+      m_stringstream.put(traits_type::to_char_type(m));
+
+      if (m_newline) {
+        const std::string tmp = m_stringstream.str();
+        const char *tmsg = tmp.c_str();
+        m_callback(tmsg, (int)strlen(tmsg));
+        m_stringstream.str("");
+        m_stringstream.clear();
       }
-
-      if (m_logfile.is_open())
-      {
-        if (m_newline)
-          writeHeader(m_logfile);
-        m_logfile.put(traits_type::to_char_type(m));
-      }
-
-      m_newline = traits_type::to_char_type(m) == '\n';
-
-      if (callbackEnabled())
-      {
-
-        m_stringstream.put(traits_type::to_char_type(m));
-
-        if (m_newline)
-        {
-          const std::string tmp = m_stringstream.str();
-          const char *tmsg = tmp.c_str();
-          m_callback(tmsg, (int)strlen(tmsg));
-          m_stringstream.str("");
-          m_stringstream.clear();
-        }
-
-        return m;
-      }
-
-      if (showLogConsole)
-        return m_sink->sputc(m);
 
       return m;
     }
 
-  private:
-    Logger(const Logger &);
-    Logger &operator=(const Logger &); // not copyable
+    if (showLogConsole)
+      return m_sink->sputc(m);
 
-    std::basic_ios<char> &m_out;
-    std::streambuf *m_sink;
-    bool m_newline;
-    std::stringstream m_stringstream;
-    std::ostream *m_pstream;
-    LogCallBack m_callback;
-    ofstream m_logfile;
-  };
-}
-#endif // CONTENTPARAMETERSET_H
+    return m;
+  }
+
+private:
+  Logger(const Logger &);
+  Logger &operator=(const Logger &); // not copyable
+
+  std::basic_ios<char> &m_out;
+  std::streambuf *m_sink;
+  bool m_newline;
+  std::stringstream m_stringstream;
+  std::ostream *m_pstream;
+  LogCallBack m_callback;
+  ofstream m_logfile;
+};
+} // namespace icov

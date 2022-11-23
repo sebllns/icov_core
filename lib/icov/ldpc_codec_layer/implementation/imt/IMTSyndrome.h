@@ -3,56 +3,52 @@
 
 #include "interface/ISyndrome.h"
 
-
-#include <aff3ct.hpp>
 #include "ldpc_codec_layer/aff3ct/Aff3ctDecoder.h"
+#include <aff3ct.hpp>
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
 
-
 namespace icov {
 
-class IMTSyndromeManager : public ISyndromeManager
-{
+class IMTSyndromeManager : public ISyndromeManager {
 
 public:
+  AffMatrix *h12_ord;
+  AffMatrix *h14_ord;
+  AffMatrix *h18;
 
-    AffMatrix *h12_ord;
-    AffMatrix *h14_ord;
-    AffMatrix *h18;
+  Syndrome syndrome12;
+  Syndrome syndrome14;
+  Syndrome syndrome18;
 
-    Syndrome syndrome12;
-    Syndrome syndrome14;
-    Syndrome syndrome18;
+  std::vector<size_t> doping_idx;
 
-    std::vector<size_t> doping_idx;
+  FastMatrix<uint32_t> *c18;
 
-    FastMatrix<uint32_t> *c18;
+  bool init_rateless;
 
-    bool init_rateless;
+  IMTSyndromeManager(int n);
+  virtual ~IMTSyndromeManager() = default;
 
+  virtual void init_accumulation(const BitVec &source_x) override;
 
-    IMTSyndromeManager(int n);
-    virtual ~IMTSyndromeManager() = default;
+  virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
+                              const LLRProvider &llr_provider,
+                              const BitVec &src) override;
 
-    virtual void init_accumulation(const BitVec& source_x) override;
+  virtual void compute_deacc(Syndrome &o_syndrome, const Syndrome &acc_syndrome,
+                             int numcode, LLRProvider &llr_provider) override;
 
-    virtual void compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider) override;
+  virtual int get_m(int numcode) const override;
 
-    virtual void compute_deacc(Syndrome& o_syndrome, const Syndrome& acc_syndrome, int numcode, LLRProvider& llr_provider) override;
+  void reset_doping() override;
 
-    virtual int get_m(int numcode) const override;
+  uint32_t get_c18(int m) const;
 
-    void reset_doping() override;
+  void compute_doping_order(const LLRProvider &llr_provider);
 
-    uint32_t get_c18(int m) const;
-
-    void compute_doping_order(const LLRProvider& llr_provider);
-
-    std::string get_type() const override;
-
-
+  std::string get_type() const override;
 };
-}
+} // namespace icov
 
 #endif // IMTSYNDROME_H

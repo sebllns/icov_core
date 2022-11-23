@@ -214,7 +214,10 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
 
   // doping for rate > 0.5
   if (m > get_m_max()) {
-    // std::cout << "doping" << std::endl;
+
+#if ICOV_CORE_DEBUG_TRACE_ENABLED
+    ICOV_LOG_MSG(trace) << "doping" << std::endl;
+#endif
 
     // order the llr values for rate = 0.5
     compute_doping_order(llr_provider, doping_synd);
@@ -232,7 +235,8 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
 
 void IMT164SyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
                                            int numcode,
-                                           const LLRProvider &llr_provider) {
+                                           const LLRProvider &llr_provider,
+                                           const BitVec &src) {
   int m = o_stored_syndrome.size();
   int m_target = this->get_m(numcode);
 
@@ -265,7 +269,7 @@ void IMT164SyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
         compute_doping_order(llr_provider, doping_synd);
       }
 
-      o_stored_syndrome[m - 1] = llr_provider.src(doping_idx[m - m_max - 1]);
+      o_stored_syndrome[m - 1] = src[doping_idx[m - m_max - 1]];
     }
   }
 }

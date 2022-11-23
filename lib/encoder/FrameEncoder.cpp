@@ -182,7 +182,7 @@ void FrameEncoder::onSelectBlock(int x, int y) {
     std::string innersep = sepstr.str();
     std::string endsep = std::string(innersep.length(), '-');
 
-    if (icov::DebugTools::is_release_build)
+    if (DebugTools::is_release_build)
       icov::helpers::io::cls();
 
     // table header

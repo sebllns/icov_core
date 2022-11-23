@@ -7,3 +7,4 @@
 #define OPT_CODER_TYPE "coder"
 #define OPT_HELP "help"
 #define OPT_MODE "mode"
+#define OPT_LOG_LVL "log-level"

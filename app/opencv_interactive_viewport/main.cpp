@@ -482,7 +482,6 @@ void run(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   try {
-    icov::DebugTools::debug_stream.rdbuf(std::cout.rdbuf());
     run(argc, argv);
   } catch (std::exception &e) {
     std::cerr << "\nError: program execution has stopped prematurely"

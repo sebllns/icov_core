@@ -6,27 +6,22 @@
 #include <limits>
 #include <random>
 
-icov::LLRProvider::LLRProvider(int n)
-    : m_llr(n, 0), m_src(n, 0), m_floor_type(0) {
+#include "helpers.h"
+
+icov::LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) {
   std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
 icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
-    : m_llr(llr), m_src(llr.size(), 0), m_floor_type(0) {
+    : m_llr(llr), m_floor_type(0) {
   std::iota(doping_order.begin(), doping_order.end(), 0);
 }
 
 void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
-                                  const std::vector<SIVal> &side_info,
-                                  const BitVec &src_bits) {
-  m_src = src_bits;
+                                  const std::vector<SIVal> &side_info) {
   for (size_t i = 0; i < side_info.size(); i++) {
-    double p = bsp.pqks(src_bits[i] > 0, side_info[i]);
-
-    p = std::clamp(p, (double)0.000000001, (double)(1.0 - 0.000000001));
-
-    if (p == 0 || p == 1)
-      std::cerr << "initLLR_s: p cannot be 0 or 1";
+    LLRVal p = static_cast<LLRVal>(bsp.pqks(side_info[i]));
+    p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
   }
 }
@@ -34,35 +29,24 @@ void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
 void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info,
                                   const std::vector<int> &sign,
-                                  const std::vector<int> &abs_predec,
-                                  const BitVec &src_bits) {
-  m_src = src_bits;
-
+                                  const std::vector<int> &abs_predec) {
   int l = bsp.x_binary_length() - 1;
-  float p = 0.0, p0 = 0.0, p1 = 0.0;
+  LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
 
   for (size_t i = 0; i < side_info.size(); i++) {
     bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);
-    p = std::clamp(p, (float)0.000001, (float)(1.0 - 0.000001));
-
-    // std::cout << p << " ";
-
+    p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
-    /*if(p == 0 || p == 1)
-    {
-        std::cerr << "initLLR_b: p cannot be 0 or 1";
-    }*/
   }
-  // std::cout << std::endl;
 }
 
-bool icov::LLRProvider::no_coding() const {
+bool icov::LLRProvider::no_coding(const BitVec &src) const {
   bool nocoding = true;
   int i = -1;
 
   while (nocoding && ++i < (int)this->m_llr.size()) {
     // b = 1 => llr < 0, b = 0 => llr >= 0
-    nocoding = ((this->m_llr[i] < 0) == this->m_src[i]);
+    nocoding = ((this->m_llr[i] < 0) == src[i]);
   }
 
   return nocoding;
@@ -71,8 +55,6 @@ bool icov::LLRProvider::no_coding() const {
 void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
   if (m_llr.size() != src_bits.size())
     throw "LLRProvider::initLLR: length of arrays are not equal";
-
-  m_src = src_bits;
 
   for (int k = 0; k < (int)src_bits.size(); k++) {
     int sideinfo_BSC =
@@ -90,8 +72,6 @@ void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info,
                                 const BitVec &src_bits) {
   if (m_llr.size() != src_bits.size())
     throw "ERROR: LLRProvider::initLLR: length of arrays are not equal";
-
-  m_src = src_bits;
 
   float pcrossover = 0;
 
@@ -115,8 +95,6 @@ void icov::LLRProvider::initLLRUniform(float pcrossover,
   if (m_llr.size() != src_bits.size())
     throw "LLRProvider::initLLRUniform length of arrays are not equal";
 
-  m_src = src_bits;
-
   float one_count = pcrossover * m_llr.size();
   one_count = m_floor_type ? std::ceil(one_count) : std::floor(one_count);
 
@@ -138,8 +116,8 @@ void icov::LLRProvider::initLLRUniform(float pcrossover,
   m_floor_type = !m_floor_type;
 }
 
-std::vector<icov::BitVal> icov::LLRProvider::initSrcRand() {
-  BitVec src(m_src.size(), 0);
+std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
+  BitVec src(n, 0);
   std::generate(src.begin(), src.end(), []() {
     return (BitVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0);
   });
@@ -159,6 +137,10 @@ uint32_t icov::LLRProvider::index_min() const {
 
 icov::LLRVal icov::LLRProvider::limit_max() {
   return std::numeric_limits<LLRVal>::max();
+}
+
+icov::LLRVal icov::LLRProvider::epsilon() {
+  return std::numeric_limits<LLRVal>::epsilon();
 }
 
 void icov::LLRProvider::reset() {

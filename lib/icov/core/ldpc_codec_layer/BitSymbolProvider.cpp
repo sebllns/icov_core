@@ -93,7 +93,7 @@ const BitSymbolProvider BitSymbolProvider::init_bsp(
   // check zmin = xmin - ymax
 
   if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max
+    ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
                         << std::endl;
 
   if (enable_z_quantization) {
@@ -102,16 +102,16 @@ const BitSymbolProvider BitSymbolProvider::init_bsp(
     z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
     z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
     if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization zmin=" << z_min
+      ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
                           << " zmax=" << z_max << std::endl;
   }
 
   if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t q=" << q << std::endl;
+    ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
   if (enable_q_quantization) {
     q = q_values[icov::helpers::maths::quantize(q, q_values)];
     if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization q=" << q << std::endl;
+      ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
   }
 
   // y_min = min(Y[k], 0<=k<N)
@@ -173,7 +173,7 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
   // check zmin = xmin - ymax
 
   if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max
+    ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
                         << std::endl;
 
   if (enable_z_quantization) {
@@ -182,16 +182,16 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
     z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
     z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
     if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization zmin=" << z_min
+      ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
                           << " zmax=" << z_max << std::endl;
   }
 
   if (DebugTools::debug_trace_enabled)
-    DebugTools::logFile << "\t q=" << q << std::endl;
+    ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
   if (enable_q_quantization) {
     q = q_values[icov::helpers::maths::quantize(q, q_values)];
     if (DebugTools::debug_trace_enabled)
-      DebugTools::logFile << "\t After quantization q=" << q << std::endl;
+      ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
   }
 
   // y_min = min(Y[k], 0<=k<N)
@@ -281,42 +281,42 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
     p1 += this->pz(z + imax * (1 - 2 * negative));
   }
 
-  // DebugTools::logFile <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
+  // ICOV_LOG_MSG(trace) <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
   // << std::endl;
 
   // attention b = a+b
   float pb = p1 + p0;
 
-  // DebugTools::logFile <<  "\t\t\t yk=" << yk << std::endl;
+  // ICOV_LOG_MSG(trace) <<  "\t\t\t yk=" << yk << std::endl;
 
   if (DebugTools::debug_trace_enabled) {
     if (pb == 0) {
       std::cerr << "WARNING: pb = 0" << std::endl;
 
-      DebugTools::logFile << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
-      DebugTools::logFile << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
+      ICOV_LOG_MSG(trace) << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
+      ICOV_LOG_MSG(trace) << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
                           << " imax=" << ((1 << (l - b))) << std::endl;
 
-      DebugTools::logFile << "\t\t\t a = ";
+      ICOV_LOG_MSG(trace) << "\t\t\t a = ";
       int imax = (1 << (l - b));
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk;
-        DebugTools::logFile << "pz(" << z << ") + ";
+        ICOV_LOG_MSG(trace) << "pz(" << z << ") + ";
       }
 
-      DebugTools::logFile << std::endl << "\t\t\t b = ";
+      ICOV_LOG_MSG(trace) << std::endl << "\t\t\t b = ";
 
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk +
                 imax * (1 - 2 * negative);
-        DebugTools::logFile << "pz(" << z << ") + ";
+        ICOV_LOG_MSG(trace) << "pz(" << z << ") + ";
       }
 
-      DebugTools::logFile << std::endl;
+      ICOV_LOG_MSG(trace) << std::endl;
     }
 
     if (std::abs(p0 / pb + p1 / pb - 1) > 0.00001) {
-      DebugTools::logFile << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
+      ICOV_LOG_MSG(trace) << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
                           << " != 1" << std::endl;
     }
   }
@@ -352,27 +352,12 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
   //  return p1 != 0;
 }
 
-float BitSymbolProvider::pqks(bool negative, int yk) const {
+float BitSymbolProvider::pqks(int yk) const {
 
   int imax = (1 << x_binary_length()); // std::max(std::abs(x_min_estimated()),
                                        // std::abs(x_max_estimated()));
   float p0 = 0.0f;
   float p1 = 0.0f;
-
-  // IMPLEMENTATION FANGPING
-  for (int i = 0; i < imax; i++) {
-
-    if ((i - yk) != 0 && (-i - yk) != 0) {
-      p0 += this->pz(i - yk);
-      if (i != 0)
-        p1 += this->pz(-i - yk);
-    } else if (negative) {
-      p1 += this->pz(0);
-    } else {
-      p0 += this->pz(0);
-    }
-  }
-  return p0 / (p0 + p1);
 
   // IMPLEMENTATION SEBASTIEN
   for (int i = 0; i < imax; i++) {

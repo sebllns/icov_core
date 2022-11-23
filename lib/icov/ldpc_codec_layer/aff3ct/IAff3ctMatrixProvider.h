@@ -9,14 +9,12 @@ using namespace aff3ct;
 using AffMatrix = tools::Sparse_matrix;
 
 namespace icov {
+class IAff3ctMatrixProvider : public IMatrixProvider<AffMatrix> {
+public:
+  IAff3ctMatrixProvider() = default;
+  virtual ~IAff3ctMatrixProvider() = default;
+};
 
-    class IAff3ctMatrixProvider : public IMatrixProvider<AffMatrix>
-    {
-    public:
-        IAff3ctMatrixProvider() = default;
-        virtual ~IAff3ctMatrixProvider() = default;
-    };
-
-}
+} // namespace icov
 
 #endif // IAFF3CTMatrixProvider_H

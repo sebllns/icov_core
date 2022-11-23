@@ -52,56 +52,52 @@
 #include "common.h"
 #include "ldpc_codec_layer/LLRProvider.h"
 
-namespace icov
-{
+namespace icov {
 
-class ISyndromeManager
-{
+class ISyndromeManager {
 public:
-    ISyndromeManager(int _n) : n(_n){};
-    virtual ~ISyndromeManager() = default;
+  ISyndromeManager(int _n) : n(_n){};
+  virtual ~ISyndromeManager() = default;
 
-    //! Compute syndrome accumulation before encoding.
-    /*!
-      \param source_x Source to be encoded.
-    */
-    virtual void init_accumulation(const BitVec& source_x) = 0;
+  //! Compute syndrome accumulation before encoding.
+  /*!
+    \param source_x Source to be encoded.
+  */
+  virtual void init_accumulation(const BitVec &source_x) = 0;
 
-    //! Compute an incremental syndrome for given code number.
-    /*!
-      \param o_stored_syndrome Output stored syndrome to fill (must be a size of n).
-      \param numcode The code number for which the syndrome will be computed.
-      \param llr_provider Provides the llr and src values (needed for doping).
-    */
-    virtual void compute_stored(Syndrome& o_stored_syndrome, int numcode, const LLRProvider& llr_provider) = 0;
+  //! Compute an incremental syndrome for given code number.
+  /*!
+    \param o_stored_syndrome Output stored syndrome to fill (must be a size of
+    n). \param numcode The code number for which the syndrome will be computed.
+    \param llr_provider Provides the llr and src values (needed for doping).
+  */
+  virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
+                              const LLRProvider &llr_provider,
+                              const BitVec &src) = 0;
 
-    //! Compute the syndrome needed for decoding from a given incremental syndrome.
-    /*!
-      \param o_syndrome Syndrome to fill, needed for decoding (must be a size of n).
-      \param stored_syndrome Incremental syndrome to be processed.
-      \param numcode The code number for which the syndrome will be computed.
-      \param llr_provider Provides the llr values (needed for doping).
-    */
-    virtual void compute_deacc(Syndrome& o_syndrome, const Syndrome& stored_syndrome, int numcode, LLRProvider& llr_provider) = 0;
+  //! Compute the syndrome needed for decoding from a given incremental
+  //! syndrome.
+  /*!
+    \param o_syndrome Syndrome to fill, needed for decoding (must be a size of
+    n). \param stored_syndrome Incremental syndrome to be processed. \param
+    numcode The code number for which the syndrome will be computed. \param
+    llr_provider Provides the llr values (needed for doping).
+  */
+  virtual void compute_deacc(Syndrome &o_syndrome,
+                             const Syndrome &stored_syndrome, int numcode,
+                             LLRProvider &llr_provider) = 0;
 
-    virtual std::string get_type() const = 0;
+  virtual std::string get_type() const = 0;
 
+  virtual int get_m(int numcode) const { return numcode; }
 
-    virtual int get_m(int numcode) const
-    {
-        return numcode;
-    }
+  virtual int get_n() const { return this->n; }
 
-    virtual int get_n() const
-    {
-        return this->n;
-    }
-
-    virtual void reset_doping() {}
+  virtual void reset_doping() {}
 
 protected:
-    uint32_t n;
+  uint32_t n;
 };
-}
+} // namespace icov
 
 #endif // ISYNDROME_H

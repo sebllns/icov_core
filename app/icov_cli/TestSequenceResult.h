@@ -52,6 +52,7 @@
 #include <map>
 
 enum result_data_type {
+  UNKNOWN = -1,
   SCALAR = 0,
   MATRIX = 1,
 };
@@ -74,6 +75,8 @@ struct result_data {
   }
 
   bool operator!=(const result_data &rhs) const { return !operator==(rhs); }
+
+  result_data() { type = UNKNOWN; }
 };
 
 class TestSequenceResult {

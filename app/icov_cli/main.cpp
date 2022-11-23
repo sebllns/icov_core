@@ -5,11 +5,7 @@
 /****************************************************************************************/
 // MAIN
 /****************************************************************************************/
-int
-main(int argc, char* argv[])
-{
-  srand((unsigned)time(NULL));
-
+int main(int argc, char *argv[]) {
   try {
     icov::video::init_video_lib(argc, argv);
   } catch (...) {

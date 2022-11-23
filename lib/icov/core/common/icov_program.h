@@ -1,10 +1,18 @@
 #pragma once
 
 #include "common.h"
+#include "helpers.h"
 #include "icov_program_options.h"
+#include "tools/DebugTools.h"
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
+#include <boost/system/error_code.hpp>
 
 namespace po = boost::program_options;
 
@@ -25,6 +33,7 @@ public:
   }
 
   virtual void launchProgram() = 0;
+  virtual int logLevel() const { return 0; }
 
   inline const boost::program_options::options_description &
   optionsDesc() const {
@@ -36,20 +45,25 @@ public:
 class IcovProgramBase : public IIcovProgram {
 public:
   IcovProgramBase() {
-    this->m_options_desc.add_options()("help,h", "produce help message")(
-        (std::string(OPT_MODE) + ",m").c_str(),
-        po::value<std::string>()->required(), "set the program mode")(
-        (std::string(OPT_CODER_TYPE) + ",c").c_str(),
-        po::value<std::string>()->required(), "set the coder type")(
-        (std::string(OPT_DATA_PATH) + ",d").c_str(),
-        po::value<std::string>()->required(), "set the data path")(
-        (std::string(OPT_CODE_LENGTH) + ",n").c_str(),
-        po::value<int>()->required(),
-        "set the code length")((std::string(OPT_BP_ITE) + ",it").c_str(),
-                               po::value<int>()->default_value(100),
-                               "set iteration count for BP LDPC coder")(
-        OPT_NUMCODES, po::value<std::string>()->default_value("numcodes.txt"),
-        "set the numcodes steps for iterative coder");
+    this->m_options_desc.add_options()
+
+        ("help,h", "produce help message")(
+            (std::string(OPT_MODE) + ",m").c_str(),
+            po::value<std::string>()->required(), "set the program mode")(
+            (std::string(OPT_CODER_TYPE) + ",c").c_str(),
+            po::value<std::string>()->required(), "set the coder type")(
+            (std::string(OPT_DATA_PATH) + ",d").c_str(),
+            po::value<std::string>()->required(), "set the data path")(
+            (std::string(OPT_CODE_LENGTH) + ",n").c_str(),
+            po::value<int>()->required(),
+            "set the code length")((std::string(OPT_BP_ITE) + ",it").c_str(),
+                                   po::value<int>()->default_value(100),
+                                   "set iteration count for BP LDPC coder")(
+            OPT_NUMCODES,
+            po::value<std::string>()->default_value("numcodes.txt"),
+            "set the numcodes steps for iterative coder")(
+            (std::string(OPT_LOG_LVL) + ",lg").c_str(),
+            po::value<int>()->default_value(2), "set log level filter");
   }
 
   virtual ~IcovProgramBase() = default;
@@ -70,6 +84,10 @@ public:
     return this->m_options_map[OPT_CODE_LENGTH].as<int>();
   }
 
+  int logLevel() const override {
+    return this->m_options_map[OPT_LOG_LVL].as<int>();
+  }
+
   int bp_ite() const { return this->m_options_map[OPT_BP_ITE].as<int>(); }
 
   void launchProgram() {
@@ -88,31 +106,36 @@ public:
 
 ////////////////////////////////////////////////////////////////
 static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
-  srand((unsigned)time(NULL));
+  icov::helpers::rand::init();
 
   try {
+    boost::log::add_common_attributes();
     pg.processCommandLine(argc, argv);
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                        pg.logLevel());
     pg.launchProgram();
   } catch (std::exception &e) {
-    std::cerr << pg.optionsDesc() << std::endl;
-    std::cerr << std::endl
-              << "Error: program execution has stopped prematurely"
-              << std::endl;
-    std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    std::cout << boost::stacktrace::stacktrace();
+    ICOV_LOG_MSG(info) << pg.optionsDesc() << std::endl;
+    ICOV_LOG_MSG(fatal) << std::endl
+                        << "Error: program execution has stopped prematurely"
+                        << std::endl;
+    ICOV_LOG_MSG(fatal) << boost::current_exception_diagnostic_information()
+                        << std::endl;
+#ifdef ICOV_CORE_STACKTRACE_ENABLED
+    ICOV_LOG_MSG(fatal) << boost::stacktrace::stacktrace();
 #endif
-    return 1;
+    return boost::system::errc::interrupted;
   } catch (...) {
-    std::cerr << pg.optionsDesc() << std::endl;
-    std::cerr << "Fatal error" << std::endl;
-    std::cerr << std::endl
-              << boost::current_exception_diagnostic_information() << std::endl;
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    std::cout << boost::stacktrace::stacktrace();
+    ICOV_LOG_MSG(info) << pg.optionsDesc() << std::endl;
+    ICOV_LOG_MSG(fatal) << "Fatal error" << std::endl;
+    ICOV_LOG_MSG(fatal) << std::endl
+                        << boost::current_exception_diagnostic_information()
+                        << std::endl;
+#ifdef ICOV_CORE_STACKTRACE_ENABLED
+    ICOV_LOG_MSG(fatal) << boost::stacktrace::stacktrace();
 #endif
-    return 2;
+    return boost::system::errc::interrupted;
   }
 
-  return 0;
+  return boost::system::errc::success;
 }

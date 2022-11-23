@@ -19,6 +19,8 @@ template <class Matrix> class InteractiveCoder {
   using LLRProvider_sp = std::shared_ptr<LLRProvider>;
 
 public:
+  static struct t_params { bool CheckBitplaneEncoding; } params;
+
   InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp,
                    ISyndromeManager *syndromeMgr, LLRProvider *llrProvider)
       : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),

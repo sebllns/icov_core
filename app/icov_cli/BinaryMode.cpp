@@ -121,9 +121,9 @@ void BinaryMode::write_results() {
     time[i] /= m_nite;
   }
 
-  icov::DebugTools::write_vector("pcrossover", m_pcrossover, '\n');
-  icov::DebugTools::write_vector("rate", rate, '\n');
-  icov::DebugTools::write_vector("numerrors", numerrors, '\n');
-  icov::DebugTools::write_vector("encode_time", time, '\n');
-  icov::DebugTools::write_vector("decode_time", decoding_time, '\n');
+  DebugTools::write_vector("pcrossover", m_pcrossover, '\n');
+  DebugTools::write_vector("rate", rate, '\n');
+  DebugTools::write_vector("numerrors", numerrors, '\n');
+  DebugTools::write_vector("encode_time", time, '\n');
+  DebugTools::write_vector("decode_time", decoding_time, '\n');
 }

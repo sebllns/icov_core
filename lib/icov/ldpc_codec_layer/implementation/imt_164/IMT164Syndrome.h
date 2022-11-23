@@ -98,7 +98,8 @@ public:
   virtual void init_accumulation(const BitVec &source_x) override;
 
   virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
-                              const LLRProvider &llr_provider) override;
+                              const LLRProvider &llr_provider,
+                              const BitVec &src) override;
 
   virtual void compute_deacc(Syndrome &o_syndrome, const Syndrome &acc_syndrome,
                              int numcode, LLRProvider &llr_provider) override;

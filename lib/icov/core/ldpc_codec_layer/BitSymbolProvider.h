@@ -71,7 +71,7 @@ public:
 
   bool pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0,
             float &p1, float &p) const;
-  float pqks(bool negative, int yk) const;
+  float pqks(int yk) const;
 
   const Bitplanes &src_bits() const { return m_src_bits; }
   //  const Bitplanes &si_bits() const { return m_si_bits; }

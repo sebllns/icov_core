@@ -200,12 +200,12 @@ void CheckMode::run() {
         v_acc = getMappingVector(getNextLevel(m_src.rows()));
     }
 
-    auto src = lp->initSrcRand();
+    auto src = lp->initSrcRand(m_coder->get_n());
     stored_syndrome.resize(0);
     decoded_syndrome.resize(0);
 
     sm->init_accumulation(src);
-    sm->compute_stored(stored_syndrome, numcode, *lp);
+    sm->compute_stored(stored_syndrome, numcode, *lp, src);
     if ((int)stored_syndrome.size() != row_count) {
       BOOST_THROW_EXCEPTION(
           std::runtime_error("Stored syndrome bad size: " +

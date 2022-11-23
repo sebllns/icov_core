@@ -191,9 +191,9 @@ void SymboleMode::write_results(const std::string &sequence_name,
 
   result_file << "# actual rate" << std::endl;
   for (auto &si : numcodes) {
-    for (auto &bp_rate : si) {
+    for (auto &bp_numcode : si) {
       result_file << std::fixed << std::setw(7) << std::setprecision(6)
-                  << std::setfill('0') << bp_rate << " ";
+                  << std::setfill('0') << m_coder->getRate(bp_numcode) << " ";
     }
     result_file << std::endl;
   }
@@ -263,7 +263,6 @@ void SymboleMode::process_input_list(const std::string &file) {
             fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
 
         process_input_file(seq_path.string());
-        //        write_results(sequence_name);
       } catch (...) {
         std::cerr << "Error: Could not process sequence file " << sequence_name
                   << std::endl;
@@ -367,7 +366,7 @@ void SymboleMode::process_input_file(const std::string &file) {
 //  // check zmin = xmin - ymax
 
 //  if (DebugTools::debug_trace_enabled)
-//    DebugTools::logFile << "\t zmin=" << z_min << " zmax=" << z_max
+//   ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
 //                        << std::endl;
 
 //  if (enable_z_quantization) {
@@ -376,16 +375,16 @@ void SymboleMode::process_input_file(const std::string &file) {
 //    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
 //    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
 //    if (DebugTools::debug_trace_enabled)
-//      DebugTools::logFile << "\t After quantization zmin=" << z_min
+//     ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
 //                          << " zmax=" << z_max << std::endl;
 //  }
 
 //  if (DebugTools::debug_trace_enabled)
-//    DebugTools::logFile << "\t q=" << q << std::endl;
+//   ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
 //  if (enable_q_quantization) {
 //    q = q_values[icov::helpers::maths::quantize(q, q_values)];
 //    if (DebugTools::debug_trace_enabled)
-//      DebugTools::logFile << "\t After quantization q=" << q << std::endl;
+//     ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
 //  }
 
 //  // y_min = min(Y[k], 0<=k<N)

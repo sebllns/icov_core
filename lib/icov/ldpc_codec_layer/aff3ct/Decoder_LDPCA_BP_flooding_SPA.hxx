@@ -4,6 +4,7 @@
 #include "Decoder_LDPCA_BP_flooding_SPA.hpp"
 #include "Tools/Exception/exception.hpp"
 #include "helpers.h"
+#include "tools/DebugTools.h"
 #include <cmath>
 #include <limits>
 #include <mipp.h>
@@ -247,7 +248,12 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode_single_ite(
       auto val = prod;
 
       if (den == 0) {
-        std::cerr << "WARNING den is zero and prod is " << prod << std::endl;
+        // FIXME: It seems there is a division by zero in some cases
+        //#if ICOV_CORE_DEBUG_TRACE_ENABLED
+        //        ICOV_LOG_MSG(trace) << "WARNING den is zero and prod is " <<
+        //        prod
+        //                                  << std::endl;
+        //#endif
         den = std::numeric_limits<R>::epsilon();
       }
 
