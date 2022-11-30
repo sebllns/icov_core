@@ -252,8 +252,8 @@ void icov::video::EncodingStructure::
     UInt icuXPosTopLeft = divresult.rem;
     UInt icuYPosTopLeft = divresult.quot;
 
-    std::cout << "create ICU #" << icuIndex << " (" << icuXPosTopLeft << ", "
-              << icuYPosTopLeft << ")" << std::endl;
+    ICOV_LOG(trace) << "create ICU #" << icuIndex << " (" << icuXPosTopLeft
+                    << ", " << icuYPosTopLeft << ")";
 
     Area icuLumaArea =
         Area(icuXPosTopLeft * icuWidth_luma + sourceMargin_x_luma,

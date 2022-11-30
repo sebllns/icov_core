@@ -18,33 +18,33 @@ ProgramController::ProgramController() {
 
 void ProgramController::launchMode(const std::string &mode_id) {
   if (mode_id == "binary") {
-    std::cout << "binary mode started" << std::endl;
+    ICOV_LOG(debug) << "binary mode started";
     BinaryMode mode(m_options_map);
     mode.run();
-    std::cout << "end binary\n";
+    ICOV_LOG(debug) << "end binary\n";
   } else if (mode_id == "symbole") {
-    std::cout << "symbole mode started" << std::endl;
+    ICOV_LOG(debug) << "symbole mode started";
     SymboleMode mode(m_options_map);
     mode.run();
-    std::cout << "end symbole\n";
+    ICOV_LOG(debug) << "end symbole\n";
   } else if (mode_id == "export") {
-    std::cout << "export mode started" << std::endl;
+    ICOV_LOG(debug) << "export mode started";
     ExportMode mode(m_options_map, codeLength(), dataPath());
     mode.run();
-    std::cout << "end export\n";
+    ICOV_LOG(debug) << "end export\n";
   } else if (mode_id == "check") {
-    std::cout << "check mode started" << std::endl;
+    ICOV_LOG(debug) << "check mode started";
     CheckMode mode(m_options_map, dataPath());
     mode.run();
-    std::cout << "end check\n";
+    ICOV_LOG(debug) << "end check\n";
   } else if (mode_id == "encode") {
-    std::cout << "encode mode started" << std::endl;
+    ICOV_LOG(debug) << "encode mode started";
     EncodeMode mode(m_options_map);
     mode.run();
-    std::cout << "end encode\n";
+    ICOV_LOG(debug) << "end encode\n";
   } else {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }
 
-  std::cout << "end program\n";
+  ICOV_LOG(debug) << "end program\n";
 }

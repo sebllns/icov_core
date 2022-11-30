@@ -48,127 +48,115 @@
  *****************************************************************************/
 #include "PcmData.h"
 
+#include "helpers.h"
+
 #include <fstream>
 #include <sstream>
 
-void PcmData::read_matrix(const std::string &filepath, AffMatrix &h)
-{
-    std::ifstream file(filepath);
+void PcmData::read_matrix(const std::string &filepath, AffMatrix &h) {
+  std::ifstream file(filepath);
 
-    if (!file.is_open())
-    {
-        std::stringstream message;
-        message << "'filename' couldn't be opened ('filename' = " <<  filepath << ").";
-        throw std::runtime_error(message.str());
+  if (!file.is_open()) {
+    std::stringstream message;
+    message << "'filename' couldn't be opened ('filename' = " << filepath
+            << ").";
+    throw std::runtime_error(message.str());
+  }
+
+  int n_rows = 0;
+  int n_cols = 0;
+
+  file >> n_rows;
+  file >> n_cols;
+
+  if ((int)h.get_n_rows() != n_rows || (int)h.get_n_cols() != n_cols) {
+    h.self_resize(n_rows, n_cols, aff3ct::tools::Matrix::Origin::TOP_LEFT);
+  }
+
+  for (int i = 0; i < n_rows; i++) {
+    int n_ones = 0;
+    file >> n_ones;
+
+    for (int j = 0; j < n_ones; j++) {
+      int one_col = 0;
+      file >> one_col;
+      h.add_connection(i, one_col - 1);
     }
+  }
 
-    int n_rows  = 0;
-    int n_cols = 0;
-
-    file >> n_rows;
-    file >> n_cols;
-
-    if((int)h.get_n_rows() != n_rows || (int)h.get_n_cols() != n_cols)
-    {
-        h.self_resize(n_rows, n_cols, aff3ct::tools::Matrix::Origin::TOP_LEFT);
-    }
-
-    for(int i = 0; i < n_rows ; i++)
-    {
-        int n_ones = 0;
-        file >> n_ones;
-
-        for(int j = 0 ; j < n_ones ; j++)
-        {
-            int one_col = 0;
-            file >> one_col;
-            h.add_connection(i, one_col - 1);
-        }
-    }
-
-    file.close();
+  file.close();
 }
 
-void PcmData::read_matrix(const std::string &filepath, icov::FastMatrix<bool> &h)
-{
-    std::ifstream file(filepath);
+void PcmData::read_matrix(const std::string &filepath,
+                          icov::FastMatrix<bool> &h) {
 
-    if (!file.is_open())
-    {
-        std::stringstream message;
-        message << "'filename' couldn't be opened ('filename' = " <<  filepath << ").";
-        throw std::runtime_error(message.str());
+  icov::helpers::path::assert_file_exists(filepath);
+
+  std::ifstream file(filepath);
+
+  if (!file.is_open()) {
+    std::stringstream message;
+    message << "'filename' couldn't be opened ('filename' = " << filepath
+            << ").";
+    throw std::runtime_error(message.str());
+  }
+
+  int n_rows = 0;
+  int n_cols = 0;
+
+  file >> n_cols;
+  file >> n_rows;
+
+  if ((int)h.rows() != n_rows || (int)h.cols() != n_cols) {
+    h = icov::FastMatrix<bool>(n_rows, n_cols);
+  }
+
+  for (int i = 0; i < n_cols; i++) {
+    int n_ones = 0;
+    file >> n_ones;
+
+    for (int j = 0; j < n_ones; j++) {
+      int one_col = 0;
+      file >> one_col;
+      h.at(one_col - 1, i) = 1;
     }
+  }
 
-    int n_rows  = 0;
-    int n_cols = 0;
-
-    file >> n_cols;
-    file >> n_rows;
-
-    if((int)h.rows() != n_rows || (int)h.cols() != n_cols)
-    {
-        h = icov::FastMatrix<bool>(n_rows, n_cols);
-    }
-
-    for(int i = 0; i < n_cols ; i++)
-    {
-        int n_ones = 0;
-        file >> n_ones;
-
-        for(int j = 0 ; j < n_ones ; j++)
-        {
-            int one_col = 0;
-            file >> one_col;
-            h.at(one_col - 1, i) = 1;
-        }
-    }
-
-    file.close();
+  file.close();
 }
 
-void PcmData::read_mapping_vector(const std::string &filepath, icov::FastMatrix<uint16_t> &m)
-{
-    std::ifstream file(filepath);
+void PcmData::read_mapping_vector(const std::string &filepath,
+                                  icov::FastMatrix<uint16_t> &m) {
 
-    std::cout << "read_mapping_vector " << filepath << std::endl;;
+  icov::helpers::path::assert_file_exists(filepath);
 
+  std::ifstream file(filepath);
 
-    if (!file.is_open())
-    {
-        std::stringstream message;
-        message << "'filename' couldn't be opened ('filename' = " <<  filepath << ").";
-        throw std::runtime_error(message.str());
+  ICOV_LOG(info) << "Read vector at " << filepath;
+
+  icov::helpers::assert::check(
+      file.is_open(),
+      "'filename' couldn't be opened ('filename' = " + filepath + ").");
+
+  int n_rows = 0;
+  int n_cols = 0;
+
+  file >> n_rows;
+  file >> n_cols;
+
+  ICOV_LOG(debug) << "Size: " << n_cols << ", " << n_rows;
+
+  m = icov::FastMatrix<uint16_t>(n_rows, n_cols);
+
+  ICOV_LOG(trace) << "READ";
+  for (int i = 0; i < n_rows; i++) {
+    ICOV_LOG(trace) << "ROW " << i;
+    for (int j = 0; j < n_cols; j++) {
+      uint16_t value = 0;
+      file >> value;
+      m.at(i, j) = value - 1;
     }
-
-    int n_rows  = 0;
-    int n_cols = 0;
-
-    file >> n_rows;
-    file >> n_cols;
-
-    std::cout <<"V "<< n_cols << ", " << n_rows << std::endl;
-
-
-    m = icov::FastMatrix<uint16_t>(n_rows, n_cols);
-
-    std::cout << "read\n";
-
-
-    for(int i = 0; i < n_rows ; i++)
-    {
-        std::cout << "ROW " <<i << std::endl;
-        for(int j = 0 ; j < n_cols ; j++)
-        {
-            uint16_t value = 0;
-            file >> value;
-            m.at(i, j) = value - 1;
-           // std::cout << i << ", " << j << std::endl;
-        }
-    }
-
-    std::cout << "end\n";
-    file.close();
+  }
+  ICOV_LOG(trace) << "END";
+  file.close();
 }
-
-

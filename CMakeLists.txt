@@ -19,8 +19,13 @@ set(ICOV_WITH_CLANG_TIDY OFF CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
 set(ICOV_USE_ADDRESS_SANITIZER ON CACHE BOOL "Use Sanitizer")
 set(ICOV_BYPASS_SETUP OFF CACHE BOOL "In case you REALLY want to bypass the default setup. May cause severe issues.")
 set(ICOV_LOG_LEVEL 2 CACHE STRING "Min Log Level")
+
+#define some flags for macros here
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 option(ICOV_CORE_STACKTRACE_ENABLED "Enable the stacktrace" OFF)
+option(ICOV_CHECK_BITPLANE_ENCODING_ENABLED "Enable the bitplane decoding check right after decoding\
+    (use it to debug as it impacts the performances)" OFF)
+option(ICOV_CONSOLE_COLOR_ENABLED "Enable color formatting of the console" OFF)
 
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(ICOV_BUILD_TESTS ON CACHE BOOL "Force ICOV tests to be built. ")
@@ -137,11 +142,14 @@ message("\n")
 message(STATUS "[INFO] Checking Boost support...")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
+
 # Removed because of issue on windows
 #set(Boost_USE_STATIC_RUNTIME OFF)
+
 #added this definition to make BOOST LOG working, see URL below in case of issue:
 #https://github.com/boostorg/log/issues/46
 add_definitions(-DBOOST_LOG_DYN_LINK)
+
 find_package(Boost 1.70.0 
     COMPONENTS
     program_options
@@ -226,6 +234,14 @@ if(ICOV_CORE_STACKTRACE_ENABLED)
         message(DEBUG "Linking with ${CMAKE_DL_LIBS}")
         link_libraries(${CMAKE_DL_LIBS})
     endif()
+endif()
+
+if(ICOV_CHECK_BITPLANE_ENCODING_ENABLED)
+    add_compile_definitions("ICOV_CHECK_BITPLANE_ENCODING_ENABLED")
+endif()
+
+if(ICOV_CONSOLE_COLOR_ENABLED)
+    add_compile_definitions("ICOV_CONSOLE_COLOR_ENABLED")
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})

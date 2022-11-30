@@ -60,12 +60,10 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 
   //    CoderFactory::create_coder_yuv(args, m_ycoder, m_uvcoder);
 
-  std::cout << boost::format("%-15s %-s") % "Input File:" %
-                   m_parameters.inputFile
-            << std::endl;
-  std::cout << boost::format("%-15s %-s ") % "Output File:" %
-                   m_parameters.encodedFile
-            << std::endl;
+  ICOV_LOG(info) << boost::format("%-15s %-s") % "Input File:" %
+                        m_parameters.inputFile;
+  ICOV_LOG(info) << boost::format("%-15s %-s ") % "Output File:" %
+                        m_parameters.encodedFile;
 }
 
 void EncodeMode::run() {
@@ -81,7 +79,7 @@ void EncodeMode::run() {
   IcovAccessBlockManager icov_accessblockMgr;
 
   BlockPrediction icov_blockPrediction;
-  std::cout << "encode\n";
+  ICOV_LOG(debug) << "Start encoding";
   m_encoder->encode(output, *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
   output.close();

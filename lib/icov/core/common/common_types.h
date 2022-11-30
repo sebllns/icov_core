@@ -132,12 +132,12 @@ public:
 
   FastMatrix(size_t rows, size_t cols)
       : FastArray<T>(rows * cols), m_rows(rows), m_cols(cols) {
-    std::cout << "new " << this->m_size << std::endl;
+    // std::cout << "new " << this->m_size << std::endl;
   }
 
   FastMatrix(const FastMatrix &f)
       : FastArray<T>(f.m_rows * f.m_cols), m_rows(f.m_rows), m_cols(f.m_cols) {
-    std::cout << "new copy " << this->m_size << std::endl;
+    //    std::cout << "new copy " << this->m_size << std::endl;
     std::memcpy(this->m_data, f.m_data, this->m_size * sizeof(T));
   }
 
@@ -154,8 +154,8 @@ public:
     this->m_data = new T[this->m_capacity];
     std::memcpy(this->m_data, f.m_data, this->m_size * sizeof(T));
 
-    std::cout << "copy " << this->m_capacity << " " << this->m_size
-              << std::endl;
+    // std::cout << "copy " << this->m_capacity << " " << this->m_size
+    //        << std::endl;
 
     return *this;
   }

@@ -136,8 +136,8 @@ struct CoderParameters {
                                    "Doping numcode must be less than " +
                                        std::to_string(max_n));
     } else {
-      std::cout << "Warning: numcodes file not found at " << path << std::endl
-                << "Creating default numcodes vector." << std::endl;
+      ICOV_LOG(warning) << "Numcodes file not found at " << path;
+      ICOV_LOG(warning) << "Creating default numcodes vector.";
 
       int max_doping_n = std::floor(1.5 * n);
       numcodes_v.resize(max_doping_n - min_n + 1);

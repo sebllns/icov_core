@@ -27,19 +27,38 @@ public:
    */
   static SymboleVec compute_symboles(const Bitplanes &input);
 
-  static const BitSymbolProvider
-  init_bsp(const SymboleVec &src_symbols, const SIVec &side_info, int lx,
-           bool enable_z_quantization,
-           const std::vector<float> &q_values = std::vector<float>());
+  static void inject_bitplane(SymboleVec &output, const BitVec &input,
+                              int bp_shift);
 
-  BitSymbolProvider(int z_min, int z_max, int y_min, int y_max, float q, int l);
+  ///
+  /// \brief BitSymbolProvider
+  /// \param n
+  ///
+  BitSymbolProvider(int n);
 
+  ///
+  /// \brief BitSymbolProvider ctor used in encode mode
+  /// \param src_symbols
+  ///
   BitSymbolProvider(const SymboleVec &src_symbols);
 
+  ///
+  /// \brief set_si for encode mode: set SI and update Pz distribution
+  /// parameters \param si \param enable_z_quantization \param q_values
+  ///
   void set_si(const SIVec &si, bool enable_z_quantization,
               const std::vector<float> &q_values = std::vector<float>());
 
   void set_si(const SIVec &si, const params &p);
+
+  ///
+  /// \brief set_si for decoding
+  /// \param si
+  /// \param z_min
+  /// \param z_max
+  /// \param q
+  ///
+  void set_si(const SIVec &si, int z_min, int z_max, float q, int l);
 
   float z_min() const;
   float z_max() const;
@@ -62,11 +81,6 @@ public:
   float pz(int zmin, int zmax) const;
 
   // L
-  int z_binary_length() const;
-
-  int x_min_estimated() const;
-  int x_max_estimated() const;
-
   int x_binary_length() const;
 
   bool pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0,
@@ -74,26 +88,30 @@ public:
   float pqks(int yk) const;
 
   const Bitplanes &src_bits() const { return m_src_bits; }
-  //  const Bitplanes &si_bits() const { return m_si_bits; }
 
   const SymboleVec &src_symboles() const { return m_src_symboles; }
   const SIVec &si_symboles() const { return m_si_symboles; }
 
-  //  Bitplanes &src() { return m_src; }
-  //  Bitplanes &si() { return m_si; }
+  void injectBitplane(uint i, BitVec x);
 
 private:
-  int m_z_min, m_z_max;
-  int m_y_min, m_y_max;
-  // q
-  float m_q0;
+  struct Pz {
+    int zmin, zmax, z0;
+    float q0, q1;
+
+    Pz() = default;
+
+    Pz(int pzmin, int pzmax, float pq) : zmin(pzmin), zmax(pzmax), q0(pq) {
+      q1 = (zmin == zmax) ? 0.0 : ((1 - q0) / (zmax - zmin));
+      z0 = (zmin > 0) ? zmin : (zmax < 0 ? zmax : 0);
+    }
+  } m_pz_params;
 
   int m_l;
 
   SymboleVec m_src_symboles;
   SIVec m_si_symboles;
   Bitplanes m_src_bits;
-  //  Bitplanes m_si_bits;
 };
 } // namespace icov
 #endif // BITSYMBOLPROVIDER_H

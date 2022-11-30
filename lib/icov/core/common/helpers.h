@@ -62,6 +62,11 @@
 
 #define stringify(name) #name
 
+// two macros ensures any macro passed will
+// be expanded before being stringified
+#define STRINGIZE_DETAIL(x) #x
+#define STRINGIZE(x) STRINGIZE_DETAIL(x)
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -76,6 +81,28 @@
 #include "common.h"
 #include <boost/exception/all.hpp>
 #include <boost/stacktrace.hpp>
+
+#define CONSOLE_FG_RED 91
+#define CONSOLE_FG_GREEN 92
+#define CONSOLE_FG_YELLOW 93
+#define CONSOLE_FG_BLUE 94
+#define CONSOLE_FG_DEFAULT 39
+#define CONSOLE_BG_RED 41
+#define CONSOLE_BG_GREEN 42
+#define CONSOLE_BG_BLUE 44
+#define CONSOLE_BG_DEFAULT 49
+#define CONSOLE_BOLD 1
+#define CONSOLE_DIM 2
+#define CONSOLE_UNDERLINE 4
+#define CONSOLE_HIGHLIGHT 7
+#define CONSOLE_HIDDEN 8
+#define CONSOLE_DEFAULT 0
+
+#ifdef ICOV_CONSOLE_COLOR_ENABLED
+#define CONSOLE_FORMAT(fmt) "\033[" STRINGIZE(fmt) "m"
+#else
+#define CONSOLE_FORMAT(fmt) ""
+#endif
 
 namespace boost {
 inline void assertion_failed_msg(char const *expr, char const *msg,
@@ -167,14 +194,37 @@ template <class E> void throw_with_trace(const E &e) {
 #define ICOV_THROW_EXCEPTION(e) BOOST_THROW_EXCEPTION(e)
 #endif
 
+#define TO_STR(MAC)                                                            \
+  ([=] {                                                                       \
+    std::stringstream ss;                                                      \
+    ss << MAC;                                                                 \
+    return std::string(ss.str());                                              \
+  })()
+
+#define CURRENT_LOCATION std::source_location::current()
+
+#define ICOV_DEBUG_HEADER(msg)                                                 \
+  TO_STR(CONSOLE_FORMAT(CONSOLE_BOLD)                                          \
+         << "In file " << __FILE__ << ":" << __LINE__ << " "                   \
+         << CONSOLE_FORMAT(CONSOLE_FG_RED) << msg                              \
+         << CONSOLE_FORMAT(CONSOLE_DEFAULT))
+
+//#define ICOV_DEBUG_HEADER(msg)                                                 \
+//  TO_STR("In file " << CONSOLE_FORMAT(CONSOLE_BOLD) << __FILE__ << ":"         \
+//                    << __LINE__ << " " << CONSOLE_FORMAT(CONSOLE_DEFAULT)      \
+//                    << CONSOLE_FORMAT(CONSOLE_FG_RED) << msg                   \
+//                    << CONSOLE_FORMAT(CONSOLE_DEFAULT))
+
 #define ICOV_THROW_LOGICAL_EXCEPTION(msg)                                      \
-  ICOV_THROW_EXCEPTION(std::logic_error(msg))
+  ICOV_THROW_EXCEPTION(std::logic_error(ICOV_DEBUG_HEADER(msg)))
 #define ICOV_THROW_RUNTIME_EXCEPTION(msg)                                      \
-  ICOV_THROW_EXCEPTION(std::runtime_error(msg))
+  ICOV_THROW_EXCEPTION(std::runtime_error(ICOV_DEBUG_HEADER(msg)))
 #define ICOV_THROW_INVALID_ARGUMENT(msg)                                       \
-  ICOV_THROW_EXCEPTION(std::invalid_argument(msg))
-#define ICOV_THROW_OUT_OF_RANGE(msg) ICOV_THROW_EXCEPTION(std::range_error(msg))
-#define ICOV_THROW_NULLPTR(msg) ICOV_THROW_EXCEPTION(std::invalid_argument(msg))
+  ICOV_THROW_EXCEPTION(std::invalid_argument(ICOV_DEBUG_HEADER(msg)))
+#define ICOV_THROW_OUT_OF_RANGE(msg)                                           \
+  ICOV_THROW_EXCEPTION(std::range_error(ICOV_DEBUG_HEADER(msg)))
+#define ICOV_THROW_NULLPTR(msg)                                                \
+  ICOV_THROW_EXCEPTION(std::invalid_argument(ICOV_DEBUG_HEADER(msg)))
 
 } // namespace exception
 
@@ -210,9 +260,11 @@ template <typename T> void range(T val, T min, T max) {
     BOOST_THROW_EXCEPTION(std::invalid_argument("Required min <= max"));
 
   if (val < min || val > max)
-    BOOST_THROW_EXCEPTION(std::out_of_range(
-        "VALUE=" + std::to_string(val) + " while the acceptable range is [" +
-        std::to_string(min) + ", " + std::to_string(max) + "]"));
+    BOOST_THROW_EXCEPTION(std::out_of_range("VALUE=" + std::to_string(val) +
+                                            " while the acceptable range "
+                                            "is [" +
+                                            std::to_string(min) + ", " +
+                                            std::to_string(max) + "]"));
 }
 
 void not_null(const void *p);

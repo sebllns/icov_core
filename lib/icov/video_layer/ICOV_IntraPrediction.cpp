@@ -751,11 +751,11 @@ void icov::video::IntraPrediction::xPredIntraPlanar(const CPelBuf &pSrc,
   const UInt offset = width * height;
 
   // Get left and above reference column and row
-  for (Int k = 0; k < width + 1; k++) {
+  for (UInt k = 0; k < width + 1; k++) {
     topRow[k] = pSrc.at(k + 1, 0);
   }
 
-  for (Int k = 0; k < height + 1; k++) {
+  for (UInt k = 0; k < height + 1; k++) {
     leftColumn[k] = pSrc.at(0, k + 1);
   }
 
@@ -763,29 +763,30 @@ void icov::video::IntraPrediction::xPredIntraPlanar(const CPelBuf &pSrc,
   Int bottomLeft = leftColumn[height];
   Int topRight = topRow[width];
 
-  for (Int k = 0; k < width; k++) {
+  for (UInt k = 0; k < width; k++) {
     bottomRow[k] = bottomLeft - topRow[k];
-    topRow[k] = topRow[k] << log2H;
+    topRow[k] = (topRow[k] & 0xffffffff) << log2H;
   }
 
-  for (Int k = 0; k < height; k++) {
+  for (UInt k = 0; k < height; k++) {
     rightColumn[k] = topRight - leftColumn[k];
-    leftColumn[k] = leftColumn[k] << log2W;
+    leftColumn[k] = (leftColumn[k] & 0xffffffff) << log2W;
   }
 
   const UInt finalShift = 1 + log2W + log2H;
   const UInt stride = pDst.stride;
   Pel *pred = pDst.buf;
-  for (Int y = 0; y < height; y++, pred += stride) {
+  for (UInt y = 0; y < height; y++, pred += stride) {
     Int horPred = leftColumn[y];
 
-    for (Int x = 0; x < width; x++) {
+    for (UInt x = 0; x < width; x++) {
       horPred += rightColumn[y];
       topRow[x] += bottomRow[x];
 
       Int vertPred = topRow[x];
-      pred[x] =
-          ((horPred << log2H) + (vertPred << log2W) + offset) >> finalShift;
+      pred[x] = (((horPred & 0xffffffff) << log2H) +
+                 ((vertPred & 0xffffffff) << log2W) + offset) >>
+                finalShift;
     }
   }
 }

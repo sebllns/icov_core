@@ -76,10 +76,10 @@ public:
   icov::bit *accumulated_syndrome;
   std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
 
+  // Doping syndrome is cached
   Syndrome doping_synd;
 
-  //    std::vector<syndrome_cell> syndrome_mapping;
-
+  // Bit order used for doping
   std::vector<size_t> doping_idx;
 
   bool init_rateless;

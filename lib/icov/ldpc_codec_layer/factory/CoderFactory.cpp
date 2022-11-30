@@ -46,8 +46,7 @@ CoderFactory::create_coder(const boost::program_options::variables_map &args) {
     throw std::runtime_error("SyndromeManager was not instantiated");
   }
 
-  std::cout << "Initialization of coder with type = " << coder_type
-            << std::endl;
+  ICOV_LOG(info) << "Initialization of coder with type = " << coder_type;
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(
       ldpca_dec, mp, syndromeMgr, llrProvider);

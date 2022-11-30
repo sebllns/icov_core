@@ -1,5 +1,6 @@
-#ifndef INTERACTIVECODER_H
-#define INTERACTIVECODER_H
+#pragma once
+
+#include "IInteractiveCoder.h"
 
 #include <memory>
 
@@ -12,15 +13,13 @@
 
 namespace icov {
 
-template <class Matrix> class InteractiveCoder {
+template <class Matrix> class InteractiveCoder : public IInteractiveCoder {
   using IMatrixProvider_sp = std::shared_ptr<IMatrixProvider<Matrix>>;
   using IDecoder_sp = std::shared_ptr<IDecoder<Matrix>>;
   using ISyndromeManager_sp = std::shared_ptr<ISyndromeManager>;
   using LLRProvider_sp = std::shared_ptr<LLRProvider>;
 
 public:
-  static struct t_params { bool CheckBitplaneEncoding; } params;
-
   InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp,
                    ISyndromeManager *syndromeMgr, LLRProvider *llrProvider)
       : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),
@@ -40,7 +39,7 @@ public:
 
   ~InteractiveCoder() = default;
 
-  size_t get_n() const;
+  size_t get_n() const override;
 
   Rate getRate(const NumcodeIdx &numcodeIdx) const;
 
@@ -54,9 +53,11 @@ public:
   int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source, uint32_t numcodeMax, uint32_t step);
 
-  void encode(std::vector<SINumcodeIdx> &rates,
-              std::vector<SISyndromes> &syndromes, const std::vector<SIVec> &si,
-              const BitSymbolProvider::params &p, const SymboleVec &src);
+  void encode_symboles(std::vector<SINumcodeIdx> &rates,
+                       std::vector<SISyndromes> &syndromes,
+                       const std::vector<SIVec> &si,
+                       const BitSymbolProvider::params &p,
+                       const SymboleVec &src, bool trace_si = false);
 
   void encode_bitplanes(const BitSymbolProvider &bsp, SINumcodeIdx &rate,
                         SISyndromes &stored_synd);
@@ -67,10 +68,21 @@ public:
 
   void decode(BitVec &o_decoded, NumcodeIdx numcodeIdx,
               const Syndrome &syndrome);
-  void decode_bitplanes(SymboleVec &output, const SINumcodeIdx &numcodes,
-                        const SISyndromes &stored_synd);
 
-  void init_LLR_bitplane(BitSymbolProvider bsp, int bitplane_idx);
+  ///
+  /// \brief decode_symboles
+  /// \param io_bsp BitSymbolProvider that has been previously initialised with
+  /// correct parameters (Q, Zmin, Zmax, lx) \param si \param numcodes \param
+  /// stored_synd
+  ///
+  void decode_symboles(BitSymbolProvider &io_bsp, const SINumcodeIdx &numcodes,
+                       const SISyndromes &stored_synd);
+
+  void decode_bitplane(BitVec &output, int bp_idx, BitSymbolProvider &bsp,
+                       const NumcodeIdx &numcode, const Syndrome &stored_synd);
+
+  void init_LLR_bitplane(const BitSymbolProvider &bsp, int bitplane_idx,
+                         const BitVec &signs, const SymboleVec &predec);
 
   IMatrixProvider_sp matrixProvider() const { return this->m_matrix_provider; }
   IDecoder_sp decoder() const { return this->m_pdecoder; }
@@ -90,5 +102,3 @@ protected:
 } // namespace icov
 
 #include "InteractiveCoder.hpp"
-
-#endif // INTERACTIVECODER_H

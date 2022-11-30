@@ -137,11 +137,11 @@ float maths::wrap(float val, float min, float max) {
 
 void assert::check(bool expr, const std::string &msg) {
   if (!expr)
-    ICOV_THROW_INVALID_ARGUMENT("Assertion is invalid: " + msg);
+    ICOV_THROW_LOGICAL_EXCEPTION("Assertion is invalid: " + msg);
 }
 
 void assert::not_null(const void *p) {
-  if (!p || p == nullptr)
+  if (!p)
     ICOV_THROW_NULLPTR("Nullptr is forbidden");
 }
 

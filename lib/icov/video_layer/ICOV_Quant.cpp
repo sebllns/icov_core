@@ -202,8 +202,8 @@ void icov::video::Quant::dequant(CoeffBuf &piCoef, const CCoeffBuf &piQCoef,
       for (UInt x = 0; x < uiWidth; x++) {
         const TCoeff clipQCoef = TCoeff(Clip3<Intermediate_Int>(
             inputMinimum, inputMaximum, piQCoef_rowPtr[x]));
-        const Intermediate_Int iCoeffQ = (Intermediate_Int(clipQCoef) * scale)
-                                         << leftShift;
+        const Intermediate_Int iCoeffQ =
+            ((Intermediate_Int(clipQCoef) * scale) & 0xffffffff) << leftShift;
 
         piCoef_rowPtr[x] = TCoeff(Clip3<Intermediate_Int>(
             transformMinimum, transformMaximum, iCoeffQ));

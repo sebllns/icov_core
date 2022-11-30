@@ -97,7 +97,7 @@ void IMT164SyndromeManager::compute_doping_order(
     const LLRProvider &llr_provider, Syndrome &syndrome) {
   if (!init_rateless)
     return;
-  // std::cout << "compute doping" << std::endl;
+  ICOV_LOG(debug) << "compute doping";
   Aff3ctDecoder dec(0);
   BitVec o_decoded(this->get_n());
   // int numcode = this->get_m_max();
@@ -108,7 +108,7 @@ void IMT164SyndromeManager::compute_doping_order(
 
 void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
   // DebugTools::write_vector("./src.txt", source_x, ' ');
-  // std::cout << "init_accumulation" << std::endl;
+  ICOV_LOG(trace) << __func__;
   reset_doping();
 
   if (accumulated_syndrome == nullptr) {
@@ -157,6 +157,7 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
     throw std::runtime_error("offset != n/2");
   }
 
+  // init cache for doping
   doping_synd = Syndrome(get_m_max());
   for (int i = 0; i < get_m_max(); i++) {
     // compute syndrome = h * x
@@ -216,7 +217,7 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
   if (m > get_m_max()) {
 
 #if ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_LOG_MSG(trace) << "doping" << std::endl;
+    ICOV_LOG(trace) << "doping";
 #endif
 
     // order the llr values for rate = 0.5

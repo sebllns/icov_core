@@ -303,8 +303,8 @@ void SymboleMode::process_input_file(const std::string &file) {
   std::vector<SISyndromes> syndromes;
   BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
 
-  m_coder->encode(numcodes, syndromes, side_infos, bsp_params,
-                  tsi.get_source());
+  m_coder->encode_symboles(numcodes, syndromes, side_infos, bsp_params,
+                           tsi.get_source(), true);
   write_results(fs::path(file).stem().string(), numcodes);
 }
 
@@ -366,7 +366,7 @@ void SymboleMode::process_input_file(const std::string &file) {
 //  // check zmin = xmin - ymax
 
 //  if (DebugTools::debug_trace_enabled)
-//   ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
+//   ICOV_LOG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
 //                        << std::endl;
 
 //  if (enable_z_quantization) {
@@ -375,16 +375,16 @@ void SymboleMode::process_input_file(const std::string &file) {
 //    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
 //    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
 //    if (DebugTools::debug_trace_enabled)
-//     ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
+//     ICOV_LOG(trace) << "\t After quantization zmin=" << z_min
 //                          << " zmax=" << z_max << std::endl;
 //  }
 
 //  if (DebugTools::debug_trace_enabled)
-//   ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
+//   ICOV_LOG(trace) << "\t q=" << q << std::endl;
 //  if (enable_q_quantization) {
 //    q = q_values[icov::helpers::maths::quantize(q, q_values)];
 //    if (DebugTools::debug_trace_enabled)
-//     ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
+//     ICOV_LOG(trace) << "\t After quantization q=" << q << std::endl;
 //  }
 
 //  // y_min = min(Y[k], 0<=k<N)

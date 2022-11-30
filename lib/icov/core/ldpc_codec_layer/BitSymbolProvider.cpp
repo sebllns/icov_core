@@ -57,80 +57,32 @@ SymboleVec BitSymbolProvider::compute_symboles(const Bitplanes &src_bits) {
   return symboles;
 }
 
-const BitSymbolProvider BitSymbolProvider::init_bsp(
-    const SymboleVec &src_symbols, const SIVec &side_info, int lx,
-    bool enable_z_quantization, const std::vector<float> &q_values) {
+void BitSymbolProvider::inject_bitplane(SymboleVec &output, const BitVec &input,
+                                        int shift) {
 
-  ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
-                  "Src and SI lengths are not equal")
+  ICOV_ASSERT_MSG(output.size() == input.size(),
+                  "Vectors must be same size for this operation");
 
-  bool enable_q_quantization = q_values.size() > 0;
-  size_t n = src_symbols.size();
+  std::cout << "shift=" << shift << std::endl;
 
-  // init intrinsic SI parameters
-  float q = 0.0;
-  int z_min = 999999;
-  int z_max = -999999;
-
-  for (size_t i = 0; i < n; i++) {
-    int z = src_symbols[i] - side_info[i];
-
-    // q = N0/N
-    if (z == 0) {
-      q += 1.0 / n;
+  for (size_t i = 0; i < output.size(); ++i) {
+    if (shift < 0) /*apply sign bitplane*/
+    {
+      if (input[i])
+        output[i] *= -1;
+    } else {
+      output[i] = (output[i] << shift) + input[i];
     }
-
-    // z_min = min(Z[k], 0<=k<N)
-    if (z < z_min)
-      z_min = z;
-
-    // z_max = max(Z[k], 0<=k<N)
-    if (z > z_max)
-      z_max = z;
   }
-
-  // check zmax = xmax - ymin
-  // check zmin = xmin - ymax
-
-  if (DebugTools::debug_trace_enabled)
-    ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
-                        << std::endl;
-
-  if (enable_z_quantization) {
-    int z_step = 16;
-    int z_limit = 1024;
-    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
-    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
-    if (DebugTools::debug_trace_enabled)
-      ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
-                          << " zmax=" << z_max << std::endl;
-  }
-
-  if (DebugTools::debug_trace_enabled)
-    ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
-  if (enable_q_quantization) {
-    q = q_values[icov::helpers::maths::quantize(q, q_values)];
-    if (DebugTools::debug_trace_enabled)
-      ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
-  }
-
-  // y_min = min(Y[k], 0<=k<N)
-  int y_min = *std::min_element(side_info.begin(), side_info.end());
-
-  // y_max = max(Y[k], 0<=k<N)
-  int y_max = *std::max_element(side_info.begin(), side_info.end());
-
-  return BitSymbolProvider(z_min, z_max, y_min, y_max, q, lx);
 }
 
-BitSymbolProvider::BitSymbolProvider(int z_min, int z_max, int y_min, int y_max,
-                                     float q, int l)
-    : m_z_min(z_min), m_z_max(z_max), m_y_min(y_min), m_y_max(y_max), m_q0(q),
-      m_l(l) {}
+BitSymbolProvider::BitSymbolProvider(int n)
+    : m_src_symboles(n, 0),
+      m_src_bits(1 /*we need to save only the sign bitplane to decode*/,
+                 BitVec(n, 0)) {}
 
 BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
-    : m_z_min(0), m_z_max(0), m_y_min(0), m_y_max(0), m_q0(0), m_l(0),
-      m_src_symboles(src_symbols),
+    : m_l(0), m_src_symboles(src_symbols),
       m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {
   m_l = m_src_bits.size();
 }
@@ -173,8 +125,7 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
   // check zmin = xmin - ymax
 
   if (DebugTools::debug_trace_enabled)
-    ICOV_LOG_MSG(trace) << "\t zmin=" << z_min << " zmax=" << z_max
-                        << std::endl;
+    ICOV_LOG(trace) << "\t zmin=" << z_min << " zmax=" << z_max << std::endl;
 
   if (enable_z_quantization) {
     int z_step = 16;
@@ -182,59 +133,50 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
     z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
     z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
     if (DebugTools::debug_trace_enabled)
-      ICOV_LOG_MSG(trace) << "\t After quantization zmin=" << z_min
-                          << " zmax=" << z_max << std::endl;
+      ICOV_LOG(trace) << "\t After quantization zmin=" << z_min
+                      << " zmax=" << z_max << std::endl;
   }
 
   if (DebugTools::debug_trace_enabled)
-    ICOV_LOG_MSG(trace) << "\t q=" << q << std::endl;
+    ICOV_LOG(trace) << "\t q=" << q << std::endl;
   if (enable_q_quantization) {
     q = q_values[icov::helpers::maths::quantize(q, q_values)];
     if (DebugTools::debug_trace_enabled)
-      ICOV_LOG_MSG(trace) << "\t After quantization q=" << q << std::endl;
+      ICOV_LOG(trace) << "\t After quantization q=" << q << std::endl;
   }
 
-  // y_min = min(Y[k], 0<=k<N)
-  int y_min = *std::min_element(side_info.begin(), side_info.end());
-
-  // y_max = max(Y[k], 0<=k<N)
-  int y_max = *std::max_element(side_info.begin(), side_info.end());
-
-  m_z_min = z_min;
-  m_z_max = z_max;
-  m_y_min = y_min;
-  m_y_max = y_max;
-  m_q0 = q;
+  m_pz_params = Pz(z_min, z_max, q);
   m_si_symboles = side_info;
-  //  m_si_bits = BitSymbolProvider::compute_bits(side_info);
 }
 
 void BitSymbolProvider::set_si(const SIVec &si, const params &p) {
-  return set_si(si, p.enable_z_quantization, p.q_values);
+  set_si(si, p.enable_z_quantization, p.q_values);
 }
 
-float BitSymbolProvider::z_min() const { return this->m_z_min; }
+void BitSymbolProvider::set_si(const SIVec &si, int z_min, int z_max, float q,
+                               int l) {
 
-float BitSymbolProvider::z_max() const { return this->m_z_max; }
-
-float BitSymbolProvider::y_min() const { return this->m_y_min; }
-
-float BitSymbolProvider::y_max() const { return this->m_y_max; }
-
-float BitSymbolProvider::q0() const { return this->m_q0; }
-
-float BitSymbolProvider::q1() const {
-  if (m_z_max == m_z_min)
-    return 0.0;
-  return (1 - m_q0) / (m_z_max - m_z_min);
+  ICOV_ASSERT_MSG(si.size() == m_src_symboles.size(),
+                  "SI must be same size as source");
+  m_pz_params = Pz(z_min, z_max, q);
+  m_si_symboles = si;
+  m_l = l;
+  std::fill(m_src_symboles.begin(), m_src_symboles.end(), 0);
+  std::fill(m_src_bits[0].begin(), m_src_bits[0].end(), 0);
 }
 
-int BitSymbolProvider::z0() const {
-  return (m_z_min > 0) ? m_z_min : (m_z_max < 0 ? m_z_max : 0);
-}
+float BitSymbolProvider::z_min() const { return m_pz_params.zmin; }
+
+float BitSymbolProvider::z_max() const { return m_pz_params.zmax; }
+
+float BitSymbolProvider::q0() const { return m_pz_params.q0; }
+
+float BitSymbolProvider::q1() const { return m_pz_params.q1; }
+
+int BitSymbolProvider::z0() const { return m_pz_params.z0; }
 
 float BitSymbolProvider::pz(int z) const {
-  return (z == z0()) ? m_q0 : ((z < m_z_min || z > m_z_max) ? 0 : q1());
+  return (z == z0()) ? q0() : ((z < z_min() || z > z_max()) ? 0.0 : q1());
 }
 
 float BitSymbolProvider::pz(int zmin, int zmax) const {
@@ -246,23 +188,7 @@ float BitSymbolProvider::pz(int zmin, int zmax) const {
   return p;
 }
 
-int BitSymbolProvider::z_binary_length() const {
-  int max = std::max(std::abs(m_z_min), std::abs(m_z_max));
-  if (max == 0)
-    return 1;
-  return std::ceil(std::log2f(max));
-}
-
-int BitSymbolProvider::x_max_estimated() const { return m_z_max + m_y_min; }
-
-int BitSymbolProvider::x_min_estimated() const { return m_z_min + m_y_max; }
-
-int BitSymbolProvider::x_binary_length() const {
-  return m_l;
-  // return std::floor(std::log2f(std::max(std::abs(x_min_estimated()),
-  //                                        std::abs(x_max_estimated())))) +
-  //         2;
-}
+int BitSymbolProvider::x_binary_length() const { return m_l; }
 
 bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
                              int yk, float &p0, float &p1, float &p) const {
@@ -281,43 +207,43 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
     p1 += this->pz(z + imax * (1 - 2 * negative));
   }
 
-  // ICOV_LOG_MSG(trace) <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
+  // ICOV_LOG(trace) <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
   // << std::endl;
 
   // attention b = a+b
   float pb = p1 + p0;
 
-  // ICOV_LOG_MSG(trace) <<  "\t\t\t yk=" << yk << std::endl;
+  // ICOV_LOG(trace) <<  "\t\t\t yk=" << yk << std::endl;
 
   if (DebugTools::debug_trace_enabled) {
     if (pb == 0) {
-      std::cerr << "WARNING: pb = 0" << std::endl;
 
-      ICOV_LOG_MSG(trace) << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
-      ICOV_LOG_MSG(trace) << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
-                          << " imax=" << ((1 << (l - b))) << std::endl;
+      ICOV_LOG(trace) << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
+      ICOV_LOG(trace) << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
+                      << " imax=" << ((1 << (l - b))) << std::endl;
 
-      ICOV_LOG_MSG(trace) << "\t\t\t a = ";
+      ICOV_LOG(trace) << "\t\t\t a = ";
       int imax = (1 << (l - b));
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk;
-        ICOV_LOG_MSG(trace) << "pz(" << z << ") + ";
+        ICOV_LOG(trace) << "pz(" << z << ") + ";
       }
 
-      ICOV_LOG_MSG(trace) << std::endl << "\t\t\t b = ";
+      ICOV_LOG(trace) << std::endl << "\t\t\t b = ";
 
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk +
                 imax * (1 - 2 * negative);
-        ICOV_LOG_MSG(trace) << "pz(" << z << ") + ";
+        ICOV_LOG(trace) << "pz(" << z << ") + ";
       }
 
-      ICOV_LOG_MSG(trace) << std::endl;
-    }
+      ICOV_LOG(trace) << std::endl;
+    } else {
 
-    if (std::abs(p0 / pb + p1 / pb - 1) > 0.00001) {
-      ICOV_LOG_MSG(trace) << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
-                          << " != 1" << std::endl;
+      if (std::abs(p0 / pb + p1 / pb - 1) > 0.00001) {
+        ICOV_LOG(trace) << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
+                        << " != 1" << std::endl;
+      }
     }
   }
 
@@ -353,7 +279,6 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
 }
 
 float BitSymbolProvider::pqks(int yk) const {
-
   int imax = (1 << x_binary_length()); // std::max(std::abs(x_min_estimated()),
                                        // std::abs(x_max_estimated()));
   float p0 = 0.0f;
@@ -365,7 +290,21 @@ float BitSymbolProvider::pqks(int yk) const {
     if (i != 0)
       p1 += this->pz(-i - yk);
   }
-
   return p0 / (p0 + p1);
+}
+
+void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
+  if (i == 0) {
+    // save sign
+    m_src_bits[0] = x;
+  } else {
+    // apply decoded bitplane
+    int shift = 1; // (i - 1);
+    BitSymbolProvider::inject_bitplane(m_src_symboles, x, shift);
+
+    // if last apply sign
+    if (shift == 0)
+      BitSymbolProvider::inject_bitplane(m_src_symboles, m_src_bits[0], -1);
+  }
 }
 } // namespace icov

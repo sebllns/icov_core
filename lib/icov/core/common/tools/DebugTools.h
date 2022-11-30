@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <boost/log/trivial.hpp>
-#define ICOV_LOG_MSG(lvl) BOOST_LOG_TRIVIAL(lvl)
+#define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
 
 #ifndef ICOV_LOG_LEVEL
 #define ICOV_LOG_LEVEL 2

@@ -1,6 +1,7 @@
 #include "FrameEncoder.h"
 
 #include "enc_helpers.h"
+#include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/ICOV_Quant.h"
@@ -398,10 +399,10 @@ void FrameEncoder::processInput(std::ostream &output,
   icov::video::IntraPrediction intraPred;
   intraPred.init(m_params.chFormat);
 
-  std::cout << "Compute intra predictions" << std::endl;
+  ICOV_LOG(info) << "Start computing intra predictions";
   for (UInt ch = 0; ch < m_numComp; ch++) {
-    std::cout << "Channel " << ch + 1 << " / " << m_numComp << std::endl
-              << std::endl;
+    ICOV_LOG(info) << "Channel " << ch + 1 << " / " << m_numComp << std::endl;
+
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360(mainFrameReco, compID);
 
@@ -417,7 +418,7 @@ void FrameEncoder::processInput(std::ostream &output,
     //        maxLog2TrDynamicRange + 1);
     //    totalRequiredBitsToCodeIntraModes += tempIntraModeBits;
   }
-  std::cout << "END of Compute intra predictions" << std::endl;
+  ICOV_LOG(info) << "Successfully computed intra predictions" << std::endl;
 
   for (auto pk : predVec) {
     cv::Mat &intraMat = m_cvmat[PIC_PREDICTION + pk];
@@ -525,7 +526,13 @@ void icov::encoder::FrameEncoder::encode_tu(
 
   icov::SINumcodeIdx si_numcodes;
   icov::SISyndromes si_synd;
+
+  m_coders.at(tu_size)->llrProvider()->LLR_DEBUG.clear();
   m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
+
+  BitSymbolProvider bsp_dec(tu_size);
+  bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
+                 bsp.x_binary_length());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
     output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
@@ -542,25 +549,36 @@ void icov::encoder::FrameEncoder::encode_tu(
       std::cout << "SYND " << si_synd[i].to_string(" ") << std::endl;
 
       BitVec decoded;
-      m_coders.at(tu_size)->decode(decoded, si_numcodes[i], si_synd[i]);
-      std::cout << "SOURCE [";
-      icov::helpers::io::write_vector(std::cout, bsp.src_bits()[i], ' ')
-          << "]" << std::endl;
-      std::cout << "DECODED [";
-      icov::helpers::io::write_vector(std::cout, decoded, ' ')
-          << "]" << std::endl;
-      icov::helpers::assert::check(decoded == bsp.src_bits()[i],
-                                   "Decoding BP check failed " +
-                                       std::to_string(i));
+
+      try {
+        m_coders.at(tu_size)->decode_bitplane(decoded, i, bsp_dec,
+                                              si_numcodes[i], si_synd[i]);
+        //      std::cout << "SOURCE [";
+        //      icov::helpers::io::write_vector(std::cout, bsp.src_bits()[i], '
+        //      ')
+        //          << "]" << std::endl;
+        //      std::cout << "DECODED [";
+        //      icov::helpers::io::write_vector(std::cout, decoded, ' ')
+        //          << "]" << std::endl;
+        icov::helpers::assert::check(decoded == bsp.src_bits()[i],
+                                     "Decoding BP check failed " +
+                                         std::to_string(i));
+      } catch (...) {
+        ICOV_LOG(error) << "\n*********************************************"
+                           "***********\nDECODING "
+                           "FAILED\n***************************************"
+                           "*****************\n";
+        break;
+      }
     }
   }
 
   if (m_params.check_decoding) {
 
     SymboleVec decoded;
-    m_coders.at(tu_size)->decode_bitplanes(decoded, si_numcodes, si_synd);
-    icov::helpers::assert::check(decoded == bsp.src_symboles(),
-                                 "Decoding symbole check failed");
+    // m_coders.at(tu_size)->decode_symboles(decoded, si_numcodes, si_synd);
+    // icov::helpers::assert::check(decoded == bsp.src_symboles(),
+    //                             "Decoding symbole check failed");
   }
 }
 
@@ -578,8 +596,8 @@ void icov::encoder::FrameEncoder::encode_icu(
     std::ostream &output, const Block &b,
     const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
 
-  std::cout << "---- encode prediction " << BlockPrediction::toString(pred)
-            << std::endl;
+  ICOV_LOG(info) << "Encode ICU with prediction "
+                 << BlockPrediction::toString(pred) << std::endl;
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
@@ -598,8 +616,8 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- try encode prediction " << BlockPrediction::toString(pred)
-            << std::endl;
+  ICOV_LOG(debug) << "try encode prediction " << BlockPrediction::toString(pred)
+                  << std::endl;
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
@@ -609,13 +627,13 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                static_cast<float>(y_block) /
                    static_cast<float>(m_params.icuSize_luma.height));
 
-  std::cout << pos.x << std::endl;
-  std::cout << pos.y << std::endl;
+  ICOV_LOG(trace) << pos.x;
+  ICOV_LOG(trace) << pos.y;
 
   const auto &es = this->m_enc_struc;
   uint icuIndex = es.get_icuIndex(pos);
 
-  std::cout << icuIndex << std::endl;
+  ICOV_LOG(trace) << icuIndex;
 
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "helpers.h"
 #include "icov_program_options.h"
+#include "ldpc_codec_layer/IInteractiveCoder.h"
 #include "tools/DebugTools.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/log/expressions.hpp>
@@ -108,34 +109,41 @@ public:
 static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
   icov::helpers::rand::init();
 
+  icov::IInteractiveCoder::params.CheckBitplaneEncoding =
+#ifdef ICOV_CHECK_BITPLANE_ENCODING_ENABLED
+      true;
+#else
+      false;
+#endif
+
   try {
     boost::log::add_common_attributes();
+    DebugTools::initLog();
     pg.processCommandLine(argc, argv);
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         pg.logLevel());
     pg.launchProgram();
   } catch (std::exception &e) {
-    ICOV_LOG_MSG(info) << pg.optionsDesc() << std::endl;
-    ICOV_LOG_MSG(fatal) << std::endl
-                        << "Error: program execution has stopped prematurely"
-                        << std::endl;
-    ICOV_LOG_MSG(fatal) << boost::current_exception_diagnostic_information()
-                        << std::endl;
+    ICOV_LOG(info) << pg.optionsDesc() << std::endl;
+    ICOV_LOG(fatal) << std::endl
+                    << "Error: program execution has stopped prematurely"
+                    << std::endl;
+    ICOV_LOG(fatal) << boost::current_exception_diagnostic_information()
+                    << std::endl;
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
-    ICOV_LOG_MSG(fatal) << boost::stacktrace::stacktrace();
+    ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
 #endif
     return boost::system::errc::interrupted;
   } catch (...) {
-    ICOV_LOG_MSG(info) << pg.optionsDesc() << std::endl;
-    ICOV_LOG_MSG(fatal) << "Fatal error" << std::endl;
-    ICOV_LOG_MSG(fatal) << std::endl
-                        << boost::current_exception_diagnostic_information()
-                        << std::endl;
+    ICOV_LOG(info) << pg.optionsDesc() << std::endl;
+    ICOV_LOG(fatal) << "Fatal error" << std::endl;
+    ICOV_LOG(fatal) << std::endl
+                    << boost::current_exception_diagnostic_information()
+                    << std::endl;
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
-    ICOV_LOG_MSG(fatal) << boost::stacktrace::stacktrace();
+    ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
 #endif
     return boost::system::errc::interrupted;
   }
-
   return boost::system::errc::success;
 }

@@ -3,20 +3,17 @@
 
 using namespace icov;
 
-void VarodayanMatrixProvider::_buildMatrix(int numcode, AffMatrix &H)
-{
-    int m = m_tools->get_m(numcode);
-    int n = m_tools->get_n();
+void VarodayanMatrixProvider::_buildMatrix(int numcode, AffMatrix &H) {
+  int m = m_tools->get_m(numcode);
+  int n = m_tools->get_n();
 
-    H = AffMatrix(n, m);
+  H = AffMatrix(n, m);
 
-    std::cout << m << ", " << n << std::endl;
+  ICOV_LOG(trace) << m << ", " << n;
 
-    for (int k = 0; k < (int)n; k++)
-    {
-        for (uint32_t l = m_tools->jc[k]; l <  m_tools->jc[k + 1]; l++)
-        {
-            H.add_connection(k, m_tools->getIr(numcode, l));
-        }
+  for (int k = 0; k < (int)n; k++) {
+    for (uint32_t l = m_tools->jc[k]; l < m_tools->jc[k + 1]; l++) {
+      H.add_connection(k, m_tools->getIr(numcode, l));
     }
+  }
 }

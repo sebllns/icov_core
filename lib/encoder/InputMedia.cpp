@@ -7,7 +7,7 @@ namespace fs = boost::filesystem;
 namespace icov {
 namespace encoder {
 InputImage::InputImage(const fs::path &path) : icov::IImage<cv::Mat>(path) {
-  std::cout << "open image " << m_path << std::endl;
+  ICOV_LOG(debug) << "open image " << m_path << std::endl;
   m_frameData = cv::imread(m_path.string(), -1);
   ICOV_ASSERT_MSG(m_frameData.total() > 0, "Empty image");
   m_width = m_frameData.cols;
