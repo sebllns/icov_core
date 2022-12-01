@@ -6,8 +6,7 @@ using namespace icov;
 
 IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level,
                                              int max_level)
-    : ISyndromeManager(n), doping_idx(n), init_rateless(true),
-      m_min_level(min_level), m_max_level(max_level),
+    : ISyndromeManager(n), m_min_level(min_level), m_max_level(max_level),
       accumulated_syndrome(nullptr), current_level(max_level) {
   int l = m_min_level;
   while (l <= m_max_level) {
@@ -88,22 +87,18 @@ std::string IMT164SyndromeManager::get_type() const { return "imt164"; }
 ///
 /// \brief Reset the doping order
 ///
-void IMT164SyndromeManager::reset_doping() {
-  std::iota(doping_idx.begin(), doping_idx.end(), 0);
-  init_rateless = true;
-}
+// void IMT164SyndromeManager::reset_doping() {
 
-void IMT164SyndromeManager::compute_doping_order(
-    const LLRProvider &llr_provider, Syndrome &syndrome) {
-  if (!init_rateless)
-    return;
-  ICOV_LOG(debug) << "compute doping";
-  Aff3ctDecoder dec(0);
-  BitVec o_decoded(this->get_n());
+//}
+
+void IMT164SyndromeManager::compute_doping_order(LLRProvider &llr_provider,
+                                                 Syndrome &syndrome) {
+  llr_provider.init_doping();
+  // Aff3ctDecoder dec(0);
+  // BitVec o_decoded(this->get_n());
   // int numcode = this->get_m_max();
-  dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(),
-                    syndrome, h[this->get_level_count() - 1]);
-  init_rateless = false;
+  // dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(),
+  //                syndrome, h[this->get_level_count() - 1]);
 }
 
 void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
@@ -222,21 +217,25 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
 
     // order the llr values for rate = 0.5
     compute_doping_order(llr_provider, doping_synd);
+    int doping_idx = 0;
 
     o_syndrome.resize(m);
 
     // put all m-m_12 lowest LLR to the max value (keeping sign)
     for (int i = get_m_max(); i < m; i++) {
       o_syndrome[i] = acc_syndrome[i];
-      LLRVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) * llr_provider.limit_max();
-      llr_provider[doping_idx[i - get_m_max()]] = llr_val;
+      llr_provider.apply_doping(doping_idx, o_syndrome[i]);
+      doping_idx++;
+      //      LLRVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) *
+      //      llr_provider.limit_max(); llr_provider[doping_idx[i -
+      //      get_m_max()]] = llr_val;
     }
   }
 }
 
 void IMT164SyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
                                            int numcode,
-                                           const LLRProvider &llr_provider,
+                                           LLRProvider &llr_provider,
                                            const BitVec &src) {
   int m = o_stored_syndrome.size();
   int m_target = this->get_m(numcode);
@@ -266,11 +265,11 @@ void IMT164SyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
     } else {
       // doping when rate > 0.5
 
-      if (init_rateless) {
-        compute_doping_order(llr_provider, doping_synd);
-      }
+      // if (init_rateless) {
+      compute_doping_order(llr_provider, doping_synd);
+      //}
 
-      o_stored_syndrome[m - 1] = src[doping_idx[m - m_max - 1]];
+      o_stored_syndrome[m - 1] = src[llr_provider.doping_order(m - 1 - m_max)];
     }
   }
 }

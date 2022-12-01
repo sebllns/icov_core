@@ -79,11 +79,6 @@ public:
   // Doping syndrome is cached
   Syndrome doping_synd;
 
-  // Bit order used for doping
-  std::vector<size_t> doping_idx;
-
-  bool init_rateless;
-
   int m_min_level;
   int m_max_level;
 
@@ -98,7 +93,7 @@ public:
   virtual void init_accumulation(const BitVec &source_x) override;
 
   virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
-                              const LLRProvider &llr_provider,
+                              LLRProvider &llr_provider,
                               const BitVec &src) override;
 
   virtual void compute_deacc(Syndrome &o_syndrome, const Syndrome &acc_syndrome,
@@ -108,7 +103,7 @@ public:
 
   std::string get_type() const override;
 
-  void reset_doping() override;
+  //  void reset_doping() override;
 
   int get_m_max() const;
 
@@ -124,8 +119,7 @@ public:
 
   int is_level(int m) const;
 
-  void compute_doping_order(const LLRProvider &llr_provider,
-                            Syndrome &syndrome);
+  void compute_doping_order(LLRProvider &llr_provider, Syndrome &syndrome);
 };
 } // namespace icov
 #endif // IMT164SYNDROME_H

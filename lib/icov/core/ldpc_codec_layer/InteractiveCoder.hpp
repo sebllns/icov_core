@@ -50,17 +50,21 @@ int InteractiveCoder<Matrix>::encode(NumcodeIdx &i, Syndrome &o_stored_syndrome,
     uint32_t io_numcode = m_matrix_provider->getNumcode(i);
 
 #if ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_LOG(trace) << (1.0 * m_psyndromeMgr->get_m(io_numcode)) /
-                           m_psyndromeMgr->get_n()
-                    << std::endl;
+    ICOV_LOG(trace) << "m = " << this->syndromeMgr()->get_m(io_numcode)
+                    << ", r = " << this->getRate(i);
 #endif
     m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode,
                                    *m_pllrProvider.get(), source);
     this->decode(decoded, i, o_stored_syndrome);
 
     convergence = testConvergence(decoded, source);
-    if (!convergence)
+    if (!convergence) {
       ++i;
+      if (!m_pllrProvider->doping_ready() && m_matrix_provider->is_doping(i)) {
+        this->m_pllrProvider->init_doping();
+        m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
+      }
+    }
   }
 
   if (convergence)
@@ -88,6 +92,12 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,
       }
 
       next_test_code = std::min(next_test_code + step, numcodeMax - 1);
+
+      if (!m_pllrProvider->doping_ready() &&
+          m_matrix_provider->is_doping(next_test_code)) {
+        m_pllrProvider->init_doping();
+        m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
+      }
     }
   }
 
@@ -175,8 +185,6 @@ void InteractiveCoder<Matrix>::init_LLR_bitplane(const BitSymbolProvider &bsp,
                                                  int bitplane_idx,
                                                  const BitVec &signs,
                                                  const SymboleVec &predec) {
-
-  this->m_pllrProvider->reset();
 
   // init the LLR values
   if (bitplane_idx == 0) {
@@ -286,17 +294,17 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   init_LLR_bitplane(bsp, bitplane_idx, sign_bits, predec);
 
   // save LLR (in case of doping)
-  auto llr = llrProvider->llr();
+  //  auto llr = llrProvider->llr();
 
   numcodeIdx = 0;
   int numerrors =
       m_coder->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
 
   // reset doping state and LLR
-  syndromeMgr->reset_doping();
-  for (int l = 0; l < n; l++) {
-    llrProvider->operator[](l) = llr[l];
-  }
+  //  syndromeMgr->reset_doping();
+  //  for (int l = 0; l < n; l++) {
+  //    llrProvider->operator[](l) = llr[l];
+  //  }
 
   if (params.CheckBitplaneEncoding) {
     std::cout << "CHECK SYNDROME BP " << bitplane_idx << std::endl;

@@ -33,7 +33,7 @@ public:
   virtual void init_accumulation(const BitVec &source_x) override;
 
   virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
-                              const LLRProvider &llr_provider,
+                              LLRProvider &llr_provider,
                               const BitVec &src) override;
 
   virtual void compute_deacc(Syndrome &o_syndrome, const Syndrome &acc_syndrome,
@@ -45,7 +45,7 @@ public:
 
   uint32_t get_c18(int m) const;
 
-  void compute_doping_order(const LLRProvider &llr_provider);
+  void compute_doping_order(LLRProvider &llr_provider);
 
   std::string get_type() const override;
 };

@@ -104,6 +104,9 @@
 #define CONSOLE_FORMAT(fmt) ""
 #endif
 
+#define CONSOLE_TODO                                                           \
+  CONSOLE_FORMAT(CONSOLE_FG_BLUE) CONSOLE_FORMAT(CONSOLE_HIGHLIGHT)
+
 namespace boost {
 inline void assertion_failed_msg(char const *expr, char const *msg,
                                  char const *function, char const * /*file*/,

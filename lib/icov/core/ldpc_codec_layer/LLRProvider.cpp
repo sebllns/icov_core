@@ -9,16 +9,18 @@
 #include "helpers.h"
 
 icov::LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) {
-  std::iota(doping_order.begin(), doping_order.end(), 0);
+  reset();
 }
 
 icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
     : m_llr(llr), m_floor_type(0) {
-  std::iota(doping_order.begin(), doping_order.end(), 0);
+  reset();
 }
 
 void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info) {
+  reset();
+
   for (size_t i = 0; i < side_info.size(); i++) {
     LLRVal p = static_cast<LLRVal>(bsp.pqks(side_info[i]));
     p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
@@ -32,6 +34,8 @@ void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info,
                                   const std::vector<int> &sign,
                                   const std::vector<int> &abs_predec) {
+  reset();
+
   int l = bsp.x_binary_length() - 1;
   LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
 
@@ -61,8 +65,11 @@ bool icov::LLRProvider::no_coding(const BitVec &src) const {
 }
 
 void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
-  if (m_llr.size() != src_bits.size())
-    throw "LLRProvider::initLLR: length of arrays are not equal";
+  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
+                               "Length "
+                               "of arrays are not equal");
+
+  reset();
 
   for (int k = 0; k < (int)src_bits.size(); k++) {
     int sideinfo_BSC =
@@ -78,8 +85,11 @@ void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
 
 void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info,
                                 const BitVec &src_bits) {
-  if (m_llr.size() != src_bits.size())
-    throw "ERROR: LLRProvider::initLLR: length of arrays are not equal";
+  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
+                               "Length "
+                               "of arrays are not equal");
+
+  reset();
 
   float pcrossover = 0;
 
@@ -100,8 +110,11 @@ void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info,
 
 void icov::LLRProvider::initLLRUniform(float pcrossover,
                                        const BitVec &src_bits) {
-  if (m_llr.size() != src_bits.size())
-    throw "LLRProvider::initLLRUniform length of arrays are not equal";
+  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
+                               "Length "
+                               "of arrays are not equal");
+
+  reset();
 
   float one_count = pcrossover * m_llr.size();
   one_count = m_floor_type ? std::ceil(one_count) : std::floor(one_count);
@@ -132,6 +145,34 @@ std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
   return src;
 }
 
+void icov::LLRProvider::init_doping() {
+  if (!m_doping_ready) {
+    ICOV_LOG(debug) << "compute doping";
+    m_llr_doping = m_llr;
+    //    icov::sort_indexes_abs(m_llr_doping, m_doping_order);
+    m_doping_ready = true;
+    //    icov::helpers::io::write_vector(std::cout, m_llr, ' ');
+    //    std::cout << std::endl << std::endl;
+    //    icov::helpers::io::write_vector(std::cout, m_doping_order, ' ');
+  }
+}
+
+void icov::LLRProvider::apply_doping(int index, BitVal x) {
+
+  icov::helpers::assert::check(m_doping_ready,
+                               "Cannot use doping if not initialized");
+  icov::helpers::assert::check(index >= 0 && index < (int)m_doping_order.size(),
+                               "Index is out of bounds");
+
+  m_llr_doping[m_doping_order[index]] =
+      x > 0 ? std::numeric_limits<LLRVal>::lowest()
+            : std::numeric_limits<LLRVal>::max();
+}
+
+int icov::LLRProvider::doping_order(int index) const {
+  return m_doping_order[index];
+}
+
 uint32_t icov::LLRProvider::index_min() const {
   uint32_t idx = 0;
 
@@ -151,4 +192,13 @@ icov::LLRVal icov::LLRProvider::epsilon() {
   return std::numeric_limits<LLRVal>::epsilon();
 }
 
-void icov::LLRProvider::reset() { std::fill(m_llr.begin(), m_llr.end(), 0); }
+void icov::LLRProvider::reset() {
+  std::cout << "RESET\n";
+  std::fill(m_llr.begin(), m_llr.end(), 0);
+  std::fill(m_llr_doping.begin(), m_llr_doping.end(), 0);
+  m_doping_order.resize(m_llr.size());
+  std::iota(m_doping_order.begin(), m_doping_order.end(), 0);
+  m_doping_ready = false;
+}
+
+bool icov::LLRProvider::doping_ready() const { return m_doping_ready; }

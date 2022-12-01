@@ -20,9 +20,11 @@ public:
   void decode(BitVec &o_decoded, int n, int idx, const std::vector<LLRVal> &llr,
               Syndrome &syndrome, const AffMatrix &matrix) override;
 
-  void decode_doping(BitVec &o_decoded, std::vector<size_t> &o_doping_idx,
-                     int n, const std::vector<LLRVal> &llr, Syndrome &syndrome,
-                     const AffMatrix &matrix);
+  void get_llr_order(int i_numcode, std::vector<size_t> &o_idx) const override;
+
+  //  void decode_doping(BitVec &o_decoded, std::vector<size_t> &o_doping_idx,
+  //                     int n, const std::vector<LLRVal> &llr, Syndrome
+  //                     &syndrome, const AffMatrix &matrix);
 
   void init_decoder(int i, int n, int n_ite, const AffMatrix &matrix);
 

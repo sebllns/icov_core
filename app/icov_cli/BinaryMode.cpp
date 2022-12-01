@@ -19,7 +19,7 @@ BinaryMode::BinaryMode(const po::variables_map &args)
 }
 
 void BinaryMode::run() {
-  std::cout << "encode\n";
+  ICOV_LOG(debug) << "encode\n";
   auto llrProvider(m_coder->llrProvider());
   auto syndromeMgr(m_coder->syndromeMgr());
   auto matrixProvider(m_coder->matrixProvider());
@@ -39,22 +39,20 @@ void BinaryMode::run() {
                        (m_pcrossover.size() * m_nite);
       std::cout << "    " << progress << "%                \r" << std::flush;
 
+      std::cout << m_pcrossover[i] << std::endl;
       // init llr
       llrProvider->initLLRUniform(m_pcrossover[i], m_src_bits);
-      llr = llrProvider->llr();
+      //      llr = llrProvider->llr();
       syndromeMgr->reset_doping();
 
       auto start = std::chrono::steady_clock::now();
+      std::cout << "encode\n";
       int err_count =
           m_coder->encode(m_numcodeIdx, m_stored_syndrome, m_src_bits);
       auto end = std::chrono::steady_clock::now();
 
       std::chrono::duration<double> elapsed_seconds = end - start;
-
-      int numcode = matrixProvider->getNumcode(m_numcodeIdx);
-      int m = syndromeMgr->get_m(numcode);
-
-      rate[i] += (((double)m) / ((double)m_nite * n));
+      rate[i] += m_coder->getRate(m_numcodeIdx) / m_nite;
       time[i] +=
           elapsed_seconds
               .count(); /// p.n_ite_crossover;// + (i > 0 ? b.time[i-1] : 0.0);
@@ -62,25 +60,16 @@ void BinaryMode::run() {
 
       if (err_count != 0) {
         // raise error
-        std::cerr << "ERROR: No convergence. Pcrossover=" << m_pcrossover[i]
-                  << std::endl;
+        ICOV_LOG(error) << "No convergence. Pcrossover=" << m_pcrossover[i];
       } else {
-        // std::cout << "check decoding\n";
-        for (int l = 0; l < n; l++) {
-          llrProvider->operator[](l) = llr[l];
-        }
-
-        syndromeMgr->reset_doping();
-
         start = std::chrono::steady_clock::now();
+        std::cout << "decode\n";
         m_coder->decode(m_dec_bits, m_numcodeIdx, m_stored_syndrome);
         end = std::chrono::steady_clock::now();
         elapsed_seconds = end - start;
         decoding_time[i] += elapsed_seconds.count() / m_nite;
         if (!m_coder->testConvergence(m_dec_bits, m_src_bits)) {
-          std::cerr << "ERROR: No decoding" << std::endl;
-
-          // throw "fatal: error cannot check decoding";
+          ICOV_LOG(error) << "Could not decode!" << std::endl;
         }
       }
     }
@@ -96,6 +85,8 @@ void BinaryMode::fill_src() {
 }
 
 void BinaryMode::fill_pcrossover() {
+  ICOV_LOG(debug) << CONSOLE_TODO
+                  << "TODO: read crossover probability from file !";
   m_pcrossover = {0.005607170053021, 0.012986862055522, 0.021539631929892,
                   0.031124460304790, 0.041692690273656, 0.053239040776806,
                   0.065786706354577, 0.079382600480655, 0.094097243346146,
@@ -111,13 +102,13 @@ void BinaryMode::fill_pcrossover() {
 }
 
 void BinaryMode::write_results() {
-  std::cout << "Write results" << std::endl;
+  ICOV_LOG(info) << "End of test. Write results.";
 
-  for (int i = 1; i < m_pcrossover.size(); i++) {
+  for (size_t i = 1; i < m_pcrossover.size(); i++) {
     time[i] += time[i - 1];
   }
 
-  for (int i = 0; i < m_pcrossover.size(); i++) {
+  for (size_t i = 0; i < m_pcrossover.size(); i++) {
     time[i] /= m_nite;
   }
 

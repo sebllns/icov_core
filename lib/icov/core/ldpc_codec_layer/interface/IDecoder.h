@@ -3,17 +3,19 @@
 
 #include "common.h"
 
-namespace icov
-{
+namespace icov {
 
-template <class M>
-class IDecoder
-{
+template <class M> class IDecoder {
 public:
-    IDecoder() = default;
-    virtual ~IDecoder() = default;
+  IDecoder() = default;
+  virtual ~IDecoder() = default;
 
-    virtual void decode(BitVec& o_decoded, int n, int numcode, const std::vector<LLRVal>& llr, Syndrome& syndrome, const M& matrix) = 0;
+  virtual void decode(BitVec &o_decoded, int n, int numcode,
+                      const std::vector<LLRVal> &llr, Syndrome &syndrome,
+                      const M &matrix) = 0;
+
+  virtual void get_llr_order(int i_numcode,
+                             std::vector<size_t> &o_idx) const = 0;
 };
-}
+} // namespace icov
 #endif // IDECODER_H

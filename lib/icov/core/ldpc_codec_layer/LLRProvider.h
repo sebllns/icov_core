@@ -62,18 +62,33 @@ public:
   LLRProvider(int n);
   LLRProvider(const std::vector<LLRVal> &llr);
 
-  inline LLRVal &operator[](int i) { return m_llr[i]; }
-  inline LLRVal operator[](int i) const { return m_llr[i]; }
-  inline const std::vector<LLRVal> &llr() const { return m_llr; }
+  static LLRVal limit_max();
+  static LLRVal epsilon();
+
+  // inline LLRVal &operator[](int i) { return m_llr[i]; }
+  // inline LLRVal operator[](int i) const { return m_llr[i]; }
+  inline const std::vector<LLRVal> &llr() const {
+    return m_doping_ready ? m_llr_doping : m_llr;
+  }
+
+  inline const std::vector<size_t> &llr_order() const { return m_doping_order; }
+
+  inline std::vector<size_t> &llr_order() { return m_doping_order; }
+
+  // inline const std::vector<LLRVal> &llr_doping() const { return m_llr_doping;
+  // }
 
   void initLLR(const std::vector<SIVal> &side_info, const BitVec &src_bits);
   void initLLR(float pCrossover, const BitVec &src);
   void initLLRUniform(float pCrossover, const BitVec &src);
   std::vector<icov::BitVal> initSrcRand(int n);
 
+  void init_doping();
+  void apply_doping(int index, BitVal x);
+  int doping_order(int index) const;
+  bool doping_ready() const;
+
   uint32_t index_min() const;
-  static LLRVal limit_max();
-  static LLRVal epsilon();
 
   void reset();
 
@@ -88,12 +103,13 @@ public:
 
 protected:
   std::vector<LLRVal> m_llr;
-  //  BitVec m_src;
-  std::vector<size_t> doping_order;
+  std::vector<LLRVal> m_llr_doping;
+  std::vector<size_t> m_doping_order;
+  bool m_doping_ready;
+
   bool m_floor_type;
 
 public:
   std::vector<std::vector<LLRVal>> LLR_DEBUG;
 };
-
 } // namespace icov

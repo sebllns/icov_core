@@ -39,6 +39,8 @@ public:
 
   icov::index_t getNumcode(int index) const { return m_numcodes[index]; }
 
+  bool is_doping(int index) const { return index >= getMatrixCount(); }
+
 protected:
   std::vector<icov::index_t> m_numcodes;
   std::vector<M> m_matrices;

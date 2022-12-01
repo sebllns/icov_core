@@ -78,7 +78,7 @@ private:
   uint32_t m_error_count;
   int m_nite;
 
-  std::vector<LLRVal> llr;
+  //  std::vector<LLRVal> llr;
   std::vector<double> time;
   std::vector<double> decoding_time;
   std::vector<double> numerrors;

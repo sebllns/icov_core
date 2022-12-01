@@ -34,7 +34,7 @@ public:
                                 const tools::Sparse_matrix &H);
   virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
 
-  std::vector<size_t> get_llr_order(std::vector<size_t> &idx) const;
+  void get_llr_order(std::vector<size_t> &idx) const;
 
   void setSyndrome(icov::Syndrome *synd) { m_syndrome = synd; }
 

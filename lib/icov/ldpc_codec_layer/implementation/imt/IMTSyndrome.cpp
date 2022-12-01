@@ -4,6 +4,7 @@ using namespace icov;
 
 IMTSyndromeManager::IMTSyndromeManager(int n)
     : ISyndromeManager(n), doping_idx(n), init_rateless(true) {
+  ICOV_LOG(warning) << __FILE__ << ": THIS CLASS IS DEPRECATED !!!";
   reset_doping();
 }
 
@@ -27,17 +28,8 @@ uint32_t IMTSyndromeManager::get_c18(int m) const {
   return c18->at(m, 0) - 1;
 }
 
-void IMTSyndromeManager::compute_doping_order(const LLRProvider &llr_provider) {
-  if (!init_rateless)
-    return;
-  // std::cout << "compute doping" << std::endl;
-  std::iota(doping_idx.begin(), doping_idx.end(), 0);
-  Aff3ctDecoder dec(0);
-  BitVec o_decoded(this->get_n());
-  // int numcode = this->get_n()/2;
-  dec.decode_doping(o_decoded, doping_idx, this->get_n(), llr_provider.llr(),
-                    syndrome12, *h12_ord);
-  init_rateless = false;
+void IMTSyndromeManager::compute_doping_order(LLRProvider &llr_provider) {
+  llr_provider.init_doping();
 }
 
 std::string IMTSyndromeManager::get_type() const { return "imt18"; }
@@ -133,14 +125,13 @@ void IMTSyndromeManager::compute_deacc(Syndrome &o_syndrome,
     for (int i = m_12; i < m; i++) {
 
       LLRVal llr_val = (o_syndrome[i] ? -1.0 : 1.0) * llr_provider.limit_max();
-      llr_provider[doping_idx[i - m_12]] = llr_val;
+      // FIXME llr_provider[doping_idx[i - m_12]] = llr_val;
     }
   }
 }
 
 void IMTSyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
-                                        int numcode,
-                                        const LLRProvider &llr_provider,
+                                        int numcode, LLRProvider &llr_provider,
                                         const BitVec &src) {
   int m = o_stored_syndrome.size();
   int m_target = this->get_m(numcode);

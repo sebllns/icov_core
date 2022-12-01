@@ -72,8 +72,7 @@ public:
     \param llr_provider Provides the llr and src values (needed for doping).
   */
   virtual void compute_stored(Syndrome &o_stored_syndrome, int numcode,
-                              const LLRProvider &llr_provider,
-                              const BitVec &src) = 0;
+                              LLRProvider &llr_provider, const BitVec &src) = 0;
 
   //! Compute the syndrome needed for decoding from a given incremental
   //! syndrome.
