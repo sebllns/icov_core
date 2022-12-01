@@ -39,14 +39,18 @@ void BinaryMode::run() {
                        (m_pcrossover.size() * m_nite);
       std::cout << "    " << progress << "%                \r" << std::flush;
 
-      std::cout << m_pcrossover[i] << std::endl;
+      ICOV_LOG(trace) << (ite * m_pcrossover.size() + i + 1) << "/"
+                      << (m_pcrossover.size() * m_nite);
+
+      ICOV_LOG(trace) << "Crossover probability " << m_pcrossover[i]
+                      << std::endl;
       // init llr
       llrProvider->initLLRUniform(m_pcrossover[i], m_src_bits);
       //      llr = llrProvider->llr();
       syndromeMgr->reset_doping();
 
       auto start = std::chrono::steady_clock::now();
-      std::cout << "encode\n";
+      ICOV_LOG(trace) << "encode";
       int err_count =
           m_coder->encode(m_numcodeIdx, m_stored_syndrome, m_src_bits);
       auto end = std::chrono::steady_clock::now();
@@ -63,7 +67,7 @@ void BinaryMode::run() {
         ICOV_LOG(error) << "No convergence. Pcrossover=" << m_pcrossover[i];
       } else {
         start = std::chrono::steady_clock::now();
-        std::cout << "decode\n";
+        ICOV_LOG(trace) << "decode";
         m_coder->decode(m_dec_bits, m_numcodeIdx, m_stored_syndrome);
         end = std::chrono::steady_clock::now();
         elapsed_seconds = end - start;

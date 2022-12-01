@@ -225,8 +225,8 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode_single_ite(
   for (auto b = vec_loop_size; b < n_branches; b++)
     msg_chk_to_var[b] = (R)std::tanh((R)0.5 * msg_var_to_chk[b]);
 
-  double prod_check = 0;
-  double val_check = 0;
+  //  double prod_check = 0;
+  //  double val_check = 0;
 
   // flooding scheduling
   const auto n_chk_nodes = (int)this->H.get_n_cols();

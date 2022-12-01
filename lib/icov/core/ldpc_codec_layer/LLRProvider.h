@@ -108,8 +108,5 @@ protected:
   bool m_doping_ready;
 
   bool m_floor_type;
-
-public:
-  std::vector<std::vector<LLRVal>> LLR_DEBUG;
 };
 } // namespace icov

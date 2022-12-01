@@ -62,7 +62,7 @@ int InteractiveCoder<Matrix>::encode(NumcodeIdx &i, Syndrome &o_stored_syndrome,
       ++i;
       if (!m_pllrProvider->doping_ready() && m_matrix_provider->is_doping(i)) {
         this->m_pllrProvider->init_doping();
-        m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
+        // m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
       }
     }
   }
@@ -96,7 +96,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,
       if (!m_pllrProvider->doping_ready() &&
           m_matrix_provider->is_doping(next_test_code)) {
         m_pllrProvider->init_doping();
-        m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
+        // m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
       }
     }
   }
@@ -151,30 +151,6 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
     output.resize(get_n());
 
   init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
-
-  LLRProvider *llrPrvdr = m_pllrProvider.get();
-
-  for (int i = 0; i < get_n(); ++i) {
-    if (llrPrvdr->LLR_DEBUG[bp_idx + bsp.x_binary_length()][i] !=
-        llrPrvdr->LLR_DEBUG[bp_idx][i])
-      std::cout << "LLR_DIFF_" << i << " = "
-                << llrPrvdr->LLR_DEBUG[bp_idx + bsp.x_binary_length()][i] -
-                       llrPrvdr->LLR_DEBUG[bp_idx][i]
-                << std::endl;
-  }
-
-  //  std::cout << "SOURCE [";
-  //  icov::helpers::io::write_vector(std::cout, llrPrvdr->LLR_DEBUG[bp_idx], '
-  //  ')
-  //    << "]" << std::endl;
-  //  std::cout << "DECODED [";
-  //  icov::helpers::io::write_vector(
-  //    std::cout, llrPrvdr->LLR_DEBUG[bp_idx + bsp.x_binary_length()], ' ')
-  //    << "]" << std::endl;
-
-  icov::helpers::assert::equal(
-      llrPrvdr->LLR_DEBUG[bp_idx],
-      llrPrvdr->LLR_DEBUG[bp_idx + bsp.x_binary_length()], "LLR are not equal");
 
   this->decode(output, numcode, stored_synd);
   bsp.injectBitplane(bp_idx, output);
@@ -293,35 +269,21 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
 
   init_LLR_bitplane(bsp, bitplane_idx, sign_bits, predec);
 
-  // save LLR (in case of doping)
-  //  auto llr = llrProvider->llr();
-
   numcodeIdx = 0;
   int numerrors =
       m_coder->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
 
-  // reset doping state and LLR
-  //  syndromeMgr->reset_doping();
-  //  for (int l = 0; l < n; l++) {
-  //    llrProvider->operator[](l) = llr[l];
-  //  }
+  icov::helpers::assert::check(numerrors == 0,
+                               "No convergence for bitplane " +
+                                   std::to_string(bitplane_idx));
 
   if (params.CheckBitplaneEncoding) {
-    std::cout << "CHECK SYNDROME BP " << bitplane_idx << std::endl;
+    ICOV_LOG(debug) << "CHECK SYNDROME BP " << bitplane_idx << std::endl;
     BitVec decoded;
     decode(decoded, numcodeIdx, stored_synd);
     icov::helpers::assert::check(decoded == src_bits[bitplane_idx],
                                  "INTERNAL Decoding BP check failed " +
                                      std::to_string(bitplane_idx));
-
-    // TODO handle error
-    if (numerrors != 0) {
-      std::cerr << "ERROR: No convergence for bitplane=" << bitplane_idx
-                << std::endl;
-    } /*else {
-      std::cout << "b=" << bitplane_idx << " rate=" << rate << std::endl;
-      // check_decoding(i);
-    }*/
   }
 
   if (bitplane_idx > 0) {

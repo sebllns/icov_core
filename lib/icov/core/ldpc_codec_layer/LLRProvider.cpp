@@ -147,9 +147,9 @@ std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
 
 void icov::LLRProvider::init_doping() {
   if (!m_doping_ready) {
-    ICOV_LOG(debug) << "compute doping";
+    ICOV_LOG(debug) << "Compute doping";
     m_llr_doping = m_llr;
-    //    icov::sort_indexes_abs(m_llr_doping, m_doping_order);
+    icov::sort_indexes_abs(m_llr, m_doping_order);
     m_doping_ready = true;
     //    icov::helpers::io::write_vector(std::cout, m_llr, ' ');
     //    std::cout << std::endl << std::endl;
@@ -193,7 +193,6 @@ icov::LLRVal icov::LLRProvider::epsilon() {
 }
 
 void icov::LLRProvider::reset() {
-  std::cout << "RESET\n";
   std::fill(m_llr.begin(), m_llr.end(), 0);
   std::fill(m_llr_doping.begin(), m_llr_doping.end(), 0);
   m_doping_order.resize(m_llr.size());
