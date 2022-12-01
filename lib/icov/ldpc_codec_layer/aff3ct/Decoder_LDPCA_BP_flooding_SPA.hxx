@@ -202,11 +202,6 @@ template <typename B, typename R>
 void Decoder_LDPCA_BP_flooding_SPA<B, R>::get_llr_order(
     std::vector<size_t> &idx) const {
   icov::sort_indexes_abs(this->post, idx);
-
-  icov::helpers::io::write_vector(std::cout, this->post, ' ');
-  std::cout << std::endl << std::endl;
-  icov::helpers::io::write_vector(std::cout, idx, ' ');
-  std::cout << std::endl << std::endl;
 }
 
 template <typename B, typename R>
