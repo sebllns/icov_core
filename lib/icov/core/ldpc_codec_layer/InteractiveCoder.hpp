@@ -147,6 +147,8 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
                                                const NumcodeIdx &numcode,
                                                const Syndrome &stored_synd) {
 
+  ICOV_LOG(debug) << "DECODE BP " << bp_idx;
+
   if (output.size() != get_n())
     output.resize(get_n());
 
@@ -194,7 +196,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
   // encode with each SI
   for (size_t i = 0; i < si.size(); i++) {
     if (trace_si)
-      ICOV_LOG(debug) << "SI=" << i + 1 << "/" << si.size() << std::endl;
+      ICOV_LOG(debug) << "SI=" << i + 1 << "/" << si.size();
     bsp.set_si(si[i], p);
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }
@@ -216,7 +218,7 @@ void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
   }
   SymboleVec predec(n, 0);
   for (size_t i = 0; i < lx; i++) {
-    ICOV_LOG(trace) << "ENCODE BP " << i << std::endl;
+    ICOV_LOG(debug) << "ENCODE BP " << i;
     stored_synd[i].resize(n);
     stored_synd[i].fill(0);
     encode_bitplane(bsp, i, numcodeIdx[i], stored_synd[i], predec);
@@ -278,7 +280,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                    std::to_string(bitplane_idx));
 
   if (params.CheckBitplaneEncoding) {
-    ICOV_LOG(debug) << "CHECK SYNDROME BP " << bitplane_idx << std::endl;
+    ICOV_LOG(debug) << "CHECK SYNDROME BP " << bitplane_idx;
     BitVec decoded;
     decode(decoded, numcodeIdx, stored_synd);
     icov::helpers::assert::check(decoded == src_bits[bitplane_idx],

@@ -26,8 +26,6 @@ void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
     p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
   }
-
-  LLR_DEBUG.push_back(m_llr);
 }
 
 void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
@@ -38,18 +36,11 @@ void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
 
   int l = bsp.x_binary_length() - 1;
   LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
-
   for (size_t i = 0; i < side_info.size(); i++) {
-    if (i == 0) {
-      std::cout << sign[i] << " " << abs_predec[i] << " " << l << " " << b
-                << " " << side_info[i] << std::endl;
-    }
     bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);
     p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
   }
-
-  LLR_DEBUG.push_back(m_llr);
 }
 
 bool icov::LLRProvider::no_coding(const BitVec &src) const {

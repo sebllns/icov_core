@@ -63,8 +63,6 @@ void BitSymbolProvider::inject_bitplane(SymboleVec &output, const BitVec &input,
   ICOV_ASSERT_MSG(output.size() == input.size(),
                   "Vectors must be same size for this operation");
 
-  std::cout << "shift=" << shift << std::endl;
-
   for (size_t i = 0; i < output.size(); ++i) {
     if (shift < 0) /*apply sign bitplane*/
     {
@@ -299,11 +297,10 @@ void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
     m_src_bits[0] = x;
   } else {
     // apply decoded bitplane
-    int shift = 1; // (i - 1);
-    BitSymbolProvider::inject_bitplane(m_src_symboles, x, shift);
+    BitSymbolProvider::inject_bitplane(m_src_symboles, x, 1);
 
     // if last apply sign
-    if (shift == 0)
+    if (i == ((uint)m_l - 1))
       BitSymbolProvider::inject_bitplane(m_src_symboles, m_src_bits[0], -1);
   }
 }

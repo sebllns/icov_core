@@ -543,41 +543,40 @@ void icov::encoder::FrameEncoder::encode_tu(
 
     if (m_params.check_decoding) {
 
-      std::cout << "TEST DECODING " << i << std::endl;
-      std::cout << "NUMCODE " << si_numcodes[i] << std::endl;
-      std::cout << "SYND " << si_synd[i].to_string(" ") << std::endl;
+      ICOV_LOG(debug) << "Check decoding bitplane " << i << std::endl;
 
       BitVec decoded;
 
       try {
+        ICOV_LOG(debug) << "Check bitplane " << i;
         m_coders.at(tu_size)->decode_bitplane(decoded, i, bsp_dec,
                                               si_numcodes[i], si_synd[i]);
-        //      std::cout << "SOURCE [";
-        //      icov::helpers::io::write_vector(std::cout, bsp.src_bits()[i], '
-        //      ')
-        //          << "]" << std::endl;
-        //      std::cout << "DECODED [";
-        //      icov::helpers::io::write_vector(std::cout, decoded, ' ')
-        //          << "]" << std::endl;
         icov::helpers::assert::check(decoded == bsp.src_bits()[i],
                                      "Decoding BP check failed " +
                                          std::to_string(i));
-      } catch (...) {
-        ICOV_LOG(error) << "\n*********************************************"
-                           "***********\nDECODING "
-                           "FAILED\n***************************************"
-                           "*****************\n";
+      } catch (const std::exception &e) {
+        ICOV_LOG(error) << e.what();
         break;
       }
     }
   }
 
   if (m_params.check_decoding) {
+    try {
+      ICOV_LOG(debug) << "Decode channel " << comp;
 
-    SymboleVec decoded;
-    // m_coders.at(tu_size)->decode_symboles(decoded, si_numcodes, si_synd);
-    // icov::helpers::assert::check(decoded == bsp.src_symboles(),
-    //                             "Decoding symbole check failed");
+      bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
+                     bsp.x_binary_length());
+      m_coders.at(tu_size)->decode_symboles(bsp_dec, si_numcodes, si_synd);
+
+      icov::helpers::assert::check(bsp_dec.src_symboles() == bsp.src_symboles(),
+                                   "Decoding symbole failed for channel " +
+                                       std::to_string(comp));
+
+      ICOV_LOG(info) << "Channel was successfully decoded";
+    } catch (const std::exception &e) {
+      ICOV_LOG(error) << e.what();
+    }
   }
 }
 
@@ -588,6 +587,11 @@ void icov::encoder::FrameEncoder::encode_si(
     ComponentID comp) {
   for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
     encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
+  }
+  ICOV_LOG(info) << "Block was successfully encoded";
+
+  if (m_params.check_decoding) {
+    ICOV_LOG(info) << "Decoding check passed";
   }
 }
 
