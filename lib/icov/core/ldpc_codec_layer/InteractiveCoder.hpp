@@ -194,7 +194,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
   // encode with each SI
   for (size_t i = 0; i < si.size(); i++) {
     if (trace_si)
-      ICOV_LOG(info) << "si=" << i + 1 << "/" << si.size() << std::endl;
+      ICOV_LOG(debug) << "SI=" << i + 1 << "/" << si.size() << std::endl;
     bsp.set_si(si[i], p);
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }
@@ -216,7 +216,7 @@ void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
   }
   SymboleVec predec(n, 0);
   for (size_t i = 0; i < lx; i++) {
-    std::cout << "ENCODE BP " << i << std::endl;
+    ICOV_LOG(trace) << "ENCODE BP " << i << std::endl;
     stored_synd[i].resize(n);
     stored_synd[i].fill(0);
     encode_bitplane(bsp, i, numcodeIdx[i], stored_synd[i], predec);

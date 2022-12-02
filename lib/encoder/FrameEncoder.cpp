@@ -527,7 +527,6 @@ void icov::encoder::FrameEncoder::encode_tu(
   icov::SINumcodeIdx si_numcodes;
   icov::SISyndromes si_synd;
 
-  m_coders.at(tu_size)->llrProvider()->LLR_DEBUG.clear();
   m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
 
   BitSymbolProvider bsp_dec(tu_size);
