@@ -11,7 +11,7 @@
  *  @brief BlockPrediction conveying BlockPrediction Units (VPU) for VCL data
  *  @ingroup common
  *  @author Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
- *  @author S�bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.0
  *  @date 2018, 2022
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.

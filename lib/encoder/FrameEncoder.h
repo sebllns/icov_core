@@ -11,7 +11,7 @@
 /** @file FrameEncoder.h
  *  @brief Defines an actual ICOV FrameEncoder.
  *  @ingroup FrameEncoder
- *  @author S�bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
@@ -74,12 +74,18 @@ public:
 
     const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
-    const int margin_x_360luma = 2; // in fact we need 1 margin for each color
-                                    // component, but since UnitArea
-    // handles division by 2 for chroma 420, it is easier to add 2 pixel
-    // margins per left and right side and this will be divided by 2 for
-    // chroma.
 
+    /// in fact we need 1 margin for each color
+    /// component, but since UnitArea
+    /// handles division by 2 for chroma 420, it is easier to add 2 pixel
+    /// margins per left and right side and this will be divided by 2 for
+    /// chroma.
+    const int margin_x_360luma = 2;
+
+    /// Bit-depth the codec
+    /// operates at (input/output files will be converted). (default:
+    /// MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data
+    /// will be converted
     const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   };
 

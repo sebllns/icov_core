@@ -307,18 +307,6 @@ void FrameEncoder::processInput(std::ostream &output,
   const Size tuSize_luma =
       Size(m_params.tuSize_luma.width, m_params.tuSize_luma.height);
 
-  //  const std::vector<int> qp_set = {22, 27, 32, 37, 42};
-  // const int qp = m_qp;
-  // std::cout << "qp= " << qp << std::endl;
-
-  // internalBitDepth[CHANNEL_TYPE_LUMA] = 8;   // Bit-depth the codec operates
-  // at (input/output files will be converted). (default: MSBExtendedBitDepth).
-  // If different to MSBExtendedBitDepth, source data will be converted
-  // internalBitDepth[CHANNEL_TYPE_CHROMA] = 8;   // Bit-depth the codec
-  // operates at (input/output files will be converted). (default:
-  // MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data will
-  // be converted
-
   // end constants
 
   // resize
@@ -614,9 +602,6 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                                              const Block &b,
                                              uint16_t prediction) {
 
-  //  if (!m_params.enable_block_encoding)
-  //    return;
-
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
   ICOV_LOG(debug) << "try encode prediction " << BlockPrediction::toString(pred)
@@ -641,24 +626,8 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
-  //  icov::helpers::assert::check(
-  //      si_map.count(pred),
-  //      "Prediction not found in computed data for the block: " +
-  //          BlockPrediction::toString(pred));
-
   if (si_map.count(pred) > 0)
     encode_icu(output, b, icu_enc, pred);
-
-  //  const IPicture &p = *(b.parent());
-  //  int bw = std::ceil(b.w() * p.width());
-  //  int bh = std::ceil(b.h() * p.height());
-  //  int bx = std::ceil(p.u(p.angleX(b.u())) * p.width());
-  //  int by = std::ceil(p.v(p.angleY(b.v())) * p.height());
-  //  auto rect_block = cv::Rect(bx, by, bw, bh);
-  //  std::cout << rect_block << std::endl;
-  //  m_cvmat[PIC_RECONSTRUCTION](rect_block).setTo(cv::Scalar(255, 0, 0));
-  //  cv::imshow(WIN_RECO, m_cvmat[PIC_RECONSTRUCTION]);
-  //  cv::waitKey(0);
 }
 
 void icov::encoder::FrameEncoder::encode(

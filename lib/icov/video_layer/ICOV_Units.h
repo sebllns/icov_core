@@ -11,7 +11,7 @@
  *  @brief ICOV_Units
  *  @ingroup video_layer
  *  @author Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.0
  *  @date 2018, 2022
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.

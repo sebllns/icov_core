@@ -11,7 +11,7 @@
 /** @file IEncoder.h
  *  @brief Defines an abstract ICOV IEncoder.
  *  @ingroup IEncoder
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.

@@ -11,7 +11,7 @@
 /** @file SourceMedia.h
  *  @brief Defines an actual ICOV SourceMedia.
  *  @ingroup SourceMedia
- *  @author S�bastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.

@@ -10,7 +10,7 @@
 /** @file povrequest.cpp
  *  @brief Request object used to transmit a point of view only
  *  @ingroup common
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
