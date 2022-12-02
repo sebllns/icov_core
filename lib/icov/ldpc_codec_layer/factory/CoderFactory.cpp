@@ -49,6 +49,9 @@ CoderFactory::create_coder(const boost::program_options::variables_map &args) {
 void CoderFactory::create_coder_yuv(
     const boost::program_options::variables_map &args,
     p_InteractiveCoder &y_coder, p_InteractiveCoder &uv_coder) {
+
+  // create parameters for Chroma coder: size of chroma block is 1/4 size of
+  // luminance block
   boost::program_options::variables_map args_uv(args);
   boost::any uv_length(args[OPT_CODE_LENGTH].as<int>() / 4);
   auto code_length_option = args_uv[OPT_CODE_LENGTH];
@@ -56,7 +59,10 @@ void CoderFactory::create_coder_yuv(
   args_uv.insert_or_assign(OPT_CODE_LENGTH, code_length_option);
 
   y_coder = CoderFactory::create_coder(args);
+  ICOV_LOG(info) << "Luminance coder instanciated";
+
   uv_coder = CoderFactory::create_coder(args_uv);
+  ICOV_LOG(info) << "Chroma coder instanciated";
 }
 
 } // namespace icov

@@ -1,27 +1,22 @@
 #ifndef VARODAYANMatrixProvider_H
 #define VARODAYANMatrixProvider_H
 
-#include "aff3ct/IAff3ctMatrixProvider.h"
 #include "VarodayanSyndrome.h"
+#include "aff3ct/IAff3ctMatrixProvider.h"
 
 namespace icov {
-class VarodayanMatrixProvider : public IAff3ctMatrixProvider
-{
+class VarodayanMatrixProvider : public IAff3ctMatrixProvider {
 public:
-    VarodayanMatrixProvider(VarodayanSyndromeManager* tools):
-        m_tools(tools)
-    {
+  [[deprecated]] VarodayanMatrixProvider(VarodayanSyndromeManager *tools)
+      : m_tools(tools) {}
+  ~VarodayanMatrixProvider() = default;
 
-    }
-    ~VarodayanMatrixProvider() = default;
-
-
-    // IMatrixProvider interface
+  // IMatrixProvider interface
 protected:
-    void _buildMatrix(int numcode, AffMatrix &matrix) override;
+  void _buildMatrix(int numcode, AffMatrix &matrix) override;
 
 private:
-    std::shared_ptr<VarodayanSyndromeManager> m_tools;
+  std::shared_ptr<VarodayanSyndromeManager> m_tools;
 };
-}
+} // namespace icov
 #endif // VARODAYANMatrixProvider_H
