@@ -140,9 +140,9 @@ void assert::check(bool expr, const std::string &msg) {
     ICOV_THROW_LOGICAL_EXCEPTION("Assertion is invalid: " + msg);
 }
 
-void assert::not_null(const void *p) {
+void assert::not_null(const void *p, const std::string &msg) {
   if (!p)
-    ICOV_THROW_NULLPTR("Nullptr is forbidden");
+    ICOV_THROW_NULLPTR(msg);
 }
 
 int maths::quantize(int value, int step, int min, int max) {

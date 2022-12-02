@@ -10,7 +10,7 @@
 /** @file ISyndrome.h
  *  @brief Defines the syndrome manager class
  *  @ingroup interactive-coder
- *  @author Sébastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.2.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.

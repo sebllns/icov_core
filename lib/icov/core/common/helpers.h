@@ -270,7 +270,8 @@ template <typename T> void range(T val, T min, T max) {
                                             std::to_string(max) + "]"));
 }
 
-void not_null(const void *p);
+void not_null(const void *p,
+              const std::string &msg = "Pointer was not allocated");
 void check(bool expr, const std::string &msg);
 template <typename T>
 void equal(T a, T b, const std::string &msg = "elements must be equal") {

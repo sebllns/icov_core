@@ -30,23 +30,17 @@ CoderFactory::create_coder(const boost::program_options::variables_map &args) {
     throw std::invalid_argument("Unknown coder type: " + coder_type);
   }
 
-  if (!llrProvider) {
-    throw std::runtime_error("LLRProvider was not instantiated");
-  }
+  icov::helpers::assert::not_null(llrProvider.get(),
+                                  "LLRProvider was not instantiated");
+  icov::helpers::assert::not_null(ldpca_dec.get(),
+                                  "Decoder was not instantiated");
+  icov::helpers::assert::not_null(mp.get(),
+                                  "MatrixProvider was not instantiated");
+  icov::helpers::assert::not_null(syndromeMgr.get(),
+                                  "SyndromeManager was not instantiated");
 
-  if (!ldpca_dec) {
-    throw std::runtime_error("Decoder was not instantiated");
-  }
-
-  if (!mp) {
-    throw std::runtime_error("MatrixProvider was not instantiated");
-  }
-
-  if (!syndromeMgr) {
-    throw std::runtime_error("SyndromeManager was not instantiated");
-  }
-
-  ICOV_LOG(info) << "Initialization of coder with type = " << coder_type;
+  ICOV_LOG(info) << "Initialization of coder with type " << coder_type
+                 << " and length " << syndromeMgr->get_n();
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(
       ldpca_dec, mp, syndromeMgr, llrProvider);
