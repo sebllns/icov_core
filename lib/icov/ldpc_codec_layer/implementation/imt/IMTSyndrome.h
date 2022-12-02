@@ -27,7 +27,7 @@ public:
 
   bool init_rateless;
 
-  IMTSyndromeManager(int n);
+  [[deprecated]] IMTSyndromeManager(int n);
   virtual ~IMTSyndromeManager() = default;
 
   virtual void init_accumulation(const BitVec &source_x) override;
