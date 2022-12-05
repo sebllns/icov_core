@@ -57,7 +57,7 @@ public:
                        std::vector<SISyndromes> &syndromes,
                        const std::vector<SIVec> &si,
                        const BitSymbolProvider::params &p,
-                       const SymboleVec &src, bool trace_si = false);
+                       const SymboleVec &src);
 
   void encode_bitplanes(const BitSymbolProvider &bsp, SINumcodeIdx &rate,
                         SISyndromes &stored_synd);

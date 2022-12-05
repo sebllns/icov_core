@@ -12,7 +12,7 @@
 // *  @brief Defines an abstract ICOV IExtractor.
 // *  @ingroup IExtractor
 // *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
-// *  @version 0.0.1
+// *  @version 1.0.1
 // *  @date 2022
 // *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
 // * The copyright in this software is being made available under

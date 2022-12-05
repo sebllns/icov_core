@@ -11,7 +11,7 @@
  *  @brief LLRProvider is a class used to compute LLR for LDPC coder
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 0.0.1
+ *  @version 1.0.1
  *  @date %YEAR%
  *  @copyright Copyright (C) %YEAR% by Inria. All rights reserved.
  * The copyright in this software is being made available under

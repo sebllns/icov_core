@@ -12,7 +12,7 @@
  *  DESCRIPTION
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 0.0.1
+ *  @version 1.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
  * The copyright in this software is being made available under
@@ -50,19 +50,18 @@
 
 #include "common.h"
 
-class TestSequenceInput
-{
-    typedef int data_type;
-public:
-    TestSequenceInput(size_t size);
+class TestSequenceInput {
+  typedef int data_type;
 
-    bool read_from_file(std::string filename);
-    const std::vector<data_type>& get_source() const;
-    const std::vector<data_type>& get_side_info(int idx) const;
-    int get_side_info_count() const;
+public:
+  TestSequenceInput(size_t size);
+
+  bool read_from_file(std::string filename);
+  const std::vector<data_type> &get_source() const;
+  const std::vector<data_type> &get_side_info(int idx) const;
+  int get_side_info_count() const;
 
 protected:
-    size_t m_size;
-    std::vector<std::vector<data_type>> m_data;
+  size_t m_size;
+  std::vector<std::vector<data_type>> m_data;
 };
-

@@ -52,11 +52,12 @@ public:
             (std::string(OPT_MODE) + ",m").c_str(),
             po::value<std::string>()->required(), "set the program mode")(
             (std::string(OPT_CODER_TYPE) + ",c").c_str(),
-            po::value<std::string>()->required(), "set the coder type")(
-            (std::string(OPT_DATA_PATH) + ",d").c_str(),
-            po::value<std::string>()->required(), "set the data path")(
+            po::value<std::string>()->default_value("imt164"),
+            "set the coder type")((std::string(OPT_DATA_PATH) + ",d").c_str(),
+                                  po::value<std::string>()->required(),
+                                  "set the data path")(
             (std::string(OPT_CODE_LENGTH) + ",n").c_str(),
-            po::value<int>()->required(),
+            po::value<int>()->default_value(1024),
             "set the code length")((std::string(OPT_BP_ITE) + ",it").c_str(),
                                    po::value<int>()->default_value(100),
                                    "set iteration count for BP LDPC coder")(

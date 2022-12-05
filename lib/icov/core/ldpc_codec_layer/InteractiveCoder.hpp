@@ -179,7 +179,7 @@ template <class Matrix>
 void InteractiveCoder<Matrix>::encode_symboles(
     std::vector<SINumcodeIdx> &numcodesIdx, std::vector<SISyndromes> &syndromes,
     const std::vector<SIVec> &si, const BitSymbolProvider::params &p,
-    const SymboleVec &src, bool trace_si) {
+    const SymboleVec &src) {
 
   // init outputs
   if (numcodesIdx.size() != si.size()) {
@@ -195,8 +195,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
 
   // encode with each SI
   for (size_t i = 0; i < si.size(); i++) {
-    if (trace_si)
-      ICOV_LOG(debug) << "SI=" << i + 1 << "/" << si.size();
+    ICOV_LOG(info) << "SI=" << i + 1 << "/" << si.size();
     bsp.set_si(si[i], p);
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }

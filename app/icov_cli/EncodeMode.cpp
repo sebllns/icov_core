@@ -43,11 +43,7 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 
     bool enable_z_quantization = true;
     std::vector<float> q_values;
-    icov::helpers::io::read_vector(
-        (fs::absolute(fs::path(args[OPT_DATA_PATH].as<std::string>()) /
-                      "../q-ary/q"))
-            .string(),
-        q_values);
+    icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE.string(), q_values);
     BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
     icov::encoder::FrameEncoder::params enc_params = {
         42,

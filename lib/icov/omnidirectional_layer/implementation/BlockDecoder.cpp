@@ -12,7 +12,7 @@
  *  @brief Implements an actual ICOV decoder.
  *  @ingroup decoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 0.0.1
+ *  @version 1.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
  * The copyright in this software is being made available under 

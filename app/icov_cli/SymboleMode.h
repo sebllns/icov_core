@@ -12,7 +12,7 @@
  *  DESCRIPTION
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 0.0.1
+ *  @version 1.0.1
  *  @date 2021
  *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
  * The copyright in this software is being made available under
@@ -56,56 +56,61 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
+///
+/// \brief The SymboleMode class runs the tests sequences from a dataset of
+/// blocks and SI values
+///
 class SymboleMode {
 public:
+  ///
+  /// \brief AddProgramOptions add options specific to this mode
+  /// \param desc
+  ///
+  static void AddProgramOptions(po::options_description &desc);
+
+  ///
+  /// \brief initialisation of this mode with the parsed options
+  /// \param args
+  ///
   SymboleMode(const po::variables_map &args);
   ~SymboleMode() = default;
 
+  ///
+  /// \brief run this mode
+  ///
   void run();
 
-  static void AddProgramOptions(po::options_description &desc);
-
 private:
-  void encode();
+  ///
+  /// \brief write_results writes a file containing measured rates from ICOV and
+  /// the ground truth to compare
+  ///
+  /// \param sequence_name is the processed file
+  /// \param numcodes are the rates measured
+  ///
   void write_results(const std::string &sequence_name,
                      const std::vector<SINumcodeIdx> &numcodes);
+
+  ///
+  /// \brief process_input_list reads a text file that contains the list of
+  /// files to be tested i.e. the dataset
+  /// \param file is dataset: list of test data files separated by newline
+  ///
   void process_input_list(const std::string &file);
+
+  ///
+  /// \brief process_input_file process one file frome the dataset
+  /// \param file
+  ///
   void process_input_file(const std::string &file);
-  //  void compute_src_bits();
-  //  void process_si();
-  //  void compute_si_bits();
-  //  void init_bsp();
-  //  void encode_bitplane(int i, std::vector<std::vector<float>> &result);
-  //  bool check_decoding(int i);
-  //  void fill_predec(int i);
 
   std::unique_ptr<AffInteractiveCoder> m_coder;
-  int n;
 
   fs::path m_dataset_dir;
   fs::path m_references_dir;
   fs::path m_result_dir;
-
-  //  SymboleVec src_symbols;
-  //  Bitplanes src_bits;
-
-  // SIVec side_info;
-  // Bitplanes si_bits;
-
-  //  LLRVec llr;
-  //  BitVec dec_bits;
-  //  BitVec dec_signs;
-  //  BitVec dec_symbols;
-  //  std::vector<std::pair<float, float>> sim_result;
   std::vector<float> q_values;
-  //  BitSymbolProvider bsp;
-  //  std::vector<int> predec;
-  //  std::vector<SIRates> rate_results;
-
   std::ofstream measure_file;
-
-  //  int lx;
-  //  Syndrome stored_synd;
   int max_si_count;
 
   bool enable_q_quantization;

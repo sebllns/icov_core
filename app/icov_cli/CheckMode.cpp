@@ -43,11 +43,9 @@ FastMatrix<bit> CheckMode::getHighLevelMatrixImt164() {
   std::cout << "Reading file " << path << std::endl;
   PcmData::read_matrix(path.string(), h);
 
-  if ((int)h.cols() != n) {
-    BOOST_THROW_EXCEPTION(
-        std::runtime_error("Bad column count: " + std::to_string(h.cols()) +
-                           " != " + std::to_string(n)));
-  }
+  icov::helpers::assert::equal((int)h.cols(), n,
+                               "Bad column count: " + std::to_string(h.cols()) +
+                                   " != " + std::to_string(n));
 
   if ((int)h.rows() != nrows) {
     BOOST_THROW_EXCEPTION(
