@@ -1,6 +1,5 @@
 #include "BlockDecoder.h"
 
-#include "enc_helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/ICOV_Quant.h"

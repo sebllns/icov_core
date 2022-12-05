@@ -79,7 +79,10 @@
 #include <vector>
 
 #include "common.h"
+#include <boost/archive/binary_iarchive.hpp>
 #include <boost/exception/all.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/stacktrace.hpp>
 
 #define CONSOLE_FG_RED 91
@@ -106,6 +109,8 @@
 
 #define CONSOLE_TODO                                                           \
   CONSOLE_FORMAT(CONSOLE_FG_BLUE) CONSOLE_FORMAT(CONSOLE_HIGHLIGHT)
+
+#define WRITE_CHARS(buf, data) buf.write((char *)&data, sizeof(data))
 
 namespace boost {
 inline void assertion_failed_msg(char const *expr, char const *msg,

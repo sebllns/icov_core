@@ -3,6 +3,8 @@
 
 #include "BinaryMode.h"
 #include "CheckMode.h"
+#include "DecodeMode.h"
+#include "DemoMode.h"
 #include "EncodeMode.h"
 #include "ExportMode.h"
 #include "SymboleMode.h"
@@ -13,7 +15,9 @@ ProgramController::ProgramController() {
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
   CheckMode::AddProgramOptions(m_options_desc);
+  DemoMode::AddProgramOptions(m_options_desc);
   EncodeMode::AddProgramOptions(m_options_desc);
+  DecodeMode::AddProgramOptions(m_options_desc);
 }
 
 void ProgramController::launchMode(const std::string &mode_id) {
@@ -37,11 +41,21 @@ void ProgramController::launchMode(const std::string &mode_id) {
     CheckMode mode(m_options_map, dataPath());
     mode.run();
     ICOV_LOG(debug) << "end check\n";
+  } else if (mode_id == "demo") {
+    ICOV_LOG(debug) << "demo mode started";
+    DemoMode mode(m_options_map);
+    mode.run();
+    ICOV_LOG(debug) << "end demo\n";
   } else if (mode_id == "encode") {
     ICOV_LOG(debug) << "encode mode started";
     EncodeMode mode(m_options_map);
     mode.run();
     ICOV_LOG(debug) << "end encode\n";
+  } else if (mode_id == "decode") {
+    ICOV_LOG(debug) << "decode mode started";
+    DecodeMode mode(m_options_map);
+    mode.run();
+    ICOV_LOG(debug) << "end decode\n";
   } else {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }

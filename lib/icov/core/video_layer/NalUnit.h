@@ -76,8 +76,9 @@ public:
   void setRbsp(icov::byte *data, int length);
   icov::enum_t::NalUnitType getType() const;
   int getRbspLength() const;
-  const void readRbsp(icov::byte *dst, int length, int offset = 0) const;
-  const icov::byte getRbspByte(int position) const;
+  const icov::byte *getRbsp() const;
+  void readRbsp(icov::byte *dst, int length, int offset = 0) const;
+  icov::byte getRbspByte(int position) const;
 
 private:
   /// 3 bits

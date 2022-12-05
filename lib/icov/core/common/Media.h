@@ -105,7 +105,6 @@ private:
 template <typename T> class IInputMedia : public IMedia {
 private:
   IInputMedia() = default;
-  //  IInputMedia(const IInputMedia &) = default;
 
 protected:
   T m_frameData;
@@ -135,10 +134,9 @@ public:
 /** @ingroup common
  *  @brief Defines the interface for any IOutputMedia.
  */
-class IOutputMedia : public IMedia {
+class OutputStream : public IMedia {
 private:
-  IOutputMedia() = default;
-  //  IInputMedia(const IInputMedia &) = default;
+  OutputStream() = default;
 
 protected:
 public:

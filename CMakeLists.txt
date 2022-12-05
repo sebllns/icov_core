@@ -162,6 +162,7 @@ find_package(Boost 1.70.0
     date_time
     thread
     chrono
+    serialization
 #    OPTIONAL_COMPONENTS
 #    unit_test_framework
 #stacktrace_backtrace
@@ -215,9 +216,9 @@ message("-----------------------------------------------------------------------
 ########################################
 #               ICOV                   #
 ########################################
-set(ICOV_CORE_VERSION_MAJOR "0")
-set(ICOV_CORE_VERSION_MINOR "10")
-set(ICOV_CORE_VERSION_PATCH "0")
+set(ICOV_CORE_VERSION_MAJOR "1")
+set(ICOV_CORE_VERSION_MINOR "0")
+set(ICOV_CORE_VERSION_PATCH "1")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 
 add_compile_definitions("ICOV_LOG_LEVEL=${ICOV_LOG_LEVEL}")
@@ -261,6 +262,8 @@ add_subdirectory(lib/icov)
 if(ICOV_BUILD_ENCODER)
     add_subdirectory(lib/encoder)
 endif()
+
+add_subdirectory(lib/decoder)
 
 if(ICOV_BUILD_EXTENSIONS)
     add_subdirectory(lib/extensions)

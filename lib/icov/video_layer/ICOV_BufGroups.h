@@ -62,6 +62,7 @@ protected:
   BoolStorage _recoFlagBuf;
 
   std::map<int, PelStorage> _bufs;
+  std::map<int, int> _links;
   //  UInt _margins[NUM_PIC_TYPES);
 
 public:
@@ -75,18 +76,22 @@ public:
               const bool scaleChromaMargin = true);
   void create(int pictureType, const UnitArea &unit);
 
+  inline void create_link(int from, int to) { _links[from] = _links[to]; }
+
   inline const_iterator begin() const { return _bufs.begin(); }
   inline const_iterator end() const { return _bufs.end(); }
 
   inline iterator begin() { return _bufs.begin(); }
   inline iterator end() { return _bufs.end(); }
 
-  PelStorage &get(int pictureType) { return _bufs.at(pictureType); }
-  const PelStorage &get(int pictureType) const { return _bufs.at(pictureType); }
+  PelStorage &get(int pictureType) { return _bufs.at(_links[pictureType]); }
+  const PelStorage &get(int pictureType) const {
+    return _bufs.at(_links.at(pictureType));
+  }
 
-  PelUnitBuf &getBuf(int pictureType) { return _bufs.at(pictureType); }
+  PelUnitBuf &getBuf(int pictureType) { return _bufs.at(_links[pictureType]); }
   const CPelUnitBuf getBuf(int pictureType) const {
-    return _bufs.at(pictureType);
+    return _bufs.at(_links.at(pictureType));
   }
 };
 } // namespace icov::video

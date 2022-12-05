@@ -55,6 +55,7 @@
 
 class IBlockDecoder : public IBlockProcessor {
 protected:
+  // std::istream m_bitstream;
   std::unique_ptr<IRenderer> m_renderer;
   unsigned char *m_pixels;
   int m_width;
@@ -62,7 +63,9 @@ protected:
   int m_rowPitch;
 
 public:
-  IBlockDecoder() : m_pixels(nullptr), m_width(0), m_height(0), m_rowPitch(0) {}
+  IBlockDecoder(/*const std::istream &bitstream*/)
+      : /*m_bitstream(bitstream.rdbuf()),*/ m_pixels(nullptr), m_width(0),
+        m_height(0), m_rowPitch(0) {}
 
   virtual ~IBlockDecoder() = default;
   virtual void decode(/*stream*/) = 0;

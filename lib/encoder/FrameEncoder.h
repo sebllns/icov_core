@@ -55,7 +55,6 @@
 #include "video_layer/Encodingstructure.h"
 
 #include <map>
-#include <opencv2/opencv.hpp>
 
 namespace icov {
 namespace encoder {
@@ -96,13 +95,6 @@ public:
   FrameEncoder(int frame, const params &p);
   ~FrameEncoder();
 
-  void onMouseViewPred(int event, int x, int y, int flags);
-  void onMouseEncode(int event, int x, int y, int flags);
-
-  void encode(std::ostream &output, IInputMedia<cv::Mat> &input,
-              const IPicture &picture, const IAccessBlockManager &access_blocks,
-              const IBlockPrediction &block_prediction) override;
-
 protected:
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
@@ -110,9 +102,6 @@ protected:
                     const IInputMedia<cv::Mat> &input) override;
 
 private:
-  void onSelectBlock(int x, int y);
-  void onEncodeBlock(int x, int y);
-
   void encode_icu(std::ostream &output, const Block &b,
                   const icov::video::IcuEncoder &icu_enc,
                   BlockPrediction::predType pred);
@@ -129,13 +118,9 @@ private:
 protected:
   params m_params;
   uint m_numComp;
-  std::map<int, cv::Mat> m_cvmat;
   std::map<size_t, std::unique_ptr<AffInteractiveCoder>> m_coders;
-  bool m_firstDisplayBlocks;
   icov::video::EncodingStructure m_enc_struc;
-  cv::Point m_currentBlockPosition;
   icov::video::BufGroups m_vvc_bufs;
-  const IPicture *m_pic_ptr;
 };
 } // namespace encoder
 } // namespace icov

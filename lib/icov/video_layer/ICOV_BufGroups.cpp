@@ -24,7 +24,7 @@ void icov::video::BufGroups::create(
 
   _bufs[pictureType].create(chromaFormat, lumaArea, maxCUSize, margin,
                             alignment, scaleChromaMargin);
-  //    _margins[pictureType] = margin;
+  _links[pictureType] = pictureType;
 
   if (pictureType == PIC_RECONSTRUCTION)
     _recoFlagBuf.create(chromaFormat, lumaArea, maxCUSize, margin, alignment,
@@ -36,7 +36,7 @@ void icov::video::BufGroups::create(int pictureType, const UnitArea &unit) {
   //        "picture type not specified");
 
   _bufs[pictureType].create(unit);
-  //  _margins[pictureType] = 0;
+  _links[pictureType] = pictureType;
 
   if (pictureType == PIC_RECONSTRUCTION)
     _recoFlagBuf.create(unit);
