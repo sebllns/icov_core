@@ -523,7 +523,7 @@ void icov::encoder::DemoEncoder::encode_tu(
     output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
            << b.parent()->col(b.u()) << "\t" << BlockPrediction::toString(pred)
            << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
-           << m_coders.at(tu_size)->getRate(si_numcodes[i]) << "\t"
+           << m_coders.at(tu_size)->get_r(si_numcodes[i]) << "\t"
            << si_synd[i].to_string(" ") << "\t";
     output << std::endl;
 

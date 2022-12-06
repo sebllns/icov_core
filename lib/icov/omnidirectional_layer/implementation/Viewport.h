@@ -1,19 +1,17 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup common
- *  @ingroup icov-core
  */
 
 /** @file Viewport.h
  *  @brief Viewport conveying Viewport Units (VPU) for VCL data
- *  @ingroup common
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -57,32 +55,31 @@ using RowMinMax = std::vector<MinMax>;
 /** @class Viewport
  *  @brief Viewport
  *
- *  A Viewport is the smallest unit of a EquiRectPicture or Viewport and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A Viewport is the smallest unit of a EquiRectPicture or Viewport and is
+ * conveying the pixels to be decoded and the pixels to be displayed.
  */
-class Viewport
-{
+class Viewport {
 private:
-
 public:
-    std::vector<std::shared_ptr<DecodingBlock>> icus;
-    BlockOrder order;
-    RowMinMax rows;
+  std::vector<std::shared_ptr<DecodingBlock>> icus;
+  BlockOrder order;
+  RowMinMax rows;
 
-    int16_t access_block_index;
+  int16_t access_block_index;
 
-    float center_x;
-    float center_y;
-    float fov_x;
-    float fov_y;
+  float center_x;
+  float center_y;
+  float fov_x;
+  float fov_y;
 
-    float u_min, u_max, v_min, v_max;
+  float u_min, u_max, v_min, v_max;
 
-    Viewport(float pcenter_x, float pcenter_y, float fov_x, float fov_y);
-    void computeOrdering();
-    void computeRows();
-    int16_t rowLength(int16_t row);
-    void getBlockCoords(const Block &b, int16_t & o_row, int16_t &o_offset);
-    int16_t getBlockIndex(int16_t row, int16_t offset);
-    void findNextFreeBlock(int16_t &row, int16_t &offset, bool down);
-    void normalizeUV(float &u, float &v);
+  Viewport(float pcenter_x, float pcenter_y, float fov_x, float fov_y);
+  void computeOrdering();
+  void computeRows();
+  int16_t rowLength(int16_t row);
+  void getBlockCoords(const Block &b, int16_t &o_row, int16_t &o_offset);
+  int16_t getBlockIndex(int16_t row, int16_t offset);
+  void findNextFreeBlock(int16_t &row, int16_t &offset, bool down);
+  void normalizeUV(float &u, float &v);
 };

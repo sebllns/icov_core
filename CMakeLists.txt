@@ -9,8 +9,6 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 ########################################
 #      GLOBAL VARIABLES FOR ICOV       #
 ########################################
-set(ICOV_BUILD_STATIC ON CACHE BOOL "Build static libraries for ICOV")
-set(ICOV_BUILD_SHARED ON CACHE BOOL "Build shared libraries for ICOV")
 set(ICOV_BUILD_ENCODER ON CACHE BOOL "Build the icov encoder lib")
 set(ICOV_BUILD_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
 set(ICOV_BUILD_APPS ON CACHE BOOL "Build ICOV apps")

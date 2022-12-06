@@ -1,19 +1,18 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup icov-core
- */
-
 /** @file ViewportManagerCenterPadded.h
- *  @brief ViewportManagerCenterPadded conveying ViewportManagerCenterPadded Units (VPU) for VCL data
- *  @ingroup common
+ *  @brief ViewportManagerCenterPadded conveying ViewportManagerCenterPadded
+ *Units (VPU) for VCL data
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -47,23 +46,25 @@
  *****************************************************************************/
 #pragma once
 #include "common.h"
-#include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
 /** @class ViewportManagerCenterPadded
  *  @brief ViewportManagerCenterPadded
  *
- *  A ViewportManagerCenterPadded is the smallest unit of a EquiRectPicture or ViewportManagerCenterPadded and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A ViewportManagerCenterPadded is the smallest unit of a EquiRectPicture or
+ * ViewportManagerCenterPadded and is conveying the pixels to be decoded and the
+ * pixels to be displayed.
  */
-class ViewportManagerCenterPadded : public IViewportManager
-{
+class ViewportManagerCenterPadded : public IViewportManager {
 protected:
-    float m_padding;
-public:
-    ViewportManagerCenterPadded(float padding);
-    ~ViewportManagerCenterPadded() = default;
+  float m_padding;
 
-    // IViewportManager interface
-    virtual bool isBlockVisible(const Block &b) const override;
+public:
+  ViewportManagerCenterPadded(float padding);
+  ~ViewportManagerCenterPadded() = default;
+
+  // IViewportManager interface
+  virtual bool isBlockVisible(const Block &b) const override;
 };

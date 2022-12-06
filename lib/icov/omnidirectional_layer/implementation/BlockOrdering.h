@@ -1,19 +1,19 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup icov-core
- */
-
 /** @file BlockOrdering.h
- *  @brief BlockOrdering conveying BlockOrdering Units (VPU) for VCL data
- *  @ingroup common
+ *  @brief BlockOrdering Performs the loop on blocks starting from a viewport
+ *request, until all blocks in the viewport are processed in the order defined
+ *by the order heuristic
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,59 +52,58 @@
 #include <stack>
 
 /** @class BlockOrdering
- *  @brief BlockOrdering
- *
- *  A BlockOrdering is the smallest unit of a EquiRectPicture or BlockOrdering and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  @brief BlockOrdering class performs the loop on blocks starting from a
+ *viewport request, until all blocks in the viewport are processed in the order
+ *defined by the order heuristic
  */
-class BlockOrdering : public IBlockOrdering
-{
+class BlockOrdering : public IBlockOrdering {
 protected:
-    struct block_path_info
-    {
-        bool visibility_tested;
-        bool is_visible;
-        bool is_processed;
-        bool si_horizontal;
-        bool si_vertical;
+  ///
+  /// \brief The block_path_info struct puts in cache many useful informations
+  /// to order the blocks faster
+  ///
+  struct block_path_info {
+    bool visibility_tested;
+    bool is_visible;
+    bool is_processed;
+    bool si_horizontal;
+    bool si_vertical;
 
-        block_path_info()
-        {
-            reset();
-        }
+    block_path_info() { reset(); }
 
-        void reset()
-        {
-            visibility_tested = false;
-            is_visible = false;
-            is_processed = false;
-            si_horizontal = false;
-            si_vertical = false;
-        }
-    };
+    void reset() {
+      visibility_tested = false;
+      is_visible = false;
+      is_processed = false;
+      si_horizontal = false;
+      si_vertical = false;
+    }
+  };
 
-    std::stack<size_t> m_cursor;
-    std::vector<size_t> m_elements;
-    std::vector<block_path_info> m_path_info;
-    std::vector<block_path_info>::iterator getPathInfoById(size_t id);
-    std::vector<block_path_info>::const_iterator getPathInfoById(size_t id) const;
+  std::stack<size_t> m_cursor;
+  std::vector<size_t> m_elements;
+  std::vector<block_path_info> m_path_info;
+  std::vector<block_path_info>::iterator getPathInfoById(size_t id);
+  std::vector<block_path_info>::const_iterator getPathInfoById(size_t id) const;
 
-    Block::NeighborDirection findAvailableNeighbor(const Block &current, const IViewportManager &vpm);
+  Block::NeighborDirection findAvailableNeighbor(const Block &current,
+                                                 const IViewportManager &vpm);
 
 public:
-    BlockOrdering(size_t blocks_count);
-    ~BlockOrdering() = default;
+  BlockOrdering(size_t blocks_count);
+  ~BlockOrdering() = default;
 
-//    template<typename Iterator> void
-//    reset(Iterator it, Iterator end)
-//    {
-//        for(; it != end; ++it) this->getById(*it)->reset();
-//    }
+  //    template<typename Iterator> void
+  //    reset(Iterator it, Iterator end)
+  //    {
+  //        for(; it != end; ++it) this->getById(*it)->reset();
+  //    }
 
-
-    // IBlockOrdering interface
+  // IBlockOrdering interface
 public:
-    BlockVector::const_iterator getNextBlock(const Block &current, const IViewportManager &vpm) override;
-    void reset() override;
-    bool isBlockProcessed(size_t id) const override;
-    bool blockExists(size_t id) const;
+  BlockVector::const_iterator
+  getNextBlock(const Block &current, const IViewportManager &vpm) override;
+  void reset() override;
+  bool isBlockProcessed(size_t id) const override;
+  bool blockExists(size_t id) const;
 };

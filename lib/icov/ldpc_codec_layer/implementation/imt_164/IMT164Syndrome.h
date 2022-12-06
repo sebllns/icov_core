@@ -1,16 +1,16 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup common
- *  @ingroup icov-core
+ *  @ingroup ICOV
  */
 
 /** @file IMT164Syndrome.h
  *  @brief Manage syndrome from IMT matrices until rate 1/64
  *  DESCRIPTION
- *  @ingroup common
+ *  @ingroup ldpc_codec_layer
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
  *  @date 2022

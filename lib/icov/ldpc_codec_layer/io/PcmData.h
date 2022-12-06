@@ -1,20 +1,19 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup common
- *  @ingroup icov-core
+ *  @ingroup ICOV
  */
 
 /** @file PcmData.h
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
- *  @ingroup common
+ *  @brief Read matrices and vectors from PCM format
+ *  @ingroup ldpc_codec_layer
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -53,13 +52,14 @@
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
 
-class PcmData
-{
+class PcmData {
 public:
-    static void read_matrix(const std::string &filepath, AffMatrix &h);
-    static void read_matrix(const std::string &filepath, icov::FastMatrix<bool> &h);
-    static void read_mapping_vector(const std::string &filepath, icov::FastMatrix<uint16_t> &m);
-private:
-    PcmData() = default;
-};
+  static void read_matrix(const std::string &filepath, AffMatrix &h);
+  static void read_matrix(const std::string &filepath,
+                          icov::FastMatrix<bool> &h);
+  static void read_mapping_vector(const std::string &filepath,
+                                  icov::FastMatrix<uint16_t> &m);
 
+private:
+  PcmData() = default;
+};

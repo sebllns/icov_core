@@ -1,19 +1,18 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup icov-core
- */
-
 /** @file EquiRectPicture.h
- *  @brief EquiRectPicture conveying EquiRectPicture Units (VPU) for VCL data
- *  @ingroup common
+ *  @brief EquiRectPicture is implementation of the abstract class IPicture with
+ *the equirectangular projection
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,9 +51,8 @@
 /** @class EquiRectPicture
  *  @brief EquiRectPicture
  *
- *  A EquiRectPicture is the smallest unit of a EquiRectPicture or
- * EquiRectPicture and is conveying the pixels to be decoded and the pixels to
- * be displayed.
+ *  A EquiRectPicture is implementation of the abstract class IPicture with
+ *the equirectangular projection
  */
 class EquiRectPicture : public IPicture {
 private:

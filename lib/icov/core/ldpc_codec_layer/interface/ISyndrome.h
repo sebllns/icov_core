@@ -1,10 +1,10 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  * ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup interactive-coder
- *  @ingroup common
+ *  @ingroup ldpc_codec_layer
  */
 
 /** @file ISyndrome.h
@@ -12,8 +12,8 @@
  *  @ingroup interactive-coder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 0.2.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or

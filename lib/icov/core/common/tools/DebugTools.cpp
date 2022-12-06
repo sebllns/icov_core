@@ -50,11 +50,11 @@ void colored_formatter(boost::log::record_view const &rec,
     break;
   }
 
-  strm << boost::log::extract<unsigned int>("LineID", rec) << ": [";
+  //  strm << boost::log::extract<unsigned int>("LineID", rec) << ": [";
   date_time_formatter(rec, strm);
-  strm << "] [";
+  // strm << "] [";
 
-  strm << severity << "]  " << rec[expr::message]
+  strm << "[" << severity << "] \t" << rec[expr::message]
        << CONSOLE_FORMAT(CONSOLE_DEFAULT);
 }
 
@@ -82,21 +82,21 @@ void icov::debug::initLog() {
       boost::log::keywords::depth = 2);
 
   boost::log::formatter logFmt =
-      boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%") %
+      boost::log::expressions::format("[%1%]\t(%2%)\t[%3%]\t[%4%]\t%5%") %
       fmtTimeStamp % fmtThreadId % fmtSeverity % fmtScope %
       boost::log::expressions::smessage;
 
-  logging::add_file_log(
-      keywords::file_name = "icov_%N.log",
-      keywords::rotation_size = 200 * 1024 * 1024,
-      // This makes the sink to write log records that look like this:
-      // YYYY-MM-DD HH:MI:SS: <normal> A normal severity message
-      // YYYY-MM-DD HH:MI:SS: <error> An error severity message
-      keywords::format =
-          (expr::stream << expr::format_date_time<boost::posix_time::ptime>(
-                               "TimeStamp", "%Y-%m-%d %H:%M:%S")
-                        << ": <" << logging::trivial::severity << "> "
-                        << expr::smessage));
+  //  logging::add_file_log(
+  //      keywords::file_name = "icov_%N.log",
+  //      keywords::rotation_size = 200 * 1024 * 1024,
+  //      // This makes the sink to write log records that look like this:
+  //      // YYYY-MM-DD HH:MI:SS: <normal> A normal severity message
+  //      // YYYY-MM-DD HH:MI:SS: <error> An error severity message
+  //      keywords::format =
+  //          (expr::stream << expr::format_date_time<boost::posix_time::ptime>(
+  //                               "TimeStamp", "%Y-%m-%d %H:%M:%S")
+  //                        << ": <" << logging::trivial::severity << "> "
+  //                        << expr::smessage));
 
   /* console sink */
   auto consoleSink = boost::log::add_console_log(std::clog);

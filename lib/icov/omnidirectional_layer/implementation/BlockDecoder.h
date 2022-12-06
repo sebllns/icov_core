@@ -1,27 +1,24 @@
 /****************************************************************************/
-/** @addtogroup icov-core 
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup decoder
- * Decoder package (client side).
- *  @ingroup icov-core
  */
 
 /** @file decoder.h
  *  @brief Defines an actual ICOV decoder.
- *  @ingroup decoder
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -52,8 +49,7 @@
 
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 
-class BlockDecoder : public IBlockDecoder
-{
+class BlockDecoder : public IBlockDecoder {
 private:
   clock_t m_startTime;
 
@@ -62,7 +58,6 @@ public:
   virtual void decode(/*stream*/) override;
   float getTime();
   ~BlockDecoder();
-
 
   // IBlockManager interface
 public:

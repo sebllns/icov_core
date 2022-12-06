@@ -1,6 +1,4 @@
-src/build*/
-/build*/
-/third-party/build*/
+build*/
 doc/html/
 doc/latex
 data/imt/*/alist/

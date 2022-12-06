@@ -40,8 +40,10 @@ public:
   ~InteractiveCoder() = default;
 
   size_t get_n() const override;
+  int get_m(const NumcodeIdx &numcodeIdx) const;
 
-  Rate getRate(const NumcodeIdx &numcodeIdx) const;
+  Rate get_r(const NumcodeIdx &numcodeIdx) const;
+  Rate get_r(int m, int n) const;
 
   bool testConvergence(const BitVec &decoded, const BitVec &source) const;
 

@@ -140,17 +140,17 @@ void SymboleMode::write_results(const std::string &sequence_name,
   icov::helpers::assert::check(result_file.is_open(),
                                "cannot open result file for " + sequence_name);
 
-  result_file << "# actual rate" << std::endl;
+  result_file << "# ICOV rate" << std::endl;
   for (auto &si : numcodes) {
     for (auto &bp_numcode : si) {
       result_file << std::fixed << std::setw(7) << std::setprecision(6)
-                  << std::setfill('0') << m_coder->getRate(bp_numcode) << " ";
+                  << std::setfill('0') << m_coder->get_r(bp_numcode) << " ";
     }
     result_file << std::endl;
   }
   result_file << std::endl;
 
-  result_file << "# Fangping's rate" << std::endl;
+  result_file << "#Ground truth" << std::endl;
   auto &frangping_rate = tsr["R"];
   for (int i = 0; i < std::min(max_si_count, frangping_rate.n_rows); i++) {
     for (int j = 0; j < frangping_rate.n_cols; j++) {
@@ -171,7 +171,7 @@ void SymboleMode::write_results(const std::string &sequence_name,
   for (size_t si = 0; si < numcodes.size(); si++) {
     float icov_rate = 0.0, fp_rate = 0.0;
     for (size_t bp = 0; bp < numcodes[si].size(); bp++) {
-      icov_rate += m_coder->getRate(numcodes[si][bp]);
+      icov_rate += m_coder->get_r(numcodes[si][bp]);
       fp_rate += std::max(tsr["R"].get_data(si, frangping_rate.n_cols - 1 - bp),
                           min_rate);
     }
@@ -229,6 +229,50 @@ void SymboleMode::process_input_file(const std::string &file) {
 
   m_coder->encode_symboles(numcodes, syndromes, side_infos, bsp_params,
                            tsi.get_source());
+
+  ICOV_LOG(info) << "Check incremental syndrome";
+  // CHECK INCREMENTAL SYNDROME
+  int bitplanes_count = syndromes[0].size();
+  for (int i = 0; i < bitplanes_count; i++) {
+
+    std::cout << "BITPLANE " << i << std::endl;
+    // check per bitplane then per SI
+    int sk = 0;
+    bool sk_first = true;
+    bool sk_val = false;
+    do {
+      sk_first = true;
+
+      NumcodeIdx max_rate = 0;
+      for (int k = 0; k < (int)syndromes.size(); ++k) {
+
+        if (numcodes[k][i] > max_rate)
+          max_rate = numcodes[k][i];
+
+        //        for (int l = 0; l < (int)syndromes[k][i].size(); ++l) {
+        //          std::cout << syndromes[k][i][l] << " ";
+        //        }
+
+        //        std::cout << std::endl;
+
+        //        if ((int)syndromes[k][i].size() > sk) {
+
+        //          if (sk_first) {
+        //            sk_val = syndromes[k][i][sk];
+        //            sk_first = false;
+        //          } else {
+        //            icov::helpers::assert::equal(sk_val, syndromes[k][i][sk],
+        //                                         "Incremental syndrome check
+        //                                         failed");
+        //          }
+        //        }
+      }
+
+      ++sk;
+    } while (!sk_first);
+  }
+  ICOV_LOG(info) << "Incremental syndrome OK";
+
   write_results(fs::path(file).stem().string(), numcodes);
 }
 

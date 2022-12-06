@@ -56,7 +56,7 @@ void BinaryMode::run() {
       auto end = std::chrono::steady_clock::now();
 
       std::chrono::duration<double> elapsed_seconds = end - start;
-      rate[i] += m_coder->getRate(m_numcodeIdx) / m_nite;
+      rate[i] += m_coder->get_r(m_numcodeIdx) / m_nite;
       time[i] +=
           elapsed_seconds
               .count(); /// p.n_ite_crossover;// + (i > 0 ? b.time[i-1] : 0.0);

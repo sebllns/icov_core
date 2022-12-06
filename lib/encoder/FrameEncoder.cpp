@@ -10,6 +10,7 @@
 #include "video_layer/vtm_utility.h"
 
 #include <boost/algorithm/algorithm.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
@@ -165,6 +166,9 @@ void icov::encoder::FrameEncoder::encode_tu(
     const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp, int tu_index) {
+
+  boost::archive::binary_oarchive o_archive(output, boost::archive::no_header);
+
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
   auto x_tuCoeff = x_tu.getQuantizedTransformCoeffs(comp);
 
@@ -199,7 +203,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
            << b.parent()->col(b.u()) << "\t" << BlockPrediction::toString(pred)
            << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
-           << m_coders.at(tu_size)->getRate(si_numcodes[i]) << "\t"
+           << m_coders.at(tu_size)->get_r(si_numcodes[i]) << "\t"
            << si_synd[i].to_string(" ") << "\t";
     output << std::endl;
 

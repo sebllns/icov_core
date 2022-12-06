@@ -1,19 +1,18 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup icov-core
- */
-
 /** @file IcovAccessBlockManager.h
- *  @brief IcovAccessBlockManager conveying IcovAccessBlockManager Units (VPU) for VCL data
- *  @ingroup common
+ *  @brief IcovAccessBlockManager conveying IcovAccessBlockManager Units (VPU)
+ *for VCL data
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,18 +51,21 @@
 /** @class IcovAccessBlockManager
  *  @brief IcovAccessBlockManager
  *
- *  A IcovAccessBlockManager is the smallest unit of a EquiRectPicture or IcovAccessBlockManager and is conveying the pixels to be decoded and the pixels to be displayed.
+ *  A IcovAccessBlockManager is the smallest unit of a EquiRectPicture or
+ * IcovAccessBlockManager and is conveying the pixels to be decoded and the
+ * pixels to be displayed.
  *  TODO : RENAME WITHOUT ICOV
  */
-class IcovAccessBlockManager : public IAccessBlockManager
-{
+class IcovAccessBlockManager : public IAccessBlockManager {
 protected:
-    angle_radian m_angle_delta;
-public:
-    IcovAccessBlockManager() = default;
-    IcovAccessBlockManager(angle_radian angle_delta);
-    ~IcovAccessBlockManager() = default;
+  angle_radian m_angle_delta;
 
-    // IAccessBlockManager interface
-    virtual void buildAccessBlocks(const IPicture &pic, IViewportManager &vpm) override;
+public:
+  IcovAccessBlockManager() = default;
+  IcovAccessBlockManager(angle_radian angle_delta);
+  ~IcovAccessBlockManager() = default;
+
+  // IAccessBlockManager interface
+  virtual void buildAccessBlocks(const IPicture &pic,
+                                 IViewportManager &vpm) override;
 };

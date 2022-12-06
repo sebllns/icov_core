@@ -1,11 +1,11 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup BitstreamParser
  * BitstreamParser package (client side).
- *  @ingroup icov-core
+ *  @ingroup ICOV
  */
 
 /** @file BitstreamParser.h

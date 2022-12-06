@@ -1,15 +1,15 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup common
- *  @ingroup icov-core
+ *  @ingroup ICOV
  */
 
 /** @file LLRProvider.h
  *  @brief LLRProvider is a class used to compute LLR for LDPC coder
- *  @ingroup common
+ *  @ingroup ldpc_codec_layer
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
  *  @date %YEAR%

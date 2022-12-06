@@ -160,7 +160,9 @@ void BitSymbolProvider::set_si(const SIVec &si, int z_min, int z_max, float q,
   m_si_symboles = si;
   m_l = l;
   std::fill(m_src_symboles.begin(), m_src_symboles.end(), 0);
-  std::fill(m_src_bits[0].begin(), m_src_bits[0].end(), 0);
+  // std::fill(m_src_bits[0].begin(), m_src_bits[0].end(), 0);
+
+  m_src_bits = Bitplanes(l, BitVec(m_src_symboles.size(), 0));
 }
 
 float BitSymbolProvider::z_min() const { return m_pz_params.zmin; }
@@ -292,6 +294,8 @@ float BitSymbolProvider::pqks(int yk) const {
 }
 
 void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
+  m_src_bits[i] = x;
+
   if (i == 0) {
     // save sign
     m_src_bits[0] = x;

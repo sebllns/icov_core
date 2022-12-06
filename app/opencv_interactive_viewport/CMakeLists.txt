@@ -92,7 +92,7 @@ if(UNIX)
     target_link_libraries(${EXE_NAME}  dl)
 endif()
 
-target_link_libraries(${EXE_NAME} s_IcovRendererLib s_IcovNetworkLib s_IcovCoreLib s_IcovEncoderLib s_IcovCoreLib s_IcovOmnidirectionalLayer  glfw3 glad ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${OpenCV_LIBS})
+target_link_libraries(${EXE_NAME} IcovRendererLib IcovNetworkLib IcovCoreLib IcovEncoderLib IcovCoreLib IcovOmnidirectionalLayer  glfw3 glad ${OPENGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY} ${OpenCV_LIBS})
 set_source_files_properties( "*.c" PROPERTIES LANGUAGE "CXX" )
 
 set_target_properties(${EXE_NAME}

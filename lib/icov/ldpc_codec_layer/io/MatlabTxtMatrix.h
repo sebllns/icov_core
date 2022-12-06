@@ -1,20 +1,20 @@
 /****************************************************************************/
-/** @addtogroup icov-core
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @addtogroup common
- *  @ingroup icov-core
+ *  @ingroup ICOV
  */
 
 /** @file MatlabTxtMatrix.h
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
- *  @ingroup common
+ *  @brief Read Matrix from matlab export txt array format
+ *
+ *  @ingroup ldpc_codec_layer
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
- *  @date 2021
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @date 2022
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -50,39 +50,36 @@
 
 #include "common.h"
 
-class MatlabTxtMatrix
-{
+class MatlabTxtMatrix {
 public:
-    MatlabTxtMatrix();
-    template<typename T> static void read_matrix(const std::string &filename, icov::FastMatrix<T> &mat)
-    {
-        std::ifstream file(filename);
+  MatlabTxtMatrix();
+  template <typename T>
+  static void read_matrix(const std::string &filename,
+                          icov::FastMatrix<T> &mat) {
+    std::ifstream file(filename);
 
-        if (!file.is_open())
-        {
-            std::stringstream message;
-            message << "'filename' couldn't be opened ('filename' = " <<  filename << ").";
-            std::cerr<<message.str()<<std::endl;
-            throw  std::runtime_error(message.str());
-        }
-
-        uint32_t rows = 0;
-        uint32_t cols = 0;
-
-        file >> rows;
-        file >> cols;
-
-        mat = icov::FastMatrix<T>(rows, cols);
-        T val;
-
-        for(int c = 0 ; c < cols ; c++ )
-        {
-            for(int r = 0 ; r < rows ; r++ )
-            {
-                file >> val;
-                mat.at(r, c) = val;
-            }
-        }
+    if (!file.is_open()) {
+      std::stringstream message;
+      message << "'filename' couldn't be opened ('filename' = " << filename
+              << ").";
+      std::cerr << message.str() << std::endl;
+      throw std::runtime_error(message.str());
     }
-};
 
+    uint32_t rows = 0;
+    uint32_t cols = 0;
+
+    file >> rows;
+    file >> cols;
+
+    mat = icov::FastMatrix<T>(rows, cols);
+    T val;
+
+    for (int c = 0; c < cols; c++) {
+      for (int r = 0; r < rows; r++) {
+        file >> val;
+        mat.at(r, c) = val;
+      }
+    }
+  }
+};

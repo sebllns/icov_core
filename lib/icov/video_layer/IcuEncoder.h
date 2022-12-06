@@ -1,20 +1,17 @@
 /****************************************************************************/
-/** @addtogroup video_layer
- *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup video_layer
- *  @ingroup icov-core
+/** @addtogroup Video
+ *  Video contains the code related to video compression.
+ *  @ingroup ICOV
  */
 
 /** @file IcuEncoder.h
  *  @brief IcuEncoder
- *  @ingroup video_layer
+ *  @ingroup Video
  *  @author Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.0
  *  @date 2018, 2022
- *  @copyright Copyright (C) 2021 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
