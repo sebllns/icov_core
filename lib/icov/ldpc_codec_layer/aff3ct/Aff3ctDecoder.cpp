@@ -20,16 +20,6 @@ void icov::Aff3ctDecoder::decode(BitVec &o_decoded, int n, int idx,
   m_decvector[d]->decode_siho(llr, o_decoded);
 }
 
-// void icov::Aff3ctDecoder::decode_doping(BitVec &o_decoded,
-// std::vector<size_t> &o_doping_idx, int n, const std::vector<LLRVal> &llr,
-// Syndrome &syndrome, const AffMatrix &matrix)
-//{
-//     auto affdec = AffLDPCA(n, 100, matrix);
-//     affdec.setSyndrome(&syndrome);
-//     affdec.decode_siho(llr, o_decoded);
-//     affdec.get_llr_order(o_doping_idx);
-//}
-
 void icov::Aff3ctDecoder::init_decoder(int i, int n, int n_ite,
                                        const AffMatrix &matrix) {
   if (i >= (int)m_decvector.size())

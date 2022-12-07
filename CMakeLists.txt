@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 ########################################
 #            INIT PROJECT              #
@@ -24,6 +24,7 @@ option(ICOV_CORE_STACKTRACE_ENABLED "Enable the stacktrace" OFF)
 option(ICOV_CHECK_BITPLANE_ENCODING_ENABLED "Enable the bitplane decoding check right after decoding\
     (use it to debug as it impacts the performances)" OFF)
 option(ICOV_CONSOLE_COLOR_ENABLED "Enable color formatting of the console" OFF)
+option(ICOV_USE_OMP "Enable parallelization with OMP" OFF)
 
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(ICOV_BUILD_TESTS ON CACHE BOOL "Force ICOV tests to be built. ")
@@ -126,6 +127,14 @@ message("-----------------------------------------------------------------------
 message(STATUS "Checking dependencies...\n") #cf https://cmake.org/cmake/help/latest/command/message.html
 
 #---------------------------------------------------------------------
+# Use Conan
+#message(STATUS "Using conan...")
+#include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+#conan_basic_setup()
+
+#message("\n")
+
+#---------------------------------------------------------------------
 # Link with the "Threads library (required to link with AFF3CT after)
 message(STATUS "[INFO] Checking Threads support...")
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
@@ -134,9 +143,14 @@ find_package(Threads REQUIRED)
 message("\n")
 
 #---------------------------------------------------------------------
-
-#Link with
-
+#LINK WITH OPENMP
+if(ICOV_USE_OMP)
+message(STATUS "[INFO] Checking OpenMP support as ICOV_USE_OMP is ON...")
+find_package(OpenMP REQUIRED)
+message("\n")
+endif()
+#---------------------------------------------------------------------
+#Link with Boost
 message(STATUS "[INFO] Checking Boost support...")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)

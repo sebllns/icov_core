@@ -959,8 +959,6 @@ void icov::video::IntraPrediction::init(ChromaFormat chromaFormatIDC) {
       }
     }
   }
-
-  std::cout << "pred init\n";
 }
 
 void icov::video::IntraPrediction::initIntraPatternChType(

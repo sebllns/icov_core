@@ -14,6 +14,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include <omp.h>
+
 namespace fs = boost::filesystem;
 using namespace icov::encoder;
 using SI_SIDE = BlockPrediction::predType;
@@ -48,6 +50,14 @@ FrameEncoder::FrameEncoder(int frame, const params &p)
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() { ICOV_LOG(trace) << "Destroy FrameEncoder"; }
+
+/*****************************************************************************/
+void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
+                               bool access_block,
+                               const IBlockPrediction &block_prediction) {
+  for (uint16_t p : getAvailablePredictions(b, access_block, block_prediction))
+    encodeBlockWithPrediction(output, b, p);
+}
 
 /*****************************************************************************/
 void FrameEncoder::processInput(std::ostream &output,
@@ -139,9 +149,6 @@ void FrameEncoder::processInput(std::ostream &output,
   PelUnitBuf mainFrameReco =
       m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
-  icov::video::IntraPrediction intraPred;
-  intraPred.init(m_params.chFormat);
-
   ICOV_LOG(debug) << "Start computing intra predictions";
   for (UInt ch = 0; ch < m_numComp; ch++) {
     ICOV_LOG(debug) << "Channel " << ch + 1 << " / " << m_numComp;
@@ -150,7 +157,7 @@ void FrameEncoder::processInput(std::ostream &output,
     copyBordersFor360_1(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
-        m_vvc_bufs, intraPred, compID, m_params.internalBitDepth,
+        m_vvc_bufs, compID, m_params.internalBitDepth,
         m_params.tuSizeAfterRegrouping_luma.width,
         m_params.tuSizeAfterRegrouping_luma.height, false, m_params.qp,
         m_params.maxLog2TrDynamicRange);

@@ -96,6 +96,9 @@ public:
   ~FrameEncoder();
 
 protected:
+  void encodeBlock(std::ostream &output, const Block &b, bool access_block,
+                   const IBlockPrediction &block_prediction) override;
+
   void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                  uint16_t prediction) override;
   void processInput(std::ostream &output,

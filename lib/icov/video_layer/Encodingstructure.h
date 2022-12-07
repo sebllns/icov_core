@@ -78,8 +78,6 @@ struct EncodingStructure {
   bool isRightVerticalBorder(const UInt icu_index) const;
 
   UInt get_icuIndex(const Position &pos) const;
-  UInt get_icuIndex(const Block &b) const;
-
   Position get_icuPosition(const UInt icu_index) const;
 
   void resetDecodedICUs();
@@ -134,7 +132,6 @@ struct EncodingStructure {
       const UInt tuWidth_luma, const UInt tuHeight_luma);
 
   void applyPredictionBasedOnEntropy(icov::video::BufGroups &encpic,
-                                     icov::video::IntraPrediction &intraPred,
                                      const ComponentID compID,
                                      const int bitDepths[MAX_NUM_CHANNEL_TYPE],
                                      const UInt tuWidth_luma,

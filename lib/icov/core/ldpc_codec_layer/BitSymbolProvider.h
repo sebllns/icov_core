@@ -1,5 +1,4 @@
-#ifndef BITSYMBOLPROVIDER_H
-#define BITSYMBOLPROVIDER_H
+#pragma once
 
 #include "common.h"
 
@@ -114,4 +113,3 @@ private:
   Bitplanes m_src_bits;
 };
 } // namespace icov
-#endif // BITSYMBOLPROVIDER_H

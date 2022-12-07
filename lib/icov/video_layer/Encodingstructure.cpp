@@ -1,13 +1,11 @@
 #include "Encodingstructure.h"
 
-#include <opencv2/imgproc.hpp>
-
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
-#include "IntraPrediction.h"
-#include "vtm_opencv_utility.h"
 #include "vtm_utility.h"
+#include <opencv2/imgproc.hpp>
 
+////////////////////////////////////////////////////////////////////
 icov::video::EncodingStructure::EncodingStructure() { deallocate(); }
 
 icov::video::EncodingStructure::EncodingStructure(
@@ -18,6 +16,7 @@ icov::video::EncodingStructure::EncodingStructure(
 
 icov::video::EncodingStructure::~EncodingStructure() { deallocate(); }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::set(const std::vector<IcuEncoder> &icus,
                                          const UInt icusPerRow,
                                          const UInt icusPerColumn) {
@@ -47,12 +46,14 @@ void icov::video::EncodingStructure::set(const std::vector<IcuEncoder> &icus,
       AreaBuf<bool>(alreadyProPtr, n_icusPerRow, n_icusPerRow, n_icusPerCol);
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::setCheckPoints(
     const std::vector<Position> &checkPoints) {
   for (unsigned int i = 0; i < checkPoints.size(); i++)
     setCheckPoint(checkPoints[i]);
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::setCheckPoint(const Position &checkPoint) {
   CHECK((checkPoint.x < 0) || (checkPoint.x >= int(n_icusPerRow)) ||
             (checkPoint.y < 0) || (checkPoint.y >= int(n_icusPerCol)),
@@ -67,6 +68,7 @@ void icov::video::EncodingStructure::setCheckPoint(const Position &checkPoint) {
   vec_checkPoints.push_back(checkPoint);
 }
 
+////////////////////////////////////////////////////////////////////
 bool icov::video::EncodingStructure::isAccessBlock(
     const Position &accessBlockPoint) {
   for (unsigned int ab_ind = 0; ab_ind < vec_checkPoints.size(); ab_ind++)
@@ -77,6 +79,7 @@ bool icov::video::EncodingStructure::isAccessBlock(
   return false;
 }
 
+////////////////////////////////////////////////////////////////////
 Position
 icov::video::EncodingStructure::get_icuPosition(const UInt icu_index) const {
   div_t divresult;
@@ -92,6 +95,7 @@ icov::video::EncodingStructure::get_icuPosition(const UInt icu_index) const {
   return block_position;
 }
 
+////////////////////////////////////////////////////////////////////
 static const int dx[4] = {1, -1, 0, 0};
 static const int dy[4] = {0, 0, -1, 1};
 static void dfs_360(AreaBuf<bool> &requestedIcus,
@@ -184,34 +188,7 @@ static void dfs_360(AreaBuf<bool> &requestedIcus,
   }
 }
 
-static void fillHolesHorizontally_360(AreaBuf<bool> &requestedIcus,
-                                      int rowIndex, int &n_requestedICUs) {
-  int iWidth = int(
-      requestedIcus
-          .width); // if we do not convert to int, the traversing equation for
-  // 360 video (neighbor_x = (iWidth + (neighbor_x%iWidth)) %
-  // iWidth) converts everything to UInt
-
-  bool *requested_rowPtr = &requestedIcus.at(0, rowIndex);
-  int x_pre, x_next;
-  for (int x = 0; x < iWidth; x++) {
-    x_pre =
-        (iWidth + (int(x - 1) % iWidth)) %
-        iWidth; // to generate circular traversing for 360 video in x direction
-    x_next =
-        (iWidth + (int(x + 1) % iWidth)) %
-        iWidth; // to generate circular traversing for 360 video in x direction
-    if (!requested_rowPtr[x]) // if the icu is false, but the previous icu and
-    // the next icu are true, then fill the hole
-    {
-      if (requested_rowPtr[x_pre] && requested_rowPtr[x_next]) {
-        requested_rowPtr[x] = true;
-        n_requestedICUs++;
-      }
-    }
-  }
-}
-
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::
     create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
         ChromaFormat chFmt, const UInt sourceWidth_luma,
@@ -353,6 +330,7 @@ void icov::video::EncodingStructure::
   set(icus_enc, nx_icus, ny_icus);
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::updateRequestedICUs(
     const cv::Mat &maskRequestedPixels,
     std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
@@ -648,6 +626,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   }
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::updateRequestedICUs(
     const cv::Mat &maskRequestedPixels,
     std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
@@ -1187,6 +1166,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   CHECK(n_remainingRequestedICUs != 0, "not enough check points");
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::
     reorderBlockDecodingBasedOnStartingAccessBlock(
         std::vector<std::vector<Position>> &in_out_requested_icus,
@@ -1231,6 +1211,7 @@ void icov::video::EncodingStructure::
         "something is missing, it should process all input blocks.");
 }
 
+////////////////////////////////////////////////////////////////////
 static void
 dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
         std::vector<Position> &currentComponent_requestedNotDecodedICUs,
@@ -1264,48 +1245,55 @@ dfs_360(AreaBuf<bool> &requestedIcus, const AreaBuf<bool> &alreadyDecodedICus,
   }
 }
 
+////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
-    icov::video::BufGroups &encpic, icov::video::IntraPrediction &intraPred,
-    const ComponentID compID, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
-    const UInt tuWidth_luma, const UInt tuHeight_luma,
-    bool encodeFrequencyTableInBitStream, const int qp,
-    int maxLog2TrDynamicRange) {
+    icov::video::BufGroups &encpic, const ComponentID compID,
+    const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
+    const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream,
+    const int qp, int maxLog2TrDynamicRange) {
 
-  auto reconstructionUnitBuffer = encpic.getBuf(PIC_RECONSTRUCTION);
-  ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
-  UInt tuWidth_component =
-      tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC);
-  UInt tuHeight_component =
-      tuHeight_luma >> getComponentScaleY(compID, chromaFormatIDC);
-  if (tuWidth_component == 0)
-    tuWidth_component = 1;
-  if (tuHeight_component == 0)
-    tuHeight_component = 1;
-  UInt nBands = tuWidth_component * tuHeight_component;
+  const auto reconstructionUnitBuffer = encpic.getBuf(PIC_RECONSTRUCTION);
+  const ChromaFormat chromaFormatIDC = getICU(0).get_sourceX().chromaFormat;
 
-  std::vector<TCoeff> transformSequence_sourceX, transformSequence_sourceY;
-  std::vector<int> residual;
+  const UInt tuWidth_component = std::max<UInt>(
+      tuWidth_luma >> getComponentScaleX(compID, chromaFormatIDC), 1);
 
-  ChannelType chType = toChannelType(compID);
-  double entropy, currEntropy;
+  const UInt tuHeight_component = std::max<UInt>(
+      tuHeight_luma >> getComponentScaleY(compID, chromaFormatIDC), 1);
 
-  Transform2D transform2D;
-  Quant quant;
-  TCoeff uiAbsSum;
-  QpParam cQP(qp, toChannelType(compID), getICU(0).get_sourceX().chromaFormat,
-              bitDepths[chType], 0, 0);
+  const UInt nBands = tuWidth_component * tuHeight_component;
 
-  std::vector<UInt> availableDirModes;
-  if (chType == CHANNEL_TYPE_LUMA) {
-    availableDirModes.reserve(NUM_LUMA_MODE);
-    for (UInt dirMode = 0; dirMode < NUM_LUMA_MODE; dirMode++)
-      availableDirModes.push_back(dirMode);
-  } else
-    availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
+  const ChannelType chType = toChannelType(compID);
 
-  for (UInt i = 0; i < vec_icus.size(); i++) {
-    //    std::cout << "-- block is " << i << std::endl;
-    int progress = (i * 100) / (vec_icus.size() - 1);
+  int processed = 0;
+  int max_count = vec_icus.size();
+#pragma omp parallel for
+  for (UInt i = 0; i < max_count; i++) {
+
+    icov::video::IntraPrediction intraPred;
+    intraPred.init(chromaFormatIDC);
+
+    std::vector<TCoeff> transformSequence_sourceX, transformSequence_sourceY;
+    std::vector<int> residual;
+    Transform2D transform2D;
+    Quant quant;
+    TCoeff uiAbsSum;
+    QpParam cQP(qp, toChannelType(compID), getICU(0).get_sourceX().chromaFormat,
+                bitDepths[chType], 0, 0);
+
+    std::vector<UInt> availableDirModes;
+    if (chType == CHANNEL_TYPE_LUMA) {
+      availableDirModes.reserve(NUM_LUMA_MODE);
+      for (UInt dirMode = 0; dirMode < NUM_LUMA_MODE; dirMode++)
+        availableDirModes.push_back(dirMode);
+    } else
+      availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
+
+    int progress = (processed * 100) / (max_count - 1);
+
+#pragma omp atomic
+    processed++;
+
     std::cout << "    " << progress << "%                \r" << std::flush;
     IcuEncoder &icu_enc = vec_icus[i];
     std::map<BlockPrediction::predType, SideInformationUnit> &currICUintraMap =
@@ -1341,7 +1329,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
       intraPred.initIntraPatternChType(reconstructionUnitBuffer, refSampSide,
                                        compArea, bitDepths[chType], false);
 
-      entropy = std::numeric_limits<double>::max();
+      double entropy = std::numeric_limits<double>::max();
 
       // SEARCH BEST DIRMODE FOR INTRA PRED
       for (const UInt &dirMode : availableDirModes) // access by const reference
@@ -1372,7 +1360,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
           //                    curr_tu_si.block(compID).height << "]" << ",
           //                    dirMode= " << dirMode << endl;
         }
-        currEntropy =
+        double currEntropy =
             static_cast<double>(si.estimateSIRequiredBitsToCodeIntraMode(
                 compID, dirMode, refSampSide));
         residual.clear();
@@ -1482,7 +1470,6 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
 
   int x1 = 0, y1 = 0, x2, y2;
   int n_nonzero;
-  int n_requestedICUs = 0;
   for (UInt y = 0; y < n_icusPerCol; y++) {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
     //        bool* previous_rowPtr = &_decodedICUs.at(0,y);
@@ -1509,7 +1496,6 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
       // is not already decoded
       {
         requested_rowPtr[x] = true;
-        n_requestedICUs++;
       }
 
       x1 = x2;
@@ -1766,8 +1752,6 @@ bool icov::video::EncodingStructure::isRightVerticalBorder(
 UInt icov::video::EncodingStructure::get_icuIndex(const Position &pos) const {
   return UInt(pos.y) * n_icusPerRow + UInt(pos.x);
 }
-
-UInt icov::video::EncodingStructure::get_icuIndex(const Block &b) const {}
 
 void icov::video::EncodingStructure::resetDecodedICUs() {
   _decodedICUs.fill(false);

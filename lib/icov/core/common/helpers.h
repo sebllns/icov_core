@@ -85,6 +85,10 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/stacktrace.hpp>
 
+#ifdef BOOST_LOG_DYN_LINK
+#define BOOST_LOG_DYN_LINK 1
+#endif
+
 #define CONSOLE_FG_RED 91
 #define CONSOLE_FG_GREEN 92
 #define CONSOLE_FG_YELLOW 93

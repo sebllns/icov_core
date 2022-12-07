@@ -382,9 +382,6 @@ void DemoEncoder::processInput(std::ostream &output,
   PelUnitBuf mainFrameReco =
       m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
-  icov::video::IntraPrediction intraPred;
-  intraPred.init(m_params.chFormat);
-
   ICOV_LOG(info) << "Start computing intra predictions";
   for (UInt ch = 0; ch < m_numComp; ch++) {
     ICOV_LOG(info) << "Channel " << ch + 1 << " / " << m_numComp << std::endl;
@@ -393,7 +390,7 @@ void DemoEncoder::processInput(std::ostream &output,
     copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
-        m_vvc_bufs, intraPred, compID, m_params.internalBitDepth,
+        m_vvc_bufs, compID, m_params.internalBitDepth,
         m_params.tuSizeAfterRegrouping_luma.width,
         m_params.tuSizeAfterRegrouping_luma.height, false, m_params.qp,
         m_params.maxLog2TrDynamicRange);

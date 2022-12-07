@@ -1,3 +1,4 @@
+#pragma once
 #include "InteractiveCoder.h"
 #include "helpers.h"
 
@@ -104,7 +105,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,
       if (!m_pllrProvider->doping_ready() &&
           m_matrix_provider->is_doping(next_test_code)) {
         m_pllrProvider->init_doping();
-        m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
+        // m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
       }
     }
   }
@@ -206,17 +207,18 @@ void InteractiveCoder<Matrix>::encode_symboles(
   std::vector<pz> sipz(si.size());
 
   // symboles to bitplanes
-  BitSymbolProvider bsp(src);
 
   // encode with each SI
   for (size_t i = 0; i < si.size(); i++) {
     ICOV_LOG(info) << "SI=" << i + 1 << "/" << si.size();
+    BitSymbolProvider bsp(src);
     bsp.set_si(si[i], p);
     sipz[i] = {bsp.z_min(), bsp.z_max(), bsp.x_binary_length(), bsp.q0()};
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }
 
   // TEST DECODE WITH WORST SI for EACH BITPLANE
+  BitSymbolProvider bsp(src);
   std::vector<Syndrome> worst_syndromes(bsp.x_binary_length());
   for (int i = 0; i < bsp.x_binary_length(); ++i) {
     ICOV_LOG(info) << "TEST DECODING BITPLANE " << i;
@@ -341,7 +343,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                    std::to_string(bitplane_idx));
 
   if (params.CheckBitplaneEncoding) {
-    ICOV_LOG(debug) << "CHECK SYNDROME BP " << bitplane_idx;
+    ICOV_LOG(info) << "CHECK SYNDROME BP " << bitplane_idx;
     BitVec decoded;
     decode(decoded, numcodeIdx, stored_synd);
     icov::helpers::assert::check(decoded == src_bits[bitplane_idx],

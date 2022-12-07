@@ -20,22 +20,21 @@ template <class Matrix> class InteractiveCoder : public IInteractiveCoder {
   using LLRProvider_sp = std::shared_ptr<LLRProvider>;
 
 public:
-  InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp,
-                   ISyndromeManager *syndromeMgr, LLRProvider *llrProvider)
-      : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),
-        m_pllrProvider(llrProvider), m_matrix_provider(mp) {
-    m_decodage_syndrome =
-        std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
-  };
+  //  InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp,
+  //                   ISyndromeManager *syndromeMgr, LLRProvider *llrProvider)
+  //      : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),
+  //        m_pllrProvider(llrProvider), m_matrix_provider(mp) {
+  //    m_decodage_syndrome =
+  //        std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
+  //  };
 
   InteractiveCoder(const IDecoder_sp &dec, const IMatrixProvider_sp &mp,
                    const ISyndromeManager_sp &syndromeMgr,
                    const LLRProvider_sp &llrProvider)
       : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),
-        m_pllrProvider(llrProvider), m_matrix_provider(mp) {
-    m_decodage_syndrome =
-        std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
-  };
+        m_pllrProvider(llrProvider), m_matrix_provider(mp),
+        m_decodage_syndrome(
+            std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()))) {}
 
   ~InteractiveCoder() = default;
 
