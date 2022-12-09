@@ -4,7 +4,7 @@
  */
 
 /** @addtogroup Encoder
- * Encoder package (client side).
+ *  ICOV Encoder Lib
  *  @ingroup ICOV
  */
 
@@ -52,10 +52,10 @@
 #include "common.h"
 #include <opencv2/opencv.hpp>
 
+void resize_covering_blocks(const cv::Mat &in_img, const cv::Size &blockSize,
+                            cv::Mat &out_img);
 
-void resize_covering_blocks(const cv::Mat &in_img, const cv::Size &blockSize, cv::Mat &out_img);
-
-void resize_covering_blocks(const cv::Mat &in_img, const cv::Size &blockSize, cv::Mat &out_img, bool keepAspectRation);
+void resize_covering_blocks(const cv::Mat &in_img, const cv::Size &blockSize,
+                            cv::Mat &out_img, bool keepAspectRation);
 
 void resize_covering_blocks(cv::Mat &img, const cv::Size &blockSize);
-

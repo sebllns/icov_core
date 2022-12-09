@@ -46,53 +46,22 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common.h"
-
+#include "encoded_stream/ContentParameterSet.h"
+#include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
+#include <cmath>
+#include <cstdint>
+#include <sys/types.h>
+#include <vector>
 
-/** @class ContentParameterSet
- *  @brief class ContentParameterSet
- *
- *  Conveys the video parameters part of bitstream.
- */
-struct ContentParameterSet {
-  std::string icov_version;
-  int content_type;
-  int content_width;
-  int content_height;
-  int content_chroma_format;
-  int content_framecount;
-  float content_framerate;
-  float content_duration;
+using namespace icov;
 
-  bool is_sov_fixed_size;
-  int sov_fixed_size;
+namespace boost {
+namespace serialization {
 
-  bool is_block_fixed_size;
-  int block_fixed_size;
+// When the class Archive corresponds to an output archive, the
+// & operator is defined similar to <<.  Likewise, when the class Archive
+// is a type of input archive the & operator is defined similar to >>.
 
-  bool has_metadata;
-
-  friend class boost::serialization::access;
-  // When the class Archive corresponds to an output archive, the
-  // & operator is defined similar to <<.  Likewise, when the class Archive
-  // is a type of input archive the & operator is defined similar to >>.
-  template <class Archive>
-  void serialize(Archive &ar, const unsigned int version) {
-    ar &icov_version;
-    ar &content_type;
-    ar &content_width;
-    ar &content_height;
-    ar &content_chroma_format;
-    ar &content_framecount;
-    ar &content_framerate;
-    ar &content_duration;
-    ar &is_sov_fixed_size;
-    if (is_sov_fixed_size)
-      ar &sov_fixed_size;
-    ar &is_block_fixed_size;
-    if (is_block_fixed_size)
-      ar &block_fixed_size;
-    ar &has_metadata;
-  }
-};
+} // namespace serialization
+} // namespace boost

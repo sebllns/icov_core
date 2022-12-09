@@ -1,5 +1,10 @@
 #include "ICOV_BufGroups.h"
 
+#include "Buffer.h"
+#include "CodingStructure.h"
+#include "Common.h"
+#include "Unit.h"
+
 icov::video::BufGroups::BufGroups() {}
 
 void icov::video::BufGroups::destroy() {

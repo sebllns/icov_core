@@ -39,7 +39,7 @@ CoderFactory::create_coder(const boost::program_options::variables_map &args) {
   icov::helpers::assert::not_null(syndromeMgr.get(),
                                   "SyndromeManager was not instantiated");
 
-  ICOV_LOG(info) << "Initialization of coder with type " << coder_type
+  ICOV_INFO << "Initialization of coder with type " << coder_type
                  << " and length " << syndromeMgr->get_n();
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(
@@ -59,10 +59,10 @@ void CoderFactory::create_coder_yuv(
   args_uv.insert_or_assign(OPT_CODE_LENGTH, code_length_option);
 
   y_coder = CoderFactory::create_coder(args);
-  ICOV_LOG(info) << "Luminance coder instanciated";
+  ICOV_INFO << "Luminance coder instanciated";
 
   uv_coder = CoderFactory::create_coder(args_uv);
-  ICOV_LOG(info) << "Chroma coder instanciated";
+  ICOV_INFO << "Chroma coder instanciated";
 }
 
 } // namespace icov

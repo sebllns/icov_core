@@ -55,11 +55,11 @@ if(MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
+if(ICOV_USE_ADDRESS_SANITIZER)
 # set address sanitizer compiler arguments
 # https://github.com/google/sanitizers/wiki/AddressSanitizer
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
-        if(ICOV_USE_ADDRESS_SANITIZER)
             # add compile options
             message(STATUS "Use sanitizer")
 
@@ -71,11 +71,12 @@ if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
 
 #            add_compile_options( "-fsanitize=address" )
 #            add_link_options( "-fsanitize=address" )
-        endif()
     endif()
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
         add_compile_options( "-fabi-version=6" )
     endif()
+endif()
+
 else()
     message(WARNING "Initial setup is BYPASSED !")
 endif()

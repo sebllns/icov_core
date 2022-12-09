@@ -44,7 +44,6 @@
  *
  *****************************************************************************/
 #pragma once
-#include "CommonLib/Picture.h"
 #include "ICOV_Storage.h"
 #include <map>
 

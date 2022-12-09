@@ -59,7 +59,7 @@ int InteractiveCoder<Matrix>::encode(NumcodeIdx &i, Syndrome &o_stored_syndrome,
     uint32_t io_numcode = m_matrix_provider->getNumcode(i);
 
 #if ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_LOG(trace) << "m = " << this->syndromeMgr()->get_m(io_numcode)
+    ICOV_TRACE << "m = " << this->syndromeMgr()->get_m(io_numcode)
                     << ", r = " << this->get_r(i);
 #endif
     m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode,
@@ -126,9 +126,9 @@ void InteractiveCoder<Matrix>::decode(BitVec &o_decoded, uint32_t i,
 }
 
 template <class Matrix>
-void InteractiveCoder<Matrix>::decode_symboles(BitSymbolProvider &io_bsp,
-                                               const SINumcodeIdx &numcodes,
-                                               const SISyndromes &stored_synd) {
+void InteractiveCoder<Matrix>::decode_symboles(
+    BitSymbolProvider &io_bsp, const NumcodeIdxVec &numcodes,
+    const SyndromesVec &stored_synd) {
 
   ICOV_ASSERT_MSG(numcodes.size() == stored_synd.size(),
                   "Rates vector and Syndrome vector must be same length");
@@ -156,7 +156,7 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
                                                const NumcodeIdx &numcode,
                                                const Syndrome &stored_synd) {
 
-  ICOV_LOG(debug) << "DECODE BP " << bp_idx;
+  ICOV_TRACE << "DECODE BP " << bp_idx;
 
   if (output.size() != get_n())
     output.resize(get_n());
@@ -186,17 +186,17 @@ void InteractiveCoder<Matrix>::init_LLR_bitplane(const BitSymbolProvider &bsp,
 
 template <class Matrix>
 void InteractiveCoder<Matrix>::encode_symboles(
-    std::vector<SINumcodeIdx> &numcodesIdx, std::vector<SISyndromes> &syndromes,
-    const std::vector<SIVec> &si, const BitSymbolProvider::params &p,
-    const SymboleVec &src) {
+    std::vector<NumcodeIdxVec> &numcodesIdx,
+    std::vector<SyndromesVec> &syndromes, const std::vector<SIVec> &si,
+    const BitSymbolProvider::params &p, const SymboleVec &src) {
 
   // init outputs
   if (numcodesIdx.size() != si.size()) {
-    numcodesIdx.resize(si.size(), SINumcodeIdx());
+    numcodesIdx.resize(si.size(), NumcodeIdxVec());
   }
 
   if (syndromes.size() != si.size()) {
-    syndromes.resize(si.size(), SISyndromes());
+    syndromes.resize(si.size(), SyndromesVec());
   }
 
   typedef struct {
@@ -210,7 +210,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
 
   // encode with each SI
   for (size_t i = 0; i < si.size(); i++) {
-    ICOV_LOG(info) << "SI=" << i + 1 << "/" << si.size();
+    ICOV_INFO << "SI=" << i + 1 << "/" << si.size();
     BitSymbolProvider bsp(src);
     bsp.set_si(si[i], p);
     sipz[i] = {bsp.z_min(), bsp.z_max(), bsp.x_binary_length(), bsp.q0()};
@@ -221,20 +221,20 @@ void InteractiveCoder<Matrix>::encode_symboles(
   BitSymbolProvider bsp(src);
   std::vector<Syndrome> worst_syndromes(bsp.x_binary_length());
   for (int i = 0; i < bsp.x_binary_length(); ++i) {
-    ICOV_LOG(info) << "TEST DECODING BITPLANE " << i;
+    ICOV_INFO << "TEST DECODING BITPLANE " << i;
     NumcodeIdx worst_rate = 0;
     worst_syndromes[i] = syndromes[0][i];
 
     // Now find worst SI
     for (int k = 0; k < (int)numcodesIdx.size(); ++k) {
       NumcodeIdx rate_k = numcodesIdx[k][i];
-      ICOV_LOG(info) << "SI has rate " << rate_k;
+      ICOV_INFO << "SI has rate " << rate_k;
       if (worst_rate < rate_k) {
         worst_rate = rate_k;
         worst_syndromes[i] = syndromes[k][i];
       }
     }
-    ICOV_LOG(info) << "Worst SI has rate " << worst_rate;
+    ICOV_INFO << "Worst SI has rate " << worst_rate;
   }
 
   // Now decode EACH SI with ITS RATE and THE WORST SYNDROME
@@ -242,24 +242,24 @@ void InteractiveCoder<Matrix>::encode_symboles(
     BitSymbolProvider bsp_dec(get_n());
     bsp_dec.set_si(si[k], sipz[k].zmin, sipz[k].zmax, sipz[k].q, sipz[k].l);
     // NumcodeIdx rate_k = numcodesIdx[k][i];
-    //    ICOV_LOG(info) << "SI has rate " << rate_k;
-    //    ICOV_LOG(debug) << "Resize syndrome " << get_m(rate_k);
+    //    ICOV_INFO << "SI has rate " << rate_k;
+    //    ICOV_DEBUG << "Resize syndrome " << get_m(rate_k);
     // worst_syndromes[i].resize(get_m(rate_k));
     //    BitVec x_dec(get_n(), 0);
 
-    ICOV_LOG(debug) << "DECODE SI " << k;
+    ICOV_DEBUG << "DECODE SI " << k;
     //    this->decode(x_dec, rate_k, worst_synd);
 
     //    if (x_dec != x)
-    //      ICOV_LOG(error) << "ERROR";
+    //      ICOV_ERROR << "ERROR";
 
     this->decode_symboles(bsp_dec, numcodesIdx[k], worst_syndromes);
     for (int i = 0; i < bsp.x_binary_length(); ++i) {
-      ICOV_LOG(info) << "CHECK BITPLANE " << i << " at rate "
+      ICOV_INFO << "CHECK BITPLANE " << i << " at rate "
                      << get_r(numcodesIdx[k][i]) << " using syndrome from rate "
                      << get_r(worst_syndromes[i].size(), get_n());
       if (bsp_dec.src_bits()[i] != bsp.src_bits()[i]) {
-        ICOV_LOG(error) << "ERRORS DETECTED IN DECODED BITPLANE " << i;
+        ICOV_ERROR << "ERRORS DETECTED IN DECODED BITPLANE " << i;
       }
     }
   }
@@ -267,42 +267,24 @@ void InteractiveCoder<Matrix>::encode_symboles(
 
 template <class Matrix>
 void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
-                                                SINumcodeIdx &numcodeIdx,
-                                                SISyndromes &stored_synd) {
+                                                NumcodeIdxVec &numcodeIdx,
+                                                SyndromesVec &stored_synd) {
 
   auto syndromeMgr = this->syndromeMgr();
   int n = syndromeMgr->get_n();
   size_t lx = bsp.x_binary_length();
 
-  numcodeIdx = SINumcodeIdx(lx, 0);
+  numcodeIdx = NumcodeIdxVec(lx, 0);
 
   if (stored_synd.size() != lx) {
-    stored_synd = SISyndromes(lx, SISyndromes::value_type(n));
+    stored_synd = SyndromesVec(lx, SyndromesVec::value_type(n));
   }
   SymboleVec predec(n, 0);
   for (size_t i = 0; i < lx; i++) {
-    ICOV_LOG(debug) << "ENCODE BP " << i;
+    ICOV_TRACE << "ENCODE BP " << i;
     stored_synd[i].resize(n);
     stored_synd[i].fill(0);
     encode_bitplane(bsp, i, numcodeIdx[i], stored_synd[i], predec);
-
-    //    int k = i;
-    //    std::cout << "POST CHECK SYNDROME BP " << k << std::endl;
-    //    BitVec decoded;
-    //    decode(decoded, numcodeIdx[k], stored_synd[k]);
-    //    icov::helpers::assert::check(decoded == bsp.src_bits()[k],
-    //                                 " POST INTERNAL Decoding BP check
-    //                                 failed " +
-    //                                     std::to_string(k));
-
-    //    std::cout << "NUMCODE " << numcodeIdx[k] << std::endl;
-    //    std::cout << "SYND " << stored_synd[k].to_string(" ") << std::endl;
-    //    std::cout << "SOURCE [";
-    //    icov::helpers::io::write_vector(std::cout, bsp.src_bits()[k], ' ')
-    //        << "]" << std::endl;
-    //    std::cout << "DECODED [";
-    //    icov::helpers::io::write_vector(std::cout, decoded, ' ')
-    //        << "]" << std::endl;
   }
 
   ICOV_ASSERT_MSG(predec == bsp.src_symboles(),
@@ -317,13 +299,10 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                                SymboleVec &predec) {
 
   auto m_coder = this;
-  auto llrProvider = m_coder->llrProvider();
   auto syndromeMgr = m_coder->syndromeMgr();
-  auto matrixPvdr = m_coder->matrixProvider();
   auto src_symbols = bsp.src_symboles();
   auto src_bits = bsp.src_bits();
-  auto &sign_bits = src_bits[0];
-  auto side_info = bsp.si_symboles();
+  const auto &sign_bits = src_bits[0];
 
   int n = syndromeMgr->get_n();
   int lx = bsp.x_binary_length();
@@ -343,7 +322,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                    std::to_string(bitplane_idx));
 
   if (params.CheckBitplaneEncoding) {
-    ICOV_LOG(info) << "CHECK SYNDROME BP " << bitplane_idx;
+    ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
     BitVec decoded;
     decode(decoded, numcodeIdx, stored_synd);
     icov::helpers::assert::check(decoded == src_bits[bitplane_idx],

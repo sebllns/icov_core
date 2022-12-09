@@ -11,7 +11,7 @@ public:
   virtual ~IMatrixProvider() = default;
 
   M &buildMatrix(int index) {
-    ICOV_LOG(trace) << __func__ << "(" << index << ") -> " << getNumcode(index);
+    ICOV_TRACE << __func__ << "(" << index << ") -> " << getNumcode(index);
     index = std::min(index, (int)m_matrices.size() - 1);
     _buildMatrix(getNumcode(index), getMatrix(index));
     return getMatrix(index);

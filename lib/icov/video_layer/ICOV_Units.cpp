@@ -5,7 +5,6 @@
 **   Inria research institute
 **************************************************************************/
 #include "ICOV_Units.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
 
 icov::video::TransformUnit::TransformUnit(
     const UnitArea &unit, bool createTransformBuffer,

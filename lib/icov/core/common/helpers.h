@@ -48,6 +48,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "typedef.h"
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
 #endif
@@ -299,6 +300,23 @@ int quantize(int value, int step, int min, int max);
 int quantize(float value, const std::vector<float> &v);
 
 } // namespace maths
+
+namespace bitstream {
+
+template <typename T> icov::byte boolToByte(const std::array<T, 8> in) {
+  icov::byte result = 0;
+  int i = 0;
+
+  for (auto &v : in) {
+    result = (result << 1);
+    if (static_cast<bool>(in[i++]))
+      result++;
+  }
+  return result;
+}
+
+bool getBit(int bit_pos, icov::byte b);
+} // namespace bitstream
 
 namespace rand {
 void init();

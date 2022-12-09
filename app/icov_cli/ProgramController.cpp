@@ -22,43 +22,43 @@ ProgramController::ProgramController() {
 
 void ProgramController::launchMode(const std::string &mode_id) {
   if (mode_id == "binary") {
-    ICOV_LOG(debug) << "binary mode started";
+    ICOV_DEBUG << "binary mode started";
     BinaryMode mode(m_options_map);
     mode.run();
-    ICOV_LOG(debug) << "end binary\n";
+    ICOV_DEBUG << "end binary\n";
   } else if (mode_id == "symbole") {
-    ICOV_LOG(debug) << "symbole mode started";
+    ICOV_DEBUG << "symbole mode started";
     SymboleMode mode(m_options_map);
     mode.run();
-    ICOV_LOG(debug) << "end symbole\n";
+    ICOV_DEBUG << "end symbole\n";
   } else if (mode_id == "export") {
-    ICOV_LOG(debug) << "export mode started";
+    ICOV_DEBUG << "export mode started";
     ExportMode mode(m_options_map, codeLength(), dataPath());
     mode.run();
-    ICOV_LOG(debug) << "end export\n";
+    ICOV_DEBUG << "end export\n";
   } else if (mode_id == "check") {
-    ICOV_LOG(debug) << "check mode started";
+    ICOV_DEBUG << "check mode started";
     CheckMode mode(m_options_map, dataPath());
     mode.run();
-    ICOV_LOG(debug) << "end check\n";
+    ICOV_DEBUG << "end check\n";
   } else if (mode_id == "demo") {
-    ICOV_LOG(debug) << "demo mode started";
+    ICOV_DEBUG << "demo mode started";
     DemoMode mode(m_options_map);
     mode.run();
-    ICOV_LOG(debug) << "end demo\n";
+    ICOV_DEBUG << "end demo\n";
   } else if (mode_id == "encode") {
-    ICOV_LOG(debug) << "encode mode started";
+    ICOV_DEBUG << "encode mode started";
     EncodeMode mode(m_options_map);
     mode.run();
-    ICOV_LOG(debug) << "end encode\n";
+    ICOV_DEBUG << "end encode\n";
   } else if (mode_id == "decode") {
-    ICOV_LOG(debug) << "decode mode started";
+    ICOV_DEBUG << "decode mode started";
     DecodeMode mode(m_options_map);
     mode.run();
-    ICOV_LOG(debug) << "end decode\n";
+    ICOV_DEBUG << "end decode\n";
   } else {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }
 
-  ICOV_LOG(debug) << "end program\n";
+  ICOV_DEBUG << "end program\n";
 }

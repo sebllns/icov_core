@@ -44,8 +44,8 @@
  *
  *****************************************************************************/
 #pragma once
+#include "CommonLib/Buffer.h"
 #include "CommonLib/CommonDef.h"
-#include "CommonLib/Unit.h"
 #include <map>
 
 namespace icov::video {

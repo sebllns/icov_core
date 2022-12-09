@@ -19,7 +19,7 @@ BinaryMode::BinaryMode(const po::variables_map &args)
 }
 
 void BinaryMode::run() {
-  ICOV_LOG(debug) << "encode\n";
+  ICOV_DEBUG << "encode\n";
   auto llrProvider(m_coder->llrProvider());
   auto syndromeMgr(m_coder->syndromeMgr());
   auto matrixProvider(m_coder->matrixProvider());
@@ -39,10 +39,10 @@ void BinaryMode::run() {
                        (m_pcrossover.size() * m_nite);
       std::cout << "    " << progress << "%                \r" << std::flush;
 
-      ICOV_LOG(trace) << (ite * m_pcrossover.size() + i + 1) << "/"
+      ICOV_TRACE << (ite * m_pcrossover.size() + i + 1) << "/"
                       << (m_pcrossover.size() * m_nite);
 
-      ICOV_LOG(trace) << "Crossover probability " << m_pcrossover[i]
+      ICOV_TRACE << "Crossover probability " << m_pcrossover[i]
                       << std::endl;
       // init llr
       llrProvider->initLLRUniform(m_pcrossover[i], m_src_bits);
@@ -50,7 +50,7 @@ void BinaryMode::run() {
       syndromeMgr->reset_doping();
 
       auto start = std::chrono::steady_clock::now();
-      ICOV_LOG(trace) << "encode";
+      ICOV_TRACE << "encode";
       int err_count =
           m_coder->encode(m_numcodeIdx, m_stored_syndrome, m_src_bits);
       auto end = std::chrono::steady_clock::now();
@@ -64,16 +64,16 @@ void BinaryMode::run() {
 
       if (err_count != 0) {
         // raise error
-        ICOV_LOG(error) << "No convergence. Pcrossover=" << m_pcrossover[i];
+        ICOV_ERROR << "No convergence. Pcrossover=" << m_pcrossover[i];
       } else {
         start = std::chrono::steady_clock::now();
-        ICOV_LOG(trace) << "decode";
+        ICOV_TRACE << "decode";
         m_coder->decode(m_dec_bits, m_numcodeIdx, m_stored_syndrome);
         end = std::chrono::steady_clock::now();
         elapsed_seconds = end - start;
         decoding_time[i] += elapsed_seconds.count() / m_nite;
         if (!m_coder->testConvergence(m_dec_bits, m_src_bits)) {
-          ICOV_LOG(error) << "Could not decode!" << std::endl;
+          ICOV_ERROR << "Could not decode!" << std::endl;
         }
       }
     }
@@ -89,7 +89,7 @@ void BinaryMode::fill_src() {
 }
 
 void BinaryMode::fill_pcrossover() {
-  ICOV_LOG(debug) << CONSOLE_TODO
+  ICOV_DEBUG << CONSOLE_TODO
                   << "TODO: read crossover probability from file !";
   m_pcrossover = {0.005607170053021, 0.012986862055522, 0.021539631929892,
                   0.031124460304790, 0.041692690273656, 0.053239040776806,
@@ -106,7 +106,7 @@ void BinaryMode::fill_pcrossover() {
 }
 
 void BinaryMode::write_results() {
-  ICOV_LOG(info) << "End of test. Write results.";
+  ICOV_INFO << "End of test. Write results.";
 
   for (size_t i = 1; i < m_pcrossover.size(); i++) {
     time[i] += time[i - 1];

@@ -3,8 +3,8 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup encoder
- * encoder package (client side).
+/** @addtogroup Encoder
+ *  ICOV Encoder Lib
  *  @ingroup ICOV
  */
 

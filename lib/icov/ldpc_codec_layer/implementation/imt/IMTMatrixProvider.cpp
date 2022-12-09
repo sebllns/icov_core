@@ -36,7 +36,7 @@ void IMTMatrixProvider::_buildMatrix(int numcode, AffMatrix &H) {
     m_tools->syndrome12.resize(m);
   }
 
-  ICOV_LOG(trace) << "IMT " << numcode << ", " << m << ", " << n << ", "
+  ICOV_TRACE << "IMT " << numcode << ", " << m << ", " << n << ", "
                   << H.get_n_cols();
 }
 

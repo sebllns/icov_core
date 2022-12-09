@@ -250,7 +250,7 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode_single_ite(
       if (den == 0) {
         // FIXME: It seems there is a division by zero in some cases
         //#if ICOV_CORE_DEBUG_TRACE_ENABLED
-        //        ICOV_LOG(trace) << "WARNING den is zero and prod is " <<
+        //        ICOV_TRACE << "WARNING den is zero and prod is " <<
         //        prod
         //                                  << std::endl;
         //#endif

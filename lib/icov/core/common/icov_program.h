@@ -125,7 +125,7 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
                                         pg.logLevel());
     pg.launchProgram();
   } catch (std::exception &e) {
-    ICOV_LOG(info) << pg.optionsDesc() << std::endl;
+    ICOV_INFO << pg.optionsDesc() << std::endl;
     ICOV_LOG(fatal) << std::endl
                     << "Error: program execution has stopped prematurely"
                     << std::endl;
@@ -136,7 +136,7 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
 #endif
     return boost::system::errc::interrupted;
   } catch (...) {
-    ICOV_LOG(info) << pg.optionsDesc() << std::endl;
+    ICOV_INFO << pg.optionsDesc() << std::endl;
     ICOV_LOG(fatal) << "Fatal error" << std::endl;
     ICOV_LOG(fatal) << std::endl
                     << boost::current_exception_diagnostic_information()

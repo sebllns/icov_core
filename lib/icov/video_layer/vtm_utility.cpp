@@ -8,7 +8,6 @@
 #include "ICOV_DistorsionCost.h"
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
 
 Area &VTM_Utility::operator&=(Area &a, const Area &b) {
   Int x1 = std::max(a.x, b.x);
@@ -61,56 +60,6 @@ void dfs_360(AreaBuf<bool> &inputOutput,
       dfs_360(inputOutput, currentComponentBlocks, neighbor_x, neighbor_y);
   }
 }
-
-void VTM_Utility::findConnectedComponents_360(
-    AreaBuf<bool> &inputOutput,
-    std::vector<std::vector<Position>> &connectedComponents) {
-  connectedComponents.clear();
-
-  for (UInt y = 0; y < inputOutput.height;
-       y++) // TODO if we had something like continous, then we could easily to
-            // the trick if(pSrc.isCountinous && piQCoef.isContinous) then :
-            // iWdith =iHeight*iWdith, iHeight=1 (similar trick that we use in
-            // OpenCV)
-  {
-    Bool *rowPtr = &inputOutput.at(0, y);
-    for (UInt x = 0; x < inputOutput.width; x++) {
-      if (rowPtr[x]) {
-        connectedComponents.push_back(std::vector<Position>());
-        dfs_360(inputOutput, connectedComponents.back(), x, y);
-      }
-    }
-  }
-}
-
-// void VTM_Utility::findRequestedICUsComponents_360(AreaBuf<bool>
-// &inputOutput_requestedICUs, AreaBuf<bool> &inputOutput_alreadyDecodedICUs,
-// std::vector<std::vector<Position> > &notDecodedRequestedICUs,
-// std::vector<std::vector<Position> > &neighborDecodedBlocksInTheComponent)
-//{
-//    notDecodedRequestedICUs.clear();
-//    neighborDecodedBlocksInTheComponent.clear();
-//    CHECK((inputOutput_requestedICUs.width !=
-//    inputOutput_alreadyDecodedICUs.width) || inputOutput_requestedICUs.height
-//    != inputOutput_alreadyDecodedICUs.height, "size do not match");
-
-//    for(UInt y=0; y < inputOutput_requestedICUs.height; y++)
-//    {
-//        bool* requested_rowPtr = &inputOutput_requestedICUs.at(0,y);
-//        bool* previous_rowPtr = &inputOutput_alreadyDecodedICUs.at(0,y);
-//        for(UInt x=0; x < inputOutput_requestedICUs.width; x++)
-//        {
-
-//            if(n_nonzero && (!previous_rowPtr[x]))  // if it is requested but
-//            it is not already decoded
-//                requested_rowPtr[x] = true;
-
-//            x1=x2;
-//        }
-//        x1=0;
-//        y1=y2;
-//    }
-//}
 
 double VTM_Utility::calculatePSNR(const CPelUnitBuf &org,
                                   const CPelUnitBuf &cur,
@@ -260,6 +209,7 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
   TCoeff uiAbsSum;
 
   // FOR EACH BLOCK (ICU)
+  //#pragma omp parallel
   for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
     icov::video::InteractiveCodingUnit &curr_icu =
         encStruct.getICU(i).get_sourceX();

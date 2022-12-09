@@ -9,7 +9,7 @@
 using namespace icov;
 
 void icov::IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H) {
-  ICOV_LOG(debug) << "build high matrix";
+  ICOV_TRACE << "build high matrix";
   m_tools->current_level = level_idx;
 
   PcmData::read_matrix(get_pcm_path(level_idx), H);
@@ -77,8 +77,8 @@ void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H) {
     }
   }
 
-  ICOV_LOG(trace) << "IMT164 " << numcode << ": " << m << " x " << n << " -> "
-                  << H.get_n_cols() << " x " << H.get_n_rows();
+  ICOV_TRACE << "IMT164 " << numcode << ": " << m << " x " << n << " -> "
+             << H.get_n_cols() << " x " << H.get_n_rows();
 }
 
 void IMT164MatrixProvider::accumulateRows(int numcode, AffMatrix &dst) {

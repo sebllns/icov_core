@@ -1,10 +1,18 @@
 #include "EncodeMode.h"
 #include "encoder/FrameEncoder.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "tools/DebugTools.h"
 #include <boost/format.hpp>
+#include <boost/serialization/array_wrapper.hpp>
+#include <cstdint>
+
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <boost/serialization/vector.hpp>
+
+#include "video_layer/encoded_stream.h"
 
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
 const char *EncodeMode::params::outputFile_id = "encode-output-file";
@@ -29,7 +37,6 @@ void EncodeMode::AddProgramOptions(
 }
 
 EncodeMode::EncodeMode(const po::variables_map &args) {
-
   m_parameters.inputFile =
       args[EncodeMode::params::inputFile_id].as<std::string>();
 
@@ -59,23 +66,67 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
     m_encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
   }
 
-  ICOV_LOG(info) << boost::format("%-15s %-s") % "Input File:" %
+  ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                         m_parameters.inputFile;
-  ICOV_LOG(info) << boost::format("%-15s %-s ") % "Output File:" %
+  ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
                         m_parameters.encodedFile;
 }
 
 void EncodeMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  std::ofstream output(m_parameters.encodedFile);
+  std::ofstream output(m_parameters.encodedFile, std::ios_base::binary);
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
   icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
+  //  {
+  //    boost::archive::binary_oarchive o_archive(output,
+  //                                              boost::archive::no_header);
+  //    //    bool *array = new bool[1024];
+  //    //    o_archive &boost::serialization::make_array<bool>(array, 1024);
+  //    //    delete[] array;
+  //    //    output.close();
 
+  //    //    std::vector<bool> array(1024);
+  //    //    o_archive &array;
+
+  //    //    std::bitset<1024> array;
+  //    //    o_archive &array;
+
+  //    Syndrome s(1024);
+  //    s.fill(0);
+  //    for (int i = 0; i < s.size(); i += 2) {
+  //      s[i] = 1;
+  //    }
+
+  //    int byte_size = bitToByteCount(s.size());
+  //    icov::byte darr[byte_size];
+  //    std::fill(darr, darr + byte_size, 0);
+  //    write_syndrome(darr, s);
+
+  //    for (int i = 0; i < byte_size; i++) {
+  //      std::cout << std::bitset<8>(darr[i]) << " ";
+  //    }
+  //    std::cout << std::endl;
+
+  //    Syndrome s2(s.size());
+  //    read_syndrome(s2, darr);
+
+  //    for (int i = 0; i < s.size(); ++i) {
+  //      if (s[i] != s2[i]) {
+  //        ICOV_ERROR << "error";
+  //        break;
+  //      }
+  //    }
+
+  //    o_archive &boost::serialization::make_array(darr, byte_size);
+
+  //    std::cout << "test end" << std::endl;
+  //    std::cout << std::endl;
+  //  }
   // TODO INIT ACCESS BLOCKS !!
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
-  ICOV_LOG(debug) << "Start encoding";
+  ICOV_DEBUG << "Start encoding";
   m_encoder->encode(output, *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
   output.close();

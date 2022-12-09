@@ -31,7 +31,7 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 
   //    CoderFactory::create_coder_yuv(args, m_ycoder, m_uvcoder);
 
-  ICOV_LOG(info) << boost::format("%-15s %-s") % "Input File:" %
+  ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                         m_parameters.inputFile;
 }
 

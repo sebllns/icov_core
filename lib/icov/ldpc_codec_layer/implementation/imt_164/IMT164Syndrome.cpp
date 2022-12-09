@@ -103,7 +103,7 @@ void IMT164SyndromeManager::compute_doping_order(LLRProvider &llr_provider,
 
 void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
   // DebugTools::write_vector("./src.txt", source_x, ' ');
-  ICOV_LOG(trace) << __func__;
+  ICOV_TRACE << __func__;
   reset_doping();
 
   if (accumulated_syndrome == nullptr) {
@@ -212,7 +212,7 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
   if (m > get_m_max()) {
 
 #if ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_LOG(trace) << "doping";
+    ICOV_TRACE << "doping";
 #endif
 
     // order the llr values for rate = 0.5

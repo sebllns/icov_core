@@ -138,7 +138,7 @@ std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
 
 void icov::LLRProvider::init_doping() {
   if (!m_doping_ready) {
-    ICOV_LOG(debug) << "Compute doping";
+    ICOV_DEBUG << "Compute doping";
     m_llr_doping = m_llr;
     // icov::sort_indexes_abs(m_llr, m_doping_order);
     m_doping_ready = true;

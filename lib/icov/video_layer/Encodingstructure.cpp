@@ -229,7 +229,7 @@ void icov::video::EncodingStructure::
     UInt icuXPosTopLeft = divresult.rem;
     UInt icuYPosTopLeft = divresult.quot;
 
-    ICOV_LOG(trace) << "create ICU #" << icuIndex << " (" << icuXPosTopLeft
+    ICOV_TRACE << "create ICU #" << icuIndex << " (" << icuXPosTopLeft
                     << ", " << icuYPosTopLeft << ")";
 
     Area icuLumaArea =

@@ -137,17 +137,6 @@ setNotMaskTo(AreaBuf<T> &buff, const AreaBuf<bool> &buff_mask,
 
 void positionRelativeTo(UnitArea &inputOutput, const Position &origin);
 
-/*
- * Finds connected component for 360 image (traversing in x direction is
- * continous). inputOutput is modified by this function The function returns
- * blocks of connected componenet in snake scanning order. So the order of
- * blocks in each connected components is already optimal for interactive
- * coding.
- */
-void findConnectedComponents_360(
-    AreaBuf<bool> &inputOutput,
-    std::vector<std::vector<Position>> &connectedComponents);
-
 double calculatePSNR(const CPelUnitBuf &org, const CPelUnitBuf &cur,
                      const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
                      double *mse_ptr = nullptr, uint *maxval_ptr = nullptr);

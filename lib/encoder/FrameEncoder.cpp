@@ -1,11 +1,10 @@
 #include "FrameEncoder.h"
 
+#include "BitSymbolProvider.h"
 #include "enc_helpers.h"
 #include "helpers.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
-#include "video_layer/ICOV_Quant.h"
-#include "video_layer/ICOV_Transform2d.h"
+#include "tools/DebugTools.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 
@@ -13,7 +12,9 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/serialization/vector.hpp>
 
+#include <cstdint>
 #include <omp.h>
 
 namespace fs = boost::filesystem;
@@ -41,22 +42,53 @@ void copyBordersFor360_1(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
 /*****************************************************************************/
 FrameEncoder::FrameEncoder(int frame, const params &p)
     : IFrameEncoder(frame), m_params(p),
-      m_numComp(getNumberValidComponents(p.chFormat)) {
-  std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-  icov::CoderFactory::create_coder_yuv(p.program_args, ycoder, uvcoder);
-  m_coders[ycoder->get_n()] = std::move(ycoder);
-  m_coders[uvcoder->get_n()] = std::move(uvcoder);
+      m_numComp(getNumberValidComponents(p.chFormat)),
+      m_pred_encoder(p.program_args, std::vector<uint16_t>{
+                                         BlockPrediction::RIGHT,
+                                         BlockPrediction::LEFT,
+                                         BlockPrediction::TOP,
+                                         BlockPrediction::BOTTOM,
+                                         BlockPrediction::TOP_RIGHT,
+                                         BlockPrediction::TOP_LEFT,
+                                         BlockPrediction::BOTTOM_RIGHT,
+                                         BlockPrediction::BOTTOM_LEFT,
+                                     }) {
+
+  int idx = 0;
+  for (auto pred : BlockPrediction::getAvailablePredictions())
+    m_predIndexes[static_cast<uint16_t>(pred)] = idx++;
 }
 
 /*****************************************************************************/
-FrameEncoder::~FrameEncoder() { ICOV_LOG(trace) << "Destroy FrameEncoder"; }
+FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 
 /*****************************************************************************/
 void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
                                bool access_block,
                                const IBlockPrediction &block_prediction) {
-  for (uint16_t p : getAvailablePredictions(b, access_block, block_prediction))
+
+  ICOV_DEBUG << "start encode block";
+  const auto v = getAvailablePredictions(b, access_block, block_prediction);
+  m_stored_synd.clear();
+  m_stored_numcodes = SINumcodeIdxVec(v.size());
+
+#pragma omp parallel for
+  for (uint16_t p : v)
     encodeBlockWithPrediction(output, b, p);
+
+  boost::archive::binary_oarchive o_archive(output, boost::archive::no_header);
+  //  //save rates for each
+  //  for (size_t i = 0; i < si_numcodes.size(); i++) {
+  //    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
+  //           << b.parent()->col(b.u()) << "\t" <<
+  //           BlockPrediction::toString(pred)
+  //           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
+  //           << encoder.get_r(si_numcodes[i]) << "\t" <<
+  //           si_synd[i].to_string(" ")
+  //           << "\t" << std::endl;
+  //  }
+
+  ICOV_DEBUG << "end encode block";
 }
 
 /*****************************************************************************/
@@ -109,7 +141,7 @@ void FrameEncoder::processInput(std::ostream &output,
   m_vvc_bufs.create(PIC_PREDICTION, extendedFrameArea);
 
   std::vector<BlockPrediction::predType> predVec = {
-      BlockPrediction::LEFT,         BlockPrediction::RIGHT,
+      BlockPrediction::RIGHT,        BlockPrediction::LEFT,
       BlockPrediction::TOP,          BlockPrediction::BOTTOM,
       BlockPrediction::TOP_LEFT,     // 0b00101
       BlockPrediction::BOTTOM_LEFT,  // 0b01001
@@ -149,9 +181,9 @@ void FrameEncoder::processInput(std::ostream &output,
   PelUnitBuf mainFrameReco =
       m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
-  ICOV_LOG(debug) << "Start computing intra predictions";
+  ICOV_DEBUG << "Start computing intra predictions";
   for (UInt ch = 0; ch < m_numComp; ch++) {
-    ICOV_LOG(debug) << "Channel " << ch + 1 << " / " << m_numComp;
+    ICOV_DEBUG << "Channel " << ch + 1 << " / " << m_numComp;
 
     const ComponentID compID = ComponentID(ch);
     copyBordersFor360_1(mainFrameReco, compID);
@@ -162,7 +194,7 @@ void FrameEncoder::processInput(std::ostream &output,
         m_params.tuSizeAfterRegrouping_luma.height, false, m_params.qp,
         m_params.maxLog2TrDynamicRange);
   }
-  ICOV_LOG(debug) << "Successfully computed intra predictions";
+  ICOV_DEBUG << "Successfully computed intra predictions";
 
   //   END INTRA PRED
 }
@@ -174,81 +206,85 @@ void icov::encoder::FrameEncoder::encode_tu(
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp, int tu_index) {
 
-  boost::archive::binary_oarchive o_archive(output, boost::archive::no_header);
+  const auto predID = static_cast<uint16_t>(pred);
 
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
+  const auto &si_tu = si.TUs[tu_index];
+
   auto x_tuCoeff = x_tu.getQuantizedTransformCoeffs(comp);
 
   size_t tu_size = x_tuCoeff.area();
 
-  const auto &si_tu = si.TUs[tu_index];
-  auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(comp);
+  // encode outputs for the current SI: vector of rates and vector of syndrome
+  // (one rate and syndrome per bitplane)
+  icov::NumcodeIdxVec si_numcodes;
+  icov::SyndromesVec si_synd;
 
-  ICOV_ASSERT_MSG(
-      (size_t)si_tuCoeff.area() == tu_size,
-      "Transform units from Source and its SI must be the same size: " +
-          std::to_string(tu_size));
+  BitSymbolProvider bsp =
+      x_tu.getBitSymbolProvider(comp, si_tu, m_params.bsp_params);
 
-  ICOV_ASSERT_MSG(m_coders.count(tu_size) > 0,
-                  "Coder not found for the given size: " +
-                      std::to_string(tu_size));
+  auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
+  encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
 
-  BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
-  bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size),
-             m_params.bsp_params);
+  // CHECK DECODING
+  if (m_params.check_decoding) {
 
-  icov::SINumcodeIdx si_numcodes;
-  icov::SISyndromes si_synd;
+    BitSymbolProvider bsp_dec(tu_size);
 
-  m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
+    bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
+                   bsp.x_binary_length());
 
-  BitSymbolProvider bsp_dec(tu_size);
-  bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                 bsp.x_binary_length());
+    for (size_t i = 0; i < si_numcodes.size(); i++) {
 
-  for (size_t i = 0; i < si_numcodes.size(); i++) {
-    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
-           << b.parent()->col(b.u()) << "\t" << BlockPrediction::toString(pred)
-           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
-           << m_coders.at(tu_size)->get_r(si_numcodes[i]) << "\t"
-           << si_synd[i].to_string(" ") << "\t";
-    output << std::endl;
-
-    if (m_params.check_decoding) {
-
-      ICOV_LOG(debug) << "Check decoding bitplane " << i << std::endl;
-
+      ICOV_TRACE << "Check decoding bitplane " << i << std::endl;
       BitVec decoded;
-
       try {
-        ICOV_LOG(debug) << "Check bitplane " << i;
-        m_coders.at(tu_size)->decode_bitplane(decoded, i, bsp_dec,
-                                              si_numcodes[i], si_synd[i]);
+        ICOV_TRACE << "Check bitplane " << i;
+        encoder.decode_bitplane(decoded, i, bsp_dec, si_numcodes[i],
+                                si_synd[i]);
         icov::helpers::assert::check(decoded == bsp.src_bits()[i],
                                      "Decoding BP check failed " +
                                          std::to_string(i));
       } catch (const std::exception &e) {
-        ICOV_LOG(error) << e.what();
+        ICOV_ERROR << e.what();
         break;
       }
     }
-  }
 
-  if (m_params.check_decoding) {
     try {
-      ICOV_LOG(debug) << "Decode channel " << comp;
-
       bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
                      bsp.x_binary_length());
-      m_coders.at(tu_size)->decode_symboles(bsp_dec, si_numcodes, si_synd);
+      encoder.decode_symboles(bsp_dec, si_numcodes, si_synd);
 
       icov::helpers::assert::check(bsp_dec.src_symboles() == bsp.src_symboles(),
                                    "Decoding symbole failed for channel " +
                                        std::to_string(comp));
-
-      ICOV_LOG(info) << "Channel was successfully decoded";
     } catch (const std::exception &e) {
-      ICOV_LOG(error) << e.what();
+      ICOV_ERROR << e.what();
+    }
+  }
+// END CHECK DECODING
+
+// encoding and decoding check done, now save syndrome if longer than current
+// saved
+#pragma omp critical
+  {
+    ICOV_DEBUG << "id " << predID;
+    ICOV_DEBUG << "value " << m_predIndexes[predID];
+    ICOV_DEBUG << "size  " << m_stored_numcodes.size();
+
+    m_stored_numcodes[m_predIndexes[predID]] = si_numcodes;
+    if (m_stored_synd.size() == 0) {
+      m_stored_synd = si_synd;
+    } else {
+      icov::helpers::assert::equal(
+          m_stored_synd.size(), si_synd.size(),
+          "Bitplane count does not match between SI of same block");
+      for (size_t i = 0; i < m_stored_synd.size(); ++i) {
+        if (si_synd[i].size() > m_stored_synd[i].size()) {
+          m_stored_synd[i] = si_synd[i];
+        }
+      }
     }
   }
 }
@@ -261,19 +297,11 @@ void icov::encoder::FrameEncoder::encode_si(
   for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
     encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
   }
-  ICOV_LOG(info) << "Block was successfully encoded";
-
-  if (m_params.check_decoding) {
-    ICOV_LOG(info) << "Decoding check passed";
-  }
 }
 
 void icov::encoder::FrameEncoder::encode_icu(
     std::ostream &output, const Block &b,
     const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
-
-  ICOV_LOG(info) << "Encode ICU with prediction "
-                 << BlockPrediction::toString(pred) << std::endl;
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
@@ -289,9 +317,6 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
-  ICOV_LOG(debug) << "try encode prediction " << BlockPrediction::toString(pred)
-                  << std::endl;
-
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
 
@@ -300,13 +325,8 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
                static_cast<float>(y_block) /
                    static_cast<float>(m_params.icuSize_luma.height));
 
-  ICOV_LOG(trace) << pos.x;
-  ICOV_LOG(trace) << pos.y;
-
   const auto &es = this->m_enc_struc;
   uint icuIndex = es.get_icuIndex(pos);
-
-  ICOV_LOG(trace) << icuIndex;
 
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();

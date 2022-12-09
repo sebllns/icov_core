@@ -132,7 +132,7 @@ void PcmData::read_mapping_vector(const std::string &filepath,
 
   std::ifstream file(filepath);
 
-  ICOV_LOG(info) << "Read vector at " << filepath;
+  ICOV_DEBUG << "Read vector at " << filepath;
 
   icov::helpers::assert::check(
       file.is_open(),
@@ -144,19 +144,19 @@ void PcmData::read_mapping_vector(const std::string &filepath,
   file >> n_rows;
   file >> n_cols;
 
-  ICOV_LOG(debug) << "Size: " << n_cols << ", " << n_rows;
+  ICOV_TRACE << "Size: " << n_cols << ", " << n_rows;
 
   m = icov::FastMatrix<uint16_t>(n_rows, n_cols);
 
-  ICOV_LOG(trace) << "READ";
+  ICOV_TRACE << "READ";
   for (int i = 0; i < n_rows; i++) {
-    ICOV_LOG(trace) << "ROW " << i;
+    ICOV_TRACE << "ROW " << i;
     for (int j = 0; j < n_cols; j++) {
       uint16_t value = 0;
       file >> value;
       m.at(i, j) = value - 1;
     }
   }
-  ICOV_LOG(trace) << "END";
+  ICOV_TRACE << "END";
   file.close();
 }

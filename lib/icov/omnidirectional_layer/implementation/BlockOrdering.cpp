@@ -32,7 +32,7 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
     auto n_id = current.getId(nn);
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_LOG(trace) << "\n    block " << current.getId(Block::SELF)
+    ICOV_TRACE << "\n    block " << current.getId(Block::SELF)
                         << ", neighbor " << nn;
 #endif
 
@@ -49,7 +49,7 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
 
         if (path_info->si_horizontal && path_info->si_vertical) {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-          ICOV_LOG(trace) << ": AVAILABLE!";
+          ICOV_TRACE << ": AVAILABLE!";
 #endif
 
           return nn;
@@ -59,12 +59,12 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
           result = nn;
       } else {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        ICOV_LOG(trace) << ": NOT visible...";
+        ICOV_TRACE << ": NOT visible...";
 #endif
       }
     } else {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-      ICOV_LOG(trace) << ": NOT available...";
+      ICOV_TRACE << ": NOT available...";
 #endif
     }
   }
@@ -75,7 +75,7 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
 BlockVector::const_iterator
 BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm) {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-  ICOV_LOG(trace) << "\nblock " << m_elements.size()
+  ICOV_TRACE << "\nblock " << m_elements.size()
                       << " id = " << current.getId(Block::SELF) << std::endl;
 #endif
 

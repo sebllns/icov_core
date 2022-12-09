@@ -3,8 +3,8 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup FrameEncoder
- * FrameEncoder package (client side).
+/** @addtogroup Encoder
+ *  ICOV Encoder Lib
  *  @ingroup ICOV
  */
 
@@ -50,10 +50,11 @@
 #pragma once
 
 #include "BlockPrediction.h"
+#include "PredictionsEncoder.h"
 #include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/IcovCoder.h"
 #include "video_layer/Encodingstructure.h"
 
+#include <cstdint>
 #include <map>
 
 namespace icov {
@@ -121,9 +122,17 @@ private:
 protected:
   params m_params;
   uint m_numComp;
-  std::map<size_t, std::unique_ptr<AffInteractiveCoder>> m_coders;
   icov::video::EncodingStructure m_enc_struc;
   icov::video::BufGroups m_vvc_bufs;
+  PredictionsEncoder m_pred_encoder;
+
+  // one incremental syndrome per bitplane
+  icov::SyndromesVec m_stored_synd;
+
+  // one numcode per SI and per bitplane
+  SINumcodeIdxVec m_stored_numcodes;
+  std::map<uint16_t, uint16_t> m_predIndexes;
 };
+
 } // namespace encoder
 } // namespace icov

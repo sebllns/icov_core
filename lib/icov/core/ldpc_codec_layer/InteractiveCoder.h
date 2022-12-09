@@ -54,14 +54,14 @@ public:
   int encode(uint32_t &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source, uint32_t numcodeMax, uint32_t step);
 
-  void encode_symboles(std::vector<SINumcodeIdx> &rates,
-                       std::vector<SISyndromes> &syndromes,
+  void encode_symboles(std::vector<NumcodeIdxVec> &rates,
+                       std::vector<SyndromesVec> &syndromes,
                        const std::vector<SIVec> &si,
                        const BitSymbolProvider::params &p,
                        const SymboleVec &src);
 
-  void encode_bitplanes(const BitSymbolProvider &bsp, SINumcodeIdx &rate,
-                        SISyndromes &stored_synd);
+  void encode_bitplanes(const BitSymbolProvider &bsp, NumcodeIdxVec &rate,
+                        SyndromesVec &stored_synd);
 
   void encode_bitplane(const BitSymbolProvider &bsp, int bitplane_idx,
                        NumcodeIdx &numcodeIdx, Syndrome &stored_synd,
@@ -76,8 +76,8 @@ public:
   /// correct parameters (Q, Zmin, Zmax, lx) \param si \param numcodes \param
   /// stored_synd
   ///
-  void decode_symboles(BitSymbolProvider &io_bsp, const SINumcodeIdx &numcodes,
-                       const SISyndromes &stored_synd);
+  void decode_symboles(BitSymbolProvider &io_bsp, const NumcodeIdxVec &numcodes,
+                       const SyndromesVec &stored_synd);
 
   void decode_bitplane(BitVec &output, int bp_idx, BitSymbolProvider &bsp,
                        const NumcodeIdx &numcode, const Syndrome &stored_synd);

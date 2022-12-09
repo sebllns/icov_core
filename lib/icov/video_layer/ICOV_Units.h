@@ -46,10 +46,11 @@
 #pragma once
 #include <memory>
 
+#include "BitSymbolProvider.h"
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
-#include "common.h"
+#include <vector>
 
 namespace icov::video {
 
@@ -90,13 +91,25 @@ public:
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
 
-  //  icov::Bitplanes &getBitplanes(const ComponentID id) {
-  //    return m_bitplanes[id];
-  //  }
+  icov::BitSymbolProvider
+  getBitSymbolProvider(const ComponentID id, const TransformUnit &si_tu,
+                       const BitSymbolProvider::params &bsp_params) const {
+    auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
+    size_t tu_size = x_tuCoeff.area();
 
-  //  const icov::Bitplanes getBitplanes(const ComponentID id) const {
-  //    return m_bitplanes[id];
-  //  }
+    BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+
+    auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(id);
+
+    ICOV_ASSERT_MSG(
+        (size_t)si_tuCoeff.area() == tu_size,
+        "Transform units from Source and its SI must be the same size: " +
+            std::to_string(tu_size));
+
+    bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), bsp_params);
+
+    return bsp;
+  }
 
   const IQTCoeffStorage getInverseQuantizedTcoeffs() const {
     return _inverseQuantizedTcoeffs;
@@ -110,7 +123,6 @@ protected:
   TCoeffStorage _Tcoeffs;
   QTCoeffStorage _quantizedTcoeffs;
   IQTCoeffStorage _inverseQuantizedTcoeffs;
-  //  icov::Bitplanes m_bitplanes[MAX_NUM_COMPONENT];
 };
 
 struct InteractiveCodingUnit : public UnitArea {

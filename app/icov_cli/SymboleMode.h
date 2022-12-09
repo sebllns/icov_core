@@ -87,7 +87,7 @@ private:
   /// \param numcodes are the rates measured
   ///
   void write_results(const std::string &sequence_name,
-                     const std::vector<SINumcodeIdx> &numcodes);
+                     const std::vector<NumcodeIdxVec> &numcodes);
 
   ///
   /// \brief process_input_list reads a text file that contains the list of

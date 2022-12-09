@@ -123,7 +123,7 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
   // check zmin = xmin - ymax
 
   if (DebugTools::debug_trace_enabled)
-    ICOV_LOG(trace) << "\t zmin=" << z_min << " zmax=" << z_max << std::endl;
+    ICOV_TRACE << "\t zmin=" << z_min << " zmax=" << z_max << std::endl;
 
   if (enable_z_quantization) {
     int z_step = 16;
@@ -131,16 +131,16 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
     z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
     z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
     if (DebugTools::debug_trace_enabled)
-      ICOV_LOG(trace) << "\t After quantization zmin=" << z_min
+      ICOV_TRACE << "\t After quantization zmin=" << z_min
                       << " zmax=" << z_max << std::endl;
   }
 
   if (DebugTools::debug_trace_enabled)
-    ICOV_LOG(trace) << "\t q=" << q << std::endl;
+    ICOV_TRACE << "\t q=" << q << std::endl;
   if (enable_q_quantization) {
     q = q_values[icov::helpers::maths::quantize(q, q_values)];
     if (DebugTools::debug_trace_enabled)
-      ICOV_LOG(trace) << "\t After quantization q=" << q << std::endl;
+      ICOV_TRACE << "\t After quantization q=" << q << std::endl;
   }
 
   m_pz_params = Pz(z_min, z_max, q);
@@ -207,41 +207,41 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
     p1 += this->pz(z + imax * (1 - 2 * negative));
   }
 
-  // ICOV_LOG(trace) <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
+  // ICOV_TRACE <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
   // << std::endl;
 
   // attention b = a+b
   float pb = p1 + p0;
 
-  // ICOV_LOG(trace) <<  "\t\t\t yk=" << yk << std::endl;
+  // ICOV_TRACE <<  "\t\t\t yk=" << yk << std::endl;
 
   if (DebugTools::debug_trace_enabled) {
     if (pb == 0) {
 
-      ICOV_LOG(trace) << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
-      ICOV_LOG(trace) << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
+      ICOV_TRACE << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
+      ICOV_TRACE << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
                       << " imax=" << ((1 << (l - b))) << std::endl;
 
-      ICOV_LOG(trace) << "\t\t\t a = ";
+      ICOV_TRACE << "\t\t\t a = ";
       int imax = (1 << (l - b));
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk;
-        ICOV_LOG(trace) << "pz(" << z << ") + ";
+        ICOV_TRACE << "pz(" << z << ") + ";
       }
 
-      ICOV_LOG(trace) << std::endl << "\t\t\t b = ";
+      ICOV_TRACE << std::endl << "\t\t\t b = ";
 
       for (int i = 0; i < imax; i++) {
         int z = (abs_predec + i) * (1 - 2 * negative) - yk +
                 imax * (1 - 2 * negative);
-        ICOV_LOG(trace) << "pz(" << z << ") + ";
+        ICOV_TRACE << "pz(" << z << ") + ";
       }
 
-      ICOV_LOG(trace) << std::endl;
+      ICOV_TRACE << std::endl;
     } else {
 
       if (std::abs(p0 / pb + p1 / pb - 1) > 0.00001) {
-        ICOV_LOG(trace) << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
+        ICOV_TRACE << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
                         << " != 1" << std::endl;
       }
     }

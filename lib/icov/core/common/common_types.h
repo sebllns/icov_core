@@ -1,19 +1,17 @@
-#ifndef COMMON_TYPES_H
-#define COMMON_TYPES_H
+#pragma once
 
-#ifndef COMMON_H
-#error Include common.h not common_types.h
-#endif
+#include <cstddef>
 
+#include "typedef.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <limits.h>
 #include <numeric>
 #include <sstream>
 #include <vector>
-
 namespace icov {
 
 ///
@@ -33,11 +31,11 @@ public:
     std::memcpy(m_data, f.m_data, m_size * sizeof(T));
   }
 
-  FastArray(size_t size) : m_capacity(size), m_size(size), m_data(new T[size]) {
-    //    std::cout << "new size " << size << std::endl;
+  FastArray(size_t size)
+      : m_capacity(size), m_size(size), m_data(new T[size]) {}
 
-    //(T*)malloc(size * sizeof (T))
-  }
+  FastArray(T *data, size_t size)
+      : m_capacity(size), m_size(size), m_data(data) {}
 
   virtual ~FastArray() {
     //    std::cout << "delete\n";
@@ -70,15 +68,12 @@ public:
   T at(int i) const { return m_data[i]; }
   T &at(int i) { return m_data[i]; }
 
-  void fill(T val) {
-    for (int i = 0; i < this->size(); i++) {
-      this->m_data[i] = val;
-    }
-  }
+  void fill(T val) { std::fill(m_data, m_data + size(), val); }
 
   size_t size() const { return m_size; }
   size_t capacity() const { return m_capacity; }
 
+  void setData(T *data) { m_data = data; };
   const T *data() const { return m_data; }
   std::vector<T> getDataVec() const {
     return std::vector<T>(m_data, m_data + m_size);
@@ -211,20 +206,20 @@ protected:
 };
 
 class BitVector {
-  typedef unsigned char byte;
-  typedef bool bit;
+  typedef icov::byte _byte_t;
+  typedef bool _bit_t;
 
 public:
   BitVector() = default;
 
-  BitVector(size_t size, byte value = 0) : m_actual_size(size) {
+  BitVector(size_t size, _byte_t value = 0) : m_actual_size(size) {
     size_t byte_count =
         m_actual_size / sizeOfByte() + (m_actual_size % sizeOfByte() != 0);
 
-    m_data = std::vector<byte>(byte_count, value);
+    m_data = std::vector<_byte_t>(byte_count, value);
   }
 
-  static size_t sizeOfByte() { return 8 * sizeof(byte); }
+  static size_t sizeOfByte() { return CHAR_BIT * sizeof(_byte_t); }
 
   size_t resize(size_t size) {
     m_actual_size = size;
@@ -240,12 +235,7 @@ public:
   size_t max_size() const { return byte_count() * sizeOfByte(); }
   size_t byte_count() const { return m_data.size(); }
 
-  bit operator[](int i) const { return get_bit(i); }
-
-  //    byte& operator [] (int i)
-  //    {
-  //        return m_data[i];
-  //    }
+  _bit_t operator[](int i) const { return get_bit(i); }
 
   void get_bit_position(int bit_index, int &o_byte_index,
                         int &o_bit_offset) const {
@@ -253,23 +243,24 @@ public:
     o_bit_offset = bit_index % sizeOfByte();
   }
 
-  byte &byte_at(int i) { return m_data[i]; }
+  _byte_t &byte_at(int i) { return m_data[i]; }
+  const _byte_t &byte_at(int i) const { return m_data[i]; }
 
-  byte &getByteFromBitPos(int bit_index) {
+  _byte_t &getByteFromBitPos(int bit_index) {
     int byte_index = 0;
     int bit_offset = 0;
     get_bit_position(bit_index, byte_index, bit_offset);
     return this->m_data[byte_index];
   }
 
-  byte getByteFromBitPos(int bit_index) const {
+  _byte_t getByteFromBitPos(int bit_index) const {
     int byte_index = 0;
     int bit_offset = 0;
     get_bit_position(bit_index, byte_index, bit_offset);
     return this->m_data[byte_index];
   }
 
-  bit get_bit(int bit_index) const {
+  _bit_t get_bit(int bit_index) const {
     int byte_index = 0;
     int bit_offset = 0;
     get_bit_position(bit_index, byte_index, bit_offset);
@@ -281,7 +272,7 @@ public:
     return (get_bit(bit_index)) ? 1.0 : 0.0;
   }
 
-  void set(int bit_index, bit bit_val) {
+  void set(int bit_index, _bit_t bit_val) {
     int byte_index = 0;
     int bit_offset = 0;
     get_bit_position(bit_index, byte_index, bit_offset);
@@ -289,7 +280,7 @@ public:
     int mask = 1 << bit_offset;
 
     this->m_data[byte_index] =
-        ((this->m_data[byte_index] & ~mask) | ((byte)bit_val << bit_offset));
+        ((this->m_data[byte_index] & ~mask) | ((_byte_t)bit_val << bit_offset));
   }
 
   void print() const {
@@ -301,7 +292,7 @@ public:
 
 protected:
   size_t m_actual_size;
-  std::vector<byte> m_data;
+  std::vector<_byte_t> m_data;
 };
 
 typedef bool bit;
@@ -323,8 +314,10 @@ using Rate = float;
 using NumcodeIdx = uint32_t;
 
 // Bitplane
-using SISyndromes = std::vector<FastArray<bit>>;
-using SINumcodeIdx = std::vector<NumcodeIdx>;
+using SyndromesVec = std::vector<Syndrome>;
+using NumcodeIdxVec = std::vector<NumcodeIdx>;
+
+using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v,
@@ -366,5 +359,3 @@ template <typename Iterator> struct value_type {
 };
 
 } // namespace icov
-
-#endif // COMMON_TYPES_H

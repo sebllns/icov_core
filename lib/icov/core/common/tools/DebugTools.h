@@ -9,6 +9,12 @@
 #include <boost/log/trivial.hpp>
 #define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
 
+#define ICOV_TRACE ICOV_LOG(trace)
+#define ICOV_DEBUG ICOV_LOG(debug)
+#define ICOV_INFO ICOV_LOG(info)
+#define ICOV_ERROR ICOV_LOG(error)
+#define ICOV_FATAL ICOV_LOG(fatal)
+
 #ifndef ICOV_LOG_LEVEL
 #define ICOV_LOG_LEVEL 2
 #endif

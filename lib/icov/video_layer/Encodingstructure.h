@@ -47,10 +47,7 @@
 #include <opencv2/core.hpp>
 
 #include "ICOV_BufGroups.h"
-#include "ICOV_IntraPrediction.h"
 #include "IcuEncoder.h"
-#include "helpers.h"
-#include "omnidirectional_layer/Block.h"
 namespace icov::video {
 
 struct EncodingStructure {

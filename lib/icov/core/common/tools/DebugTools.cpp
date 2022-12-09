@@ -116,7 +116,7 @@ void icov::debug::initLog() {
   logging::core::get()->set_filter(logging::trivial::severity >=
                                    ICOV_LOG_LEVEL);
 
-  ICOV_LOG(info) << "Log intialized";
+  ICOV_INFO << "Log intialized";
 }
 
 void icov::debug::write_str(const std::string &filename,

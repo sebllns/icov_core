@@ -130,7 +130,7 @@ void SymboleMode::run() {
 }
 
 void SymboleMode::write_results(const std::string &sequence_name,
-                                const std::vector<SINumcodeIdx> &numcodes) {
+                                const std::vector<NumcodeIdxVec> &numcodes) {
   TestSequenceResult tsr;
   tsr.read_from_file((m_references_dir / (sequence_name + ".mat")).string());
 
@@ -198,12 +198,12 @@ void SymboleMode::process_input_list(const std::string &file) {
         fs::path seq_path =
             fs::path(m_dataset_dir) / "sequences" / (sequence_name + ".txt");
 
-        ICOV_LOG(info) << "Process file " << seq_path;
+        ICOV_INFO << "Process file " << seq_path;
         process_input_file(seq_path.string());
       } catch (...) {
-        ICOV_LOG(error) << "Error: Could not process sequence file "
+        ICOV_ERROR << "Error: Could not process sequence file "
                         << sequence_name;
-        ICOV_LOG(error) << boost::current_exception_diagnostic_information();
+        ICOV_ERROR << boost::current_exception_diagnostic_information();
       }
     }
   }
@@ -223,14 +223,14 @@ void SymboleMode::process_input_file(const std::string &file) {
     side_infos.push_back(tsi.get_side_info(k));
   }
 
-  std::vector<SINumcodeIdx> numcodes;
-  std::vector<SISyndromes> syndromes;
+  std::vector<NumcodeIdxVec> numcodes;
+  std::vector<SyndromesVec> syndromes;
   BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
 
   m_coder->encode_symboles(numcodes, syndromes, side_infos, bsp_params,
                            tsi.get_source());
 
-  ICOV_LOG(info) << "Check incremental syndrome";
+  ICOV_INFO << "Check incremental syndrome";
   // CHECK INCREMENTAL SYNDROME
   int bitplanes_count = syndromes[0].size();
   for (int i = 0; i < bitplanes_count; i++) {
@@ -271,7 +271,7 @@ void SymboleMode::process_input_file(const std::string &file) {
       ++sk;
     } while (!sk_first);
   }
-  ICOV_LOG(info) << "Incremental syndrome OK";
+  ICOV_INFO << "Incremental syndrome OK";
 
   write_results(fs::path(file).stem().string(), numcodes);
 }

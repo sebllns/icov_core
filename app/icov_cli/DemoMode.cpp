@@ -58,9 +58,9 @@ DemoMode::DemoMode(const po::variables_map &args) {
     m_encoder = std::make_unique<icov::encoder::DemoEncoder>(0, enc_params);
   }
 
-  ICOV_LOG(info) << boost::format("%-15s %-s") % "Input File:" %
+  ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                         m_parameters.inputFile;
-  ICOV_LOG(info) << boost::format("%-15s %-s ") % "Output File:" %
+  ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
                         m_parameters.encodedFile;
 }
 
@@ -74,7 +74,7 @@ void DemoMode::run() {
   icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
-  ICOV_LOG(debug) << "Start encoding";
+  ICOV_DEBUG << "Start encoding";
   m_encoder->encode(std::cout, *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
 }

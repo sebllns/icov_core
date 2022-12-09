@@ -9,7 +9,7 @@ void VarodayanMatrixProvider::_buildMatrix(int numcode, AffMatrix &H) {
 
   H = AffMatrix(n, m);
 
-  ICOV_LOG(trace) << m << ", " << n;
+  ICOV_TRACE << m << ", " << n;
 
   for (int k = 0; k < (int)n; k++) {
     for (uint32_t l = m_tools->jc[k]; l < m_tools->jc[k + 1]; l++) {

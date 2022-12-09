@@ -1,5 +1,5 @@
 #include "BitstreamParser.h"
-#include "video_layer/NalUnit.h"
+#include "video_layer/extracted_stream.h"
 
 using namespace icov::decoder;
 

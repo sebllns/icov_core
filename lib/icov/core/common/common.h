@@ -78,9 +78,4 @@
 #include <stdexcept>
 #include <string>
 
-//#include "helpers.h"
-//#include "icov_program_options.h"
-
-//#include <boost/throw_exception.hpp>
-
 #endif // COMMON_H
