@@ -74,7 +74,11 @@ typedef char int8b;
 #define BYTE_SIZE CHAR_BIT * sizeof(icov::byte)
 
 inline size_t bitToByteCount(size_t bit_count) {
-  return std::floor(bit_count / BYTE_SIZE) + bit_count % BYTE_SIZE;
+  return bit_count / BYTE_SIZE + bit_count % BYTE_SIZE;
+}
+
+inline size_t byteToBitCount(size_t byte_count) {
+  return BYTE_SIZE * byte_count;
 }
 
 // typedef std::basic_streambuf<icov::byte> bitstreambuf;

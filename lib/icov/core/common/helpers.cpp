@@ -136,13 +136,21 @@ float maths::wrap(float val, float min, float max) {
 }
 
 void assert::check(bool expr, const std::string &msg) {
-  if (!expr)
+  if (!expr) {
+#ifdef ICOV_CORE_STACKTRACE_ENABLED
+    ICOV_FATAL << boost::stacktrace::stacktrace();
+#endif
     ICOV_THROW_LOGICAL_EXCEPTION("Assertion is invalid: " + msg);
+  }
 }
 
 void assert::not_null(const void *p, const std::string &msg) {
-  if (!p)
+  if (!p) {
+#ifdef ICOV_CORE_STACKTRACE_ENABLED
+    ICOV_FATAL << boost::stacktrace::stacktrace();
+#endif
     ICOV_THROW_NULLPTR(msg);
+  }
 }
 
 int maths::quantize(int value, int step, int min, int max) {

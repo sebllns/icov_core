@@ -46,15 +46,14 @@
  *
  *****************************************************************************/
 #pragma once
-#include "encoded_stream/ContentParameterSet.h"
+#include "helpers.h"
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
 #include <cmath>
 #include <cstdint>
 #include <sys/types.h>
 #include <vector>
-
-using namespace icov;
 
 namespace boost {
 namespace serialization {

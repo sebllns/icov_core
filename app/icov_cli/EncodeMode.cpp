@@ -1,8 +1,10 @@
 #include "EncodeMode.h"
 #include "encoder/FrameEncoder.h"
+#include "encoder/OutputMedia.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "tools/DebugTools.h"
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/serialization/array_wrapper.hpp>
 #include <cstdint>
@@ -11,6 +13,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/serialization/vector.hpp>
+#include <memory>
+#include <utility>
 
 #include "video_layer/encoded_stream.h"
 
@@ -45,37 +49,44 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   if (m_parameters.encodedFile.empty()) {
     m_parameters.encodedFile = m_parameters.inputFile;
     m_parameters.encodedFile.replace_extension(".icov");
-
-    m_parameters.icuSize = args[EncodeMode::params::icuSize_id].as<int>();
-
-    bool enable_z_quantization = true;
-    std::vector<float> q_values;
-    icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE.string(), q_values);
-    BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
-    icov::encoder::FrameEncoder::params enc_params = {
-        42,
-        CHROMA_420,
-        cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-        cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-        bsp_params,
-        args,
-        true,
-        false,
-        true};
-
-    m_encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
   }
 
+  m_parameters.icuSize = args[EncodeMode::params::icuSize_id].as<int>();
+
+  bool enable_z_quantization = true;
+  std::vector<float> q_values;
+  icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE.string(), q_values);
+  BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
+  icov::encoder::FrameEncoder::params enc_params = {
+      42,
+      CHROMA_420,
+      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+      bsp_params,
+      args,
+      true,
+      false,
+      true};
+
+  auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
+  auto output =
+      std::make_shared<icov::encoder::OutputIcov>(m_parameters.encodedFile);
+
+  encoder->setIcovFile(output);
+
+  m_encoder = std::move(encoder);
+  m_output = std::move(output);
+
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
-                        m_parameters.inputFile;
+                   m_parameters.inputFile;
   ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
-                        m_parameters.encodedFile;
+                   m_parameters.encodedFile;
 }
 
 void EncodeMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  std::ofstream output(m_parameters.encodedFile, std::ios_base::binary);
+  // std::ofstream output(m_parameters.encodedFile, std::ios_base::binary);
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
   icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
   //  {
@@ -127,7 +138,7 @@ void EncodeMode::run() {
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
   ICOV_DEBUG << "Start encoding";
-  m_encoder->encode(output, *input, icov_pic, icov_accessblockMgr,
+
+  m_encoder->encode(m_output->stream(), *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
-  output.close();
 }

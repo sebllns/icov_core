@@ -50,12 +50,15 @@
 #pragma once
 
 #include "BlockPrediction.h"
+#include "Media.h"
+#include "OutputMedia.h"
 #include "PredictionsEncoder.h"
 #include "encoder/interface/IEncoder.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <cstdint>
 #include <map>
+#include <memory>
 
 namespace icov {
 namespace encoder {
@@ -96,7 +99,10 @@ public:
   FrameEncoder(int frame, const params &p);
   ~FrameEncoder();
 
-protected:
+  const std::shared_ptr<OutputIcov> &icovFile() const;
+  void setIcovFile(const std::shared_ptr<OutputIcov> &newIcov_file);
+
+  protected:
   void encodeBlock(std::ostream &output, const Block &b, bool access_block,
                    const IBlockPrediction &block_prediction) override;
 
@@ -126,12 +132,13 @@ protected:
   icov::video::BufGroups m_vvc_bufs;
   PredictionsEncoder m_pred_encoder;
 
+  std::shared_ptr<OutputIcov> m_icov_file;
+
   // one incremental syndrome per bitplane
   icov::SyndromesVec m_stored_synd;
 
   // one numcode per SI and per bitplane
-  SINumcodeIdxVec m_stored_numcodes;
-  std::map<uint16_t, uint16_t> m_predIndexes;
+  std::map<uint16_t, NumcodeIdxVec> m_stored_numcodes;
 };
 
 } // namespace encoder

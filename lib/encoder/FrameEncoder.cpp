@@ -12,7 +12,6 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <cstdint>
 #include <omp.h>
@@ -52,12 +51,7 @@ FrameEncoder::FrameEncoder(int frame, const params &p)
                                          BlockPrediction::TOP_LEFT,
                                          BlockPrediction::BOTTOM_RIGHT,
                                          BlockPrediction::BOTTOM_LEFT,
-                                     }) {
-
-  int idx = 0;
-  for (auto pred : BlockPrediction::getAvailablePredictions())
-    m_predIndexes[static_cast<uint16_t>(pred)] = idx++;
-}
+                                     }) {}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
@@ -66,20 +60,28 @@ FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
                                bool access_block,
                                const IBlockPrediction &block_prediction) {
-
   ICOV_DEBUG << "start encode block";
   const auto v = getAvailablePredictions(b, access_block, block_prediction);
   m_stored_synd.clear();
-  m_stored_numcodes = SINumcodeIdxVec(v.size());
+  m_stored_numcodes.clear();
 
 #pragma omp parallel for
   for (uint16_t p : v)
     encodeBlockWithPrediction(output, b, p);
 
-  boost::archive::binary_oarchive o_archive(output, boost::archive::no_header);
+  for (const auto &s : m_stored_synd)
+    m_icov_file->writeSyndrome(s);
+
+  for (uint16_t p : v) {
+    if (m_stored_numcodes.count(p)) {
+      m_icov_file->writeRates(m_stored_numcodes.at(p));
+    }
+  }
+
   //  //save rates for each
   //  for (size_t i = 0; i < si_numcodes.size(); i++) {
-  //    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
+  //    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) <<
+  //    "\t"
   //           << b.parent()->col(b.u()) << "\t" <<
   //           BlockPrediction::toString(pred)
   //           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
@@ -269,11 +271,7 @@ void icov::encoder::FrameEncoder::encode_tu(
 // saved
 #pragma omp critical
   {
-    ICOV_DEBUG << "id " << predID;
-    ICOV_DEBUG << "value " << m_predIndexes[predID];
-    ICOV_DEBUG << "size  " << m_stored_numcodes.size();
-
-    m_stored_numcodes[m_predIndexes[predID]] = si_numcodes;
+    m_stored_numcodes[predID] = si_numcodes;
     if (m_stored_synd.size() == 0) {
       m_stored_synd = si_synd;
     } else {
@@ -287,6 +285,15 @@ void icov::encoder::FrameEncoder::encode_tu(
       }
     }
   }
+}
+
+const std::shared_ptr<OutputIcov> &FrameEncoder::icovFile() const {
+  return m_icov_file;
+}
+
+void FrameEncoder::setIcovFile(
+    const std::shared_ptr<OutputIcov> &newIcov_file) {
+  m_icov_file = newIcov_file;
 }
 
 void icov::encoder::FrameEncoder::encode_si(

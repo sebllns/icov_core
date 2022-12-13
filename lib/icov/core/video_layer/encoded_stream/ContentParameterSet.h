@@ -64,7 +64,7 @@ struct ContentParameterSet {
   uint16_t content_width;
   uint16_t content_height;
 
-  uint8_t content_chroma_format;
+  icov::byte content_chroma_format;
 
   int content_framecount;
   float content_framerate;
@@ -78,6 +78,8 @@ struct ContentParameterSet {
 
   bool is_tu_count_fixed;
   icov::byte fixed_tu_count;
+
+  icov::byte numcode_byte_count;
 
   bool has_metadata;
 };

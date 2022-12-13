@@ -52,6 +52,10 @@
 #include "helpers.h"
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
+#include <ios>
+#include <memory>
+#include <ostream>
+
 namespace fs = boost::filesystem;
 
 namespace icov {
@@ -69,12 +73,12 @@ enum eMediaType {
 class IMedia {
 public:
   virtual ~IMedia() = default;
-  IMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
+  explicit IMedia(const fs::path &path,
+                  int media_type = (int)eMediaType::UNKNOWN)
       : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
         m_frameCount(0)
 
   {
-    icov::helpers::path::assert_file_exists(path.string());
     ICOV_ASSERT_MSG(m_type != eMediaType::COUNT && m_type != eMediaType::ERROR,
                     "Media type is unsupported");
     ICOV_WARNING_MSG(m_type != eMediaType::UNKNOWN, "Media type is unknown");
@@ -114,7 +118,9 @@ public:
   // using IMedia::IMedia;
 
   IInputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
-      : IMedia(path, media_type), m_frameID(0) {}
+      : IMedia(path, media_type), m_frameID(0) {
+    icov::helpers::path::assert_file_exists(path.string());
+  }
 
   virtual void setFrame(int frame) { m_frameID = frame; }
   inline int getFrameID() const { return m_frameID; }
@@ -134,17 +140,25 @@ public:
 /** @ingroup common
  *  @brief Defines the interface for any IOutputMedia.
  */
-class OutputStream : public IMedia {
-private:
-  OutputStream() = default;
-
+class IOutputMedia : public IMedia {
 protected:
+  std::unique_ptr<std::ostream> m_outputStream;
+
 public:
+  explicit IOutputMedia(const fs::path &path,
+                        int media_type = (int)eMediaType::UNKNOWN)
+      : IMedia(path, media_type), m_outputStream(nullptr) {
+    icov::helpers::path::assert_file_exists(path.string());
+  }
+
+  virtual ~IOutputMedia() = default;
+  inline std::ostream &stream() { return *m_outputStream; }
 };
 
 template <typename T> class IImage : public IInputMedia<T> {
 public:
-  IImage(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::IMAGE) {
+  explicit IImage(const fs::path &path)
+      : IInputMedia<T>(path, (int)eMediaType::IMAGE) {
     /*image = 1 frame only*/
     this->m_frameCount = 1;
   }
@@ -158,20 +172,30 @@ public:
 
 template <typename T> class IVideo : public IInputMedia<T> {
 public:
-  IVideo(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::VIDEO) {}
+  explicit IVideo(const fs::path &path)
+      : IInputMedia<T>(path, (int)eMediaType::VIDEO) {}
 };
 
 template <typename T> class IModel3D : public IInputMedia<T> {
 public:
-  IModel3D(const fs::path &path)
+  explicit IModel3D(const fs::path &path)
       : IInputMedia<T>(path, (int)eMediaType::MODEL_3D) {}
   virtual ~IModel3D() = default;
 };
 
-template <typename T> class IIcov : public IInputMedia<T> {
+template <typename T> class InputIcov : public IInputMedia<T> {
 public:
-  IIcov(const fs::path &path) : IInputMedia<T>(path, (int)eMediaType::ICOV) {}
-  virtual ~IIcov() = default;
+  explicit InputIcov(const fs::path &path)
+      : IInputMedia<T>(path, (int)eMediaType::ICOV) {}
+  virtual ~InputIcov() = default;
+};
+
+class IOutputIcov : public IOutputMedia {
+protected:
+public:
+  explicit IOutputIcov(const fs::path &path)
+      : IOutputMedia(path, (int)eMediaType::ICOV) {}
+  virtual ~IOutputIcov() = default;
 };
 
 } // namespace icov

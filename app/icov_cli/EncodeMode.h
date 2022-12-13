@@ -4,7 +4,6 @@
  *  @ingroup ICOV
  */
 
-
 /** @file EncodeMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
@@ -46,6 +45,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "Media.h"
 #include "common.h"
 #include "encoder/InputMedia.h"
 #include "encoder/interface/IEncoder.h"
@@ -81,5 +81,6 @@ private:
   //  std::unique_ptr<AffInteractiveCoder> m_ycoder;
   //  std::unique_ptr<AffInteractiveCoder> m_uvcoder;
   std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
+  std::shared_ptr<icov::IOutputIcov> m_output;
   params m_parameters;
 };

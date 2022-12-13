@@ -122,9 +122,10 @@ inline void assertion_failed_msg(char const *expr, char const *msg,
                                  char const *function, char const * /*file*/,
                                  long /*line*/) {
   std::cerr << "Expression '" << expr << "' is false in function '" << function
-            << "': " << (msg ? msg : "<...>") << ".\n"
-            << "Backtrace:\n"
-            << boost::stacktrace::stacktrace() << '\n';
+            << "': " << (msg ? msg : "<...>") << ".\n";
+#ifdef ICOV_CORE_STACKTRACE_ENABLED
+  std::cerr << "Backtrace:\n" << boost::stacktrace::stacktrace() << '\n';
+#endif
   std::abort();
 }
 
@@ -200,8 +201,7 @@ template <class E> void throw_with_trace(const E &e) {
                         << traced(boost::stacktrace::stacktrace()));
 }
 
-#if !defined(NDEBUG) || defined(ICOV_CORE_DEBUG_TRACE_ENABLED)
-
+#if !defined(NDEBUG) || defined(ICOV_CORE_STACKTRACE_ENABLED)
 #define ICOV_THROW_EXCEPTION(e) icov::helpers::exception::throw_with_trace(e)
 #else
 #define ICOV_THROW_EXCEPTION(e) BOOST_THROW_EXCEPTION(e)

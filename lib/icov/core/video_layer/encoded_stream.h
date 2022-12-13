@@ -46,10 +46,8 @@
  *
  *****************************************************************************/
 #pragma once
-#include "helpers.h"
-#include "icov_stream.h"
-
 #include "encoded_stream/ContentParameterSet.h"
+#include "icov_stream.h"
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
@@ -59,8 +57,6 @@
 #include <cstdint>
 #include <sys/types.h>
 #include <vector>
-
-using namespace icov;
 
 // template <typename T>
 // void serialize(std::vector<icov::byte> &output, const std::vector<T> &input,
@@ -83,18 +79,30 @@ using namespace icov;
 //  }
 //}
 
-inline void read_syndrome(Syndrome &s, const icov::byte *data) {
+using namespace icov;
+
+inline int read_syndrome(Syndrome &s, const icov::byte *data, int offset = 0) {
+  int bit_shift = 0;
   for (size_t i = 0; i < s.size(); ++i) {
-    s[i] = icov::helpers::bitstream::getBit(BYTE_SIZE - i % BYTE_SIZE - 1,
-                                            data[i / BYTE_SIZE]);
+    size_t bit_idx = i + offset;
+    bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
+    size_t byte_idx = bit_idx / BYTE_SIZE;
+    s[i] = icov::helpers::bitstream::getBit(bit_shift, data[byte_idx]);
   }
+  return bit_shift;
 }
 
-inline void write_syndrome(icov::byte *data, const Syndrome &s) {
+inline int write_syndrome(icov::byte *data, const Syndrome &s, int offset = 0) {
   // data = (icov::byte *)calloc(s.size(), sizeof(icov::byte));
+  int bit_shift = 0;
   for (size_t i = 0; i < s.size(); ++i) {
-    data[i / BYTE_SIZE] += s[i] << (BYTE_SIZE - i % BYTE_SIZE - 1);
+    size_t bit_idx = i + offset;
+    bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
+    size_t byte_idx = bit_idx / BYTE_SIZE;
+    data[byte_idx] += s[i] << (bit_shift);
   }
+  return bit_shift; // then if != 0, continue from this, then calculate new
+                    // size bytesize(bit_size + bit_shift)
 }
 
 namespace boost {
