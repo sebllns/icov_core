@@ -55,19 +55,34 @@
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <cstdint>
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <vector>
+
+#ifndef ICOV_RATE_SIZE
+#define ICOV_RATE_SIZE 1
+#endif
 
 namespace icov {
 namespace encoder {
+
+using rate_t =
+#if ICOV_RATE_SIZE == 1
+    icov::byte;
+#elif ICOV_RATE_SIZE == 2
+    uint16_t;
+#else
+    uint32_t;
+#endif
 
 class OutputIcov : public icov::IOutputIcov {
 public:
   typedef enum {
     MEDIA_HEADER = 0,
     FRAMES_SIZE,
-    BITPLANES_COUNT,
+    BLOCKS_SIZE,
     RATES,
     SYNDROME,
     COUNT
@@ -81,6 +96,7 @@ public:
   void writeContentParameterSet();
   void writeSyndrome(const Syndrome &s);
   void writeFrameSize();
+  void writeBlockSize();
   void writeRates(const NumcodeIdxVec &v);
 
 private:
@@ -92,10 +108,14 @@ private:
   int last_bit_shift;
   icov::byte last_byte;
 
-  int total_write_byte;
+  int total_write_byte_block;
+  int total_write_byte_frame;
+
   int total_write_bits;
   int total_lost;
   int total_shift;
+
+  int rates_count;
 };
 
 } // namespace encoder

@@ -53,12 +53,15 @@
 #include "Media.h"
 #include "OutputMedia.h"
 #include "PredictionsEncoder.h"
+#include "common_types.h"
 #include "encoder/interface/IEncoder.h"
+#include "typedef.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace icov {
 namespace encoder {
@@ -102,7 +105,7 @@ public:
   const std::shared_ptr<OutputIcov> &icovFile() const;
   void setIcovFile(const std::shared_ptr<OutputIcov> &newIcov_file);
 
-  protected:
+protected:
   void encodeBlock(std::ostream &output, const Block &b, bool access_block,
                    const IBlockPrediction &block_prediction) override;
 
@@ -134,11 +137,14 @@ protected:
 
   std::shared_ptr<OutputIcov> m_icov_file;
 
-  // one incremental syndrome per bitplane
-  icov::SyndromesVec m_stored_synd;
+  // one incremental syndrome per bitplane and per channel
+  std::vector<std::vector<icov::Syndrome>> m_stored_synd;
 
-  // one numcode per SI and per bitplane
-  std::map<uint16_t, NumcodeIdxVec> m_stored_numcodes;
+  // one numcode per SI and per bitplane and per channel
+  std::map<uint16_t, std::map<int, NumcodeIdxVec>> m_stored_numcodes;
+
+  std::vector<icov::byte> m_nocodingFlags;
+  int block_comp;
 };
 
 } // namespace encoder

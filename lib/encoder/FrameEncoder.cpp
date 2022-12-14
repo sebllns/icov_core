@@ -63,32 +63,27 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   ICOV_DEBUG << "start encode block";
   const auto v = getAvailablePredictions(b, access_block, block_prediction);
   m_stored_synd.clear();
+  m_stored_synd.resize(m_numComp);
   m_stored_numcodes.clear();
 
+  // ERROR BECAUSE OF CHANNEL
+  for (int c = 0; c < (int)m_numComp; ++c) {
+    block_comp = c;
 #pragma omp parallel for
-  for (uint16_t p : v)
-    encodeBlockWithPrediction(output, b, p);
+    for (uint16_t p : v)
+      encodeBlockWithPrediction(output, b, p);
 
-  for (const auto &s : m_stored_synd)
-    m_icov_file->writeSyndrome(s);
-
-  for (uint16_t p : v) {
-    if (m_stored_numcodes.count(p)) {
-      m_icov_file->writeRates(m_stored_numcodes.at(p));
-    }
+    // store syndrome per bitplane
+    for (const auto &s : m_stored_synd[c])
+      m_icov_file->writeSyndrome(s);
   }
 
-  //  //save rates for each
-  //  for (size_t i = 0; i < si_numcodes.size(); i++) {
-  //    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) <<
-  //    "\t"
-  //           << b.parent()->col(b.u()) << "\t" <<
-  //           BlockPrediction::toString(pred)
-  //           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
-  //           << encoder.get_r(si_numcodes[i]) << "\t" <<
-  //           si_synd[i].to_string(" ")
-  //           << "\t" << std::endl;
-  //  }
+  // store bitplanes rates per SI
+  for (uint16_t p : v) {
+    if (m_stored_numcodes.count(p)) {
+      m_icov_file->writeRates(m_stored_numcodes.at(p).at(c));
+    }
+  }
 
   ICOV_DEBUG << "end encode block";
 }
@@ -271,16 +266,23 @@ void icov::encoder::FrameEncoder::encode_tu(
 // saved
 #pragma omp critical
   {
-    m_stored_numcodes[predID] = si_numcodes;
-    if (m_stored_synd.size() == 0) {
-      m_stored_synd = si_synd;
+    std::cout << "PRED " << predID << ": " << m_stored_synd.size() << ", "
+              << si_synd.size() << ", " << si_numcodes.size() << std::endl;
+
+    // save rates
+    m_stored_numcodes[predID][comp] = si_numcodes;
+
+    // save syndrome
+    if (m_stored_synd[comp].size() == 0) {
+      m_stored_synd[comp] = si_synd; /*save first*/
     } else {
       icov::helpers::assert::equal(
           m_stored_synd.size(), si_synd.size(),
           "Bitplane count does not match between SI of same block");
-      for (size_t i = 0; i < m_stored_synd.size(); ++i) {
-        if (si_synd[i].size() > m_stored_synd[i].size()) {
-          m_stored_synd[i] = si_synd[i];
+      // save if longer only
+      for (size_t i = 0; i < m_stored_synd[comp].size(); ++i) {
+        if (si_synd[i].size() > m_stored_synd[comp][i].size()) {
+          m_stored_synd[comp][i] = si_synd[i];
         }
       }
     }
@@ -301,7 +303,12 @@ void icov::encoder::FrameEncoder::encode_si(
     const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp) {
-  for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
+
+  icov::helpers::assert::equal(
+      (int)si.TUs.size(), 1,
+      "This version of ICOV can only manage one transform unit per block");
+
+  for (int tu_index = 0; tu_index < (int)si.TUs.size(); tu_index++) {
     encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
   }
 }
@@ -312,9 +319,8 @@ void icov::encoder::FrameEncoder::encode_icu(
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
-  for (uint c = 0; c < m_numComp; c++) {
-    encode_si(output, b, icu_enc, *si, pred, static_cast<ComponentID>(c));
-  }
+  encode_si(output, b, icu_enc, *si, pred,
+            static_cast<ComponentID>(block_comp));
 }
 
 /*****************************************************************************/

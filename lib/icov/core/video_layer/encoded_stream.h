@@ -81,25 +81,29 @@
 
 using namespace icov;
 
-inline int read_syndrome(Syndrome &s, const icov::byte *data, int offset = 0) {
+template <typename T>
+int read_bits(T &output, const icov::byte *input, int offset = 0) {
   int bit_shift = 0;
-  for (size_t i = 0; i < s.size(); ++i) {
+  for (size_t i = 0; i < output.size(); ++i) {
     size_t bit_idx = i + offset;
     bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
     size_t byte_idx = bit_idx / BYTE_SIZE;
-    s[i] = icov::helpers::bitstream::getBit(bit_shift, data[byte_idx]);
+    output[i] = icov::helpers::bitstream::getBit(bit_shift, input[byte_idx]);
   }
   return bit_shift;
 }
 
-inline int write_syndrome(icov::byte *data, const Syndrome &s, int offset = 0) {
+template <typename T>
+int write_bits(icov::byte *output, const T &input, int offset = 0) {
   // data = (icov::byte *)calloc(s.size(), sizeof(icov::byte));
   int bit_shift = 0;
-  for (size_t i = 0; i < s.size(); ++i) {
+  for (size_t i = 0; i < input.size(); ++i) {
     size_t bit_idx = i + offset;
     bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
-    size_t byte_idx = bit_idx / BYTE_SIZE;
-    data[byte_idx] += s[i] << (bit_shift);
+    if (input[i]) {
+      size_t byte_idx = bit_idx / BYTE_SIZE;
+      output[byte_idx] += 1 << (bit_shift);
+    }
   }
   return bit_shift; // then if != 0, continue from this, then calculate new
                     // size bytesize(bit_size + bit_shift)

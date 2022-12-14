@@ -18,10 +18,11 @@ OutputIcov::OutputIcov(const boost::filesystem::path &path)
     *m_fileParts[i] << std::ios_base::unitbuf;
   }
 
+  rates_count = 0;
   total_lost = 0;
   total_shift = 0;
   total_write_bits = 0;
-  total_write_byte = 0;
+  total_write_byte_block = 0;
 }
 
 const icov::ContentParameterSet &OutputIcov::contentParameterSet() const {
@@ -42,14 +43,14 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
   const int byte_size = bitToByteCount(s.size());
   icov::byte darr[byte_size];
   std::fill(darr, darr + byte_size, 0);
-  int shift = write_syndrome(darr, s);
+  int shift = write_bits(darr, s);
   int lost = byteToBitCount(byte_size) - s.size();
 
   total_lost += lost;
   total_write_bits += s.size();
   total_shift += shift;
 
-  total_write_byte += byte_size;
+  total_write_byte_block += byte_size;
 
   std::cout << "WRITE BITS " << s.size() << std::endl;
   std::cout << "SHIFT BITS " << shift << std::endl;
@@ -59,21 +60,29 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
   std::cout << "TOTAL SHIFT BITS " << total_shift << std::endl;
   std::cout << "TOTAL LOST BITS " << total_lost << std::endl;
 
-  boost::archive::binary_oarchive o_archive(*m_fileParts[eIcovStream::SYNDROME],
-                                            boost::archive::no_header);
-  o_archive &boost::serialization::make_array(darr, byte_size);
+  //  boost::archive::binary_oarchive
+  //  o_archive(*m_fileParts[eIcovStream::SYNDROME],
+  //                                            boost::archive::no_header);
+  //  o_archive &boost::serialization::make_array(darr, byte_size);
+
+  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
+  m_fileParts[eIcovStream::SYNDROME]->flush();
 }
 
 void OutputIcov::writeFrameSize() {
-  boost::archive::binary_oarchive o_archive(*m_fileParts[eIcovStream::SYNDROME],
-                                            boost::archive::no_header);
-  o_archive &total_write_byte;
-  total_write_byte = 0;
+  boost::archive::binary_oarchive o_archive(
+      *m_fileParts[eIcovStream::FRAMES_SIZE], boost::archive::no_header);
+  o_archive &total_write_byte_frame;
+  total_write_byte_frame = 0;
 }
 
+void OutputIcov::writeBlockSize() {}
+
 void OutputIcov::writeRates(const NumcodeIdxVec &v) {
-  boost::archive::binary_oarchive o_archive(*m_fileParts[eIcovStream::RATES],
-                                            boost::archive::no_header);
+  rates_count += v.size() * sizeof(rate_t);
+  for (auto r : v)
+    helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::RATES],
+                                     static_cast<rate_t>(r), true);
 }
 
 } // namespace encoder

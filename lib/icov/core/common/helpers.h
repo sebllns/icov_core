@@ -337,6 +337,16 @@ std::ostream &write_vector(std::ostream &out, const std::vector<T> &data,
 }
 
 template <typename T>
+static void write_value(std::ostream &str, T val, bool flush = false,
+                        int size = 0) {
+  str.write(reinterpret_cast<const char *>(&val),
+            size == 0 ? sizeof(val) : size);
+  if (flush) {
+    str.flush();
+  }
+}
+
+template <typename T>
 void write_vector(const std::string &filename, const std::vector<T> &data,
                   char sep) {
   std::ofstream file(filename);
