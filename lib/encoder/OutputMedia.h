@@ -97,7 +97,7 @@ public:
   void writeSyndrome(const Syndrome &s);
   void writeFrameSize();
   void writeBlockSize();
-  void writeRates(const NumcodeIdxVec &v);
+  void writeSIRates(const NumcodeIdxVec &v);
 
 private:
   icov::ContentParameterSet m_contentParameterSet;
@@ -108,8 +108,8 @@ private:
   int last_bit_shift;
   icov::byte last_byte;
 
-  int total_write_byte_block;
-  int total_write_byte_frame;
+  uint32_t m_total_write_byte_block[2];
+  uint32_t m_total_write_byte_frame[2];
 
   int total_write_bits;
   int total_lost;

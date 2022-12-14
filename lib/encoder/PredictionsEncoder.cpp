@@ -1,6 +1,7 @@
 #include "PredictionsEncoder.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
+#include <vector>
 
 icov::encoder::PredictionsEncoder::PredictionsEncoder(
     const boost::program_options::variables_map &program_args,
@@ -9,7 +10,7 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(
   int count = 1;
   for (auto pred : predictions) {
     ICOV_INFO << "Initialize prediction coder " << count << "/"
-                   << predictions.size();
+              << predictions.size();
 #pragma omp atomic
     ++count;
     std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
@@ -19,4 +20,25 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(
   }
 
   ICOV_INFO << "Prediction coders initialized";
+}
+
+AffInteractiveCoder &encoder::PredictionsEncoder::get_coder(uint16_t prediction,
+                                                            size_t code_size) {
+
+  ICOV_ASSERT_MSG(m_coders.count(prediction) > 0,
+                  "Coder not found for the given prediction: " +
+                      std::to_string(prediction));
+
+  ICOV_ASSERT_MSG(m_coders.at(prediction).count(code_size) > 0,
+                  "Coder not found for the given size: " +
+                      std::to_string(code_size));
+
+  return *(m_coders.at(prediction).at(code_size).get());
+}
+
+std::vector<size_t> encoder::PredictionsEncoder::getCoderSizes() const {
+  std::vector<size_t> sizes;
+  for (const auto &p : m_coders.begin()->second)
+    sizes.push_back(p.first);
+  return sizes;
 }

@@ -58,6 +58,8 @@
 #include "typedef.h"
 #include "video_layer/Encodingstructure.h"
 
+#include <opencv2/plot.hpp>>
+
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -77,6 +79,9 @@ public:
     bool enable_block_encoding;
     bool write_intra_pred_image;
     bool check_decoding;
+
+    float maxRateNoCoding;
+    int maxCountSINoCoding;
 
     const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
@@ -142,9 +147,13 @@ protected:
 
   // one numcode per SI and per bitplane and per channel
   std::map<uint16_t, std::map<int, NumcodeIdxVec>> m_stored_numcodes;
-
   std::vector<icov::byte> m_nocodingFlags;
   int block_comp;
+
+  std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
+
+  cv::Ptr<cv::plot::Plot2d> plot;
+  cv::Mat xData, yData, display;
 };
 
 } // namespace encoder

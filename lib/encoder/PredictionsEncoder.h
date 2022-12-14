@@ -61,18 +61,9 @@ public:
                      std::vector<uint16_t> predictions);
   ~PredictionsEncoder() = default;
 
-  inline AffInteractiveCoder &get_coder(uint16_t prediction, size_t code_size) {
+  AffInteractiveCoder &get_coder(uint16_t prediction, size_t code_size);
 
-    ICOV_ASSERT_MSG(m_coders.count(prediction) > 0,
-                    "Coder not found for the given prediction: " +
-                        std::to_string(prediction));
-
-    ICOV_ASSERT_MSG(m_coders.at(prediction).count(code_size) > 0,
-                    "Coder not found for the given size: " +
-                        std::to_string(code_size));
-
-    return *(m_coders.at(prediction).at(code_size).get());
-  }
+  std::vector<size_t> getCoderSizes() const;
 
 protected:
   std::map<uint16_t, std::map<size_t, std::unique_ptr<AffInteractiveCoder>>>

@@ -4,6 +4,7 @@
 #include "enc_helpers.h"
 #include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
+#include "opencv2/plot.hpp"
 #include "tools/DebugTools.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
@@ -51,7 +52,24 @@ FrameEncoder::FrameEncoder(int frame, const params &p)
                                          BlockPrediction::TOP_LEFT,
                                          BlockPrediction::BOTTOM_RIGHT,
                                          BlockPrediction::BOTTOM_LEFT,
-                                     }) {}
+                                     }) {
+
+  //  xData.create(1, 100, CV_64F); // 1 Row, 100 columns, Double
+  //  yData.create(1, 100, CV_64F);
+
+  //  for (int i = 0; i < 100; ++i) {
+  //    xData.at<double>(i) = i / 10.0;
+  //    yData.at<double>(i) = (1.0 * i * i) / 100;
+  //  }
+  //  plot = cv::plot::Plot2d::create(xData, yData);
+  //  plot->setPlotSize(100, 1000);
+  //  plot->setMaxX(10);
+  //  plot->setMinX(0);
+  //  plot->setMaxY(100);
+  //  plot->setMinY(-1);
+  //  plot->render(display);
+  //  cv::imshow("Plot", display);
+}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
@@ -78,12 +96,16 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       m_icov_file->writeSyndrome(s);
   }
 
-  // store bitplanes rates per SI
+  // store bitplanes rates per SI and per channel
   for (uint16_t p : v) {
-    if (m_stored_numcodes.count(p)) {
-      m_icov_file->writeRates(m_stored_numcodes.at(p).at(c));
+    for (int c = 0; c < (int)m_numComp; ++c) {
+      if (m_stored_numcodes.count(p)) {
+        m_icov_file->writeSIRates(m_stored_numcodes.at(p).at(c));
+      }
     }
   }
+
+  m_icov_file->writeBlockSize();
 
   ICOV_DEBUG << "end encode block";
 }
@@ -266,8 +288,9 @@ void icov::encoder::FrameEncoder::encode_tu(
 // saved
 #pragma omp critical
   {
-    std::cout << "PRED " << predID << ": " << m_stored_synd.size() << ", "
-              << si_synd.size() << ", " << si_numcodes.size() << std::endl;
+    std::cout << "COMP " << comp << " PRED " << predID << ": "
+              << m_stored_synd[comp].size() << ", " << si_synd.size() << ", "
+              << si_numcodes.size() << std::endl;
 
     // save rates
     m_stored_numcodes[predID][comp] = si_numcodes;
@@ -277,12 +300,15 @@ void icov::encoder::FrameEncoder::encode_tu(
       m_stored_synd[comp] = si_synd; /*save first*/
     } else {
       icov::helpers::assert::equal(
-          m_stored_synd.size(), si_synd.size(),
+          m_stored_synd[comp].size(), si_synd.size(),
           "Bitplane count does not match between SI of same block");
       // save if longer only
       for (size_t i = 0; i < m_stored_synd[comp].size(); ++i) {
         if (si_synd[i].size() > m_stored_synd[comp][i].size()) {
           m_stored_synd[comp][i] = si_synd[i];
+        }
+
+        if (encoder.get_r(si_numcodes[i]) > 0.75) {
         }
       }
     }

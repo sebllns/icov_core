@@ -1,7 +1,9 @@
 #include "OutputMedia.h"
+#include "helpers.h"
 #include "typedef.h"
 #include "video_layer/encoded_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
+#include <limits>
 #include <memory>
 #include <string>
 namespace icov {
@@ -22,7 +24,10 @@ OutputIcov::OutputIcov(const boost::filesystem::path &path)
   total_lost = 0;
   total_shift = 0;
   total_write_bits = 0;
-  total_write_byte_block = 0;
+  m_total_write_byte_block[0] = 0;
+  m_total_write_byte_block[1] = 0;
+  m_total_write_byte_frame[0] = 0;
+  m_total_write_byte_frame[1] = 0;
 }
 
 const icov::ContentParameterSet &OutputIcov::contentParameterSet() const {
@@ -50,8 +55,9 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
   total_write_bits += s.size();
   total_shift += shift;
 
-  total_write_byte_block += byte_size;
+  m_total_write_byte_block[1] += byte_size;
 
+  std::cout << "WRITE BYTES " << byte_size << std::endl;
   std::cout << "WRITE BITS " << s.size() << std::endl;
   std::cout << "SHIFT BITS " << shift << std::endl;
   std::cout << "LOST BITS " << lost << std::endl;
@@ -65,25 +71,54 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
   //                                            boost::archive::no_header);
   //  o_archive &boost::serialization::make_array(darr, byte_size);
 
-  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
-  m_fileParts[eIcovStream::SYNDROME]->flush();
+  //  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
+  //  m_fileParts[eIcovStream::SYNDROME]->flush();
+
+  helpers::io::write_value(*m_fileParts[eIcovStream::SYNDROME], darr, true);
 }
 
 void OutputIcov::writeFrameSize() {
-  boost::archive::binary_oarchive o_archive(
-      *m_fileParts[eIcovStream::FRAMES_SIZE], boost::archive::no_header);
-  o_archive &total_write_byte_frame;
-  total_write_byte_frame = 0;
+  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
+                                     m_total_write_byte_frame[0], false);
+  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
+                                     m_total_write_byte_frame[1], true);
+  m_total_write_byte_frame[0] = 0;
+  m_total_write_byte_frame[1] = 0;
 }
 
-void OutputIcov::writeBlockSize() {}
+void OutputIcov::writeBlockSize() {
 
-void OutputIcov::writeRates(const NumcodeIdxVec &v) {
+  std::cout << "WRITE SIZE " << m_total_write_byte_block[0] << " "
+            << m_total_write_byte_block[1] << std::endl;
+
+  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
+                                     m_total_write_byte_block[0], true);
+  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
+                                     m_total_write_byte_block[1], true);
+
+  m_total_write_byte_frame[0] += m_total_write_byte_block[0];
+  m_total_write_byte_frame[1] += m_total_write_byte_block[1];
+
+  m_total_write_byte_block[0] = 0;
+  m_total_write_byte_block[1] = 0;
+}
+
+void OutputIcov::writeSIRates(const NumcodeIdxVec &v) {
   rates_count += v.size() * sizeof(rate_t);
-  for (auto r : v)
+  // CHECKED RATES
+  std::cout << "WRITE RATES";
+  for (auto r : v) {
+    icov::helpers::assert::check(
+        r < std::numeric_limits<rate_t>::max(),
+        "Value " + std::to_string(r) + " overflows the max possible value " +
+            std::to_string(std::numeric_limits<rate_t>::max()));
     helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::RATES],
                                      static_cast<rate_t>(r), true);
-}
 
+    std::cout << " " << r;
+    m_total_write_byte_block[0] += sizeof(rate_t);
+  }
+  std::cout << std::endl;
+}
 } // namespace encoder
 } // namespace icov

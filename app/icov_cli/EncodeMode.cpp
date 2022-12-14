@@ -13,9 +13,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/serialization/vector.hpp>
+#include <cstdlib>
 #include <memory>
 #include <utility>
 
+#include "typedef.h"
 #include "video_layer/encoded_stream.h"
 
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
