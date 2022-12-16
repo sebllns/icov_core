@@ -66,6 +66,6 @@ public:
   ~IcovAccessBlockManager() = default;
 
   // IAccessBlockManager interface
-  virtual void buildAccessBlocks(const IPicture &pic,
+  virtual void buildAccessBlocks(IPicture &pic,
                                  IViewportManager &vpm) override;
 };

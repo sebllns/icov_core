@@ -31,24 +31,6 @@ const int DemoEncoder::RecoViewID = DemoEncoder::PredViewID + 1;
 const int DemoEncoder::DecodedDebugViewID = DemoEncoder::RecoViewID + 1;
 
 /*****************************************************************************/
-void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
-  const auto &compBuf = mainFrame_roi.get(compID);
-
-  Pel *src1 = compBuf.buf;
-  Pel *dst1 = compBuf.buf + compBuf.width;
-
-  Pel *src2 = compBuf.buf + compBuf.width - 1;
-  Pel *dst2 = compBuf.buf - 1;
-
-  for (UInt y = 0; y < compBuf.height; y++, src1 += compBuf.stride,
-            dst1 += compBuf.stride, src2 += compBuf.stride,
-            dst2 += compBuf.stride) {
-    *dst1 = *src1;
-    *dst2 = *src2;
-  }
-}
-
-/*****************************************************************************/
 void callBackFuncViewPred(int event, int x, int y, int flags, void *userdata) {
   static_cast<DemoEncoder *>(userdata)->onMouseViewPred(event, x, y, flags);
 }
@@ -387,7 +369,7 @@ void DemoEncoder::processInput(std::ostream &output,
     ICOV_INFO << "Channel " << ch + 1 << " / " << m_numComp << std::endl;
 
     const ComponentID compID = ComponentID(ch);
-    copyBordersFor360(mainFrameReco, compID);
+    VTM_Utility::copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
         m_vvc_bufs, compID, m_params.internalBitDepth,
@@ -582,8 +564,8 @@ void icov::encoder::DemoEncoder::encode_icu(
     std::ostream &output, const Block &b,
     const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
 
-  ICOV_INFO << "Encode ICU with prediction "
-                 << BlockPrediction::toString(pred) << std::endl;
+  ICOV_INFO << "Encode ICU with prediction " << BlockPrediction::toString(pred)
+            << std::endl;
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
@@ -600,7 +582,7 @@ void DemoEncoder::encodeBlockWithPrediction(std::ostream &output,
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
   ICOV_DEBUG << "try encode prediction " << BlockPrediction::toString(pred)
-                  << std::endl;
+             << std::endl;
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());

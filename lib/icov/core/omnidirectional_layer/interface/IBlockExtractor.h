@@ -57,9 +57,6 @@ class IBlockExtractor : IBlockProcessor {
 protected:
 public:
   virtual ~IBlockExtractor() = default;
-  virtual void extract(/*stream*/) = 0;
-  /*void setRenderer(IRenderer*);
-  const IRenderer& getRenderer() const;*/
 };
 
 #endif // IBlockExtractor_H

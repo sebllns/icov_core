@@ -1,6 +1,7 @@
 #include "FrameEncoder.h"
 
 #include "BitSymbolProvider.h"
+#include "common_types.h"
 #include "enc_helpers.h"
 #include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
@@ -16,28 +17,11 @@
 
 #include <cstdint>
 #include <omp.h>
+#include <vector>
 
 namespace fs = boost::filesystem;
 using namespace icov::encoder;
 using SI_SIDE = BlockPrediction::predType;
-
-/*****************************************************************************/
-void copyBordersFor360_1(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
-  const auto &compBuf = mainFrame_roi.get(compID);
-
-  Pel *src1 = compBuf.buf;
-  Pel *dst1 = compBuf.buf + compBuf.width;
-
-  Pel *src2 = compBuf.buf + compBuf.width - 1;
-  Pel *dst2 = compBuf.buf - 1;
-
-  for (UInt y = 0; y < compBuf.height; y++, src1 += compBuf.stride,
-            dst1 += compBuf.stride, src2 += compBuf.stride,
-            dst2 += compBuf.stride) {
-    *dst1 = *src1;
-    *dst2 = *src2;
-  }
-}
 
 /*****************************************************************************/
 FrameEncoder::FrameEncoder(int frame, const params &p)
@@ -78,11 +62,18 @@ FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
                                bool access_block,
                                const IBlockPrediction &block_prediction) {
-  ICOV_DEBUG << "start encode block";
+
+  if (b.getId(Block::SELF) > 1)
+    return;
+
+  ICOV_DEBUG << "start encode block " << b.getId(Block::SELF);
+
+  if (access_block)
+    std::cout << "ACCESS BLOCK\n";
+
   const auto v = getAvailablePredictions(b, access_block, block_prediction);
-  m_stored_synd.clear();
-  m_stored_synd.resize(m_numComp);
-  m_stored_numcodes.clear();
+
+  m_channelCoder = std::vector<ChannelCoder>(m_numComp);
 
   // ERROR BECAUSE OF CHANNEL
   for (int c = 0; c < (int)m_numComp; ++c) {
@@ -92,22 +83,34 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       encodeBlockWithPrediction(output, b, p);
 
     // store syndrome per bitplane
-    for (const auto &s : m_stored_synd[c])
-      m_icov_file->writeSyndrome(s);
+    for (const auto &s : m_channelCoder[c]) {
+      if (access_block) {
+#ifdef ICOV_ASSERTION_ENABLED
+        icov::helpers::assert::check(s.m_accessBlock.size() > 0,
+                                     "No access blocks bits !");
+#endif
+        m_icov_file->writeSyndrome(true, s.m_accessBlock);
+      }
+      m_icov_file->writeSyndrome(s.m_nocodingFlags, s.m_stored_synd);
+    }
   }
 
   // store bitplanes rates per SI and per channel
   for (uint16_t p : v) {
     for (int c = 0; c < (int)m_numComp; ++c) {
-      if (m_stored_numcodes.count(p)) {
-        m_icov_file->writeSIRates(m_stored_numcodes.at(p).at(c));
+      std::cout << "WRITE RATES SI " << p << " COMP " << c;
+      for (int bp = 0; bp < (int)m_channelCoder[c].size(); ++bp) {
+        if (m_channelCoder[c][bp].m_stored_numcodes.count(p)) {
+          m_icov_file->writeSIRate(
+              m_channelCoder[c][bp].m_stored_numcodes.at(p));
+        }
       }
+      std::cout << std::endl;
     }
   }
-
   m_icov_file->writeBlockSize();
 
-  ICOV_DEBUG << "end encode block";
+  ICOV_DEBUG << "end encode block " << b.getId(Block::SELF);
 }
 
 /*****************************************************************************/
@@ -205,7 +208,7 @@ void FrameEncoder::processInput(std::ostream &output,
     ICOV_DEBUG << "Channel " << ch + 1 << " / " << m_numComp;
 
     const ComponentID compID = ComponentID(ch);
-    copyBordersFor360_1(mainFrameReco, compID);
+    VTM_Utility::copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
         m_vvc_bufs, compID, m_params.internalBitDepth,
@@ -289,26 +292,42 @@ void icov::encoder::FrameEncoder::encode_tu(
 #pragma omp critical
   {
     std::cout << "COMP " << comp << " PRED " << predID << ": "
-              << m_stored_synd[comp].size() << ", " << si_synd.size() << ", "
+              << m_channelCoder[comp].size() << ", " << si_synd.size() << ", "
               << si_numcodes.size() << std::endl;
 
-    // save rates
-    m_stored_numcodes[predID][comp] = si_numcodes;
+    // first SI stored (no bitplanes stored for comp)
+    if (m_channelCoder[comp].size() == 0) {
+      m_channelCoder[comp] = ChannelCoder(si_synd.size());
+      for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
+        m_channelCoder[comp][i].m_stored_synd = si_synd[i];
+        m_channelCoder[comp][i].m_nocodingThreshold = 0.0;
+        m_channelCoder[comp][i].m_nocodingFlags = false;
 
-    // save syndrome
-    if (m_stored_synd[comp].size() == 0) {
-      m_stored_synd[comp] = si_synd; /*save first*/
-    } else {
-      icov::helpers::assert::equal(
-          m_stored_synd[comp].size(), si_synd.size(),
-          "Bitplane count does not match between SI of same block");
-      // save if longer only
-      for (size_t i = 0; i < m_stored_synd[comp].size(); ++i) {
-        if (si_synd[i].size() > m_stored_synd[comp][i].size()) {
-          m_stored_synd[comp][i] = si_synd[i];
+        if (b.isAccessBlock()) {
+          m_channelCoder[comp][i].m_accessBlock.fillFrom(bsp.src_bits()[i]);
         }
+      }
+    }
 
-        if (encoder.get_r(si_numcodes[i]) > 0.75) {
+#ifdef ICOV_ASSERTION_ENABLED
+    icov::helpers::assert::check(
+        m_channelCoder[comp].size() == si_synd.size() &&
+            m_channelCoder[comp].size() == si_numcodes.size(),
+        "Bitplane count does not match between SI of same block");
+#endif
+
+    for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
+      if (!m_channelCoder[comp][i].m_nocodingFlags) {
+        m_channelCoder[comp][i].m_stored_numcodes[predID] = si_numcodes[i];
+        m_channelCoder[comp][i].m_nocodingThreshold +=
+            encoder.get_r(si_numcodes[i]);
+        if (m_channelCoder[comp][i].m_nocodingThreshold > 3) {
+          m_channelCoder[comp][i].m_nocodingFlags = true;
+          m_channelCoder[comp][i].m_stored_synd.fillFrom(bsp.src_bits()[i]);
+          std::cout << "NO CODING !" << std::endl;
+        } else if (si_synd[i].size() >
+                   m_channelCoder[comp][i].m_stored_synd.size()) {
+          m_channelCoder[comp][i].m_stored_synd = si_synd[i];
         }
       }
     }

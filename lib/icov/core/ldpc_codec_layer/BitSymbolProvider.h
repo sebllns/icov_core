@@ -59,8 +59,8 @@ public:
   ///
   void set_si(const SIVec &si, int z_min, int z_max, float q, int l);
 
-  float z_min() const;
-  float z_max() const;
+  int z_min() const;
+  int z_max() const;
 
   float y_min() const;
   float y_max() const;

@@ -60,7 +60,7 @@ int InteractiveCoder<Matrix>::encode(NumcodeIdx &i, Syndrome &o_stored_syndrome,
 
 #if ICOV_CORE_DEBUG_TRACE_ENABLED
     ICOV_TRACE << "m = " << this->syndromeMgr()->get_m(io_numcode)
-                    << ", r = " << this->get_r(i);
+               << ", r = " << this->get_r(i);
 #endif
     m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode,
                                    *m_pllrProvider.get(), source);
@@ -256,8 +256,8 @@ void InteractiveCoder<Matrix>::encode_symboles(
     this->decode_symboles(bsp_dec, numcodesIdx[k], worst_syndromes);
     for (int i = 0; i < bsp.x_binary_length(); ++i) {
       ICOV_INFO << "CHECK BITPLANE " << i << " at rate "
-                     << get_r(numcodesIdx[k][i]) << " using syndrome from rate "
-                     << get_r(worst_syndromes[i].size(), get_n());
+                << get_r(numcodesIdx[k][i]) << " using syndrome from rate "
+                << get_r(worst_syndromes[i].size(), get_n());
       if (bsp_dec.src_bits()[i] != bsp.src_bits()[i]) {
         ICOV_ERROR << "ERRORS DETECTED IN DECODED BITPLANE " << i;
       }
@@ -336,10 +336,12 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       predec[k] = std::abs(src_symbols[k]) >> bitplane;
       if (bitplane_idx == (lx - 1)) {
         predec[k] *= (1 - 2 * sign_bits[k]);
+#ifdef ICOV_ASSERTION_ENABLED
         icov::helpers::assert::check(predec[k] == src_symbols[k],
                                      "Expected " +
                                          std::to_string(src_symbols[k]) +
                                          " got " + std::to_string(predec[k]));
+#endif
       }
     }
   }

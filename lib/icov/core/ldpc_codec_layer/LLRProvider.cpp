@@ -149,11 +149,12 @@ void icov::LLRProvider::init_doping() {
 }
 
 void icov::LLRProvider::apply_doping(int index, BitVal x) {
-
+#ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(m_doping_ready,
                                "Cannot use doping if not initialized");
   icov::helpers::assert::check(index >= 0 && index < (int)m_doping_order.size(),
                                "Index is out of bounds");
+#endif
 
   m_llr_doping[m_doping_order[index]] =
       x > 0 ? std::numeric_limits<LLRVal>::lowest()

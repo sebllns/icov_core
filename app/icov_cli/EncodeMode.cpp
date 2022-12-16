@@ -3,6 +3,7 @@
 #include "encoder/OutputMedia.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
+#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "tools/DebugTools.h"
 #include <algorithm>
 #include <boost/format.hpp>
@@ -86,11 +87,6 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 }
 
 void EncodeMode::run() {
-  std::unique_ptr<icov::encoder::InputMedia> input;
-  icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  // std::ofstream output(m_parameters.encodedFile, std::ios_base::binary);
-  EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
-  icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
   //  {
   //    boost::archive::binary_oarchive o_archive(output,
   //                                              boost::archive::no_header);
@@ -136,11 +132,17 @@ void EncodeMode::run() {
   //    std::cout << "test end" << std::endl;
   //    std::cout << std::endl;
   //  }
-  // TODO INIT ACCESS BLOCKS !!
-  IcovAccessBlockManager icov_accessblockMgr;
-  BlockPrediction icov_blockPrediction;
-  ICOV_DEBUG << "Start encoding";
 
+  std::unique_ptr<icov::encoder::InputMedia> input;
+  icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
+  EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
+  IcovAccessBlockManager icov_accessblockMgr;
+  ViewportManagerCenterPadded icov_viewport(1.2f);
+  BlockPrediction icov_blockPrediction;
+
+  ICOV_DEBUG << "Start encoding";
+  icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
+  icov_accessblockMgr.buildAccessBlocks(icov_pic, icov_viewport);
   m_encoder->encode(m_output->stream(), *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
 }

@@ -131,8 +131,8 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
     z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
     z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
     if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "\t After quantization zmin=" << z_min
-                      << " zmax=" << z_max << std::endl;
+      ICOV_TRACE << "\t After quantization zmin=" << z_min << " zmax=" << z_max
+                 << std::endl;
   }
 
   if (DebugTools::debug_trace_enabled)
@@ -165,9 +165,9 @@ void BitSymbolProvider::set_si(const SIVec &si, int z_min, int z_max, float q,
   m_src_bits = Bitplanes(l, BitVec(m_src_symboles.size(), 0));
 }
 
-float BitSymbolProvider::z_min() const { return m_pz_params.zmin; }
+int BitSymbolProvider::z_min() const { return m_pz_params.zmin; }
 
-float BitSymbolProvider::z_max() const { return m_pz_params.zmax; }
+int BitSymbolProvider::z_max() const { return m_pz_params.zmax; }
 
 float BitSymbolProvider::q0() const { return m_pz_params.q0; }
 
@@ -220,7 +220,7 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
 
       ICOV_TRACE << "\t\t\t WARNING: pb = (a + b) = 0" << std::endl;
       ICOV_TRACE << "\t\t\t yk=" << yk << " a=" << p0 << " b=" << p1
-                      << " imax=" << ((1 << (l - b))) << std::endl;
+                 << " imax=" << ((1 << (l - b))) << std::endl;
 
       ICOV_TRACE << "\t\t\t a = ";
       int imax = (1 << (l - b));
@@ -241,8 +241,8 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
     } else {
 
       if (std::abs(p0 / pb + p1 / pb - 1) > 0.00001) {
-        ICOV_TRACE << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb)
-                        << " != 1" << std::endl;
+        ICOV_TRACE << "\t\t\t WARNING: sum = " << (p0 / pb + p1 / pb) << " != 1"
+                   << std::endl;
       }
     }
   }

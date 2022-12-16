@@ -316,6 +316,8 @@ template <typename T> icov::byte boolToByte(const std::array<T, 8> in) {
 }
 
 bool getBit(int bit_pos, icov::byte b);
+void setBit(int bit_pos, icov::byte &b);
+
 } // namespace bitstream
 
 namespace rand {

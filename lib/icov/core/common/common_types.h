@@ -38,8 +38,6 @@ public:
       : m_capacity(size), m_size(size), m_data(data) {}
 
   virtual ~FastArray() {
-    //    std::cout << "delete\n";
-
     if (m_data != nullptr) {
       delete[] m_data;
       m_data = nullptr;
@@ -78,6 +76,14 @@ public:
   std::vector<T> getDataVec() const {
     return std::vector<T>(m_data, m_data + m_size);
   }
+
+  template <typename T1> void fillFrom(const std::vector<T1> &v) {
+    resize(v.size());
+    for (size_t i = 0; i < m_size; ++i) {
+      this->at(i) = static_cast<T>(v[i]);
+    }
+  }
+
   template <typename T1> std::vector<T1> getDataVec() const {
     return std::vector<T1>(m_data, m_data + m_size);
   }

@@ -102,7 +102,7 @@ int write_bits(icov::byte *output, const T &input, int offset = 0) {
     bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
     if (input[i]) {
       size_t byte_idx = bit_idx / BYTE_SIZE;
-      output[byte_idx] += 1 << (bit_shift);
+      output[byte_idx] |= 1 << (bit_shift);
     }
   }
   return bit_shift; // then if != 0, continue from this, then calculate new

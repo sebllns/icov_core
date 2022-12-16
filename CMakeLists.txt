@@ -25,6 +25,7 @@ option(ICOV_CHECK_BITPLANE_ENCODING_ENABLED "Enable the bitplane decoding check 
     (use it to debug as it impacts the performances)" OFF)
 option(ICOV_CONSOLE_COLOR_ENABLED "Enable color formatting of the console" OFF)
 option(ICOV_USE_OMP "Enable parallelization with OMP" OFF)
+option(ICOV_ASSERTION_ENABLED "If set to OFF, some heavy assertions will be disabled to improve performances" ON)
 
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(ICOV_BUILD_TESTS ON CACHE BOOL "Force ICOV tests to be built. ")
@@ -55,27 +56,41 @@ if(MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
-if(ICOV_USE_ADDRESS_SANITIZER)
+if(ICOV_USE_ADDRESS_SANITIZER AND CMAKE_BUILD_TYPE MATCHES Debug)
 # set address sanitizer compiler arguments
 # https://github.com/google/sanitizers/wiki/AddressSanitizer
-if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
+#message("=========== ID " ${CMAKE_CXX_COMPILER_ID})
+#if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
             # add compile options
-            message(STATUS "Use sanitizer")
+            message(STATUS "[INFO] Use sanitizer")
 
+            # -fsanitize=leak
             SET(SANITIZE_OPTIONS -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment)
+
+
+            find_program(LLVM_SYMB_PATH  NAMES llvm-symbolizer
+                llvm-symbolizer-3.8
+                llvm-symbolizer-3.7
+                llvm-symbolizer-3.6)
+
+            if(LLVM_SYMB_PATH)
+                message("[INFO] Use llvm-symbolizer from ${LLVM_SYMB_PATH}")
+                set(ENV{ASAN_SYMBOLIZER_PATH} ${LLVM_SYMB_PATH})
+            endif()
+
+            set(ENV{LSAN_OPTIONS} LSAN_OPTIONS=symbolize=1 )
+
+
 
             add_compile_options(${SANITIZE_OPTIONS})
             link_libraries(${SANITIZE_OPTIONS})
 
-
-#            add_compile_options( "-fsanitize=address" )
-#            add_link_options( "-fsanitize=address" )
     endif()
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
-        add_compile_options( "-fabi-version=6" )
-    endif()
-endif()
+#    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
+#        add_compile_options( "-fabi-version=6" )
+#    endif()
+#endif()
 
 else()
     message(WARNING "Initial setup is BYPASSED !")
@@ -212,6 +227,11 @@ message("\n")
 message(STATUS "[INFO] Checking AFF3CT support...")
 set(AFF3CT_BUILD_DIR third-party/aff3ct CACHE STRING "Path to aff3ct build directory default is ${CMAKE_BINARY_DIR}/third-party/aff3ct")
 set(AFF3CT_BUILD_DIR_FULL ${CMAKE_BINARY_DIR}/${AFF3CT_BUILD_DIR})
+if(NOT DEFINED AFF3CT_BUILD_TYPE)
+    SET(AFF3CT_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+endif()
+
+# WE NEED TO BUILD and INSTALL AFF3CT BEFORE AS add_subdiretory command does NOT work well with aff3ct
 include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/install_aff3ct.cmake)
 
 set (AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
@@ -251,11 +271,18 @@ if(ICOV_CORE_STACKTRACE_ENABLED)
 endif()
 
 if(ICOV_CHECK_BITPLANE_ENCODING_ENABLED)
+    message(STATUS "[INFO] Encoded bitplane check is ENABLED")
     add_compile_definitions("ICOV_CHECK_BITPLANE_ENCODING_ENABLED")
 endif()
 
 if(ICOV_CONSOLE_COLOR_ENABLED)
+    message(STATUS "[INFO] Colored log in console are ENABLED")
     add_compile_definitions("ICOV_CONSOLE_COLOR_ENABLED")
+endif()
+
+if(ICOV_ASSERTION_ENABLED)
+    message(STATUS "[INFO] Assertions are ENABLED")
+    add_compile_definitions("ICOV_ASSERTION_ENABLED")
 endif()
 
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
@@ -277,6 +304,7 @@ if(ICOV_BUILD_ENCODER)
 endif()
 
 add_subdirectory(lib/decoder)
+add_subdirectory(lib/extractor)
 
 if(ICOV_BUILD_EXTENSIONS)
     add_subdirectory(lib/extensions)

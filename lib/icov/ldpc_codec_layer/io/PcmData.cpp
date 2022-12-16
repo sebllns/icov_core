@@ -134,9 +134,11 @@ void PcmData::read_mapping_vector(const std::string &filepath,
 
   ICOV_DEBUG << "Read vector at " << filepath;
 
+#ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(
       file.is_open(),
       "'filename' couldn't be opened ('filename' = " + filepath + ").");
+#endif
 
   int n_rows = 0;
   int n_cols = 0;

@@ -1,8 +1,8 @@
 /****************************************************************************/
-/** @addtogroup ICOV 
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup extractor
  * Extractor package (server side).
  *  @ingroup ICOV
@@ -15,13 +15,13 @@
  *  @version 1.0.1
  *  @date 2022
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -47,28 +47,25 @@
  *
  *****************************************************************************/
 
-
 #pragma once
 
 #include "common.h"
 #include "omnidirectional_layer/Block.h"
 
-
 class IPicture;
 class IViewportManager;
 struct viewport_geometry;
 
-class IAccessBlockManager
-{
+class IAccessBlockManager {
 protected:
-    BlockIteratorVector m_blocks;
-    BlockVector::const_iterator m_invalidBlock;
+  BlockIteratorVector m_blocks;
+  BlockVector::const_iterator m_invalidBlock;
 
 public:
-    const BlockIteratorVector& blocks() const;
-    virtual ~IAccessBlockManager() = default;
-    virtual void buildAccessBlocks(const IPicture &pic, IViewportManager &vpm) = 0;
-    virtual BlockVector::const_iterator findAccessBlock(const IViewportManager &vpm) const;
-    virtual bool isAccessBlock(size_t id) const;
+  const BlockIteratorVector &blocks() const;
+  virtual ~IAccessBlockManager() = default;
+  virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) = 0;
+  virtual BlockVector::const_iterator
+  findAccessBlock(const IViewportManager &vpm) const;
+  virtual bool isAccessBlock(size_t id) const;
 };
-

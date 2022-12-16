@@ -174,4 +174,6 @@ int maths::quantize(float value, const std::vector<float> &v) {
 
 bool bitstream::getBit(int bit_pos, byte b) { return (b >> bit_pos) & 1; }
 
+void bitstream::setBit(int bit_pos, byte &b) { b |= 1 << bit_pos; }
+
 } // namespace icov::helpers

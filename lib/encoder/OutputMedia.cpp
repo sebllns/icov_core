@@ -44,10 +44,13 @@ void OutputIcov::writeContentParameterSet() {
   o_archive &m_contentParameterSet;
 }
 
-void OutputIcov::writeSyndrome(const Syndrome &s) {
-  const int byte_size = bitToByteCount(s.size());
+void OutputIcov::writeSyndrome(bool nocoding, const Syndrome &s) {
+  const int byte_size = bitToByteCount(s.size() + 1);
   icov::byte darr[byte_size];
   std::fill(darr, darr + byte_size, 0);
+  if (nocoding)
+    icov::helpers::bitstream::setBit(BYTE_SIZE,
+                                     darr[0]); /*set bit for no coding*/
   int shift = write_bits(darr, s);
   int lost = byteToBitCount(byte_size) - s.size();
 
@@ -108,17 +111,24 @@ void OutputIcov::writeSIRates(const NumcodeIdxVec &v) {
   // CHECKED RATES
   std::cout << "WRITE RATES";
   for (auto r : v) {
-    icov::helpers::assert::check(
-        r < std::numeric_limits<rate_t>::max(),
-        "Value " + std::to_string(r) + " overflows the max possible value " +
-            std::to_string(std::numeric_limits<rate_t>::max()));
-    helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::RATES],
-                                     static_cast<rate_t>(r), true);
-
-    std::cout << " " << r;
-    m_total_write_byte_block[0] += sizeof(rate_t);
+    writeSIRate(r);
   }
   std::cout << std::endl;
+}
+
+void OutputIcov::writeSIRate(const NumcodeIdx &r) {
+#ifdef ICOV_ASSERTION_ENABLED
+  icov::helpers::assert::check(
+      r < std::numeric_limits<rate_t>::max(),
+      "Value " + std::to_string(r) + " overflows the max possible value " +
+          std::to_string(std::numeric_limits<rate_t>::max()));
+#endif
+
+  helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::RATES],
+                                   static_cast<rate_t>(r), true);
+
+  std::cout << " " << r;
+  m_total_write_byte_block[0] += sizeof(rate_t);
 }
 } // namespace encoder
 } // namespace icov

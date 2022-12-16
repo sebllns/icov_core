@@ -60,6 +60,8 @@ class IPicture;
  */
 class Block {
 
+  friend class IPicture;
+
 public:
   enum NeighborDirection {
     SELF = 0,
@@ -82,8 +84,9 @@ protected:
   // center, topleft, topright, bottomright, bottomleft
   point3d cartesian_coords[5];
 
-public:
   Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph);
+
+public:
   ~Block();
 
   const IPicture *parent() const;
@@ -103,6 +106,7 @@ public:
   bool isAccessBlock() const;
 
   //  bool isVisible(const viewport_geometry &vpg) const;
+  void setIsAccessBlock(bool newIsAccessBlock);
 };
 
 using sp_Block = std::shared_ptr<Block>;

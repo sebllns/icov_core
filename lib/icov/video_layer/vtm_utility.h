@@ -63,12 +63,11 @@ void flipHoriz(const AreaBuf<const DataType> &srcBuffer,
   DataType t0, t1;
   int n = (srcBuffer.width + 1) /
           2; // Iterate only half the buffer to get a full flip
-  int x, y, reverseIndex;
   int rowLastIndex = srcBuffer.width - 1;
   for (unsigned y = 0; y < srcBuffer.height;
        y++, src += srcBuffer.stride, dst += dstBuffer.stride) {
-    for (x = 0; x < n; x++) {
-      reverseIndex = rowLastIndex - x;
+    for (int x = 0; x < n; x++) {
+      int reverseIndex = rowLastIndex - x;
 
       t0 = src[x];
       t1 = src[reverseIndex];
@@ -162,4 +161,7 @@ double
 computeTheoreticalRateWithEntropyForCompressPrecomputeFrequencyTable2ByteValuesAdaptiveRangeAbsoluteValues(
     std::vector<int> &in, bool encodeFrequencyTableInBitStream,
     int maxLog2DynamicRange);
+
+void copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID);
+
 } // namespace VTM_Utility

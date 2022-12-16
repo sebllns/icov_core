@@ -40,6 +40,11 @@ float Block::center_v() const { return v() + 0.5f * h(); }
 
 bool Block::isAccessBlock() const { return m_isAccessBlock; }
 
+void Block::setIsAccessBlock(bool newIsAccessBlock)
+{
+  m_isAccessBlock = newIsAccessBlock;
+}
+
 Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw,
              float ph)
     : m_parent(parent), m_u(pu), m_v(pv), m_w(pw), m_h(ph) {

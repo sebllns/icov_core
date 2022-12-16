@@ -251,7 +251,9 @@ BlockPrediction::getPrediction(const Block &b,
     pred = RIGHT;
   }
 
+#ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
+#endif
 
   return static_cast<uint16_t>(pred);
 }

@@ -94,10 +94,11 @@ public:
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
   void writeContentParameterSet();
-  void writeSyndrome(const Syndrome &s);
+  void writeSyndrome(bool nocoding, const Syndrome &s);
   void writeFrameSize();
   void writeBlockSize();
   void writeSIRates(const NumcodeIdxVec &v);
+  void writeSIRate(const NumcodeIdx &v);
 
 private:
   icov::ContentParameterSet m_contentParameterSet;

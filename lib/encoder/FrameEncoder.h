@@ -142,18 +142,30 @@ protected:
 
   std::shared_ptr<OutputIcov> m_icov_file;
 
-  // one incremental syndrome per bitplane and per channel
-  std::vector<std::vector<icov::Syndrome>> m_stored_synd;
-
-  // one numcode per SI and per bitplane and per channel
-  std::map<uint16_t, std::map<int, NumcodeIdxVec>> m_stored_numcodes;
-  std::vector<icov::byte> m_nocodingFlags;
   int block_comp;
 
   std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
 
   cv::Ptr<cv::plot::Plot2d> plot;
   cv::Mat xData, yData, display;
+
+  // bitplane coding
+  typedef struct {
+
+    icov::Syndrome m_accessBlock;
+    icov::Syndrome m_stored_synd;
+    icov::Rate m_nocodingThreshold;
+    bool m_nocodingFlags;
+
+    // one numcode per SI and per bitplane
+    std::map<uint16_t, NumcodeIdx> m_stored_numcodes;
+
+  } BitplaneCoder;
+
+  // channel coding
+  typedef std::vector<BitplaneCoder> ChannelCoder;
+
+  std::vector<ChannelCoder> m_channelCoder;
 };
 
 } // namespace encoder

@@ -1,11 +1,12 @@
 #include "IcovAccessBlockManager.h"
+#include "Block.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
 IcovAccessBlockManager::IcovAccessBlockManager(angle_radian delta)
     : m_angle_delta(delta) {}
 
-void IcovAccessBlockManager::buildAccessBlocks(const IPicture &pic,
+void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
                                                IViewportManager &vpm) {
   m_invalidBlock = pic.invalidBlock();
 
@@ -19,6 +20,7 @@ void IcovAccessBlockManager::buildAccessBlocks(const IPicture &pic,
 
     if (!pic.isValidBlock(findAccessBlock(vpm))) {
       m_blocks.push_back(it);
+      pic.setAccessBlockFlag(it->getId(Block::SELF));
     }
   }
 

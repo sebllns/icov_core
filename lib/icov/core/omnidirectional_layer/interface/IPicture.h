@@ -83,13 +83,19 @@ public:
 
   bool blockExists(size_t id) const;
 
+  BlockVector::iterator getById(size_t id);
   BlockVector::const_iterator getById(size_t id) const;
 
   BlockVector::const_iterator getBlock(int i, int j) const;
 
   bool isValidBlock(BlockVector::const_iterator it) const;
 
+  void setAccessBlockFlag(size_t id);
+
   BlockVector::const_iterator invalidBlock() const;
+
+  BlockVector::iterator addBlock(size_t id, float pu, float pv, float pw,
+                                 float ph);
 
   virtual void getPixelCoords(float u, float v, int &i, int &j) const;
   virtual int row(float v) const;

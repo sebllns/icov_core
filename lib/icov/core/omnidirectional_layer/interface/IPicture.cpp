@@ -1,4 +1,5 @@
 #include "IPicture.h"
+#include "Block.h"
 
 RequestManager *IPicture::requestManager() const {
   assert(m_requestManager != nullptr);
@@ -24,6 +25,12 @@ bool IPicture::blockExists(size_t id) const {
   return id > 0 && id <= m_icus.size();
 }
 
+BlockVector::iterator IPicture::getById(size_t id) {
+  if (!blockExists(id))
+    return m_icus.end();
+  return m_icus.begin() + id - 1;
+}
+
 BlockVector::const_iterator IPicture::getById(size_t id) const {
   if (!blockExists(id))
     return m_icus.end();
@@ -38,8 +45,18 @@ bool IPicture::isValidBlock(BlockVector::const_iterator it) const {
   return it != invalidBlock();
 }
 
+void IPicture::setAccessBlockFlag(size_t id) {
+  getById(id)->setIsAccessBlock(true);
+}
+
 BlockVector::const_iterator IPicture::invalidBlock() const {
   return m_icus.end();
+}
+
+BlockVector::iterator IPicture::addBlock(size_t id, float pu, float pv,
+                                         float pw, float ph) {
+  m_icus.push_back(Block(id, this, pu, pv, pw, ph));
+  return std::prev(m_icus.end());
 }
 
 size_t IPicture::width() const { return m_width; }

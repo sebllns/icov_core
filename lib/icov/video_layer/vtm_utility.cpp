@@ -364,3 +364,20 @@ double VTM_Utility::
                                                // sign of absolute values
   return transmissionBits;
 }
+
+void VTM_Utility::copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
+  const auto &compBuf = mainFrame_roi.get(compID);
+
+  Pel *src1 = compBuf.buf;
+  Pel *dst1 = compBuf.buf + compBuf.width;
+
+  Pel *src2 = compBuf.buf + compBuf.width - 1;
+  Pel *dst2 = compBuf.buf - 1;
+
+  for (UInt y = 0; y < compBuf.height; y++, src1 += compBuf.stride,
+                                       dst1 += compBuf.stride, src2 += compBuf.stride,
+                                       dst2 += compBuf.stride) {
+    *dst1 = *src1;
+    *dst2 = *src2;
+  }
+}
