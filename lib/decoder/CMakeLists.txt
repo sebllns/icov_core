@@ -5,7 +5,7 @@ find_package(OpenCV REQUIRED)
 # library
 set( LIB_NAME IcovDecoderLib )
 
-include_directories(. ${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 # get source files
 file(GLOB_RECURSE SRC_FILES "*.cpp" )

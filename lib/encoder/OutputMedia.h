@@ -68,15 +68,6 @@
 namespace icov {
 namespace encoder {
 
-using rate_t =
-#if ICOV_RATE_SIZE == 1
-    icov::byte;
-#elif ICOV_RATE_SIZE == 2
-    uint16_t;
-#else
-    uint32_t;
-#endif
-
 class OutputIcov : public icov::IOutputIcov {
 public:
   typedef enum {
@@ -88,17 +79,29 @@ public:
     COUNT
   } eIcovStream;
 
+  using rate_t =
+#if ICOV_RATE_SIZE == 1
+      icov::byte;
+#elif ICOV_RATE_SIZE == 2
+      uint16_t;
+#else
+      uint32_t;
+#endif
+
   explicit OutputIcov(const fs::path &path);
   ~OutputIcov() = default;
 
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
   void writeContentParameterSet();
-  void writeSyndrome(bool nocoding, const Syndrome &s);
+  void writeSyndromeFlag(bool flag);
+  void writeSyndrome(const Syndrome &s);
   void writeFrameSize();
   void writeBlockSize();
   void writeSIRates(const NumcodeIdxVec &v);
   void writeSIRate(const NumcodeIdx &v);
+  void flush(int id);
+  std::ostream &getStream(int id);
 
 private:
   icov::ContentParameterSet m_contentParameterSet;
@@ -109,6 +112,7 @@ private:
   int last_bit_shift;
   icov::byte last_byte;
 
+  // 0 : RATE, 1: SYNDROME
   uint32_t m_total_write_byte_block[2];
   uint32_t m_total_write_byte_frame[2];
 

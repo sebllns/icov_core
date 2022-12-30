@@ -5,7 +5,7 @@
  */
 
 
-/** @file DemoMode.h
+/** @file EncodeDemoMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup CLI
@@ -56,7 +56,7 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-class DemoMode {
+class EncodeDemoMode {
   struct params {
 
     static const char *inputFile_id;
@@ -69,8 +69,8 @@ class DemoMode {
   };
 
 public:
-  DemoMode(const po::variables_map &args);
-  ~DemoMode() = default;
+  EncodeDemoMode(const po::variables_map &args);
+  ~EncodeDemoMode() = default;
 
   void run();
 

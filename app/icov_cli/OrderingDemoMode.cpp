@@ -1,8 +1,20 @@
-/**************************************************************************
-**   Copyright (C): 2021
-**   Author: Navid MAHMOUDIAN BIDGOLI <navid.mahmoudian-bidgoli@inria.fr>
-**   Inria research institute
-**************************************************************************/
+#include "OrderingDemoMode.h"
+#include "encoder/FakeEncoder.h"
+#include "encoder/InputMedia.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+#include "omnidirectional_layer/RequestManager.h"
+#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/implementation/BlockOrdering.h"
+#include "omnidirectional_layer/implementation/EquiRectPicture.h"
+#include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
+#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include "opencv_interactive_viewport/single360degreecamerahandler.h"
+#include "tools/DebugTools.h"
+
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/qvm/all.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -12,55 +24,9 @@
 #include <stdio.h>
 #include <time.h> /* time */
 
-#include "omnidirectional_layer/implementation/BlockExtractor.h"
-#include "omnidirectional_layer/implementation/BlockOrdering.h"
-#include "omnidirectional_layer/implementation/EquiRectPicture.h"
-#include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
-#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
-#include "omnidirectional_layer/interface/IBlockProcessor.h"
-
-#include "encoder/FakeEncoder.h"
-#include "encoder/InputMedia.h"
-#include "omnidirectional_layer/BlockPrediction.h"
-#include "omnidirectional_layer/RequestManager.h"
-#include "omnidirectional_layer/geometry.h"
-
-#include "single360degreecamerahandler.h"
-
-#include <boost/exception/diagnostic_information.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/qvm/all.hpp>
-
-class BlockProcessor : public IBlockProcessor {
-
-private:
-  cv::Point m_line_point;
-  uint16_t m_blockCount;
-  uint16_t m_single_si_count;
-  uint16_t m_double_si_count;
-  std::ofstream m_csv_file;
-  std::ifstream m_encoded_image;
-  int header[4];
-
-public:
-  angle_degree Pov;
-  cv::Mat BlockRequested;
-  bool b_show_side_infos;
-  bool b_show_access_block;
-  bool b_show_block_grid;
-  bool b_show_block_number;
-  bool b_show_path;
-  bool b_use_encoded_stream;
-
-  BlockProcessor(const std::string &encoded_image);
-  ~BlockProcessor();
-
-  // IBlockProcessor interface
-  void processBlock(const Block &b, uint16_t prediction) override;
-  void endProcess() override;
-  void startProcess() override;
-  std::ostream encodingStream();
-};
+const char *OrderingDemoMode::params::inputFile_id = "ordering-demo-input-file";
+const char *OrderingDemoMode::params::icuSize_id = "ordering-demo-icu-size";
+const char *OrderingDemoMode::params::viewportFov_id = "ordering-demo-fov";
 
 void BlockProcessor::startProcess() {
   m_blockCount = 0;
@@ -225,14 +191,32 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
   m_blockCount++;
 }
 
-void run(int argc, char *argv[]) {
-  icov::helpers::rand::init();
+void OrderingDemoMode::AddProgramOptions(
+    boost::program_options::options_description &desc) {
+  desc.add_options()(OrderingDemoMode::params::inputFile_id,
+                     po::value<std::string>()->default_value("/tmp/image.jpg"),
+                     "Background image")
 
-  icov::helpers::assert::check(argc > 3, "Missing args in command line");
+      (OrderingDemoMode::params::icuSize_id,
+       po::value<int>()->default_value(32), "Size of blocks")
 
-  const std::string fileAddr = argv[1];
-  const double fovX_degree = std::atof(argv[2]);
-  const int block_size = std::atoi(argv[3]);
+          (OrderingDemoMode::params::viewportFov_id,
+           po::value<float>()->default_value(80),
+           "Viewport horizontal field of view in degrees");
+}
+
+OrderingDemoMode::OrderingDemoMode(const po::variables_map &args) {
+  m_parameters.inputFile =
+      args[OrderingDemoMode::params::inputFile_id].as<std::string>();
+  m_parameters.icuSize = args[OrderingDemoMode::params::icuSize_id].as<int>();
+  m_parameters.viewportFov =
+      args[OrderingDemoMode::params::viewportFov_id].as<float>();
+}
+
+void OrderingDemoMode::run() {
+  const std::string &fileAddr = m_parameters.inputFile.string();
+  const double fovX_degree = m_parameters.viewportFov;
+  const int block_size = m_parameters.icuSize;
 
   // viewport parameters
   cv::Size outputResolution(1920, 1080);
@@ -476,21 +460,4 @@ void run(int argc, char *argv[]) {
     viewer.pitch(pov_y - previous_pov_y);
     viewer.yaw(previous_pov_x - pov_x);
   }
-}
-
-int main(int argc, char *argv[]) {
-  try {
-    run(argc, argv);
-  } catch (std::exception &e) {
-    std::cerr << "\nError: program execution has stopped prematurely"
-              << std::endl;
-    std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-    return 1;
-  } catch (...) {
-    std::cerr << "\nFatal error" << std::endl;
-    std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-    return 2;
-  }
-
-  return 0;
 }

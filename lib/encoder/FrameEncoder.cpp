@@ -3,6 +3,7 @@
 #include "BitSymbolProvider.h"
 #include "common_types.h"
 #include "enc_helpers.h"
+#include "encoder/interface/IEncoder.h"
 #include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "opencv2/plot.hpp"
@@ -27,16 +28,18 @@ using SI_SIDE = BlockPrediction::predType;
 FrameEncoder::FrameEncoder(int frame, const params &p)
     : IFrameEncoder(frame), m_params(p),
       m_numComp(getNumberValidComponents(p.chFormat)),
-      m_pred_encoder(p.program_args, std::vector<uint16_t>{
-                                         BlockPrediction::RIGHT,
-                                         BlockPrediction::LEFT,
-                                         BlockPrediction::TOP,
-                                         BlockPrediction::BOTTOM,
-                                         BlockPrediction::TOP_RIGHT,
-                                         BlockPrediction::TOP_LEFT,
-                                         BlockPrediction::BOTTOM_RIGHT,
-                                         BlockPrediction::BOTTOM_LEFT,
-                                     }) {
+      m_pred_encoder(p.program_args,
+                     std::vector<uint16_t>{
+                         BlockPrediction::RIGHT,
+                         BlockPrediction::LEFT,
+                         BlockPrediction::TOP,
+                         BlockPrediction::BOTTOM,
+                         BlockPrediction::TOP_RIGHT,
+                         BlockPrediction::TOP_LEFT,
+                         BlockPrediction::BOTTOM_RIGHT,
+                         BlockPrediction::BOTTOM_LEFT,
+                     }),
+      block_comp(0) {
 
   //  xData.create(1, 100, CV_64F); // 1 Row, 100 columns, Double
   //  yData.create(1, 100, CV_64F);
@@ -75,7 +78,6 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
 
   m_channelCoder = std::vector<ChannelCoder>(m_numComp);
 
-  // ERROR BECAUSE OF CHANNEL
   for (int c = 0; c < (int)m_numComp; ++c) {
     block_comp = c;
 #pragma omp parallel for
@@ -89,9 +91,14 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
         icov::helpers::assert::check(s.m_accessBlock.size() > 0,
                                      "No access blocks bits !");
 #endif
-        m_icov_file->writeSyndrome(true, s.m_accessBlock);
+        m_icov_file->writeSyndrome(s.m_accessBlock);
       }
-      m_icov_file->writeSyndrome(s.m_nocodingFlags, s.m_stored_synd);
+
+      m_icov_file->writeSyndromeFlag(s.m_codingFlag);
+      if (s.m_codingFlag) {
+        m_icov_file->writeSyndromeFlag(s.m_sourceFlag);
+        m_icov_file->writeSyndrome(s.m_stored_synd);
+      }
     }
   }
 
@@ -300,9 +307,10 @@ void icov::encoder::FrameEncoder::encode_tu(
       m_channelCoder[comp] = ChannelCoder(si_synd.size());
       for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
         m_channelCoder[comp][i].m_stored_synd = si_synd[i];
-        m_channelCoder[comp][i].m_nocodingThreshold = 0.0;
-        m_channelCoder[comp][i].m_nocodingFlags = false;
-
+        m_channelCoder[comp][i].m_noSourceThreshold = 0.0;
+        m_channelCoder[comp][i].m_codingFlag = false;
+        m_channelCoder[comp][i].m_sourceFlag = false;
+        m_channelCoder[comp][i].m_minRate = si_numcodes[i];
         if (b.isAccessBlock()) {
           m_channelCoder[comp][i].m_accessBlock.fillFrom(bsp.src_bits()[i]);
         }
@@ -317,14 +325,18 @@ void icov::encoder::FrameEncoder::encode_tu(
 #endif
 
     for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
-      if (!m_channelCoder[comp][i].m_nocodingFlags) {
+      if (si_numcodes[i] < m_channelCoder[comp][i].m_minRate)
+        m_channelCoder[comp][i].m_minRate = si_numcodes[i];
+      if (!m_channelCoder[comp][i].m_sourceFlag &&
+          !m_channelCoder[comp][i].m_codingFlag) {
         m_channelCoder[comp][i].m_stored_numcodes[predID] = si_numcodes[i];
-        m_channelCoder[comp][i].m_nocodingThreshold +=
+        m_channelCoder[comp][i].m_noSourceThreshold +=
             encoder.get_r(si_numcodes[i]);
-        if (m_channelCoder[comp][i].m_nocodingThreshold > 3) {
-          m_channelCoder[comp][i].m_nocodingFlags = true;
+        if (m_channelCoder[comp][i].m_noSourceThreshold >
+            m_params.maxRateNoCoding) {
+          m_channelCoder[comp][i].m_sourceFlag = true;
           m_channelCoder[comp][i].m_stored_synd.fillFrom(bsp.src_bits()[i]);
-          std::cout << "NO CODING !" << std::endl;
+          std::cout << "SOURCE !" << std::endl;
         } else if (si_synd[i].size() >
                    m_channelCoder[comp][i].m_stored_synd.size()) {
           m_channelCoder[comp][i].m_stored_synd = si_synd[i];

@@ -339,13 +339,25 @@ std::ostream &write_vector(std::ostream &out, const std::vector<T> &data,
 }
 
 template <typename T>
-static void write_value(std::ostream &str, T val, bool flush = false,
-                        int size = 0) {
-  str.write(reinterpret_cast<const char *>(&val),
-            size == 0 ? sizeof(val) : size);
+static void write_array(std::ostream &str, const T *val, size_t size,
+                        bool flush = false) {
+
+  str.write(reinterpret_cast<const char *>(val), size * sizeof(T));
   if (flush) {
     str.flush();
   }
+}
+
+template <typename T>
+static void write_value(std::ostream &str, const T &val, bool flush = false) {
+  str.write(reinterpret_cast<const char *>(&val), sizeof(val));
+  if (flush) {
+    str.flush();
+  }
+}
+
+template <typename T> static void read_value(std::istream &str, T *val) {
+  str.read(reinterpret_cast<char *>(&val), sizeof(val));
 }
 
 template <typename T>

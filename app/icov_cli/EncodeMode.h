@@ -62,10 +62,12 @@ class EncodeMode {
     static const char *inputFile_id;
     static const char *outputFile_id;
     static const char *icuSize_id;
+    static const char *viewportPadding_id;
 
     fs::path inputFile;
     fs::path encodedFile;
     int icuSize;
+    float viewportPadding;
   };
 
 public:

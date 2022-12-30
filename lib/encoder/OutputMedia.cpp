@@ -10,14 +10,13 @@ namespace icov {
 namespace encoder {
 
 OutputIcov::OutputIcov(const boost::filesystem::path &path)
-    : icov::IOutputIcov(path) {
+    : icov::IOutputIcov(path), last_bit_shift(0), last_byte(0) {
   m_outputStream = std::make_unique<std::ofstream>(path, std::ios_base::binary);
 
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
     m_fileParts[i] =
         std::make_unique<std::ofstream>(part_file, std::ios_base::binary);
-    *m_fileParts[i] << std::ios_base::unitbuf;
   }
 
   rates_count = 0;
@@ -44,25 +43,41 @@ void OutputIcov::writeContentParameterSet() {
   o_archive &m_contentParameterSet;
 }
 
-void OutputIcov::writeSyndrome(bool nocoding, const Syndrome &s) {
-  const int byte_size = bitToByteCount(s.size() + 1);
+void OutputIcov::writeSyndromeFlag(bool flag) {
+  icov::helpers::bitstream::setBit(BYTE_SIZE - last_bit_shift, last_byte);
+  last_bit_shift = (last_bit_shift + 1) % BYTE_SIZE;
+  if (last_bit_shift == 0) {
+    icov::helpers::io::write_value(getStream(eIcovStream::SYNDROME), last_byte,
+                                   true);
+    last_byte = 0;
+  }
+}
+
+void OutputIcov::writeSyndrome(const Syndrome &s) {
+  const int byte_size = bitToByteCount(s.size() + last_bit_shift);
   icov::byte darr[byte_size];
+
   std::fill(darr, darr + byte_size, 0);
-  if (nocoding)
-    icov::helpers::bitstream::setBit(BYTE_SIZE,
-                                     darr[0]); /*set bit for no coding*/
-  int shift = write_bits(darr, s);
+
+  darr[0] = last_byte;
+  last_byte = 0;
+
+  last_bit_shift = write_bits(s, darr, last_bit_shift);
+
+  if (last_bit_shift != 0)
+    last_byte = darr[byte_size - 1];
+
   int lost = byteToBitCount(byte_size) - s.size();
 
   total_lost += lost;
   total_write_bits += s.size();
-  total_shift += shift;
+  total_shift += last_bit_shift;
 
   m_total_write_byte_block[1] += byte_size;
 
   std::cout << "WRITE BYTES " << byte_size << std::endl;
   std::cout << "WRITE BITS " << s.size() << std::endl;
-  std::cout << "SHIFT BITS " << shift << std::endl;
+  std::cout << "SHIFT BITS " << last_bit_shift << std::endl;
   std::cout << "LOST BITS " << lost << std::endl;
 
   std::cout << "TOTAL WRITE BITS " << total_write_bits << std::endl;
@@ -77,7 +92,8 @@ void OutputIcov::writeSyndrome(bool nocoding, const Syndrome &s) {
   //  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
   //  m_fileParts[eIcovStream::SYNDROME]->flush();
 
-  helpers::io::write_value(*m_fileParts[eIcovStream::SYNDROME], darr, true);
+  helpers::io::write_array(*m_fileParts[eIcovStream::SYNDROME], darr,
+                           byte_size - (last_bit_shift != 0 ? 1 : 0), true);
 }
 
 void OutputIcov::writeFrameSize() {
@@ -130,5 +146,16 @@ void OutputIcov::writeSIRate(const NumcodeIdx &r) {
   std::cout << " " << r;
   m_total_write_byte_block[0] += sizeof(rate_t);
 }
+
+void OutputIcov::flush(int id) {
+  if (id == eIcovStream::COUNT) {
+    for (const auto &p : m_fileParts)
+      p.second->flush();
+  } else {
+    m_fileParts[id]->flush();
+  }
+}
+
+std::ostream &OutputIcov::getStream(int id) { return *m_fileParts[id]; }
 } // namespace encoder
 } // namespace icov

@@ -1,4 +1,4 @@
-#include "DemoMode.h"
+#include "EncodeDemoMode.h"
 #include "encoder/DemoEncoder.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
@@ -6,39 +6,39 @@
 #include "tools/DebugTools.h"
 #include <boost/format.hpp>
 
-const char *DemoMode::params::inputFile_id = "demo-input-file";
-const char *DemoMode::params::outputFile_id = "demo-output-file";
-const char *DemoMode::params::icuSize_id = "demo-icu-size";
+const char *EncodeDemoMode::params::inputFile_id = "demo-input-file";
+const char *EncodeDemoMode::params::outputFile_id = "demo-output-file";
+const char *EncodeDemoMode::params::icuSize_id = "demo-icu-size";
 
-void DemoMode::AddProgramOptions(
+void EncodeDemoMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
   desc.add_options()
 
-      (DemoMode::params::inputFile_id,
+      (EncodeDemoMode::params::inputFile_id,
        po::value<std::string>()->default_value("/tmp/image.jpg"),
        "Image to use for the demo. Must be an image format supported by OpenCV "
        "(https://docs.opencv.org/4.x/db/deb/tutorial_display_image.html)")
 
-          (DemoMode::params::outputFile_id,
+          (EncodeDemoMode::params::outputFile_id,
            po::value<std::string>()->default_value(std::string()),
            "Path to output file")
 
-              (DemoMode::params::icuSize_id,
+              (EncodeDemoMode::params::icuSize_id,
                po::value<int>()->default_value(32), "Size of ICUs blocks");
 }
 
-DemoMode::DemoMode(const po::variables_map &args) {
+EncodeDemoMode::EncodeDemoMode(const po::variables_map &args) {
 
   m_parameters.inputFile =
-      args[DemoMode::params::inputFile_id].as<std::string>();
+      args[EncodeDemoMode::params::inputFile_id].as<std::string>();
 
   m_parameters.encodedFile =
-      args[DemoMode::params::outputFile_id].as<std::string>();
+      args[EncodeDemoMode::params::outputFile_id].as<std::string>();
   if (m_parameters.encodedFile.empty()) {
     m_parameters.encodedFile = m_parameters.inputFile;
     m_parameters.encodedFile.replace_extension(".icov");
 
-    m_parameters.icuSize = args[DemoMode::params::icuSize_id].as<int>();
+    m_parameters.icuSize = args[EncodeDemoMode::params::icuSize_id].as<int>();
 
     bool enable_z_quantization = true;
     std::vector<float> q_values = {0.125,   0.375,   0.5625,  0.6875,
@@ -64,7 +64,7 @@ DemoMode::DemoMode(const po::variables_map &args) {
                         m_parameters.encodedFile;
 }
 
-void DemoMode::run() {
+void EncodeDemoMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
   icov::helpers::assert::equal(

@@ -4,9 +4,10 @@
 #include "BinaryMode.h"
 #include "CheckMode.h"
 #include "DecodeMode.h"
-#include "DemoMode.h"
+#include "EncodeDemoMode.h"
 #include "EncodeMode.h"
 #include "ExportMode.h"
+#include "OrderingDemoMode.h"
 #include "SymboleMode.h"
 #include "helpers.h"
 
@@ -15,9 +16,10 @@ ProgramController::ProgramController() {
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
   CheckMode::AddProgramOptions(m_options_desc);
-  DemoMode::AddProgramOptions(m_options_desc);
+  EncodeDemoMode::AddProgramOptions(m_options_desc);
   EncodeMode::AddProgramOptions(m_options_desc);
   DecodeMode::AddProgramOptions(m_options_desc);
+  OrderingDemoMode::AddProgramOptions(m_options_desc);
 }
 
 void ProgramController::launchMode(const std::string &mode_id) {
@@ -41,9 +43,9 @@ void ProgramController::launchMode(const std::string &mode_id) {
     CheckMode mode(m_options_map, dataPath());
     mode.run();
     ICOV_DEBUG << "end check\n";
-  } else if (mode_id == "demo") {
-    ICOV_DEBUG << "demo mode started";
-    DemoMode mode(m_options_map);
+  } else if (mode_id == "encode-demo") {
+    ICOV_DEBUG << "encode demo mode started";
+    EncodeDemoMode mode(m_options_map);
     mode.run();
     ICOV_DEBUG << "end demo\n";
   } else if (mode_id == "encode") {
@@ -54,6 +56,11 @@ void ProgramController::launchMode(const std::string &mode_id) {
   } else if (mode_id == "decode") {
     ICOV_DEBUG << "decode mode started";
     DecodeMode mode(m_options_map);
+    mode.run();
+    ICOV_DEBUG << "end decode\n";
+  } else if (mode_id == "ordering-demo") {
+    ICOV_DEBUG << "ordering demo mode started";
+    OrderingDemoMode mode(m_options_map);
     mode.run();
     ICOV_DEBUG << "end decode\n";
   } else {

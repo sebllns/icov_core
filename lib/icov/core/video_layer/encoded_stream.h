@@ -94,7 +94,7 @@ int read_bits(T &output, const icov::byte *input, int offset = 0) {
 }
 
 template <typename T>
-int write_bits(icov::byte *output, const T &input, int offset = 0) {
+int write_bits(const T &input, icov::byte *output, int offset = 0) {
   // data = (icov::byte *)calloc(s.size(), sizeof(icov::byte));
   int bit_shift = 0;
   for (size_t i = 0; i < input.size(); ++i) {
@@ -105,7 +105,8 @@ int write_bits(icov::byte *output, const T &input, int offset = 0) {
       output[byte_idx] |= 1 << (bit_shift);
     }
   }
-  return bit_shift; // then if != 0, continue from this, then calculate new
+  return (BYTE_SIZE - bit_shift) %
+         BYTE_SIZE; // then if != 0, continue from this, then calculate new
                     // size bytesize(bit_size + bit_shift)
 }
 
@@ -135,6 +136,7 @@ void serialize(Archive &ar, ContentParameterSet &io,
   ar &io.content_framecount;
   ar &io.content_framerate;
   ar &io.content_duration;
+  ar &io.viewport_padding;
 
   ar &io.is_sov_fixed_size;
   if (io.is_sov_fixed_size)

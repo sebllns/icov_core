@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.10)
 # library
 set( LIB_NAME IcovExtractorLib )
 
-include_directories(. ${OpenCV_INCLUDE_DIRS})
-
 # get source files
 file(GLOB_RECURSE SRC_FILES "*.cpp" )
 

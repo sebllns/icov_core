@@ -59,7 +59,7 @@
 #include <opencv2/opencv.hpp>
 
 namespace icov {
-namespace encoder {
+namespace decoder {
 class BlockDecoder : public IBlockDecoder {
   // IBlockProcessor interface
 public:
@@ -103,5 +103,5 @@ protected:
   params m_params;
   icov::video::EncodingStructure m_dec_struc;
 };
-} // namespace encoder
+} // namespace decoder
 } // namespace icov

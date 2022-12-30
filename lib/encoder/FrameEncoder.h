@@ -58,7 +58,7 @@
 #include "typedef.h"
 #include "video_layer/Encodingstructure.h"
 
-#include <opencv2/plot.hpp>>
+#include <opencv2/plot.hpp>
 
 #include <cstdint>
 #include <map>
@@ -81,7 +81,7 @@ public:
     bool check_decoding;
 
     float maxRateNoCoding;
-    int maxCountSINoCoding;
+    // int maxCountSINoCoding;
 
     const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
@@ -154,8 +154,10 @@ protected:
 
     icov::Syndrome m_accessBlock;
     icov::Syndrome m_stored_synd;
-    icov::Rate m_nocodingThreshold;
-    bool m_nocodingFlags;
+    icov::Rate m_noSourceThreshold;
+    icov::Rate m_minRate;
+    bool m_codingFlag;
+    bool m_sourceFlag;
 
     // one numcode per SI and per bitplane
     std::map<uint16_t, NumcodeIdx> m_stored_numcodes;

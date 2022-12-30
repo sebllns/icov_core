@@ -119,10 +119,12 @@ void IFrameEncoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
 
   input.setFrame(m_frame);
 
+#ifdef ICOV_ASSERTION_ENABLED
   ICOV_ASSERT_MSG(input.getPixelCount() > 0, "Cannot encode empty frame");
   ICOV_ASSERT_MSG(input.getHeight() == picture.height() &&
                       input.getWidth() == picture.width(),
                   "Picture is not the right size");
+#endif
 
   this->processInput(output, input);
   for (const auto &b : picture.icus()) {

@@ -48,20 +48,18 @@
 #pragma once
 
 #include "common.h"
-#include "omnidirectional_layer/DecodingBlock.h"
-#include <unordered_set>
+#include "omnidirectional_layer/Block.h"
 
 /** @class IBlockProcessor
  *  @brief IBlockProcessor
  *
  *  A IBlockProcessor is
  */
-class IBlockProcessor
-{
+class IBlockProcessor {
 public:
-    virtual ~IBlockProcessor() = default;
+  virtual ~IBlockProcessor() = default;
 
-    inline virtual void startProcess() {};
-    virtual void processBlock(const Block& b, uint16_t prediction) = 0;
-    inline virtual void endProcess() {};
+  inline virtual void startProcess(){};
+  virtual void processBlock(const Block &b, uint16_t prediction) = 0;
+  inline virtual void endProcess(){};
 };

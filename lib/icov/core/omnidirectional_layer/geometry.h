@@ -47,36 +47,34 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
 #include "boost/geometry.hpp"
 #include <boost/geometry/geometries/point_xyz.hpp>
-//#include <boost/qvm/quat_operations.hpp>
 #include <boost/qvm/all.hpp>
 
 namespace bg = boost::geometry;
 
 typedef float coord_precision;
-typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::degree>>     angle_degree;
-typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::radian> >    angle_radian;
-typedef bg::model::d3::point_xyz<coord_precision, bg::cs::cartesian >               point3d;
-typedef bg::model::d2::point_xy<coord_precision, bg::cs::cartesian >                point2d;
-typedef bg::model::box<point2d>                                                     box;
+typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::degree>>
+    angle_degree;
+typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::radian>>
+    angle_radian;
+typedef bg::model::d3::point_xyz<coord_precision, bg::cs::cartesian> point3d;
+typedef bg::model::d2::point_xy<coord_precision, bg::cs::cartesian> point2d;
+typedef bg::model::box<point2d> box;
 
 typedef boost::qvm::vec<float, 3> float3;
 
-
-struct viewport_geometry
-{
-    angle_radian pov;
-    angle_radian fov;
-    float focale;
-    point2d resolution;
-    point2d center;
-    point2d roi_size;
+struct viewport_geometry {
+  angle_radian pov;
+  angle_radian fov;
+  float focale;
+  point2d resolution;
+  point2d center;
+  point2d roi_size;
 
 public:
-    angle_radian getPov() const;
-    void setPov(angle_radian newPov);
+  angle_radian getPov() const;
+  void setPov(angle_radian newPov);
 };
 
 bool is_visible(const point3d &p, const point2d &viewport_size);

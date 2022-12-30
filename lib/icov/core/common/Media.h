@@ -183,11 +183,11 @@ public:
   virtual ~IModel3D() = default;
 };
 
-template <typename T> class InputIcov : public IInputMedia<T> {
+template <typename T> class IInputIcov : public IInputMedia<T> {
 public:
-  explicit InputIcov(const fs::path &path)
+  explicit IInputIcov(const fs::path &path)
       : IInputMedia<T>(path, (int)eMediaType::ICOV) {}
-  virtual ~InputIcov() = default;
+  virtual ~IInputIcov() = default;
 };
 
 class IOutputIcov : public IOutputMedia {

@@ -33,6 +33,8 @@ else()
      set(ICOV_BUILD_TESTS OFF CACHE BOOL "Force ICOV tests to be built. ")
 endif()
 
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
+
 # use folders in IDEs for projects (e.g. lib sample app test)
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 
@@ -242,7 +244,7 @@ message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
 #include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
 #    third-party/aff3ct/lib/rang/include)
 
-message(WARNING "Move aff3ct to better place (lib/icov/ldpc_codec_layer)")
+message(WARNING "(DEV ONLY) TODO Move aff3ct to better place (lib/icov/ldpc_codec_layer)")
 message("\n")
 message("-------------------------------------------------------------------------")
 

@@ -103,7 +103,7 @@ public:
     m_size = new_size;
   }
 
-  std::string to_string(std::string sep = ", ") const {
+  std::string to_string(const std::string &sep = ", ") const {
     std::stringstream sstr;
 
     sstr << "Array " << typeid(T).name() << m_size << "; max" << m_capacity
@@ -290,7 +290,7 @@ public:
   }
 
   void print() const {
-    for (int i = 0; i < m_actual_size; i++) {
+    for (size_t i = 0; i < m_actual_size; i++) {
       std::cout << get_bit(i) << " ";
     }
     std::cout << std::endl;

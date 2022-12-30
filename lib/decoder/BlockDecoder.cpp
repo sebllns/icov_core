@@ -22,7 +22,7 @@
 #define WIN_DEBUG_DECODE "Decoded"
 
 namespace fs = boost::filesystem;
-using namespace icov::encoder;
+using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
 BlockDecoder::BlockDecoder(const params &p) : IBlockDecoder(), m_params(p) {
@@ -42,9 +42,9 @@ BlockDecoder::BlockDecoder(const params &p) : IBlockDecoder(), m_params(p) {
 
 BlockDecoder::~BlockDecoder() {}
 
-void icov::encoder::BlockDecoder::startProcess() {}
+void icov::decoder::BlockDecoder::startProcess() {}
 
-void icov::encoder::BlockDecoder::processBlock(const Block &b,
+void icov::decoder::BlockDecoder::processBlock(const Block &b,
                                                uint16_t prediction) {
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
@@ -120,9 +120,9 @@ void icov::encoder::BlockDecoder::processBlock(const Block &b,
   //  // std::cout << (decoded == bsp.src_symboles()) << std::endl;
 }
 
-void icov::encoder::BlockDecoder::endProcess() {}
+void icov::decoder::BlockDecoder::endProcess() {}
 
-void icov::encoder::BlockDecoder::decode() {}
+void icov::decoder::BlockDecoder::decode() {}
 
 void BlockDecoder::decode_icu(const Block &b, const video::IcuEncoder &icu_enc,
                               BlockPrediction::predType pred) {}

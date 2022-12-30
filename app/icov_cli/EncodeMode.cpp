@@ -24,6 +24,7 @@
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
 const char *EncodeMode::params::outputFile_id = "encode-output-file";
 const char *EncodeMode::params::icuSize_id = "encode-icu-size";
+const char *EncodeMode::params::viewportPadding_id = "encode-viewport-padding";
 
 void EncodeMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
@@ -40,7 +41,11 @@ void EncodeMode::AddProgramOptions(
            ".icov extension)")
 
               (EncodeMode::params::icuSize_id,
-               po::value<int>()->default_value(32), "Size of ICUs blocks");
+               po::value<int>()->default_value(32), "Size of ICUs blocks")
+
+                  (EncodeMode::params::viewportPadding_id,
+                   po::value<float>()->default_value(1.2),
+                   "Radius used in function to check if a block is visible");
 }
 
 EncodeMode::EncodeMode(const po::variables_map &args) {
@@ -55,6 +60,8 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   }
 
   m_parameters.icuSize = args[EncodeMode::params::icuSize_id].as<int>();
+  m_parameters.viewportPadding =
+      args[EncodeMode::params::viewportPadding_id].as<float>();
 
   bool enable_z_quantization = true;
   std::vector<float> q_values;
@@ -69,12 +76,18 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
       args,
       true,
       false,
-      true};
+      true,
+      3};
 
   auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
   auto output =
       std::make_shared<icov::encoder::OutputIcov>(m_parameters.encodedFile);
 
+  output->contentParameterSet().icov_version = "icov_test" ICOV_CORE_VERSION;
+  output->contentParameterSet().content_framecount = 1;
+  output->contentParameterSet().is_block_fixed_size = true;
+  output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
+  output->writeContentParameterSet();
   encoder->setIcovFile(output);
 
   m_encoder = std::move(encoder);
@@ -137,7 +150,7 @@ void EncodeMode::run() {
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
   IcovAccessBlockManager icov_accessblockMgr;
-  ViewportManagerCenterPadded icov_viewport(1.2f);
+  ViewportManagerCenterPadded icov_viewport(m_parameters.viewportPadding);
   BlockPrediction icov_blockPrediction;
 
   ICOV_DEBUG << "Start encoding";

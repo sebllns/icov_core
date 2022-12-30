@@ -3,14 +3,14 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup BlockDecoder
- * BlockDecoder package (client side).
+/** @addtogroup BlockExtractor
+ * BlockExtractor package (client side).
  *  @ingroup ICOV
  */
 
-/** @file BlockDecoder.h
- *  @brief Defines an actual ICOV BlockDecoder.
- *  @ingroup BlockDecoder
+/** @file BlockExtractor.h
+ *  @brief Defines an actual ICOV BlockExtractor.
+ *  @ingroup BlockExtractor
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.1
  *  @date 2022
@@ -49,59 +49,34 @@
 
 #pragma once
 
-#include "BlockPrediction.h"
-#include "Media.h"
-#include "ldpc_codec_layer/IcovCoder.h"
-#include "omnidirectional_layer/interface/IBlockDecoder.h"
-#include "video_layer/Encodingstructure.h"
-
-#include <map>
-#include <opencv2/opencv.hpp>
+#include "extractor/InputMedia.h"
+#include "interface/IBlockProcessor.h"
+#include <memory>
+#include <ostream>
 
 namespace icov {
-namespace encoder {
-class BlockDecoder : public IBlockDecoder {
+namespace extractor {
+class BlockExtractor : public IBlockProcessor {
   // IBlockProcessor interface
 public:
   struct params {
-    int qp;
-    ChromaFormat chFormat;
-
-    // TODO: unplug openCV from DECODER
-    cv::Size sourceSize;
-    cv::Size icuSize_luma;
-    cv::Size tuSize_luma;
-
-    BitSymbolProvider::params bsp_params;
-    po::variables_map program_args;
-    bool enable_block_encoding;
-    bool write_intra_pred_image;
-
-    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
-    const int maxLog2TrDynamicRange = 15;
-    const int margin_x_360luma = 2; // in fact we need 1 margin for each color
-                                    // component, but since UnitArea
-    // handles division by 2 for chroma 420, it is easier to add 2 pixel
-    // margins per left and right side and this will be divided by 2 for
-    // chroma.
-
-    const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
+    int block_size;
+    int channel_count;
   };
 
-  BlockDecoder(const BlockDecoder::params &p);
-  ~BlockDecoder();
+  BlockExtractor(std::shared_ptr<InputIcov> &icovFile,
+                 std::shared_ptr<std::ostream> &stream,
+                 const BlockExtractor::params &p);
+  ~BlockExtractor();
 
   void startProcess() override;
   void processBlock(const Block &b, uint16_t prediction) override;
   void endProcess() override;
-  void decode() override;
 
 protected:
-  void decode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
-                  BlockPrediction::predType pred);
-
+  std::shared_ptr<InputIcov> m_icovFile;
+  std::shared_ptr<std::ostream> m_stream;
   params m_params;
-  icov::video::EncodingStructure m_dec_struc;
 };
-} // namespace encoder
+} // namespace extractor
 } // namespace icov
