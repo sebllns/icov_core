@@ -46,7 +46,9 @@
  *
  *****************************************************************************/
 #pragma once
+#include "BitSymbolProvider.h"
 #include "helpers.h"
+#include "typedef.h"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
@@ -55,12 +57,37 @@
 #include <sys/types.h>
 #include <vector>
 
-namespace boost {
-namespace serialization {
+#define QARY_PARAMS_SIZE 3
 
-// When the class Archive corresponds to an output archive, the
-// & operator is defined similar to <<.  Likewise, when the class Archive
-// is a type of input archive the & operator is defined similar to >>.
+namespace icov {
+namespace bitstream {
 
-} // namespace serialization
-} // namespace boost
+// ERRORS : NEED 1 BYTE FOR ZMIN AND 1 BYTE FOR ZMAX
+// WHY ZMIN AND ZMAX ARE 0 ??
+typedef icov::byte QaryParams[QARY_PARAMS_SIZE];
+
+inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
+                           int &z_max, int &lx) {
+  lx = input[0] >> 4;
+  q_idx = input[0] & 15;
+
+  z_min = input[1] * Z_STEP - Z_LIMIT;
+  z_max = input[2] * Z_STEP - Z_LIMIT;
+}
+
+inline void writeQaryParams(QaryParams output, int q_idx, int z_min, int z_max,
+                            int lx) {
+
+  output[0] = lx << 4;
+  output[0] |= q_idx;
+
+  output[1] = ((z_min + Z_LIMIT) / Z_STEP);
+  output[2] = ((z_max + Z_LIMIT) / Z_STEP);
+
+  std::cout << "BSP " << lx << ", " << q_idx << ", " << z_min << ", " << z_max
+            << "->" << (uint)output[0] << ", " << (uint)output[1] << ", "
+            << (uint)output[2] << std::endl;
+}
+
+} // namespace bitstream
+} // namespace icov

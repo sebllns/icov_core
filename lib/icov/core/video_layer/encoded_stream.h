@@ -46,6 +46,7 @@
  *
  *****************************************************************************/
 #pragma once
+#include "BlockPrediction.h"
 #include "encoded_stream/ContentParameterSet.h"
 #include "icov_stream.h"
 #include "typedef.h"
@@ -58,28 +59,23 @@
 #include <sys/types.h>
 #include <vector>
 
-// template <typename T>
-// void serialize(std::vector<icov::byte> &output, const std::vector<T> &input,
-//               int bit_length, bool is_signed) {
-
-//  icov::helpers::assert::check(
-//      bit_length >= CHAR_BIT * sizeof(icov::byte),
-//      "Use this method only to convert data shorter than bytes");
-
-//  int byte_length = std::floor(bit_length /) + 1;
-
-//  icov::byte value = 0;
-
-//  if (is_signed && input < 0) {
-//    value = 1;
-//  }
-
-//  for (int i = 0; i < bit_length; ++i) {
-//    value << 1;
-//  }
-//}
-
 using namespace icov;
+
+typedef enum {
+  MEDIA_HEADER = 0,
+  FRAMES_SIZE,
+  BLOCKS_SIZE,
+  RATES,
+  SYNDROME,
+  COUNT
+} eIcovStream;
+
+static const uint16_t PredictionID[8] = {
+    BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
+    BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
+    BlockPrediction::RIGHT,        BlockPrediction::LEFT,
+    BlockPrediction::TOP,          BlockPrediction::BOTTOM,
+};
 
 template <typename T>
 int read_bits(T &output, const icov::byte *input, int offset = 0) {

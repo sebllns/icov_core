@@ -75,15 +75,6 @@ namespace extractor {
 using pstream = std::unique_ptr<std::istream>;
 class InputIcov : public icov::IInputIcov<pstream> {
 public:
-  typedef enum {
-    MEDIA_HEADER = 0,
-    FRAMES_SIZE,
-    BLOCKS_SIZE,
-    RATES,
-    SYNDROME,
-    COUNT
-  } eIcovStream;
-
   using rate_t =
 #if ICOV_RATE_SIZE == 1
       icov::byte;
@@ -100,9 +91,10 @@ public:
   icov::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
   void readSyndrome(char *output, uint64_t block, uint16_t prediction,
-                    int channel, int bitplane, bool &nocoding, NumcodeIdx &m);
+                    int channel, int bitplane, NumcodeIdx &m);
   void readFrameSize();
   void readBlockPos();
+  int readBitplaneCount(uint64_t block);
   void readSIRates(const NumcodeIdxVec &v);
   void readSIRate(const NumcodeIdx &v);
 

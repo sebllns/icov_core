@@ -49,9 +49,11 @@
 
 #pragma once
 
+#include "BitSymbolProvider.h"
 #include "Media.h"
 #include "common_types.h"
 #include "encoded_stream/ContentParameterSet.h"
+#include "icov_stream.h"
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
@@ -70,15 +72,6 @@ namespace encoder {
 
 class OutputIcov : public icov::IOutputIcov {
 public:
-  typedef enum {
-    MEDIA_HEADER = 0,
-    FRAMES_SIZE,
-    BLOCKS_SIZE,
-    RATES,
-    SYNDROME,
-    COUNT
-  } eIcovStream;
-
   using rate_t =
 #if ICOV_RATE_SIZE == 1
       icov::byte;
@@ -93,6 +86,7 @@ public:
 
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
+  void writeQaryParams(const BitSymbolProvider::Pz &bsp);
   void writeContentParameterSet();
   void writeSyndromeFlag(bool flag);
   void writeSyndrome(const Syndrome &s);
@@ -121,6 +115,8 @@ private:
   int total_shift;
 
   int rates_count;
+
+  icov::bitstream::QaryParams m_qaryParams;
 };
 
 } // namespace encoder

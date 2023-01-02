@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 #include "tools/DebugTools.h"
+#include <string>
 
 namespace icov {
 Bitplanes BitSymbolProvider::compute_bits(const SymboleVec &src_symbols) {
@@ -85,19 +86,20 @@ BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
   m_l = m_src_bits.size();
 }
 
-void BitSymbolProvider::set_si(const SIVec &side_info,
+bool BitSymbolProvider::set_si(const SIVec &side_info,
                                bool enable_z_quantization,
                                const std::vector<float> &q_values) {
 
   auto &src_symbols = m_src_symboles;
 
   ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
-                  "Src and SI lengths are not equal")
+                  "Src and SI lengths are not equal");
 
   bool enable_q_quantization = q_values.size() > 0;
   size_t n = src_symbols.size();
 
   // init intrinsic SI parameters
+  int q_idx = 0;
   float q = 0.0;
   int z_min = std::numeric_limits<int>::max();
   int z_max = std::numeric_limits<int>::min();
@@ -122,41 +124,54 @@ void BitSymbolProvider::set_si(const SIVec &side_info,
   // check zmax = xmax - ymin
   // check zmin = xmin - ymax
 
+  if (q == 1) {
+    m_pz_params = Pz(0, 0, 0, 1);
+    if (DebugTools::debug_trace_enabled)
+      ICOV_TRACE << "SI == source. No coding.";
+    return true;
+  }
+
   if (DebugTools::debug_trace_enabled)
-    ICOV_TRACE << "\t zmin=" << z_min << " zmax=" << z_max << std::endl;
+    ICOV_TRACE << "zmin=" << z_min << " zmax=" << z_max;
 
   if (enable_z_quantization) {
-    int z_step = 16;
-    int z_limit = 1024;
-    z_min = icov::helpers::maths::quantize(z_min, z_step, -z_limit, z_limit);
-    z_max = icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit);
+    int z_step = Z_STEP;
+    int z_limit = Z_LIMIT;
+    z_min =
+        icov::helpers::maths::quantize(z_min, z_step, -z_limit + 1, z_limit);
+    z_max =
+        icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit - 1);
     if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "\t After quantization zmin=" << z_min << " zmax=" << z_max
-                 << std::endl;
+      ICOV_TRACE << "After quantization zmin=" << z_min << " zmax=" << z_max;
   }
 
   if (DebugTools::debug_trace_enabled)
-    ICOV_TRACE << "\t q=" << q << std::endl;
+    ICOV_TRACE << "q=" << q << std::endl;
   if (enable_q_quantization) {
-    q = q_values[icov::helpers::maths::quantize(q, q_values)];
+    q_idx = icov::helpers::maths::quantize(q, q_values);
+    q = q_values[q_idx];
     if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "\t After quantization q=" << q << std::endl;
+      ICOV_TRACE << "After quantization q=" << q;
   }
 
-  m_pz_params = Pz(z_min, z_max, q);
+  m_pz_params = Pz(z_min, z_max, q_idx, q);
+  m_pz_params.lx = m_l;
   m_si_symboles = side_info;
+  return false;
 }
 
-void BitSymbolProvider::set_si(const SIVec &si, const params &p) {
-  set_si(si, p.enable_z_quantization, p.q_values);
+bool BitSymbolProvider::set_si(const SIVec &si, const params &p) {
+  return set_si(si, p.enable_z_quantization, p.q_values);
 }
 
 void BitSymbolProvider::set_si(const SIVec &si, int z_min, int z_max, float q,
                                int l) {
 
   ICOV_ASSERT_MSG(si.size() == m_src_symboles.size(),
-                  "SI must be same size as source");
-  m_pz_params = Pz(z_min, z_max, q);
+                  "SI must be same size as source " +
+                      std::to_string(si.size()) +
+                      "==" + std::to_string(m_src_symboles.size()));
+  m_pz_params = Pz(z_min, z_max, 0, q);
   m_si_symboles = si;
   m_l = l;
   std::fill(m_src_symboles.begin(), m_src_symboles.end(), 0);
@@ -168,6 +183,8 @@ void BitSymbolProvider::set_si(const SIVec &si, int z_min, int z_max, float q,
 int BitSymbolProvider::z_min() const { return m_pz_params.zmin; }
 
 int BitSymbolProvider::z_max() const { return m_pz_params.zmax; }
+
+int BitSymbolProvider::q_idx() const { return m_pz_params.q_idx; }
 
 float BitSymbolProvider::q0() const { return m_pz_params.q0; }
 
@@ -307,5 +324,9 @@ void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
     if (i == ((uint)m_l - 1))
       BitSymbolProvider::inject_bitplane(m_src_symboles, m_src_bits[0], -1);
   }
+}
+
+const BitSymbolProvider::Pz BitSymbolProvider::getPz() const {
+  return m_pz_params;
 }
 } // namespace icov

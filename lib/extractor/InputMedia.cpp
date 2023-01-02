@@ -1,4 +1,5 @@
 #include "InputMedia.h"
+#include "BlockPrediction.h"
 #include "Media.h"
 #include "helpers.h"
 #include "typedef.h"
@@ -51,8 +52,14 @@ void InputIcov::readContentParameterSet() {
 }
 
 void InputIcov::readSyndrome(char *output, uint64_t block, uint16_t prediction,
-                             int channel, int bitplane, bool &nocoding,
-                             NumcodeIdx &m) {}
+                             int channel, int bitplane, NumcodeIdx &m) {
+
+  // Access blocks
+  if (prediction == BlockPrediction::predType::NONE) {
+
+  } else {
+  }
+}
 
 void InputIcov::readBlockPos() {
   std::streampos rate_pos = 0;
@@ -76,6 +83,15 @@ void InputIcov::readBlockPos() {
     std::cout << "BLOCK " << i << ": " << rate_pos << ", " << synd_pos
               << std::endl;
   }
+}
+
+int InputIcov::readBitplaneCount(uint64_t block) {
+  icov::byte val = 0;
+  auto &str = getStream(eIcovStream::RATES);
+  str.seekg(m_rates_pos[block]);
+  icov::helpers::io::read_value(str, &val);
+  std::cout << static_cast<int>(val) << std::endl;
+  return static_cast<int>(val >> 4);
 }
 
 void InputIcov::readSIRates(const NumcodeIdxVec &v) {}

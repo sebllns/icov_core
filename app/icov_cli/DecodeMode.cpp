@@ -35,13 +35,15 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 }
 
 void DecodeMode::run() {
-  icov::extractor::InputIcov inputFile(m_parameters.inputFile);
+  icov::extractor::InputIcov inputFile(m_parameters.inputFile, 1);
   inputFile.readContentParameterSet();
   const auto cps = inputFile.contentParameterSet();
   ICOV_DEBUG << "Icov version: " << cps.icov_version;
   icov::helpers::assert::check(
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
+
+  std::cout << inputFile.readBitplaneCount(0) << std::endl;
 
   EquiRectPicture icov_pic(cps.content_width, cps.content_height);
   IcovAccessBlockManager icov_accessblockMgr;

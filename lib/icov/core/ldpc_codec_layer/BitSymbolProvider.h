@@ -2,12 +2,29 @@
 
 #include "common.h"
 
+#define Z_STEP 16
+#define Z_LIMIT 1024
+
 namespace icov {
 class BitSymbolProvider {
 public:
   struct params {
     bool enable_z_quantization;
     std::vector<float> q_values;
+  };
+
+  struct Pz {
+    int zmin, zmax, z0;
+    int q_idx, lx;
+    float q0, q1;
+
+    Pz() = default;
+
+    Pz(int pzmin, int pzmax, int pq_idx, float pq)
+        : zmin(pzmin), zmax(pzmax), q_idx(pq_idx), lx(0), q0(pq) {
+      q1 = (zmin == zmax) ? 0.0 : ((1 - q0) / (zmax - zmin));
+      z0 = (zmin > 0) ? zmin : (zmax < 0 ? zmax : 0);
+    }
   };
 
   /**
@@ -45,10 +62,10 @@ public:
   /// \brief set_si for encode mode: set SI and update Pz distribution
   /// parameters \param si \param enable_z_quantization \param q_values
   ///
-  void set_si(const SIVec &si, bool enable_z_quantization,
+  bool set_si(const SIVec &si, bool enable_z_quantization,
               const std::vector<float> &q_values = std::vector<float>());
 
-  void set_si(const SIVec &si, const params &p);
+  bool set_si(const SIVec &si, const params &p);
 
   ///
   /// \brief set_si for decoding
@@ -64,6 +81,8 @@ public:
 
   float y_min() const;
   float y_max() const;
+
+  int q_idx() const;
 
   // q
   float q0() const;
@@ -93,18 +112,10 @@ public:
 
   void injectBitplane(uint i, BitVec x);
 
+  const Pz getPz() const;
+
 private:
-  struct Pz {
-    int zmin, zmax, z0;
-    float q0, q1;
-
-    Pz() = default;
-
-    Pz(int pzmin, int pzmax, float pq) : zmin(pzmin), zmax(pzmax), q0(pq) {
-      q1 = (zmin == zmax) ? 0.0 : ((1 - q0) / (zmax - zmin));
-      z0 = (zmin > 0) ? zmin : (zmax < 0 ? zmax : 0);
-    }
-  } m_pz_params;
+  Pz m_pz_params;
 
   int m_l;
 

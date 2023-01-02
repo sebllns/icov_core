@@ -3,6 +3,7 @@
 #include "BitSymbolProvider.h"
 #include "common_types.h"
 #include "enc_helpers.h"
+#include "encoded_stream.h"
 #include "encoder/interface/IEncoder.h"
 #include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
@@ -85,7 +86,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       encodeBlockWithPrediction(output, b, p);
 
     // store syndrome per bitplane
-    for (const auto &s : m_channelCoder[c]) {
+    for (const auto &s : m_channelCoder[c].bitplanes) {
       if (access_block) {
 #ifdef ICOV_ASSERTION_ENABLED
         icov::helpers::assert::check(s.m_accessBlock.size() > 0,
@@ -94,25 +95,34 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
         m_icov_file->writeSyndrome(s.m_accessBlock);
       }
 
-      m_icov_file->writeSyndromeFlag(s.m_codingFlag);
-      if (s.m_codingFlag) {
-        m_icov_file->writeSyndromeFlag(s.m_sourceFlag);
+      std::cout << "COMP " << c << " SYNDROME " << s.m_stored_synd.size()
+                << std::endl;
+
+      if (s.m_stored_synd.size() > 0) {
         m_icov_file->writeSyndrome(s.m_stored_synd);
       }
     }
   }
 
   // store bitplanes rates per SI and per channel
-  for (uint16_t p : v) {
+  for (uint16_t p : PredictionID) {
     for (int c = 0; c < (int)m_numComp; ++c) {
-      std::cout << "WRITE RATES SI " << p << " COMP " << c;
-      for (int bp = 0; bp < (int)m_channelCoder[c].size(); ++bp) {
-        if (m_channelCoder[c][bp].m_stored_numcodes.count(p)) {
-          m_icov_file->writeSIRate(
-              m_channelCoder[c][bp].m_stored_numcodes.at(p));
+      if (m_channelCoder[c].m_stored_pz.count(p)) {
+        m_icov_file->writeQaryParams(m_channelCoder[c].m_stored_pz[p]);
+        if (m_channelCoder[c].m_stored_pz[p].lx > 0) {
+          std::cout << "WRITE RATES SI " << p << " COMP " << c;
+          for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
+            if (m_channelCoder[c].bitplanes[bp].m_stored_numcodes.count(p)) {
+              m_icov_file->writeSIRate(
+                  m_channelCoder[c].bitplanes[bp].m_sourceFlag
+                      ? 1
+                      : m_channelCoder[c].bitplanes[bp].m_stored_numcodes.at(
+                            p));
+            }
+          }
+          std::cout << std::endl;
         }
       }
-      std::cout << std::endl;
     }
   }
   m_icov_file->writeBlockSize();
@@ -253,93 +263,117 @@ void icov::encoder::FrameEncoder::encode_tu(
       x_tu.getBitSymbolProvider(comp, si_tu, m_params.bsp_params);
 
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
-  encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
 
-  // CHECK DECODING
-  if (m_params.check_decoding) {
+  if (bsp.q0() == 1) {
+    ICOV_TRACE << "SI identical... no coding...";
+  } else {
+    encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
 
-    BitSymbolProvider bsp_dec(tu_size);
+    // CHECK DECODING
+    if (m_params.check_decoding) {
 
-    bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                   bsp.x_binary_length());
+      BitSymbolProvider bsp_dec(tu_size);
 
-    for (size_t i = 0; i < si_numcodes.size(); i++) {
+      ICOV_TRACE << bsp.si_symboles().size();
+      ICOV_TRACE << bsp.z_min();
+      ICOV_TRACE << bsp.z_max();
+      ICOV_TRACE << bsp.q0();
+      ICOV_TRACE << bsp.x_binary_length();
 
-      ICOV_TRACE << "Check decoding bitplane " << i << std::endl;
-      BitVec decoded;
-      try {
-        ICOV_TRACE << "Check bitplane " << i;
-        encoder.decode_bitplane(decoded, i, bsp_dec, si_numcodes[i],
-                                si_synd[i]);
-        icov::helpers::assert::check(decoded == bsp.src_bits()[i],
-                                     "Decoding BP check failed " +
-                                         std::to_string(i));
-      } catch (const std::exception &e) {
-        ICOV_ERROR << e.what();
-        break;
-      }
-    }
-
-    try {
       bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
                      bsp.x_binary_length());
-      encoder.decode_symboles(bsp_dec, si_numcodes, si_synd);
 
-      icov::helpers::assert::check(bsp_dec.src_symboles() == bsp.src_symboles(),
-                                   "Decoding symbole failed for channel " +
-                                       std::to_string(comp));
-    } catch (const std::exception &e) {
-      ICOV_ERROR << e.what();
+      for (size_t i = 0; i < si_numcodes.size(); i++) {
+
+        ICOV_TRACE << "Check decoding bitplane " << i << std::endl;
+        BitVec decoded;
+        try {
+          ICOV_TRACE << "Check bitplane " << i;
+          encoder.decode_bitplane(decoded, i, bsp_dec, si_numcodes[i],
+                                  si_synd[i]);
+          icov::helpers::assert::check(decoded == bsp.src_bits()[i],
+                                       "Decoding BP check failed " +
+                                           std::to_string(i));
+        } catch (const std::exception &e) {
+          ICOV_ERROR << e.what();
+          break;
+        }
+      }
+
+      try {
+        bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
+                       bsp.x_binary_length());
+        encoder.decode_symboles(bsp_dec, si_numcodes, si_synd);
+
+        icov::helpers::assert::check(
+            bsp_dec.src_symboles() == bsp.src_symboles(),
+            "Decoding symbole failed for channel " + std::to_string(comp));
+      } catch (const std::exception &e) {
+        ICOV_ERROR << e.what();
+      }
     }
+    // END CHECK DECODING
   }
-// END CHECK DECODING
-
 // encoding and decoding check done, now save syndrome if longer than current
 // saved
 #pragma omp critical
   {
     std::cout << "COMP " << comp << " PRED " << predID << ": "
-              << m_channelCoder[comp].size() << ", " << si_synd.size() << ", "
-              << si_numcodes.size() << std::endl;
+              << m_channelCoder[comp].bitplanes.size() << ", " << si_synd.size()
+              << ", " << si_numcodes.size() << std::endl;
 
-    // first SI stored (no bitplanes stored for comp)
-    if (m_channelCoder[comp].size() == 0) {
-      m_channelCoder[comp] = ChannelCoder(si_synd.size());
-      for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
-        m_channelCoder[comp][i].m_stored_synd = si_synd[i];
-        m_channelCoder[comp][i].m_noSourceThreshold = 0.0;
-        m_channelCoder[comp][i].m_codingFlag = false;
-        m_channelCoder[comp][i].m_sourceFlag = false;
-        m_channelCoder[comp][i].m_minRate = si_numcodes[i];
-        if (b.isAccessBlock()) {
-          m_channelCoder[comp][i].m_accessBlock.fillFrom(bsp.src_bits()[i]);
+    m_channelCoder[comp].m_stored_pz[predID] = bsp.getPz();
+
+    if (bsp.q0() < 1) {
+      // first SI stored (no bitplanes stored for comp)
+      if (m_channelCoder[comp].bitplanes.size() == 0) {
+        m_channelCoder[comp].bitplanes =
+            std::vector<BitplaneCoder>(si_synd.size());
+        for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+          m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
+          m_channelCoder[comp].bitplanes[i].m_noSourceThreshold = 0.0;
+          m_channelCoder[comp].bitplanes[i].m_sourceFlag = false;
+          m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
+          if (b.isAccessBlock()) {
+            m_channelCoder[comp].bitplanes[i].m_accessBlock.fillFrom(
+                bsp.src_bits()[i]);
+          }
         }
       }
-    }
 
 #ifdef ICOV_ASSERTION_ENABLED
-    icov::helpers::assert::check(
-        m_channelCoder[comp].size() == si_synd.size() &&
-            m_channelCoder[comp].size() == si_numcodes.size(),
-        "Bitplane count does not match between SI of same block");
+      icov::helpers::assert::check(
+          m_channelCoder[comp].bitplanes.size() == si_synd.size() &&
+              m_channelCoder[comp].bitplanes.size() == si_numcodes.size(),
+          "Bitplane count does not match between SI of same block");
 #endif
 
-    for (size_t i = 0; i < m_channelCoder[comp].size(); ++i) {
-      if (si_numcodes[i] < m_channelCoder[comp][i].m_minRate)
-        m_channelCoder[comp][i].m_minRate = si_numcodes[i];
-      if (!m_channelCoder[comp][i].m_sourceFlag &&
-          !m_channelCoder[comp][i].m_codingFlag) {
-        m_channelCoder[comp][i].m_stored_numcodes[predID] = si_numcodes[i];
-        m_channelCoder[comp][i].m_noSourceThreshold +=
-            encoder.get_r(si_numcodes[i]);
-        if (m_channelCoder[comp][i].m_noSourceThreshold >
-            m_params.maxRateNoCoding) {
-          m_channelCoder[comp][i].m_sourceFlag = true;
-          m_channelCoder[comp][i].m_stored_synd.fillFrom(bsp.src_bits()[i]);
-          std::cout << "SOURCE !" << std::endl;
-        } else if (si_synd[i].size() >
-                   m_channelCoder[comp][i].m_stored_synd.size()) {
-          m_channelCoder[comp][i].m_stored_synd = si_synd[i];
+      for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+
+        if (si_numcodes[i] > 0 &&
+            si_numcodes[i] < m_channelCoder[comp].bitplanes[i].m_minRate)
+          m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
+
+        if (si_numcodes[i] == 0) {
+          m_channelCoder[comp].bitplanes[i].m_stored_numcodes[predID] = 0;
+        } else if (!m_channelCoder[comp].bitplanes[i].m_sourceFlag) {
+
+          m_channelCoder[comp].bitplanes[i].m_noSourceThreshold +=
+              encoder.get_r(si_numcodes[i] - 2);
+
+          m_channelCoder[comp].bitplanes[i].m_stored_numcodes[predID] =
+              si_numcodes[i];
+
+          if (m_channelCoder[comp].bitplanes[i].m_noSourceThreshold >
+              m_params.maxRateNoCoding) {
+            m_channelCoder[comp].bitplanes[i].m_sourceFlag = true;
+            m_channelCoder[comp].bitplanes[i].m_stored_synd.fillFrom(
+                bsp.src_bits()[i]);
+            std::cout << "SOURCE !" << std::endl;
+          } else if (si_synd[i].size() >
+                     m_channelCoder[comp].bitplanes[i].m_stored_synd.size()) {
+            m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
+          }
         }
       }
     }

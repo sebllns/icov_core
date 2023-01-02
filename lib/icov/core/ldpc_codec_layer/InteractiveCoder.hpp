@@ -1,6 +1,7 @@
 #pragma once
 #include "InteractiveCoder.h"
 #include "helpers.h"
+#include <algorithm>
 
 using namespace icov;
 
@@ -163,7 +164,24 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
 
   init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
 
-  this->decode(output, numcode, stored_synd);
+  if (numcode > 1) {
+    this->decode(output, numcode - 2, stored_synd);
+  } else if (numcode == 1) {
+    ICOV_TRACE << "DECODE: SOURCE";
+#if ICOV_ASSERTION_ENABLED
+    icov::helpers::assert::equal(stored_synd.size(), get_n(),
+                                 "Size does not match");
+#endif
+    for (size_t i = 0; i < get_n(); ++i) {
+      output[i] = stored_synd[i];
+    }
+  } else if (numcode == 0) {
+    ICOV_TRACE << "DECODE: NO CODING";
+    for (size_t i = 0; i < get_n(); ++i) {
+      output[i] = m_pllrProvider->llr()[i] < 0 ? 1 : 0;
+    }
+  }
+
   bsp.injectBitplane(bp_idx, output);
 }
 
@@ -313,21 +331,39 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
 
   init_LLR_bitplane(bsp, bitplane_idx, sign_bits, predec);
 
+  // TO CODE OR NOT TO CODE ???
   numcodeIdx = 0;
-  int numerrors =
-      m_coder->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
 
-  icov::helpers::assert::check(numerrors == 0,
-                               "No convergence for bitplane " +
-                                   std::to_string(bitplane_idx));
+  for (int i = 0; numcodeIdx == 0 && i < n; ++i) {
+    if (m_pllrProvider->llr()[i] == 0 ||
+        (m_pllrProvider->llr()[i] < 0 && src_bits[bitplane_idx][i] <= 0) ||
+        (m_pllrProvider->llr()[i] > 0 && src_bits[bitplane_idx][i] > 0)) {
+      numcodeIdx = 1;
+    }
+  }
 
-  if (params.CheckBitplaneEncoding) {
-    ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
-    BitVec decoded;
-    decode(decoded, numcodeIdx, stored_synd);
-    icov::helpers::assert::check(decoded == src_bits[bitplane_idx],
-                                 "INTERNAL Decoding BP check failed " +
+  if (numcodeIdx > 0) {
+
+    int numerrors =
+        m_coder->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
+
+    icov::helpers::assert::check(numerrors == 0,
+                                 "No convergence for bitplane " +
                                      std::to_string(bitplane_idx));
+
+    if (params.CheckBitplaneEncoding) {
+      ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
+      BitVec decoded;
+      decode(decoded, numcodeIdx, stored_synd);
+      icov::helpers::assert::check(decoded == src_bits[bitplane_idx],
+                                   "INTERNAL Decoding BP check failed " +
+                                       std::to_string(bitplane_idx));
+    }
+
+    numcodeIdx += 2;
+  } else {
+    stored_synd.resize(0);
+    ICOV_TRACE << "ENCODE: NO CODING";
   }
 
   if (bitplane_idx > 0) {

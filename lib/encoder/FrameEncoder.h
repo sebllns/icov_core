@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include "BitSymbolProvider.h"
 #include "BlockPrediction.h"
 #include "Media.h"
 #include "OutputMedia.h"
@@ -156,7 +157,6 @@ protected:
     icov::Syndrome m_stored_synd;
     icov::Rate m_noSourceThreshold;
     icov::Rate m_minRate;
-    bool m_codingFlag;
     bool m_sourceFlag;
 
     // one numcode per SI and per bitplane
@@ -165,7 +165,10 @@ protected:
   } BitplaneCoder;
 
   // channel coding
-  typedef std::vector<BitplaneCoder> ChannelCoder;
+  typedef struct {
+    std::vector<BitplaneCoder> bitplanes;
+    std::map<uint16_t, BitSymbolProvider::Pz> m_stored_pz;
+  } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;
 };

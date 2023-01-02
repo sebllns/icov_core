@@ -1,5 +1,6 @@
 #include "OutputMedia.h"
 #include "helpers.h"
+#include "icov_stream.h"
 #include "typedef.h"
 #include "video_layer/encoded_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
@@ -35,6 +36,19 @@ const icov::ContentParameterSet &OutputIcov::contentParameterSet() const {
 
 icov::ContentParameterSet &OutputIcov::contentParameterSet() {
   return m_contentParameterSet;
+}
+
+void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
+  if (bsp.lx == 0) {
+    std::cout << "SI IDENTICAL" << std::endl;
+    icov::helpers::io::write_value<icov::byte>(getStream(eIcovStream::RATES), 0,
+                                               true);
+  } else {
+    icov::bitstream::writeQaryParams(m_qaryParams, bsp.q_idx, bsp.zmin,
+                                     bsp.zmax, bsp.lx);
+    icov::helpers::io::write_array(getStream(eIcovStream::RATES), m_qaryParams,
+                                   QARY_PARAMS_SIZE, true);
+  }
 }
 
 void OutputIcov::writeContentParameterSet() {

@@ -50,6 +50,7 @@
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
+#include "tools/DebugTools.h"
 #include <vector>
 
 namespace icov::video {
@@ -96,6 +97,8 @@ public:
                        const BitSymbolProvider::params &bsp_params) const {
     auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
     size_t tu_size = x_tuCoeff.area();
+
+    ICOV_TRACE << tu_size;
 
     BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
 
