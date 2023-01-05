@@ -1,7 +1,9 @@
 #include "InputMedia.h"
 #include "BlockPrediction.h"
 #include "Media.h"
+#include "common_types.h"
 #include "helpers.h"
+#include "icov_stream.h"
 #include "typedef.h"
 #include "video_layer/encoded_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
@@ -20,9 +22,19 @@ InputIcov::InputIcov(const boost::filesystem::path &path, size_t block_count)
 
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
-    m_fileParts[i] =
-        std::make_unique<std::ifstream>(part_file, std::ios_base::binary);
+    ICOV_TRACE << "Open file part " << part_file << std::endl;
+    m_fileParts[i] = std::make_unique<std::ifstream>(
+        part_file, std::ios_base::binary | std::ios_base::in);
   }
+
+  //  icov::byte val = 0;
+  //  getStream(eIcovStream::RATES).seekg(11, std::ios_base::beg);
+  //    icov::helpers::io::read_value(getStream(eIcovStream::RATES), &val);
+
+  //  getStream(eIcovStream::RATES)
+  //      .read(reinterpret_cast<char *>(&val), sizeof(val));
+  //  std::cout << val << std::endl;
+  //  std::cout << static_cast<int>(val) << std::endl;
 
   rates_count = 0;
   total_lost = 0;
@@ -51,14 +63,8 @@ void InputIcov::readContentParameterSet() {
   archive &m_contentParameterSet;
 }
 
-void InputIcov::readSyndrome(char *output, uint64_t block, uint16_t prediction,
-                             int channel, int bitplane, NumcodeIdx &m) {
-
-  // Access blocks
-  if (prediction == BlockPrediction::predType::NONE) {
-
-  } else {
-  }
+void InputIcov::readSyndrome(icov::byte *output, uint64_t size) {
+  icov::helpers::io::read_value(getStream(eIcovStream::SYNDROME), output, size);
 }
 
 void InputIcov::readBlockPos() {
@@ -85,16 +91,52 @@ void InputIcov::readBlockPos() {
   }
 }
 
-int InputIcov::readBitplaneCount(uint64_t block) {
+void InputIcov::selectBlockPrediction(uint64_t block, int pred_idx,
+                                      bool access_block) {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::RATES);
-  str.seekg(m_rates_pos[block]);
-  icov::helpers::io::read_value(str, &val);
-  std::cout << static_cast<int>(val) << std::endl;
-  return static_cast<int>(val >> 4);
+  str.seekg(m_rates_pos[block], std::ios_base::beg);
+
+  if (access_block && pred_idx > 0) {
+    str.seekg(m_channelCount * sizeof(icov::byte));
+    pred_idx--;
+  }
+
+  for (int i = 0; i < pred_idx * m_channelCount; ++i) {
+    icov::helpers::io::read_value(str, &val);
+    // std::cout << static_cast<int>(val) << std::endl;
+    val = val >> 4;
+    if (val > 0) {
+      // std::cout << "seek " << (val + 2) << std::endl;
+      str.seekg((val + 2) * sizeof(icov::byte), std::ios_base::cur);
+    }
+  }
 }
 
-void InputIcov::readSIRates(const NumcodeIdxVec &v) {}
+int InputIcov::readPredictionHeader() {
+  icov::byte val = 0;
+  auto &str = getStream(eIcovStream::RATES);
+  icov::helpers::io::read_value(str, &val);
+  return static_cast<int>(val);
+}
+
+void InputIcov::readQaryParams(icov::byte header, int &lx, int &q_idx,
+                               int &z_min, int &z_max) {
+  m_qaryParams[0] = header;
+  auto &str = getStream(eIcovStream::RATES);
+  icov::helpers::io::read_value(str, &m_qaryParams[1]);
+  icov::helpers::io::read_value(str, &m_qaryParams[2]);
+  icov::bitstream::readQaryParams(m_qaryParams, q_idx, z_min, z_max, lx);
+}
+
+void InputIcov::readSIRates(NumcodeIdxVec &v) {
+  for (int i = 0; i < (int)v.size(); ++i) {
+    icov::byte val = 0;
+    auto &str = getStream(eIcovStream::RATES);
+    icov::helpers::io::read_value(str, &val);
+    v[i] = static_cast<NumcodeIdx>(val);
+  }
+}
 
 void InputIcov::readSIRate(const NumcodeIdx &r) {}
 } // namespace extractor

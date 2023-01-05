@@ -52,6 +52,7 @@
 #include "Media.h"
 #include "common_types.h"
 #include "encoded_stream/ContentParameterSet.h"
+#include "icov_stream.h"
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
@@ -90,12 +91,13 @@ public:
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
-  void readSyndrome(char *output, uint64_t block, uint16_t prediction,
-                    int channel, int bitplane, NumcodeIdx &m);
+  void readSyndrome(byte *output, uint64_t size);
   void readFrameSize();
   void readBlockPos();
-  int readBitplaneCount(uint64_t block);
-  void readSIRates(const NumcodeIdxVec &v);
+  void selectBlockPrediction(uint64_t block, int pred_idx, bool access_block);
+  int readPredictionHeader();
+  void readQaryParams(byte header, int &lx, int &q_idx, int &z_min, int &z_max);
+  void readSIRates(NumcodeIdxVec &v);
   void readSIRate(const NumcodeIdx &v);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
@@ -120,8 +122,13 @@ private:
 
   int rates_count;
   size_t m_blockCount;
+
+  // TODO variable
+  const int m_channelCount = 3;
   std::vector<std::streampos> m_rates_pos;
   std::vector<std::streampos> m_synd_pos;
+
+  bitstream::QaryParams m_qaryParams;
 };
 
 } // namespace extractor

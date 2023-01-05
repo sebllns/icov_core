@@ -208,7 +208,7 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
   icov::video::Quant quant;
   TCoeff uiAbsSum;
 
-  // FOR EACH BLOCK (ICU)
+  // FOR EACH BLOCK (ICU) PARALLELIZATION DOES NOT WORK
   //#pragma omp parallel
   for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
     icov::video::InteractiveCodingUnit &curr_icu =
@@ -365,7 +365,8 @@ double VTM_Utility::
   return transmissionBits;
 }
 
-void VTM_Utility::copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID compID) {
+void VTM_Utility::copyBordersFor360(PelUnitBuf &mainFrame_roi,
+                                    const ComponentID compID) {
   const auto &compBuf = mainFrame_roi.get(compID);
 
   Pel *src1 = compBuf.buf;
@@ -375,8 +376,8 @@ void VTM_Utility::copyBordersFor360(PelUnitBuf &mainFrame_roi, const ComponentID
   Pel *dst2 = compBuf.buf - 1;
 
   for (UInt y = 0; y < compBuf.height; y++, src1 += compBuf.stride,
-                                       dst1 += compBuf.stride, src2 += compBuf.stride,
-                                       dst2 += compBuf.stride) {
+            dst1 += compBuf.stride, src2 += compBuf.stride,
+            dst2 += compBuf.stride) {
     *dst1 = *src1;
     *dst2 = *src2;
   }

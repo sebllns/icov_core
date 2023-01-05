@@ -61,6 +61,11 @@
 
 using namespace icov;
 
+#define PREDICTION_COUNT 8
+#define ACCESS_BLOCK_PREDICTION_COUNT 1
+#define TOTAL_PREDICTION_COUNT                                                 \
+  (PREDICTION_COUNT + ACCESS_BLOCK_PREDICTION_COUNT)
+
 typedef enum {
   MEDIA_HEADER = 0,
   FRAMES_SIZE,
@@ -70,7 +75,7 @@ typedef enum {
   COUNT
 } eIcovStream;
 
-static const uint16_t PredictionID[8] = {
+static const uint16_t PredictionID[PREDICTION_COUNT] = {
     BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
     BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
     BlockPrediction::RIGHT,        BlockPrediction::LEFT,

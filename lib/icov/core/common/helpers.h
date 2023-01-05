@@ -356,8 +356,9 @@ static void write_value(std::ostream &str, const T &val, bool flush = false) {
   }
 }
 
-template <typename T> static void read_value(std::istream &str, T *val) {
-  str.read(reinterpret_cast<char *>(&val), sizeof(val));
+template <typename T>
+static void read_value(std::istream &str, T *val, int size = 1) {
+  str.read(reinterpret_cast<char *>(val), size * sizeof(T));
 }
 
 template <typename T>

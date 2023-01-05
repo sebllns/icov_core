@@ -43,11 +43,13 @@ void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
     std::cout << "SI IDENTICAL" << std::endl;
     icov::helpers::io::write_value<icov::byte>(getStream(eIcovStream::RATES), 0,
                                                true);
+    m_total_write_byte_block[0] += sizeof(icov::byte);
   } else {
     icov::bitstream::writeQaryParams(m_qaryParams, bsp.q_idx, bsp.zmin,
                                      bsp.zmax, bsp.lx);
     icov::helpers::io::write_array(getStream(eIcovStream::RATES), m_qaryParams,
                                    QARY_PARAMS_SIZE, true);
+    m_total_write_byte_block[0] += QARY_PARAMS_SIZE * sizeof(icov::byte);
   }
 }
 

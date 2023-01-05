@@ -316,6 +316,7 @@ void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
   if (i == 0) {
     // save sign
     m_src_bits[0] = x;
+
   } else {
     // apply decoded bitplane
     BitSymbolProvider::inject_bitplane(m_src_symboles, x, 1);

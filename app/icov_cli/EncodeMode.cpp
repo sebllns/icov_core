@@ -87,6 +87,8 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   output->contentParameterSet().content_framecount = 1;
   output->contentParameterSet().is_block_fixed_size = true;
   output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
+  output->contentParameterSet().content_chroma_format =
+      (icov::byte)enc_params.chFormat;
   output->writeContentParameterSet();
   encoder->setIcovFile(output);
 
