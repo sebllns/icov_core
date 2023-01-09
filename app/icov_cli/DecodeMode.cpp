@@ -10,12 +10,14 @@
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
+#include "opencv2/core/mat.hpp"
 #include "opencv2/highgui.hpp"
 #include "tools/DebugTools.h"
 #include "typedef.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/ICOV_Units.h"
+#include "video_layer/vtm_opencv_utility.h"
 
 #include <algorithm>
 #include <boost/format.hpp>
@@ -46,7 +48,18 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 }
 
 void DecodeMode::run() {
-  icov::extractor::InputIcov inputFile(m_parameters.inputFile, 1);
+  const int maxLog2TrDynamicRange = 15;
+  const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
+  const ChromaFormat chFrmt = ChromaFormat::CHROMA_420;
+  const int qp = 42;
+  const int s = 32;
+  const int n = s * s;
+  const int channelCount = 3;
+  const int block_count = 1;
+
+  std::vector<NumcodeIdxVec> syndSizes(channelCount);
+
+  icov::extractor::InputIcov inputFile(m_parameters.inputFile, block_count, n);
   inputFile.readContentParameterSet();
   const auto cps = inputFile.contentParameterSet();
   ICOV_DEBUG << "Icov version: " << cps.icov_version;
@@ -54,14 +67,17 @@ void DecodeMode::run() {
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
 
-  for (int p = 0; p < PREDICTION_COUNT + 1; ++p) {
-    inputFile.selectBlockPrediction(0, p, true);
-    for (int c = 0; c < 3; c++) {
-      int pred_hdr = inputFile.readPredictionHeader();
+  inputFile.selectBlock(0);
+  inputFile.readSyndromesSizes(syndSizes);
+
+  for (int p = 0; p < PREDICTION_COUNT; ++p) {
+    inputFile.selectPrediction(p, channelCount);
+    for (int c = 0; c < channelCount; c++) {
+      int pred_hdr = inputFile.readByteInt();
       std::cout << p << ", " << c << ": " << pred_hdr << std::endl;
-      if (p > 0 && pred_hdr != 0) {
+      if (pred_hdr != 0) {
         int lx = 0, q_idx = 0, z_min = 0, z_max = 0;
-        inputFile.readQaryParams(pred_hdr, lx, q_idx, z_min, z_max);
+        inputFile.readQaryParams(pred_hdr, q_idx, z_min, z_max);
         std::cout << lx << ", " << q_idx << ", " << z_min << ", " << z_max
                   << std::endl;
         NumcodeIdxVec nmc(lx, 0);
@@ -71,14 +87,6 @@ void DecodeMode::run() {
       }
     }
   }
-
-  const int maxLog2TrDynamicRange = 15;
-  const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
-  const ChromaFormat chFrmt = ChromaFormat::CHROMA_420;
-  const int qp = 42;
-  const int s = 32;
-  const int n = s * s;
-  const int channelCount = 3;
 
   icov::byte read_buf[n];
   icov::video::Quant quant;
@@ -90,7 +98,11 @@ void DecodeMode::run() {
   PelStorage dec_block;
   dec_block.create(blockArea);
 
-  inputFile.selectBlockPrediction(0, 0, true);
+  BitVec accessBlockBits(n);
+
+  inputFile.selectBlock(0);
+  //  inputFile.selectPrediction(0, channelCount);
+  inputFile.readSyndromesSizes(syndSizes);
   for (int c = 0; c < channelCount; c++) {
     const auto compID = static_cast<ComponentID>(c);
     const int nc = blockArea.block(compID).area();
@@ -99,12 +111,11 @@ void DecodeMode::run() {
     const icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
 
     BitSymbolProvider bsp(nc);
-    int pred_hdr = inputFile.readPredictionHeader();
-    int lx = pred_hdr >> 4;
+    int lx = syndSizes[c].size();
     std::cout << "LX " << lx << std::endl;
     for (int bp = 0; bp < lx; bp++) {
-      inputFile.readSyndrome(read_buf, nc);
-      bsp.injectBitplane(bp, BitVec(read_buf, read_buf + nc));
+      inputFile.readSyndrome(accessBlockBits, nc, nc);
+      bsp.injectBitplane(bp, accessBlockBits);
     }
 
     auto buf = dec_tu.getQuantizedTransformCoeffs(compID).buf;
@@ -129,6 +140,10 @@ void DecodeMode::run() {
     // dec_tu.getInverseQuantizedTransformCoeffs().buf;
   }
 
+  cv::Mat block_output;
+  VTM_OPENCV_Utility::toBGRMat(dec_block.getBuf(blockArea), block_output);
+
+  cv::imshow("DECODED", block_output);
   cv::waitKeyEx(0);
 
   EquiRectPicture icov_pic(cps.content_width, cps.content_height);

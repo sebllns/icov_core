@@ -155,6 +155,7 @@ protected:
 
     icov::Syndrome m_accessBlock;
     icov::Syndrome m_stored_synd;
+    NumcodeIdx m_stored_synd_rate;
     icov::Rate m_noSourceThreshold;
     icov::Rate m_minRate;
     bool m_sourceFlag;

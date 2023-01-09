@@ -67,25 +67,25 @@ namespace bitstream {
 typedef icov::byte QaryParams[QARY_PARAMS_SIZE];
 
 inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
-                           int &z_max, int &lx) {
-  lx = input[0] >> 4;
-  q_idx = input[0] & 15;
+                           int &z_max) {
+  // lx = input[0] >> 4;
+  q_idx = input[0] - 1; // & 15;
 
   z_min = input[1] * Z_STEP - Z_LIMIT;
   z_max = input[2] * Z_STEP - Z_LIMIT;
 }
 
-inline void writeQaryParams(QaryParams output, int q_idx, int z_min, int z_max,
-                            int lx) {
+inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
+                            int z_max) {
 
-  output[0] = lx << 4;
-  output[0] |= q_idx;
+  // output[0] = lx << 4;
+  output[0] = q_idx + 1;
 
   output[1] = ((z_min + Z_LIMIT) / Z_STEP);
   output[2] = ((z_max + Z_LIMIT) / Z_STEP);
 
-  std::cout << "BSP " << lx << ", " << q_idx << ", " << z_min << ", " << z_max
-            << "->" << (uint)output[0] << ", " << (uint)output[1] << ", "
+  std::cout << "BSP " << q_idx << ", " << z_min << ", " << z_max << "->"
+            << (uint)output[0] << ", " << (uint)output[1] << ", "
             << (uint)output[2] << std::endl;
 }
 

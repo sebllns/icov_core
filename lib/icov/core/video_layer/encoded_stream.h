@@ -70,7 +70,7 @@ typedef enum {
   MEDIA_HEADER = 0,
   FRAMES_SIZE,
   BLOCKS_SIZE,
-  RATES,
+  ENCODE_PARAMS,
   SYNDROME,
   COUNT
 } eIcovStream;

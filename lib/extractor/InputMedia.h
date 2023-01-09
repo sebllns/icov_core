@@ -51,6 +51,7 @@
 
 #include "Media.h"
 #include "common_types.h"
+#include "encoded_stream.h"
 #include "encoded_stream/ContentParameterSet.h"
 #include "icov_stream.h"
 #include "typedef.h"
@@ -85,18 +86,35 @@ public:
       uint32_t;
 #endif
 
-  InputIcov(const fs::path &path, size_t block_count);
-  ~InputIcov() = default;
+  InputIcov(const fs::path &path, size_t block_count, size_t bufferSize);
+  ~InputIcov();
 
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
-  void readSyndrome(byte *output, uint64_t size);
+
+  void offsetAccessBlock(uint offset);
+
+  template <class T>
+  void readSyndrome(T &output, uint64_t read_size, uint64_t stored_size) {
+    output.resize(read_size);
+    auto byte_count = bitToByteCount(read_size);
+    auto &str = getStream(eIcovStream::SYNDROME);
+    icov::helpers::io::read_value(str, m_readBuf, byte_count);
+    m_syndromeOffset = read_bits(output, m_readBuf, m_syndromeOffset);
+    byte_count = bitToByteCount(stored_size) - byte_count;
+    if (m_syndromeOffset)
+      --byte_count;
+    str.seekg(byte_count, std::ios_base::cur);
+  }
+
   void readFrameSize();
   void readBlockPos();
-  void selectBlockPrediction(uint64_t block, int pred_idx, bool access_block);
-  int readPredictionHeader();
-  void readQaryParams(byte header, int &lx, int &q_idx, int &z_min, int &z_max);
+  void selectBlock(uint64_t block);
+  void readSyndromesSizes(std::vector<NumcodeIdxVec> &output);
+  void selectPrediction(ushort pred_idx, int channelCount);
+  int readByteInt();
+  void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
   void readSIRate(const NumcodeIdx &v);
 
@@ -124,11 +142,15 @@ private:
   size_t m_blockCount;
 
   // TODO variable
-  const int m_channelCount = 3;
+  // const int m_channelCount = 3;
   std::vector<std::streampos> m_rates_pos;
   std::vector<std::streampos> m_synd_pos;
 
   bitstream::QaryParams m_qaryParams;
+
+  icov::byte *m_readBuf;
+
+  ushort m_syndromeOffset;
 };
 
 } // namespace extractor

@@ -311,13 +311,15 @@ float BitSymbolProvider::pqks(int yk) const {
 }
 
 void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
-  m_src_bits[i] = x;
 
   if (i == 0) {
     // save sign
     m_src_bits[0] = x;
 
   } else {
+    if (i < m_src_bits.size())
+      m_src_bits[i] = x;
+
     // apply decoded bitplane
     BitSymbolProvider::inject_bitplane(m_src_symboles, x, 1);
 

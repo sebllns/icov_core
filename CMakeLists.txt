@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 ########################################
 #            INIT PROJECT              #
 ########################################
-project(icov_core LANGUAGES CXX)
+project(icov_core LANGUAGES CXX C)
 message(STATUS "BUILD ICOV CORE PROJECT")
 
 ########################################
@@ -131,7 +131,7 @@ if(CMAKE_C_COMPILER_LOADED)
         message(STATUS "C Compiler is part of GCC")
     endif()
 else()
-    message(STATUS "No C compiler defined")
+    message(FATAL_ERROR "No C compiler defined")
 endif()
 
 message("\n")

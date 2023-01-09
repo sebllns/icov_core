@@ -41,13 +41,13 @@ icov::ContentParameterSet &OutputIcov::contentParameterSet() {
 void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
     std::cout << "SI IDENTICAL" << std::endl;
-    icov::helpers::io::write_value<icov::byte>(getStream(eIcovStream::RATES), 0,
+    icov::helpers::io::write_value<icov::byte>(getStream(eIcovStream::ENCODE_PARAMS), 0,
                                                true);
     m_total_write_byte_block[0] += sizeof(icov::byte);
   } else {
     icov::bitstream::writeQaryParams(m_qaryParams, bsp.q_idx, bsp.zmin,
-                                     bsp.zmax, bsp.lx);
-    icov::helpers::io::write_array(getStream(eIcovStream::RATES), m_qaryParams,
+                                     bsp.zmax);
+    icov::helpers::io::write_array(getStream(eIcovStream::ENCODE_PARAMS), m_qaryParams,
                                    QARY_PARAMS_SIZE, true);
     m_total_write_byte_block[0] += QARY_PARAMS_SIZE * sizeof(icov::byte);
   }
@@ -60,7 +60,9 @@ void OutputIcov::writeContentParameterSet() {
 }
 
 void OutputIcov::writeSyndromeFlag(bool flag) {
-  icov::helpers::bitstream::setBit(BYTE_SIZE - last_bit_shift, last_byte);
+  if (flag) {
+    icov::helpers::bitstream::setBit(BYTE_SIZE - last_bit_shift, last_byte);
+  }
   last_bit_shift = (last_bit_shift + 1) % BYTE_SIZE;
   if (last_bit_shift == 0) {
     icov::helpers::io::write_value(getStream(eIcovStream::SYNDROME), last_byte,
@@ -156,7 +158,7 @@ void OutputIcov::writeSIRate(const NumcodeIdx &r) {
           std::to_string(std::numeric_limits<rate_t>::max()));
 #endif
 
-  helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::RATES],
+  helpers::io::write_value<rate_t>(*m_fileParts[eIcovStream::ENCODE_PARAMS],
                                    static_cast<rate_t>(r), true);
 
   std::cout << " " << r;

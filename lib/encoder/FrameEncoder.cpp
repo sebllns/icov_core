@@ -83,17 +83,26 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       encodeBlockWithPrediction(output, b, p);
   }
 
-  if (access_block) {
-    for (int c = 0; c < (int)m_numComp; ++c) {
-      // store syndrome per bitplane
-      std::cout << "BP ";
-      m_icov_file->writeSIRate(m_channelCoder[c].bitplanes.size());
+  std::cout << "START HEADER\n";
+
+  for (int c = 0; c < (int)m_numComp; ++c) {
+    // store syndrome per bitplane
+    std::cout << "BP ";
+    m_icov_file->writeSIRate(m_channelCoder[c].bitplanes.size());
+    std::cout << std::endl;
+
+    for (const auto &s : m_channelCoder[c].bitplanes) {
+      std::cout << "COMP " << c << " SYNDROME ";
+      m_icov_file->writeSIRate(s.m_stored_synd_rate);
       std::cout << std::endl;
-      for (const auto &s : m_channelCoder[c].bitplanes) {
+    }
+
+    for (const auto &s : m_channelCoder[c].bitplanes) {
 #ifdef ICOV_ASSERTION_ENABLED
-        icov::helpers::assert::check(s.m_accessBlock.size() > 0,
-                                     "No access blocks bits !");
+      icov::helpers::assert::check(s.m_accessBlock.size() > 0,
+                                   "No access blocks bits !");
 #endif
+      if (access_block) {
         std::cout << "COMP " << c << " ACCESS BLOCK " << s.m_accessBlock.size()
                   << std::endl;
         m_icov_file->writeSyndrome(s.m_accessBlock);
@@ -101,12 +110,13 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
     }
   }
 
+  std::cout << "END HEADER\n";
+
   for (int c = 0; c < (int)m_numComp; ++c) {
     // store syndrome per bitplane
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      std::cout << "COMP " << c << " SYNDROME ";
-      m_icov_file->writeSIRate(s.m_stored_synd.size());
-      std::cout << std::endl;
+      std::cout << "COMP " << c << " SYNDROME " << s.m_stored_synd.size()
+                << std::endl;
       if (s.m_stored_synd.size() > 0) {
         m_icov_file->writeSyndrome(s.m_stored_synd);
       }
@@ -340,6 +350,7 @@ void icov::encoder::FrameEncoder::encode_tu(
       m_channelCoder[comp].bitplanes =
           std::vector<BitplaneCoder>(si_synd.size());
       for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+        m_channelCoder[comp].bitplanes[i].m_stored_synd_rate = si_numcodes[i];
         m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
         m_channelCoder[comp].bitplanes[i].m_noSourceThreshold = 0.0;
         m_channelCoder[comp].bitplanes[i].m_sourceFlag = false;
@@ -381,10 +392,12 @@ void icov::encoder::FrameEncoder::encode_tu(
             m_channelCoder[comp].bitplanes[i].m_sourceFlag = true;
             m_channelCoder[comp].bitplanes[i].m_stored_synd.fillFrom(
                 bsp.src_bits()[i]);
+            m_channelCoder[comp].bitplanes[i].m_stored_synd_rate = 1;
             std::cout << "SOURCE !" << std::endl;
           } else if (si_synd[i].size() >
                      m_channelCoder[comp].bitplanes[i].m_stored_synd.size()) {
             m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
+            m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
           }
         }
       }
