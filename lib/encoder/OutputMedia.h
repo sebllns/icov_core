@@ -94,6 +94,7 @@ public:
   void writeBlockSize();
   void writeSIRates(const NumcodeIdxVec &v);
   void writeSIRate(const NumcodeIdx &v);
+  void writeSIMode(const uint &v);
   void flush(int id);
   std::ostream &getStream(int id);
 

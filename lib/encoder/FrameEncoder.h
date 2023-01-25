@@ -153,22 +153,28 @@ protected:
   // bitplane coding
   typedef struct {
 
-    icov::Syndrome m_accessBlock;
-    icov::Syndrome m_stored_synd;
-    NumcodeIdx m_stored_synd_rate;
-    icov::Rate m_noSourceThreshold;
-    icov::Rate m_minRate;
-    bool m_sourceFlag;
+    icov::Syndrome accessBlock;
+    icov::Syndrome stored_synd;
+    NumcodeIdx stored_synd_rate;
+    icov::Rate noSourceThreshold;
+    icov::Rate minRate;
+    bool sourceFlag;
 
     // one numcode per SI and per bitplane
-    std::map<uint16_t, NumcodeIdx> m_stored_numcodes;
+    std::map<uint16_t, NumcodeIdx> stored_numcodes;
 
   } BitplaneCoder;
+
+  typedef struct {
+    BitSymbolProvider::Pz stored_pz;
+    // mode
+    uint dirmode;
+  } SiCoder;
 
   // channel coding
   typedef struct {
     std::vector<BitplaneCoder> bitplanes;
-    std::map<uint16_t, BitSymbolProvider::Pz> m_stored_pz;
+    std::map<uint16_t, SiCoder> si;
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;

@@ -24,6 +24,7 @@
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
 const char *EncodeMode::params::outputFile_id = "encode-output-file";
 const char *EncodeMode::params::icuSize_id = "encode-icu-size";
+const char *EncodeMode::params::qp_id = "encode-qp";
 const char *EncodeMode::params::viewportPadding_id = "encode-viewport-padding";
 
 void EncodeMode::AddProgramOptions(
@@ -43,9 +44,14 @@ void EncodeMode::AddProgramOptions(
               (EncodeMode::params::icuSize_id,
                po::value<int>()->default_value(32), "Size of ICUs blocks")
 
-                  (EncodeMode::params::viewportPadding_id,
-                   po::value<float>()->default_value(1.2),
-                   "Radius used in function to check if a block is visible");
+                  (EncodeMode::params::qp_id,
+                   po::value<int>()->default_value(42),
+                   "Quantization parameter")
+
+                      (EncodeMode::params::viewportPadding_id,
+                       po::value<float>()->default_value(1.2),
+                       "Radius used in function to check if a block is "
+                       "visible");
 }
 
 EncodeMode::EncodeMode(const po::variables_map &args) {
@@ -60,6 +66,8 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   }
 
   m_parameters.icuSize = args[EncodeMode::params::icuSize_id].as<int>();
+  m_parameters.qp = args[EncodeMode::params::qp_id].as<int>();
+
   m_parameters.viewportPadding =
       args[EncodeMode::params::viewportPadding_id].as<float>();
 
@@ -68,7 +76,7 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE.string(), q_values);
   BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
   icov::encoder::FrameEncoder::params enc_params = {
-      42,
+      m_parameters.qp,
       CHROMA_420,
       cv::Size(m_parameters.icuSize, m_parameters.icuSize),
       cv::Size(m_parameters.icuSize, m_parameters.icuSize),
@@ -89,7 +97,6 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
   output->contentParameterSet().content_chroma_format =
       (icov::byte)enc_params.chFormat;
-  output->writeContentParameterSet();
   encoder->setIcovFile(output);
 
   m_encoder = std::move(encoder);
@@ -158,6 +165,12 @@ void EncodeMode::run() {
   ICOV_DEBUG << "Start encoding";
   icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
   icov_accessblockMgr.buildAccessBlocks(icov_pic, icov_viewport);
+
+  m_output->contentParameterSet().content_width =
+      static_cast<uint16_t>(input->getWidth());
+  m_output->contentParameterSet().content_height =
+      static_cast<uint16_t>(input->getHeight());
+  m_output->writeContentParameterSet();
   m_encoder->encode(m_output->stream(), *input, icov_pic, icov_accessblockMgr,
                     icov_blockPrediction);
 }

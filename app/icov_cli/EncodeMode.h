@@ -48,6 +48,7 @@
 #include "Media.h"
 #include "common.h"
 #include "encoder/InputMedia.h"
+#include "encoder/OutputMedia.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 
@@ -62,11 +63,13 @@ class EncodeMode {
     static const char *inputFile_id;
     static const char *outputFile_id;
     static const char *icuSize_id;
+    static const char *qp_id;
     static const char *viewportPadding_id;
 
     fs::path inputFile;
     fs::path encodedFile;
     int icuSize;
+    int qp;
     float viewportPadding;
   };
 
@@ -83,6 +86,6 @@ private:
   //  std::unique_ptr<AffInteractiveCoder> m_ycoder;
   //  std::unique_ptr<AffInteractiveCoder> m_uvcoder;
   std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-  std::shared_ptr<icov::IOutputIcov> m_output;
+  std::shared_ptr<icov::encoder::OutputIcov> m_output;
   params m_parameters;
 };

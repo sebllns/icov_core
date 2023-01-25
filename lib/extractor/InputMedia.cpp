@@ -13,15 +13,10 @@
 #include <limits>
 #include <memory>
 #include <string>
-namespace icov {
-namespace extractor {
 
-InputIcov::InputIcov(const boost::filesystem::path &path, size_t block_count,
-                     size_t bufferSize)
-    : icov::IInputIcov<pstream>(path), m_blockCount(block_count),
-      m_rates_pos(block_count + 1), m_synd_pos(block_count + 1),
-      m_readBuf(new icov::byte[bufferSize]), m_syndromeOffset(0) {
-
+icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
+    : icov::IInputIcov<pstream>(path), m_blockCount(0), m_readBuf(nullptr),
+      m_syndromeOffset(0) {
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
     ICOV_TRACE << "Open file part " << part_file << std::endl;
@@ -51,27 +46,39 @@ InputIcov::InputIcov(const boost::filesystem::path &path, size_t block_count,
   m_synd_pos[0] = 0;
 }
 
-InputIcov::~InputIcov() { delete[] m_readBuf; }
+icov::extractor::InputIcov::~InputIcov() {
+  if (m_readBuf)
+    delete[] m_readBuf;
+}
 
-const icov::ContentParameterSet &InputIcov::contentParameterSet() const {
+const icov::ContentParameterSet &
+icov::extractor::InputIcov::contentParameterSet() const {
   return m_contentParameterSet;
 }
 
-icov::ContentParameterSet &InputIcov::contentParameterSet() {
+icov::ContentParameterSet &icov::extractor::InputIcov::contentParameterSet() {
   return m_contentParameterSet;
 }
 
-void InputIcov::readContentParameterSet() {
+void icov::extractor::InputIcov::readContentParameterSet() {
   boost::archive::binary_iarchive archive(
       *m_fileParts[eIcovStream::MEDIA_HEADER], boost::archive::no_header);
   archive &m_contentParameterSet;
 }
 
-void InputIcov::offsetAccessBlock(uint offset) {
+void icov::extractor::InputIcov::initBuffer(size_t block_count,
+                                            size_t bufferSize) {
+  m_blockCount = block_count;
+  m_rates_pos.resize(block_count + 1);
+  m_synd_pos.resize(block_count + 1);
+  m_readBuf = new icov::byte[bufferSize];
+}
+
+void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
   getStream(eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
 }
 
-void InputIcov::readBlockPos() {
+void icov::extractor::InputIcov::readBlockPos() {
   std::streampos rate_pos = 0;
   std::streampos synd_pos = 0;
 
@@ -95,7 +102,7 @@ void InputIcov::readBlockPos() {
   }
 }
 
-void InputIcov::selectBlock(uint64_t block) {
+void icov::extractor::InputIcov::selectBlock(uint64_t block) {
   getStream(eIcovStream::ENCODE_PARAMS).clear();
   getStream(eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[block + 1], std::ios_base::beg);
@@ -105,7 +112,8 @@ void InputIcov::selectBlock(uint64_t block) {
   m_syndromeOffset = 0;
 }
 
-void InputIcov::readSyndromesSizes(std::vector<NumcodeIdxVec> &output) {
+void icov::extractor::InputIcov::readSyndromesSizes(
+    std::vector<NumcodeIdxVec> &output) {
   for (int c = 0; c < (int)output.size(); ++c) {
     output[c] = NumcodeIdxVec(readByteInt());
     std::cout << "COMP " << c << " N " << output[c].size() << ":";
@@ -117,22 +125,27 @@ void InputIcov::readSyndromesSizes(std::vector<NumcodeIdxVec> &output) {
   }
 }
 
-void InputIcov::selectPrediction(ushort pred_idx, int channelCount) {
+void icov::extractor::InputIcov::selectPrediction(ushort pred_idx,
+                                                  int channelCount) {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
 
   for (int i = 0; i < pred_idx * channelCount; ++i) {
+    // read prediction mode
+    icov::helpers::io::read_value(str, &val);
+
+    // read q_idx + 1
     icov::helpers::io::read_value(str, &val);
     // std::cout << static_cast<int>(val) << std::endl;
-    val = val >> 4;
     if (val > 0) {
       // std::cout << "seek " << (val + 2) << std::endl;
-      str.seekg((val + 2) * sizeof(icov::byte), std::ios_base::cur);
-    }
+      // shift qary params
+      str.seekg(((val >> 4) + 2) * sizeof(icov::byte), std::ios_base::cur);
+    } // else no coding
   }
 }
 
-int InputIcov::readByteInt() {
+int icov::extractor::InputIcov::readByteInt() {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
   icov::helpers::io::read_value(str, &val);
@@ -140,27 +153,28 @@ int InputIcov::readByteInt() {
   return static_cast<int>(val);
 }
 
-void InputIcov::readQaryParams(icov::byte header, int &q_idx, int &z_min,
-                               int &z_max) {
+void icov::extractor::InputIcov::readQaryParams(icov::byte header, int &q_idx,
+                                                int &z_min, int &z_max) {
+  // q
   m_qaryParams[0] = header;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
+  // z_min
   icov::helpers::io::read_value(str, &m_qaryParams[1]);
+  // z_max
   icov::helpers::io::read_value(str, &m_qaryParams[2]);
   icov::bitstream::readQaryParams(m_qaryParams, q_idx, z_min, z_max);
 }
 
-void InputIcov::readSIRates(NumcodeIdxVec &v) {
+void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   for (int i = 0; i < (int)v.size(); ++i) {
+    // note : type icov::byte should be selected depending on the rate byte
+    // encoding length
     icov::byte val = 0;
     auto &str = getStream(eIcovStream::ENCODE_PARAMS);
     icov::helpers::io::read_value(str, &val);
     v[i] = static_cast<NumcodeIdx>(val);
   }
 }
-
-void InputIcov::readSIRate(const NumcodeIdx &r) {}
-} // namespace extractor
-} // namespace icov
 
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}
@@ -205,7 +219,8 @@ void icov::extractor::InputIcov::setFrame(int frame) {
 
   getStream(eIcovStream::BLOCKS_SIZE)
       .seekg(m_frameID * m_blockCount, std::ios_base::beg);
-  getStream(eIcovStream::ENCODE_PARAMS).seekg(m_rates_pos[0], std::ios_base::beg);
+  getStream(eIcovStream::ENCODE_PARAMS)
+      .seekg(m_rates_pos[0], std::ios_base::beg);
   getStream(eIcovStream::SYNDROME).seekg(m_synd_pos[0], std::ios_base::beg);
 }
 

@@ -67,7 +67,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
                                bool access_block,
                                const IBlockPrediction &block_prediction) {
 
-  if (b.getId(Block::SELF) > 1)
+  if (b.getId(Block::SELF) > 2)
     return;
 
   ICOV_DEBUG << "start encode block " << b.getId(Block::SELF);
@@ -93,19 +93,19 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
       std::cout << "COMP " << c << " SYNDROME ";
-      m_icov_file->writeSIRate(s.m_stored_synd_rate);
+      m_icov_file->writeSIRate(s.stored_synd_rate);
       std::cout << std::endl;
     }
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
 #ifdef ICOV_ASSERTION_ENABLED
-      icov::helpers::assert::check(s.m_accessBlock.size() > 0,
+      icov::helpers::assert::check(s.accessBlock.size() > 0,
                                    "No access blocks bits !");
 #endif
       if (access_block) {
-        std::cout << "COMP " << c << " ACCESS BLOCK " << s.m_accessBlock.size()
+        std::cout << "COMP " << c << " ACCESS BLOCK " << s.accessBlock.size()
                   << std::endl;
-        m_icov_file->writeSyndrome(s.m_accessBlock);
+        m_icov_file->writeSyndrome(s.accessBlock);
       }
     }
   }
@@ -115,10 +115,10 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   for (int c = 0; c < (int)m_numComp; ++c) {
     // store syndrome per bitplane
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      std::cout << "COMP " << c << " SYNDROME " << s.m_stored_synd.size()
+      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
                 << std::endl;
-      if (s.m_stored_synd.size() > 0) {
-        m_icov_file->writeSyndrome(s.m_stored_synd);
+      if (s.stored_synd.size() > 0) {
+        m_icov_file->writeSyndrome(s.stored_synd);
       }
     }
   }
@@ -126,17 +126,17 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   // store bitplanes rates per SI and per channel
   for (uint16_t p : PredictionID) {
     for (int c = 0; c < (int)m_numComp; ++c) {
-      if (m_channelCoder[c].m_stored_pz.count(p)) {
-        m_icov_file->writeQaryParams(m_channelCoder[c].m_stored_pz[p]);
-        if (m_channelCoder[c].m_stored_pz[p].lx > 0) {
+      if (m_channelCoder[c].si.count(p)) {
+        m_icov_file->writeSIMode(m_channelCoder[c].si[p].dirmode);
+        m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
+        if (m_channelCoder[c].si[p].stored_pz.lx > 0) {
           std::cout << "WRITE RATES SI " << p << " COMP " << c;
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
-            if (m_channelCoder[c].bitplanes[bp].m_stored_numcodes.count(p)) {
+            if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
               m_icov_file->writeSIRate(
-                  m_channelCoder[c].bitplanes[bp].m_sourceFlag
+                  m_channelCoder[c].bitplanes[bp].sourceFlag
                       ? 1
-                      : m_channelCoder[c].bitplanes[bp].m_stored_numcodes.at(
-                            p));
+                      : m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p));
             }
           }
           std::cout << std::endl;
@@ -343,20 +343,22 @@ void icov::encoder::FrameEncoder::encode_tu(
               << m_channelCoder[comp].bitplanes.size() << ", " << si_synd.size()
               << ", " << si_numcodes.size() << std::endl;
 
-    m_channelCoder[comp].m_stored_pz[predID] = bsp.getPz();
+    m_channelCoder[comp].si[predID].stored_pz = bsp.getPz();
+    m_channelCoder[comp].si[predID].dirmode =
+        icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp];
 
     // first SI stored (no bitplanes stored for comp)
     if (m_channelCoder[comp].bitplanes.size() == 0) {
       m_channelCoder[comp].bitplanes =
           std::vector<BitplaneCoder>(si_synd.size());
       for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
-        m_channelCoder[comp].bitplanes[i].m_stored_synd_rate = si_numcodes[i];
-        m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
-        m_channelCoder[comp].bitplanes[i].m_noSourceThreshold = 0.0;
-        m_channelCoder[comp].bitplanes[i].m_sourceFlag = false;
-        m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
+        m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
+        m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
+        m_channelCoder[comp].bitplanes[i].noSourceThreshold = 0.0;
+        m_channelCoder[comp].bitplanes[i].sourceFlag = false;
+        m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
         if (b.isAccessBlock()) {
-          m_channelCoder[comp].bitplanes[i].m_accessBlock.fillFrom(
+          m_channelCoder[comp].bitplanes[i].accessBlock.fillFrom(
               bsp.src_bits()[i]);
         }
       }
@@ -374,30 +376,30 @@ void icov::encoder::FrameEncoder::encode_tu(
       for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
 
         if (si_numcodes[i] > 0 &&
-            si_numcodes[i] < m_channelCoder[comp].bitplanes[i].m_minRate)
-          m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
+            si_numcodes[i] < m_channelCoder[comp].bitplanes[i].minRate)
+          m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
 
         if (si_numcodes[i] == 0) {
-          m_channelCoder[comp].bitplanes[i].m_stored_numcodes[predID] = 0;
-        } else if (!m_channelCoder[comp].bitplanes[i].m_sourceFlag) {
+          m_channelCoder[comp].bitplanes[i].stored_numcodes[predID] = 0;
+        } else if (!m_channelCoder[comp].bitplanes[i].sourceFlag) {
 
-          m_channelCoder[comp].bitplanes[i].m_noSourceThreshold +=
+          m_channelCoder[comp].bitplanes[i].noSourceThreshold +=
               encoder.get_r(si_numcodes[i] - 2);
 
-          m_channelCoder[comp].bitplanes[i].m_stored_numcodes[predID] =
+          m_channelCoder[comp].bitplanes[i].stored_numcodes[predID] =
               si_numcodes[i];
 
-          if (m_channelCoder[comp].bitplanes[i].m_noSourceThreshold >
+          if (m_channelCoder[comp].bitplanes[i].noSourceThreshold >
               m_params.maxRateNoCoding) {
-            m_channelCoder[comp].bitplanes[i].m_sourceFlag = true;
-            m_channelCoder[comp].bitplanes[i].m_stored_synd.fillFrom(
+            m_channelCoder[comp].bitplanes[i].sourceFlag = true;
+            m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
                 bsp.src_bits()[i]);
-            m_channelCoder[comp].bitplanes[i].m_stored_synd_rate = 1;
+            m_channelCoder[comp].bitplanes[i].stored_synd_rate = 1;
             std::cout << "SOURCE !" << std::endl;
           } else if (si_synd[i].size() >
-                     m_channelCoder[comp].bitplanes[i].m_stored_synd.size()) {
-            m_channelCoder[comp].bitplanes[i].m_stored_synd = si_synd[i];
-            m_channelCoder[comp].bitplanes[i].m_minRate = si_numcodes[i];
+                     m_channelCoder[comp].bitplanes[i].stored_synd.size()) {
+            m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
+            m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
           }
         }
       }

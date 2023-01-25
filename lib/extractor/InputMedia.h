@@ -86,14 +86,16 @@ public:
       uint32_t;
 #endif
 
-  InputIcov(const fs::path &path, size_t block_count, size_t bufferSize);
+  InputIcov(const fs::path &path);
   ~InputIcov();
 
   const icov::ContentParameterSet &contentParameterSet() const;
   icov::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
 
-  void offsetAccessBlock(uint offset);
+  void initBuffer(size_t block_count, size_t bufferSize);
+
+  void offsetSyndrome(uint offset);
 
   template <class T>
   void readSyndrome(T &output, uint64_t read_size, uint64_t stored_size) {
@@ -116,7 +118,6 @@ public:
   int readByteInt();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
-  void readSIRate(const NumcodeIdx &v);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;

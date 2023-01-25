@@ -64,6 +64,8 @@ struct ContentParameterSet {
   uint16_t content_width;
   uint16_t content_height;
 
+  uint16_t qp;
+
   icov::byte content_chroma_format;
 
   int content_framecount;
@@ -85,10 +87,11 @@ struct ContentParameterSet {
   bool has_metadata;
 
   ContentParameterSet()
-      : content_type(0), content_width(0), content_height(0),
-        content_chroma_format(0), content_framecount(0), content_framerate(0),
-        content_duration(0), is_sov_fixed_size(true), sov_fixed_size(1),
-        is_block_fixed_size(true), block_fixed_size(5), is_tu_count_fixed(true),
-        fixed_tu_count(1), numcode_byte_count(1), has_metadata(false) {}
+      : content_type(0), content_width(0), content_height(0), qp(42),
+      content_chroma_format(0), content_framecount(0), content_framerate(0),
+      content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
+        sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
+        is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
+        has_metadata(false) {}
 };
 } // namespace icov

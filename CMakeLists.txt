@@ -49,51 +49,50 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
 include(ExternalProject)
 
 if(NOT ICOV_BYPASS_SETUP)
- message(DEBUG "Initial setup")
-#some flags needed to build for windows
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
-endif()
-if(MINGW)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-endif()
-
-if(ICOV_USE_ADDRESS_SANITIZER AND CMAKE_BUILD_TYPE MATCHES Debug)
-# set address sanitizer compiler arguments
-# https://github.com/google/sanitizers/wiki/AddressSanitizer
-#message("=========== ID " ${CMAKE_CXX_COMPILER_ID})
-#if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
-    if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
-            # add compile options
-            message(STATUS "[INFO] Use sanitizer")
-
-            # -fsanitize=leak
-            SET(SANITIZE_OPTIONS -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment)
-
-
-            find_program(LLVM_SYMB_PATH  NAMES llvm-symbolizer
-                llvm-symbolizer-3.8
-                llvm-symbolizer-3.7
-                llvm-symbolizer-3.6)
-
-            if(LLVM_SYMB_PATH)
-                message("[INFO] Use llvm-symbolizer from ${LLVM_SYMB_PATH}")
-                set(ENV{ASAN_SYMBOLIZER_PATH} ${LLVM_SYMB_PATH})
-            endif()
-
-            set(ENV{LSAN_OPTIONS} LSAN_OPTIONS=symbolize=1 )
-
-
-
-            add_compile_options(${SANITIZE_OPTIONS})
-            link_libraries(${SANITIZE_OPTIONS})
-
+    message(DEBUG "Initial setup")
+    #some flags needed to build for windows
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
     endif()
-#    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
-#        add_compile_options( "-fabi-version=6" )
-#    endif()
-#endif()
+    if(MINGW)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+    endif()
 
+    if(ICOV_USE_ADDRESS_SANITIZER AND CMAKE_BUILD_TYPE MATCHES Debug)
+    # set address sanitizer compiler arguments
+    # https://github.com/google/sanitizers/wiki/AddressSanitizer
+    #message("=========== ID " ${CMAKE_CXX_COMPILER_ID})
+    #if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
+        if( CMAKE_SYSTEM_NAME STREQUAL "Linux" )
+                # add compile options
+                message(STATUS "[INFO] Use sanitizer")
+
+                # -fsanitize=leak
+                SET(SANITIZE_OPTIONS -fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow -fno-sanitize=null -fno-sanitize=alignment)
+
+
+                find_program(LLVM_SYMB_PATH  NAMES llvm-symbolizer
+                    llvm-symbolizer-3.8
+                    llvm-symbolizer-3.7
+                    llvm-symbolizer-3.6)
+
+                if(LLVM_SYMB_PATH)
+                    message("[INFO] Use llvm-symbolizer from ${LLVM_SYMB_PATH}")
+                    set(ENV{ASAN_SYMBOLIZER_PATH} ${LLVM_SYMB_PATH})
+                endif()
+
+                set(ENV{LSAN_OPTIONS} LSAN_OPTIONS=symbolize=1 )
+
+
+
+                add_compile_options(${SANITIZE_OPTIONS})
+                link_libraries(${SANITIZE_OPTIONS})
+
+        endif()
+    #    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0 )
+    #        add_compile_options( "-fabi-version=6" )
+    #    endif()
+    endif()
 else()
     message(WARNING "Initial setup is BYPASSED !")
 endif()
@@ -105,7 +104,6 @@ if( CCACHE_FOUND )
     message( STATUS "ccache found. using it." )
     set_property( GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache )
     set_property( GLOBAL PROPERTY RULE_LAUNCH_LINK ccache )
-endif()
 endif()
 
 ########################################

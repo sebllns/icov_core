@@ -41,14 +41,14 @@ icov::ContentParameterSet &OutputIcov::contentParameterSet() {
 void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
     std::cout << "SI IDENTICAL" << std::endl;
-    icov::helpers::io::write_value<icov::byte>(getStream(eIcovStream::ENCODE_PARAMS), 0,
-                                               true);
+    icov::helpers::io::write_value<icov::byte>(
+        getStream(eIcovStream::ENCODE_PARAMS), 0, true);
     m_total_write_byte_block[0] += sizeof(icov::byte);
   } else {
     icov::bitstream::writeQaryParams(m_qaryParams, bsp.q_idx, bsp.zmin,
                                      bsp.zmax);
-    icov::helpers::io::write_array(getStream(eIcovStream::ENCODE_PARAMS), m_qaryParams,
-                                   QARY_PARAMS_SIZE, true);
+    icov::helpers::io::write_array(getStream(eIcovStream::ENCODE_PARAMS),
+                                   m_qaryParams, QARY_PARAMS_SIZE, true);
     m_total_write_byte_block[0] += QARY_PARAMS_SIZE * sizeof(icov::byte);
   }
 }
@@ -163,6 +163,11 @@ void OutputIcov::writeSIRate(const NumcodeIdx &r) {
 
   std::cout << " " << r;
   m_total_write_byte_block[0] += sizeof(rate_t);
+}
+
+void OutputIcov::writeSIMode(const uint &v) {
+  helpers::io::write_value<icov::byte>(*m_fileParts[eIcovStream::ENCODE_PARAMS],
+                                       static_cast<rate_t>(v), true);
 }
 
 void OutputIcov::flush(int id) {

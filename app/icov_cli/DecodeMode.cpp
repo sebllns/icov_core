@@ -48,6 +48,16 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 }
 
 void DecodeMode::run() {
+
+  icov::extractor::InputIcov inputFile(m_parameters.inputFile);
+  inputFile.readContentParameterSet();
+  const auto cps = inputFile.contentParameterSet();
+  ICOV_DEBUG << "Icov version: " << cps.icov_version;
+  ICOV_DEBUG << (int)cps.content_chroma_format;
+  ICOV_DEBUG << (int)cps.content_height;
+  ICOV_DEBUG << (int)cps.content_width;
+  ICOV_DEBUG << (int)cps.block_fixed_size;
+
   const int maxLog2TrDynamicRange = 15;
   const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   const ChromaFormat chFrmt = ChromaFormat::CHROMA_420;
@@ -55,96 +65,115 @@ void DecodeMode::run() {
   const int s = 32;
   const int n = s * s;
   const int channelCount = 3;
-  const int block_count = 1;
+  const int block_count = 2;
 
   std::vector<NumcodeIdxVec> syndSizes(channelCount);
 
-  icov::extractor::InputIcov inputFile(m_parameters.inputFile, block_count, n);
-  inputFile.readContentParameterSet();
-  const auto cps = inputFile.contentParameterSet();
-  ICOV_DEBUG << "Icov version: " << cps.icov_version;
+  inputFile.initBuffer(block_count, n);
+
   icov::helpers::assert::check(
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
-
-  inputFile.selectBlock(0);
-  inputFile.readSyndromesSizes(syndSizes);
-
-  for (int p = 0; p < PREDICTION_COUNT; ++p) {
-    inputFile.selectPrediction(p, channelCount);
-    for (int c = 0; c < channelCount; c++) {
-      int pred_hdr = inputFile.readByteInt();
-      std::cout << p << ", " << c << ": " << pred_hdr << std::endl;
-      if (pred_hdr != 0) {
-        int lx = 0, q_idx = 0, z_min = 0, z_max = 0;
-        inputFile.readQaryParams(pred_hdr, q_idx, z_min, z_max);
-        std::cout << lx << ", " << q_idx << ", " << z_min << ", " << z_max
-                  << std::endl;
-        NumcodeIdxVec nmc(lx, 0);
-        inputFile.readSIRates(nmc);
-        icov::helpers::io::write_vector(std::cout, nmc, ' ');
-        std::cout << std::endl;
-      }
-    }
-  }
-
-  icov::byte read_buf[n];
   icov::video::Quant quant;
   icov::video::Transform2D transform2D;
 
-  UnitArea blockArea(chFrmt, Area(0, 0, s, s));
-  icov::video::TransformUnit dec_tu(blockArea, true, true, true);
+  for (int icu = 0; icu < block_count; ++icu) {
+    inputFile.selectBlock(icu);
+    inputFile.readSyndromesSizes(syndSizes);
 
-  PelStorage dec_block;
-  dec_block.create(blockArea);
-
-  BitVec accessBlockBits(n);
-
-  inputFile.selectBlock(0);
-  //  inputFile.selectPrediction(0, channelCount);
-  inputFile.readSyndromesSizes(syndSizes);
-  for (int c = 0; c < channelCount; c++) {
-    const auto compID = static_cast<ComponentID>(c);
-    const int nc = blockArea.block(compID).area();
-    const ChannelType channelType = toChannelType(compID);
-    const int bit_depth = internalBitDepth[channelType];
-    const icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
-
-    BitSymbolProvider bsp(nc);
-    int lx = syndSizes[c].size();
-    std::cout << "LX " << lx << std::endl;
-    for (int bp = 0; bp < lx; bp++) {
-      inputFile.readSyndrome(accessBlockBits, nc, nc);
-      bsp.injectBitplane(bp, accessBlockBits);
+    for (int p = 0; p < PREDICTION_COUNT; ++p) {
+      inputFile.selectPrediction(p, channelCount);
+      for (int c = 0; c < channelCount; c++) {
+        int dir_mode = inputFile.readByteInt();
+        int pred_hdr = inputFile.readByteInt();
+        std::cout << p << ", " << c << ": " << dir_mode << ", " << pred_hdr
+                  << std::endl;
+        if (pred_hdr != 0) {
+          int lx = 0, q_idx = 0, z_min = 0, z_max = 0;
+          inputFile.readQaryParams(pred_hdr, q_idx, z_min, z_max);
+          std::cout << lx << ", " << q_idx << ", " << z_min << ", " << z_max
+                    << std::endl;
+          NumcodeIdxVec nmc(lx, 0);
+          inputFile.readSIRates(nmc);
+          icov::helpers::io::write_vector(std::cout, nmc, ' ');
+          std::cout << std::endl;
+        }
+      }
     }
 
-    auto buf = dec_tu.getQuantizedTransformCoeffs(compID).buf;
+    UnitArea blockArea(chFrmt, Area(0, 0, s, s));
+    icov::video::TransformUnit dec_tu(blockArea, true, true, true);
 
-    for (int i = 0; i < (int)bsp.src_symboles().size(); ++i) {
-      std::cout << i << std::endl;
-      buf[i] = bsp.src_symboles()[i];
+    PelStorage dec_block;
+    dec_block.create(blockArea);
+
+    BitVec blockSyndrome(n);
+
+    inputFile.selectBlock(icu);
+    //  inputFile.selectPrediction(0, channelCount);
+    inputFile.readSyndromesSizes(syndSizes);
+    for (int c = 0; c < channelCount; c++) {
+      const auto compID = static_cast<ComponentID>(c);
+      const int nc = blockArea.block(compID).area();
+      const ChannelType channelType = toChannelType(compID);
+      const int bit_depth = internalBitDepth[channelType];
+      const icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
+
+      BitSymbolProvider bsp(nc);
+      int lx = syndSizes[c].size();
+      std::cout << "LX " << lx << std::endl;
+      for (int bp = 0; bp < lx; bp++) {
+        inputFile.readSyndrome(blockSyndrome, nc, nc);
+        bsp.injectBitplane(bp, blockSyndrome);
+      }
+
+      //     intraPred.predIntraAng(roiComp_predictionFrameBuff,
+      //     si.intraDir[compID]);
+      /// home/sbelleno/_ICOV/CODE/adt.git/core/lib/icov/video_layer/Encodingstructure.cpp:1423
+      ///
+      ///       intraPred.predIntraAng(roiComp_predictionFrameBuff,
+      ///       si.intraDir[compID]);
+      //      for (UInt j = 0; j < n_tus; j++) {
+      //        TransformUnit &curr_tu_si = si_TUs[j];
+      //        transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
+      //                                 predictionUnitBuf,
+      //                                 curr_tu_si.block(compID),
+      //                                 bitDepths[chType],
+      //                                 maxLog2TrDynamicRange);
+      //        quant.quant(curr_tu_si.getQuantizedTransformCoeffs(compID),
+      //                    curr_tu_si.getTransformCoeffs(compID), uiAbsSum,
+      //                    cQP, SliceType::I_SLICE, bitDepths[chType],
+      //                    maxLog2TrDynamicRange);
+      //      }
+
+      auto buf = dec_tu.getQuantizedTransformCoeffs(compID).buf;
+
+      for (int i = 0; i < (int)bsp.src_symboles().size(); ++i) {
+        std::cout << i << std::endl;
+        buf[i] = bsp.src_symboles()[i];
+      }
+
+      // iQ
+      quant.dequant(dec_tu.getInverseQuantizedTransformCoeffs(compID),
+                    dec_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth,
+                    maxLog2TrDynamicRange);
+
+      // iDCT
+      transform2D.invTransformNxN(
+          dec_block, dec_tu.block(compID),
+          dec_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth,
+          maxLog2TrDynamicRange);
+
+      // bsp.src_symboles()
+      // dec_tu.getInverseQuantizedTransformCoeffs().buf;
     }
 
-    // iQ
-    quant.dequant(dec_tu.getInverseQuantizedTransformCoeffs(compID),
-                  dec_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth,
-                  maxLog2TrDynamicRange);
+    cv::Mat block_output;
+    VTM_OPENCV_Utility::toBGRMat(dec_block.getBuf(blockArea), block_output);
 
-    // iDCT
-    transform2D.invTransformNxN(
-        dec_block, dec_tu.block(compID),
-        dec_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth,
-        maxLog2TrDynamicRange);
-
-    // bsp.src_symboles()
-    // dec_tu.getInverseQuantizedTransformCoeffs().buf;
+    cv::imshow("DECODED", block_output);
+    cv::waitKeyEx(0);
   }
-
-  cv::Mat block_output;
-  VTM_OPENCV_Utility::toBGRMat(dec_block.getBuf(blockArea), block_output);
-
-  cv::imshow("DECODED", block_output);
-  cv::waitKeyEx(0);
 
   EquiRectPicture icov_pic(cps.content_width, cps.content_height);
   IcovAccessBlockManager icov_accessblockMgr;

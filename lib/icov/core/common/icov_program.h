@@ -93,7 +93,7 @@ public:
 
   int bp_ite() const { return this->m_options_map[OPT_BP_ITE].as<int>(); }
 
-  void launchProgram() {
+  void launchProgram() override {
     if (m_options_map.count(OPT_HELP)) {
       std::cout << m_options_desc << std::endl;
       return;
