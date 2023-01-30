@@ -32,18 +32,6 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
   //      .read(reinterpret_cast<char *>(&val), sizeof(val));
   //  std::cout << val << std::endl;
   //  std::cout << static_cast<int>(val) << std::endl;
-
-  rates_count = 0;
-  total_lost = 0;
-  total_shift = 0;
-  total_read_bits = 0;
-  m_total_read_byte_block[0] = 0;
-  m_total_read_byte_block[1] = 0;
-  m_total_read_byte_frame[0] = 0;
-  m_total_read_byte_frame[1] = 0;
-
-  m_rates_pos[0] = 0;
-  m_synd_pos[0] = 0;
 }
 
 icov::extractor::InputIcov::~InputIcov() {
@@ -69,8 +57,8 @@ void icov::extractor::InputIcov::readContentParameterSet() {
 void icov::extractor::InputIcov::initBuffer(size_t block_count,
                                             size_t bufferSize) {
   m_blockCount = block_count;
-  m_rates_pos.resize(block_count + 1);
-  m_synd_pos.resize(block_count + 1);
+  m_rates_pos.resize(block_count + 1, 0);
+  m_synd_pos.resize(block_count + 1, 0);
   m_readBuf = new icov::byte[bufferSize];
 }
 
@@ -115,11 +103,13 @@ void icov::extractor::InputIcov::selectBlock(uint64_t block) {
 void icov::extractor::InputIcov::readSyndromesSizes(
     std::vector<NumcodeIdxVec> &output) {
   for (int c = 0; c < (int)output.size(); ++c) {
-    output[c] = NumcodeIdxVec(readByteInt());
+    // read bitplane count
+    output[c] = NumcodeIdxVec(readByteIntParam());
     std::cout << "COMP " << c << " N " << output[c].size() << ":";
     for (int bp = 0; bp < (int)output[c].size(); ++bp) {
-      output[c][bp] = readByteInt();
-      std::cout << " " << output[c][bp];
+      // for each bitplane read stored syndrome size
+      output[c][bp] = readByteIntParam();
+      // std::cout << " " << output[c][bp];
     }
     std::cout << std::endl;
   }
@@ -145,7 +135,7 @@ void icov::extractor::InputIcov::selectPrediction(ushort pred_idx,
   }
 }
 
-int icov::extractor::InputIcov::readByteInt() {
+int icov::extractor::InputIcov::readByteIntParam() {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
   icov::helpers::io::read_value(str, &val);

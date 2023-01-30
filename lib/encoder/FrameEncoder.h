@@ -56,7 +56,6 @@
 #include "PredictionsEncoder.h"
 #include "common_types.h"
 #include "encoder/interface/IEncoder.h"
-#include "typedef.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <opencv2/plot.hpp>

@@ -59,8 +59,21 @@
 
 #define QARY_PARAMS_SIZE 3
 
+#ifndef ICOV_RATE_SIZE
+#define ICOV_RATE_SIZE 1
+#endif
+
 namespace icov {
 namespace bitstream {
+
+using rate_t =
+#if ICOV_RATE_SIZE == 1
+    icov::byte;
+#elif ICOV_RATE_SIZE == 2
+    uint16_t;
+#else
+    uint32_t;
+#endif
 
 // ERRORS : NEED 1 BYTE FOR ZMIN AND 1 BYTE FOR ZMAX
 // WHY ZMIN AND ZMAX ARE 0 ??

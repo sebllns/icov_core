@@ -94,7 +94,7 @@ if(NOT ICOV_BYPASS_SETUP)
     #    endif()
     endif()
 else()
-    message(WARNING "Initial setup is BYPASSED !")
+    message(WARNING "[WARNING] Initial setup is BYPASSED !")
 endif()
 
 # use ccache if available to compile faster
@@ -129,7 +129,7 @@ if(CMAKE_C_COMPILER_LOADED)
         message(STATUS "C Compiler is part of GCC")
     endif()
 else()
-    message(FATAL_ERROR "No C compiler defined")
+    message(FATAL_ERROR "[ERROR] No C compiler defined")
 endif()
 
 message("\n")

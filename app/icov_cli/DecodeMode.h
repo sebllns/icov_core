@@ -71,4 +71,5 @@ public:
 
 private:
   params m_parameters;
+  std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
 };

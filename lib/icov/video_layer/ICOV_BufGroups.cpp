@@ -39,10 +39,11 @@ void icov::video::BufGroups::create(
 void icov::video::BufGroups::create(int pictureType, const UnitArea &unit) {
   //  CHECK((pictureType < PIC_RECONSTRUCTION || pictureType > NUM_PIC_TYPES),
   //        "picture type not specified");
+  if (!_bufs.count(pictureType)) {
+    _bufs[pictureType].create(unit);
+    _links[pictureType] = pictureType;
 
-  _bufs[pictureType].create(unit);
-  _links[pictureType] = pictureType;
-
-  if (pictureType == PIC_RECONSTRUCTION)
-    _recoFlagBuf.create(unit);
+    if (pictureType == PIC_RECONSTRUCTION)
+      _recoFlagBuf.create(unit);
+  }
 }

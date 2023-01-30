@@ -63,24 +63,12 @@
 #include <ostream>
 #include <vector>
 
-#ifndef ICOV_RATE_SIZE
-#define ICOV_RATE_SIZE 1
-#endif
-
 namespace icov {
 namespace encoder {
 
 class OutputIcov : public icov::IOutputIcov {
 public:
-  using rate_t =
-#if ICOV_RATE_SIZE == 1
-      icov::byte;
-#elif ICOV_RATE_SIZE == 2
-      uint16_t;
-#else
-      uint32_t;
-#endif
-
+  using rate_t = icov::bitstream::rate_t;
   explicit OutputIcov(const fs::path &path);
   ~OutputIcov() = default;
 

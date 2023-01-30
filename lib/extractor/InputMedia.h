@@ -67,24 +67,13 @@
 #include <sys/types.h>
 #include <vector>
 
-#ifndef ICOV_RATE_SIZE
-#define ICOV_RATE_SIZE 1
-#endif
-
 namespace icov {
 namespace extractor {
 
 using pstream = std::unique_ptr<std::istream>;
 class InputIcov : public icov::IInputIcov<pstream> {
 public:
-  using rate_t =
-#if ICOV_RATE_SIZE == 1
-      icov::byte;
-#elif ICOV_RATE_SIZE == 2
-      uint16_t;
-#else
-      uint32_t;
-#endif
+  using rate_t = icov::bitstream::rate_t;
 
   InputIcov(const fs::path &path);
   ~InputIcov();
@@ -115,7 +104,7 @@ public:
   void selectBlock(uint64_t block);
   void readSyndromesSizes(std::vector<NumcodeIdxVec> &output);
   void selectPrediction(ushort pred_idx, int channelCount);
-  int readByteInt();
+  int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
 
@@ -132,18 +121,8 @@ private:
   int last_bit_shift;
   icov::byte last_byte;
 
-  uint32_t m_total_read_byte_block[2];
-  uint32_t m_total_read_byte_frame[2];
-
-  int total_read_bits;
-  int total_lost;
-  int total_shift;
-
-  int rates_count;
   size_t m_blockCount;
 
-  // TODO variable
-  // const int m_channelCount = 3;
   std::vector<std::streampos> m_rates_pos;
   std::vector<std::streampos> m_synd_pos;
 

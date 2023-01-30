@@ -48,6 +48,7 @@
 #pragma once
 #include "BlockPrediction.h"
 #include "encoded_stream/ContentParameterSet.h"
+#include "helpers.h"
 #include "icov_stream.h"
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
@@ -81,6 +82,39 @@ static const uint16_t PredictionID[PREDICTION_COUNT] = {
     BlockPrediction::RIGHT,        BlockPrediction::LEFT,
     BlockPrediction::TOP,          BlockPrediction::BOTTOM,
 };
+
+inline int getPredictionOrder(BlockPrediction::predType pred) {
+  switch (pred) {
+
+  case BlockPrediction::TOP_RIGHT:
+    return 0;
+
+  case BlockPrediction::TOP_LEFT:
+    return 1;
+
+  case BlockPrediction::BOTTOM_RIGHT:
+    return 2;
+
+  case BlockPrediction::BOTTOM_LEFT:
+    return 3;
+
+  case BlockPrediction::RIGHT:
+    return 4;
+
+  case BlockPrediction::LEFT:
+    return 5;
+
+  case BlockPrediction::TOP:
+    return 6;
+
+  case BlockPrediction::BOTTOM:
+    return 7;
+
+  default:
+    ICOV_THROW_INVALID_ARGUMENT("Unrecognized prediction value");
+  }
+  return -1;
+}
 
 template <typename T>
 int read_bits(T &output, const icov::byte *input, int offset = 0) {
@@ -119,7 +153,7 @@ namespace serialization {
 // is a type of input archive the & operator is defined similar to >>.
 
 template <class Archive>
-void serialize(Archive &ar, Syndrome &io, const unsigned int version) {
+void serialize(Archive &ar, Syndrome &io, const unsigned int /*version*/) {
   size_t byte_count = bitToByteCount(io.size());
   icov::byte *data = new icov::byte[byte_count];
   ar &make_array<icov::byte>(data, byte_count);
@@ -127,7 +161,7 @@ void serialize(Archive &ar, Syndrome &io, const unsigned int version) {
 
 template <class Archive>
 void serialize(Archive &ar, ContentParameterSet &io,
-               const unsigned int version) {
+               const unsigned int /*version*/) {
 
   ar &io.icov_version;
   ar &io.content_type;
@@ -164,7 +198,7 @@ void save(Ar &ar, dynamic_bitset<Block, Alloc> const &bs, unsigned) {
 }
 
 template <typename Ar, typename Block, typename Alloc>
-void load(Ar &ar, dynamic_bitset<Block, Alloc> &bs, unsigned) {
+void load(Ar &ar, dynamic_bitset<Block, Alloc> &bs, unsigned /*version*/) {
   size_t num_bits;
   std::vector<Block> blocks;
   ar &num_bits &blocks;

@@ -168,10 +168,10 @@ void FrameEncoder::processInput(std::ostream &output,
   // end constants
 
   // resize
-  cv::Size size_before = img_src.size();
+  const cv::Size size_before = img_src.size();
   resize_covering_blocks(img_src,
                          cv::Size(icuSize_luma.width, icuSize_luma.height));
-  cv::Size size_after = img_src.size();
+  const cv::Size size_after = img_src.size();
 
   if (size_after != size_before) {
     ICOV_LOG(warning) << "Image resized from " << size_before << " to "
@@ -187,11 +187,12 @@ void FrameEncoder::processInput(std::ostream &output,
   const int sourceHeight = img_src.rows;
   // end resize
 
-  UnitArea extendedFrameArea(
+  const UnitArea extendedFrameArea(
       m_params.chFormat,
       Area(0, 0, sourceWidth + 2 * m_params.margin_x_360luma, sourceHeight));
-  UnitArea mainFrameArea(m_params.chFormat, Area(m_params.margin_x_360luma, 0,
-                                                 sourceWidth, sourceHeight));
+  const UnitArea mainFrameArea(
+      m_params.chFormat,
+      Area(m_params.margin_x_360luma, 0, sourceWidth, sourceHeight));
 
   //  PelStorage picTemp;
   //  picTemp.create(extendedFrameArea);
@@ -220,6 +221,7 @@ void FrameEncoder::processInput(std::ostream &output,
   ICOV_ASSERT_MSG((int)(mainFrameOrig.get(COMPONENT_Y).height) == img_src.rows,
                   "Height does not match");
 
+  /// TODO : MOVE INSIDE SPECIFIC FUNCTION
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
