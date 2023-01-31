@@ -132,9 +132,9 @@ void DecodeMode::run() {
 
     BlockPrediction::predType block_prediction =
         is_access_block ? BlockPrediction::predType::NONE
-                        : BlockPrediction::predType::RIGHT;
+                        : BlockPrediction::predType::LEFT;
 
-    auto b = icov_pic.getById(0);
+    auto b = icov_pic.getById(icu + 1);
 
     int x_block = b->parent()->col(b->u());
     int y_block = b->parent()->row(b->v());
@@ -147,32 +147,34 @@ void DecodeMode::run() {
     auto icu_enc = es.getICU(icuIndex);
 
     auto currICUintraMap = icu_enc.get_intraSIsMap();
+    auto &si = currICUintraMap.at(block_prediction);
 
-    inputFile.selectBlock(icu);
-    inputFile.readSyndromesSizes(syndSizes);
+    //    inputFile.selectBlock(icu);
+    //    inputFile.readSyndromesSizes(syndSizes);
+    //    for (int p = 0; p < PREDICTION_COUNT; ++p) {
+    //      inputFile.selectPrediction(p, channelCount);
+    //      for (int c = 0; c < channelCount; c++) {
+    //        // const ComponentID compID = ComponentID(c);
+    //        // const auto compArea = icu_enc.get_sourceX().block(compID);
 
-    for (int p = 0; p < PREDICTION_COUNT; ++p) {
-      inputFile.selectPrediction(p, channelCount);
-      for (int c = 0; c < channelCount; c++) {
-        // const ComponentID compID = ComponentID(c);
-        // const auto compArea = icu_enc.get_sourceX().block(compID);
-
-        int dir_mode = inputFile.readByteIntParam();
-        int pred_hdr = inputFile.readByteIntParam();
-        std::cout << p << ", " << c << ": " << dir_mode << ", " << pred_hdr
-                  << std::endl;
-        if (pred_hdr != 0) {
-          int lx = 0, q_idx = 0, z_min = 0, z_max = 0;
-          inputFile.readQaryParams(pred_hdr, q_idx, z_min, z_max);
-          std::cout << lx << ", " << q_idx << ", " << z_min << ", " << z_max
-                    << std::endl;
-          NumcodeIdxVec nmc(lx, 0);
-          inputFile.readSIRates(nmc);
-          icov::helpers::io::write_vector(std::cout, nmc, ' ');
-          std::cout << std::endl;
-        }
-      }
-    }
+    //        int dir_mode = inputFile.readByteIntParam();
+    //        int pred_hdr = inputFile.readByteIntParam();
+    //        std::cout << p << ", " << c << ": " << dir_mode << ", " <<
+    //        pred_hdr
+    //                  << std::endl;
+    //        if (pred_hdr != 0) {
+    //          int lx = 0, q_idx = 0, z_min = 0, z_max = 0;
+    //          inputFile.readQaryParams(pred_hdr, q_idx, z_min, z_max);
+    //          std::cout << lx << ", " << q_idx << ", " << z_min << ", " <<
+    //          z_max
+    //                    << std::endl;
+    //          NumcodeIdxVec nmc(lx, 0);
+    //          inputFile.readSIRates(nmc);
+    //          icov::helpers::io::write_vector(std::cout, nmc, ' ');
+    //          std::cout << std::endl;
+    //        }
+    //      }
+    //    }
 
     inputFile.selectBlock(icu);
     inputFile.readSyndromesSizes(syndSizes);
@@ -187,39 +189,54 @@ void DecodeMode::run() {
       const icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
 
       BitSymbolProvider bsp(comp_area_value);
-      int lx = syndSizes[c].size();
+      const int lx = syndSizes[c].size();
       std::cout << "LX " << lx << std::endl;
 
       // access block ?
       if (block_prediction == BlockPrediction::predType::NONE) {
+        ICOV_TRACE << "Decode access block for comp " << c;
         for (int bp = 0; bp < lx; bp++) {
           inputFile.readSyndrome(blockBitplane, comp_area_value,
                                  comp_area_value);
           bsp.injectBitplane(bp, blockBitplane);
         }
       } else {
-
-        auto &si = currICUintraMap.at(block_prediction);
+        ICOV_TRACE << "Decode block with prediction "
+                   << BlockPrediction::toString(block_prediction)
+                   << " for comp " << c;
 
         ICOV_ASSERT_MSG(si.TUs.size() == 1,
                         "This version of ICOV only supports one TU per ICU");
 
-        int block_prediction_idx = getPredictionOrder(block_prediction);
-        auto stored_synd_size = syndSizes[c][lx];
+        const int block_prediction_idx = getPredictionOrder(block_prediction);
         inputFile.selectPrediction(block_prediction_idx, channelCount);
 
-        int dir_mode = inputFile.readByteIntParam();
-        int pred_hdr = inputFile.readByteIntParam();
+        const int dir_mode = inputFile.readByteIntParam();
+        const int pred_hdr = inputFile.readByteIntParam();
 
         PelBuf roiComp_predictionFrameBuff =
             VTM_Utility::getAreaBuf(predictionUnitBuf, comp_area);
 
         // std::cout << p << ", " << c << ": " << dir_mode << ", " << pred_hdr
         //         << std::endl;
+
         if (pred_hdr != 0) {
+        } else {
+
+          // TODO
+          bsp.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
+                     bsp.x_binary_length());
+
+          for (int bp = 0; bp < lx; bp++) {
+            NumcodeIdx stored_synd_size = syndSizes[c][bp];
+            NumcodeIdx pred_synd_size =
+                static_cast<NumcodeIdx>(inputFile.readByteIntParam());
+
+            // TODO CONVERT SIZE
+            inputFile.readSyndrome(blockSyndrome, pred_synd_size,
+                                   stored_synd_size);
+          }
         }
-        inputFile.readSyndrome(blockSyndrome, comp_area_value,
-                               stored_synd_size);
 
         intraPred.initIntraPatternChType(reconstructionUnitBuffer,
                                          block_prediction, comp_area, bit_depth,
@@ -230,7 +247,6 @@ void DecodeMode::run() {
         ///
         si.intraDir[compID] = dir_mode;
         intraPred.predIntraAng(roiComp_predictionFrameBuff, dir_mode);
-        //      for (UInt j = 0; j < n_tus; j++) {
         auto &curr_tu_si = si.TUs[0];
         transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
                                  predictionUnitBuf, curr_tu_si.block(compID),
@@ -238,13 +254,12 @@ void DecodeMode::run() {
         quant.quant(curr_tu_si.getQuantizedTransformCoeffs(compID),
                     curr_tu_si.getTransformCoeffs(compID), uiAbsSum, cQP,
                     SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
-        //      }
       }
 
       auto buf = dec_tu.getQuantizedTransformCoeffs(compID).buf;
 
       for (int i = 0; i < (int)bsp.src_symboles().size(); ++i) {
-        std::cout << i << std::endl;
+        // std::cout << i << std::endl;
         buf[i] = bsp.src_symboles()[i];
       }
 
@@ -258,9 +273,6 @@ void DecodeMode::run() {
           dec_block, dec_tu.block(compID),
           dec_tu.getInverseQuantizedTransformCoeffs(compID), bit_depth,
           maxLog2TrDynamicRange);
-
-      // bsp.src_symboles()
-      // dec_tu.getInverseQuantizedTransformCoeffs().buf;
     }
 
     cv::Mat block_output;

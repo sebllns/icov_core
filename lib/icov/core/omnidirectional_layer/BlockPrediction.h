@@ -51,6 +51,7 @@
 #include "helpers.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include <boost/algorithm/string/trim.hpp>
 
 // namespace icov {
 
@@ -162,9 +163,10 @@ inline std::string BlockPrediction::toString(BlockPrediction::predType pred) {
     if (pred & BlockPrediction::RIGHT) {
       predStr << "RIGHT ";
     }
-
-    return predStr.str();
-  } break;
+    auto result = predStr.str();
+    boost::trim_right(result);
+    return result;
+  }
   }
 }
 

@@ -14,6 +14,7 @@
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
 #include <boost/system/error_code.hpp>
+#include <string>
 
 namespace po = boost::program_options;
 
@@ -45,28 +46,31 @@ public:
 ////////////////////////////////////////////////////////////////
 class IcovProgramBase : public IIcovProgram {
 public:
-  IcovProgramBase() {
+  IcovProgramBase(const std::string &modes) {
     this->m_options_desc.add_options()
 
         ("help,h", "produce help message")(
             (std::string(OPT_MODE) + ",m").c_str(),
-            po::value<std::string>()->required(), "set the program mode")(
-            (std::string(OPT_CODER_TYPE) + ",c").c_str(),
-            po::value<std::string>()->default_value("imt164"),
-            "set the coder type")(
+            po::value<std::string>()->required(),
+            (std::string("Set the program mode (see documentation for more "
+                         "details on each mode)\nAccepted values: ") +
+             modes)
+                .c_str())((std::string(OPT_CODER_TYPE) + ",c").c_str(),
+                          po::value<std::string>()->default_value("imt164"),
+                          "Set the coder type")(
             (std::string(OPT_DATA_PATH) + ",d").c_str(),
             po::value<std::string>()->default_value("data/"),
-            "set the data path")((std::string(OPT_CODE_LENGTH) + ",n").c_str(),
+            "Set the data path")((std::string(OPT_CODE_LENGTH) + ",n").c_str(),
                                  po::value<int>()->default_value(1024),
                                  "set the code length")(
             (std::string(OPT_BP_ITE) + ",it").c_str(),
             po::value<int>()->default_value(100),
-            "set iteration count for BP LDPC coder")(
+            "Set iteration count for belief propagation of LDPC coder")(
             OPT_NUMCODES,
             po::value<std::string>()->default_value("numcodes.txt"),
-            "set the numcodes steps for iterative coder")(
+            "Set the numcodes steps for iterative coder")(
             (std::string(OPT_LOG_LVL) + ",lg").c_str(),
-            po::value<int>()->default_value(2), "set log level filter");
+            po::value<int>()->default_value(2), "Set log level filter");
   }
 
   virtual ~IcovProgramBase() = default;
@@ -95,7 +99,7 @@ public:
 
   void launchProgram() override {
     if (m_options_map.count(OPT_HELP)) {
-      std::cout << m_options_desc << std::endl;
+      ICOV_INFO << m_options_desc;
       return;
     } else {
       po::notify(m_options_map);

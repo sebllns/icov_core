@@ -10,8 +10,11 @@
 #include "OrderingDemoMode.h"
 #include "SymboleMode.h"
 #include "helpers.h"
+#include "icov_program.h"
 
-ProgramController::ProgramController() {
+ProgramController::ProgramController()
+    : IcovProgramBase("binary, symbole, export, check, encode-demo, "
+                      "ordering-demo, encode, decode") {
   BinaryMode::AddProgramOptions(m_options_desc);
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
@@ -62,7 +65,7 @@ void ProgramController::launchMode(const std::string &mode_id) {
     ICOV_DEBUG << "ordering demo mode started";
     OrderingDemoMode mode(m_options_map);
     mode.run();
-    ICOV_DEBUG << "end decode\n";
+    ICOV_DEBUG << "end ordering-demo\n";
   } else {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }

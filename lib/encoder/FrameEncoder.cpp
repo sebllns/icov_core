@@ -377,7 +377,7 @@ void icov::encoder::FrameEncoder::encode_tu(
 
       for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
 
-        if (si_numcodes[i] > 0 &&
+        if (si_numcodes[i] > 1 &&
             si_numcodes[i] < m_channelCoder[comp].bitplanes[i].minRate)
           m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
 
@@ -401,7 +401,7 @@ void icov::encoder::FrameEncoder::encode_tu(
           } else if (si_synd[i].size() >
                      m_channelCoder[comp].bitplanes[i].stored_synd.size()) {
             m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
-            m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
+            m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
           }
         }
       }
