@@ -1,0 +1,141 @@
+#include "CompDecoder.h"
+
+#include "Common.h"
+#include "Unit.h"
+#include "helpers.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/ICOV_Quant.h"
+#include "video_layer/ICOV_Transform2d.h"
+#include "video_layer/vtm_opencv_utility.h"
+#include "video_layer/vtm_utility.h"
+
+#include <algorithm>
+#include <boost/algorithm/algorithm.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+
+namespace fs = boost::filesystem;
+using namespace icov::decoder;
+using SI_SIDE = BlockPrediction::predType;
+
+CompDecoder::CompDecoder(
+    const params &p, const std::shared_ptr<icov::video::BufGroups> &vvc_bufs)
+    : m_params(p), m_vvc_bufs(vvc_bufs),
+      //      m_blockArea(
+      //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
+      //          p.icu_size))
+      //              .block(p.CompID)),
+      m_ldpc_coder(icov::CoderFactory::create_coder(p.program_args)),
+      m_blockBitplane(m_ldpc_coder->get_n(), 0),
+      m_blockSI(m_ldpc_coder->get_n()),
+      // m_syndrome(m_ldpc_coder->get_n()),
+      m_bsp(m_ldpc_coder->get_n()),
+      m_block_prediction(BlockPrediction::predType::UNKNOWN),
+      mp_icu_enc(nullptr) {}
+
+CompDecoder::~CompDecoder() {}
+
+void CompDecoder::start_decode_icu(BlockVector::const_iterator &b,
+                                   video::IcuEncoder *icu_enc,
+                                   BlockPrediction::predType block_prediction) {
+  ICOV_ASSERT_MSG(block_prediction != BlockPrediction::predType::UNKNOWN,
+                  "Prediction unknown;")
+  icov::helpers::assert::not_null(icu_enc, "ICU is NULL");
+
+  m_block = b;
+  mp_icu_enc = icu_enc;
+  m_block_prediction = block_prediction;
+
+  //  const auto comp_area_value = m_blockArea.area();
+
+  //  if (block_prediction != BlockPrediction::predType::NONE) {
+  //  }
+}
+
+void CompDecoder::set_si_dir_mode(int dir_mode) {
+
+  auto m_blockArea = mp_icu_enc->get_sourceX().block(m_params.CompID);
+
+  auto roiComp_predictionFrameBuff =
+      VTM_Utility::getAreaBuf(m_vvc_bufs->get(PIC_PREDICTION), m_blockArea);
+
+  intraPred.initIntraPatternChType(m_vvc_bufs->getBuf(PIC_RECONSTRUCTION),
+                                   m_block_prediction, m_blockArea,
+                                   m_params.bit_depth, false);
+
+  auto currICUintraMap = mp_icu_enc->get_intraSIsMap();
+  auto &si = currICUintraMap.at(m_block_prediction);
+
+  si.intraDir[m_params.CompID] = dir_mode;
+  intraPred.predIntraAng(roiComp_predictionFrameBuff, dir_mode);
+
+  ICOV_ASSERT_MSG(si.TUs.size() == 1,
+                  "This version of ICOV only supports one TU per ICU");
+
+  auto &curr_tu_si = si.TUs[0];
+
+  const auto &predictionUnitBuf = m_vvc_bufs->get(PIC_PREDICTION);
+
+  transform2D.transformNxN(curr_tu_si.getTransformCoeffs(m_params.CompID),
+                           predictionUnitBuf, curr_tu_si.block(m_params.CompID),
+                           m_params.bit_depth, m_params.maxLog2TrDynamicRange);
+  quant.quant(curr_tu_si.getQuantizedTransformCoeffs(m_params.CompID),
+              curr_tu_si.getTransformCoeffs(m_params.CompID), uiAbsSum,
+              m_params.QpParam, SliceType::I_SLICE, m_params.bit_depth,
+              m_params.maxLog2TrDynamicRange);
+}
+
+void CompDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
+
+  auto currICUintraMap = mp_icu_enc->get_intraSIsMap();
+  const auto &si = currICUintraMap.at(m_block_prediction);
+
+  const auto &si_tu = si.TUs[0];
+  auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(m_params.CompID);
+
+  m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
+  m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
+}
+
+void CompDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
+                                  const Syndrome &synd) {
+  if (m_block_prediction == BlockPrediction::predType::NONE) {
+    ICOV_ASSERT_MSG(numcode == 1,
+                    "Numcode value must be set to 1 for access block");
+    //    m_blockBitplane.assign(m_syndrome.data(),
+    //                           m_syndrome.data() + m_syndrome.size());
+  }
+  m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
+  m_bsp.injectBitplane(bp, m_blockBitplane);
+}
+
+void CompDecoder::end_encode_icu() {
+
+  // TODO : fix values
+
+  UnitArea blockArea;
+
+  icov::video::TransformUnit dec_tu(blockArea, true, true, true);
+
+  PelStorage dec_block;
+  //  dec_block.create(blockArea);
+
+  std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
+            dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
+
+  // iQ
+  quant.dequant(dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
+                dec_tu.getQuantizedTransformCoeffs(m_params.CompID),
+                m_params.QpParam, m_params.bit_depth,
+                m_params.maxLog2TrDynamicRange);
+
+  // iDCT
+  transform2D.invTransformNxN(
+      dec_block, dec_tu.block(m_params.CompID),
+      dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
+      m_params.bit_depth, m_params.maxLog2TrDynamicRange);
+
+  mp_icu_enc = nullptr;
+  m_block_prediction = BlockPrediction::predType::UNKNOWN;
+}

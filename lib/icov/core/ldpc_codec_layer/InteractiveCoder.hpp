@@ -172,11 +172,15 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
     icov::helpers::assert::equal(stored_synd.size(), get_n(),
                                  "Size does not match");
 #endif
-    for (size_t i = 0; i < get_n(); ++i) {
-      output[i] = stored_synd[i];
-    }
+
+    output.assign(stored_synd.data(), stored_synd.data() + get_n());
+
+    //    for (size_t i = 0; i < get_n(); ++i) {
+    //      output[i] = stored_synd[i];
+    //    }
   } else if (numcode == 0) {
     ICOV_TRACE << "DECODE: NO CODING";
+
     for (size_t i = 0; i < get_n(); ++i) {
       output[i] = m_pllrProvider->llr()[i] < 0 ? 1 : 0;
     }

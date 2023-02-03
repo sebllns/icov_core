@@ -2,6 +2,7 @@
 
 #include "Coder_IMT18.h"
 #include "Coder_IMT64.h"
+#include "icov_program_options.h"
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -40,7 +41,7 @@ CoderFactory::create_coder(const boost::program_options::variables_map &args) {
                                   "SyndromeManager was not instantiated");
 
   ICOV_INFO << "Initialization of coder with type " << coder_type
-                 << " and length " << syndromeMgr->get_n();
+            << " and length " << syndromeMgr->get_n();
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(
       ldpca_dec, mp, syndromeMgr, llrProvider);
@@ -53,10 +54,7 @@ void CoderFactory::create_coder_yuv(
   // create parameters for Chroma coder: size of chroma block is 1/4 size of
   // luminance block
   boost::program_options::variables_map args_uv(args);
-  boost::any uv_length(args[OPT_CODE_LENGTH].as<int>() / 4);
-  auto code_length_option = args_uv[OPT_CODE_LENGTH];
-  code_length_option.value() = uv_length;
-  args_uv.insert_or_assign(OPT_CODE_LENGTH, code_length_option);
+  setCodeLength(args_uv, args[OPT_CODE_LENGTH].as<int>() / 4);
 
   y_coder = CoderFactory::create_coder(args);
   ICOV_INFO << "Luminance coder instanciated";
