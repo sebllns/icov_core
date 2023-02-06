@@ -3,10 +3,12 @@
 #include "BlockPrediction.h"
 #include "Common.h"
 #include "common_types.h"
+#include "decoder/CompDecoder.h"
 #include "encoded_stream.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
 #include "helpers.h"
+#include "icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
@@ -32,6 +34,7 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/serialization/vector.hpp>
+#include <memory>
 #include <vector>
 
 const char *DecodeMode::params::inputFile_id = "decode-input-file";
@@ -81,17 +84,37 @@ void DecodeMode::run() {
   const UnitArea mainFrameArea(
       chFrmt, Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
-  icov::video::BufGroups m_vvc_bufs;
-  m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
-  m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
-  m_vvc_bufs.create(PIC_PREDICTION, extendedFrameArea);
+  auto m_vvc_bufs = std::make_shared<icov::video::BufGroups>();
+  m_vvc_bufs->create(PIC_ORIGINAL, extendedFrameArea);
+  m_vvc_bufs->create(PIC_RECONSTRUCTION, extendedFrameArea);
+  m_vvc_bufs->create(PIC_PREDICTION, extendedFrameArea);
 
-  const PelUnitBuf predictionUnitBuf = m_vvc_bufs.get(PIC_PREDICTION);
-  const auto reconstructionUnitBuffer = m_vvc_bufs.getBuf(PIC_RECONSTRUCTION);
+  const PelUnitBuf predictionUnitBuf = m_vvc_bufs->get(PIC_PREDICTION);
+  const auto reconstructionUnitBuffer = m_vvc_bufs->getBuf(PIC_RECONSTRUCTION);
+
+  std::vector<std::unique_ptr<decoder::CompDecoder>> channelCoder;
+
+  UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
+  for (int c = 0; c < channelCount; c++) {
+
+    const auto compID = static_cast<ComponentID>(c);
+
+    const ChannelType channelType = toChannelType(compID);
+    const int bit_depth = internalBitDepth[channelType];
+    const icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
+
+    // TODO ACTUAL ARGS
+    po::variables_map ldpc_args;
+    setCodeLength(ldpc_args, blockArea.block(compID).area());
+
+    channelCoder.push_back(std::make_unique<decoder::CompDecoder>(
+        decoder::CompDecoder::params{cQP, icu_size, compID, bit_depth,
+                                     ldpc_args, maxLog2TrDynamicRange},
+        m_vvc_bufs));
+  }
 
   std::vector<NumcodeIdxVec> syndSizes(channelCount);
 
-  UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
   icov::video::TransformUnit dec_tu(blockArea, true, true, true);
 
   PelStorage dec_block;

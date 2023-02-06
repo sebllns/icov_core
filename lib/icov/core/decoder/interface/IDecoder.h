@@ -12,8 +12,8 @@
  *  @brief Defines an abstract ICOV IDecoder.
  *  @ingroup IDecoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 1.0.1
- *  @date 2022
+ *  @version 1.0.3
+ *  @date 2023
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
