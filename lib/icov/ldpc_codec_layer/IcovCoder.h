@@ -147,6 +147,7 @@ struct CoderParameters {
     return numcodes_v;
   }
 
+  virtual std::unique_ptr<CoderParameters> clone() const = 0;
   virtual ~CoderParameters() = default;
 };
 } // namespace icov

@@ -56,25 +56,30 @@ using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov {
 
-class Coder_IMT64
-{
-    struct encode_parameters
-    {
-        icov::index_t start_code;
-        icov::index_t stop_code;
-        icov::index_t step;
-    };
+class Coder_IMT64 {
+  struct encode_parameters {
+    icov::index_t start_code;
+    icov::index_t stop_code;
+    icov::index_t step;
+  };
 
 public:
-    struct parameters : public CoderParameters
-    {
-        parameters(const boost::program_options::variables_map &args): CoderParameters(args, Coder_IMT64::id){};
-    };
+  struct parameters : public CoderParameters {
+    parameters(const boost::program_options::variables_map &args)
+        : CoderParameters(args, Coder_IMT64::id){};
+    ~parameters() = default;
+    std::unique_ptr<CoderParameters> clone() const override {
+      return std::make_unique<parameters>(*this);
+    }
+  };
 
-    static const std::string id;
+  static const std::string id;
 
-    static void create(std::shared_ptr<LLRProvider> &llrProvider, std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec, std::shared_ptr<ISyndromeManager> &syndromeMgr,  std::shared_ptr<IMatrixProvider<AffMatrix>> &mb, const parameters &p);
-
+  static void create(std::shared_ptr<LLRProvider> &llrProvider,
+                     std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec,
+                     std::shared_ptr<ISyndromeManager> &syndromeMgr,
+                     std::shared_ptr<IMatrixProvider<AffMatrix>> &mb,
+                     const parameters &p);
 };
 
-}
+} // namespace icov

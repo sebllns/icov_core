@@ -61,7 +61,7 @@ namespace icov {
 
 class CoderFactory {
 public:
-  static CoderParameters parse_coder_parameters(const po::variables_map &args);
+  static std::unique_ptr<CoderParameters> parse_coder_parameters(const po::variables_map &args);
 
   static p_InteractiveCoder create_coder(const CoderParameters &args);
   static p_InteractiveCoder create_coder(const po::variables_map &args);
