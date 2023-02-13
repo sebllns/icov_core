@@ -53,6 +53,7 @@
 #include "common_types.h"
 #include "encoded_stream.h"
 #include "encoded_stream/ContentParameterSet.h"
+#include "extracted_stream.h"
 #include "icov_stream.h"
 #include "typedef.h"
 #include <boost/dynamic_bitset.hpp>
@@ -107,6 +108,7 @@ public:
   int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
+  void extractBlock(BlockDecoderParams &output);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;

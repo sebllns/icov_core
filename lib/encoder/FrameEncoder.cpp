@@ -1,6 +1,7 @@
 #include "FrameEncoder.h"
 
 #include "BitSymbolProvider.h"
+#include "Block.h"
 #include "common_types.h"
 #include "enc_helpers.h"
 #include "encoded_stream.h"
@@ -83,19 +84,18 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       encodeBlockWithPrediction(output, b, p);
   }
 
-  std::cout << "START HEADER\n";
-
   for (int c = 0; c < (int)m_numComp; ++c) {
     // store syndrome per bitplane
-    std::cout << "BP ";
+    std::cout << "<COMP " << c << "> BP";
     m_icov_file->writeSIRate(m_channelCoder[c].bitplanes.size());
-    std::cout << std::endl;
+
+    std::cout << " S";
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      std::cout << "COMP " << c << " SYNDROME ";
       m_icov_file->writeSIRate(s.stored_synd_rate);
-      std::cout << std::endl;
     }
+
+    std::cout << std::endl;
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
 #ifdef ICOV_ASSERTION_ENABLED
@@ -103,20 +103,18 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
                                    "No access blocks bits !");
 #endif
       if (access_block) {
-        std::cout << "COMP " << c << " ACCESS BLOCK " << s.accessBlock.size()
-                  << std::endl;
+        // std::cout << "COMP " << c << " ACCESS BLOCK " << s.accessBlock.size()
+        //        << std::endl;
         m_icov_file->writeSyndrome(s.accessBlock);
       }
     }
   }
 
-  std::cout << "END HEADER\n";
-
   for (int c = 0; c < (int)m_numComp; ++c) {
     // store syndrome per bitplane
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
-                << std::endl;
+      //      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
+      //                << std::endl;
       if (s.stored_synd.size() > 0) {
         m_icov_file->writeSyndrome(s.stored_synd);
       }
@@ -126,11 +124,15 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   // store bitplanes rates per SI and per channel
   for (uint16_t p : PredictionID) {
     for (int c = 0; c < (int)m_numComp; ++c) {
+      std::cout << "<COMP " << c << " SI "
+                << BlockPrediction::toString(BlockPrediction::toPredType(p))
+                << "> ";
       if (m_channelCoder[c].si.count(p)) {
+        std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
         m_icov_file->writeSIMode(m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
         if (m_channelCoder[c].si[p].stored_pz.lx > 0) {
-          std::cout << "WRITE RATES SI " << p << " COMP " << c;
+          std::cout << "R ";
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
               m_icov_file->writeSIRate(
@@ -141,7 +143,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
           }
           std::cout << std::endl;
         }
-      } else {
+      } else if (p != BlockPrediction::predType::NONE) {
         m_icov_file->writeQaryParams(BitSymbolProvider::Pz(0, 0, 0, 0));
       }
     }
@@ -174,13 +176,13 @@ void FrameEncoder::processInput(std::ostream &output,
   const cv::Size size_after = img_src.size();
 
   if (size_after != size_before) {
-    ICOV_LOG(warning) << "Image resized from " << size_before << " to "
-                      << size_after;
+    ICOV_WARNING << "Image resized from " << size_before << " to "
+                 << size_after;
 
-    ICOV_LOG(warning) << "Aspect changed from "
-                      << double(size_before.width) / double(size_before.height)
-                      << " to "
-                      << double(size_after.width) / double(size_after.height);
+    ICOV_WARNING << "Aspect changed from "
+                 << double(size_before.width) / double(size_before.height)
+                 << " to "
+                 << double(size_after.width) / double(size_after.height);
   }
 
   const int sourceWidth = img_src.cols;
@@ -341,9 +343,10 @@ void icov::encoder::FrameEncoder::encode_tu(
 // saved
 #pragma omp critical
   {
-    std::cout << "COMP " << comp << " PRED " << predID << ": "
-              << m_channelCoder[comp].bitplanes.size() << ", " << si_synd.size()
-              << ", " << si_numcodes.size() << std::endl;
+    //    std::cout << "COMP " << comp << " PRED " << predID << ": "
+    //              << m_channelCoder[comp].bitplanes.size() << ", " <<
+    //              si_synd.size()
+    //              << ", " << si_numcodes.size() << std::endl;
 
     m_channelCoder[comp].si[predID].stored_pz = bsp.getPz();
     m_channelCoder[comp].si[predID].dirmode =

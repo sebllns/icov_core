@@ -4,7 +4,7 @@ using namespace icov;
 
 IMTSyndromeManager::IMTSyndromeManager(int n)
     : ISyndromeManager(n), doping_idx(n), init_rateless(true) {
-  ICOV_LOG(warning) << __FILE__ << ": THIS CLASS IS DEPRECATED !!!";
+  ICOV_WARNING << __FILE__ << ": THIS CLASS IS DEPRECATED !!!";
   reset_doping();
 }
 

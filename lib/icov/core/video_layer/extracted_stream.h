@@ -46,9 +46,11 @@
  *
  *****************************************************************************/
 #pragma once
+#include "common_types.h"
 #include "extracted_stream/NalUnit.h"
 #include "extracted_stream/ViewportUnit.h"
 #include "icov_stream.h"
+#include "typedef.h"
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
@@ -57,14 +59,43 @@
 #include <sys/types.h>
 #include <vector>
 
-using namespace icov;
+namespace icov {
+
+struct BlockDecoderParams {
+  icov::byte DirMode;
+  bool CloneSI;
+  icov::byte LX;
+  icov::byte QIdx;
+  icov::byte Zmin;
+  icov::byte Zmax;
+  icov::byte Numcode;
+
+  explicit BlockDecoderParams()
+      : DirMode(0), CloneSI(false), LX(0), QIdx(0), Zmin(0), Zmax(0),
+        Numcode(0) {}
+};
+
+} // namespace icov
 
 namespace boost {
 namespace serialization {
 
-// When the class Archive corresponds to an output archive, the
-// & operator is defined similar to <<.  Likewise, when the class Archive
-// is a type of input archive the & operator is defined similar to >>.
+template <class Archive>
+void serialize(Archive &ar, icov::BlockDecoderParams &io,
+               const unsigned int /*version*/) {
+
+  ar &io.DirMode;
+  ar &io.CloneSI;
+  ar &io.LX;
+  ar &io.QIdx;
+  ar &io.Zmin;
+  ar &io.Zmax;
+  ar &io.Numcode;
+
+  //  size_t byte_count = bitToByteCount(io.size());
+  //  icov::byte *data = new icov::byte[byte_count];
+  //  ar &make_array<icov::byte>(data, byte_count);
+}
 
 } // namespace serialization
 } // namespace boost

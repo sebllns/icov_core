@@ -46,12 +46,11 @@
 #pragma once
 
 #include "common.h"
-#include "encoder/InputMedia.h"
-#include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <memory>
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
@@ -59,6 +58,7 @@ class DecodeMode {
   struct params {
     static const char *inputFile_id;
     fs::path inputFile;
+    std::unique_ptr<CoderParameters> coder_params;
   };
 
 public:
@@ -71,5 +71,5 @@ public:
 
 private:
   params m_parameters;
-  std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
+  std::vector<float> m_q_values;
 };

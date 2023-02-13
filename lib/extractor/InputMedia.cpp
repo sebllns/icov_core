@@ -166,6 +166,11 @@ void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   }
 }
 
+void extractor::InputIcov::extractBlock(BlockDecoderParams &output)
+{
+
+}
+
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}
 

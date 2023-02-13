@@ -10,9 +10,9 @@
 #define OPT_MODE "mode"
 #define OPT_LOG_LVL "log-level"
 
-#define ICOV_DATA_DIR                                                          \
+#define ICOV_DATA_DIR(args)                                                    \
   fs::absolute(fs::path(args[OPT_DATA_PATH].as<std::string>()))
-#define ICOV_Q_VALUES_FILE (ICOV_DATA_DIR / "../q-ary/q")
+#define ICOV_Q_VALUES_FILE(args) (ICOV_DATA_DIR(args) / "../q-ary/q")
 
 inline int getCodeLength(const boost::program_options::variables_map &args) {
   return args[OPT_CODE_LENGTH].as<int>();

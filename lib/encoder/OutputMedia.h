@@ -105,6 +105,8 @@ private:
 
   int rates_count;
 
+  bool m_csvEnabled;
+
   icov::bitstream::QaryParams m_qaryParams;
 };
 

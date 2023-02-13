@@ -12,7 +12,8 @@ namespace encoder {
 
 OutputIcov::OutputIcov(const boost::filesystem::path &path)
     : icov::IOutputIcov(path), last_bit_shift(0), last_byte(0) {
-  m_outputStream = std::make_unique<std::ofstream>(path, std::ios_base::binary);
+  //  m_outputStream = std::make_unique<std::ofstream>(path,
+  //  std::ios_base::binary);
 
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
@@ -40,7 +41,8 @@ icov::ContentParameterSet &OutputIcov::contentParameterSet() {
 
 void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
-    std::cout << "SI IDENTICAL" << std::endl;
+    // std::cout << "SI IDENTICAL" << std::endl;
+    std::cout << "Q 0" << std::endl;
     icov::helpers::io::write_value<icov::byte>(
         getStream(eIcovStream::ENCODE_PARAMS), 0, true);
     m_total_write_byte_block[0] += sizeof(icov::byte);
@@ -93,14 +95,14 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
 
   m_total_write_byte_block[1] += byte_size;
 
-  std::cout << "WRITE BYTES " << byte_size << std::endl;
-  std::cout << "WRITE BITS " << s.size() << std::endl;
-  std::cout << "SHIFT BITS " << last_bit_shift << std::endl;
-  std::cout << "LOST BITS " << lost << std::endl;
+  //  std::cout << "WRITE BYTES " << byte_size << std::endl;
+  //  std::cout << "WRITE BITS " << s.size() << std::endl;
+  //  std::cout << "SHIFT BITS " << last_bit_shift << std::endl;
+  //  std::cout << "LOST BITS " << lost << std::endl;
 
-  std::cout << "TOTAL WRITE BITS " << total_write_bits << std::endl;
-  std::cout << "TOTAL SHIFT BITS " << total_shift << std::endl;
-  std::cout << "TOTAL LOST BITS " << total_lost << std::endl;
+  //  std::cout << "TOTAL WRITE BITS " << total_write_bits << std::endl;
+  //  std::cout << "TOTAL SHIFT BITS " << total_shift << std::endl;
+  //  std::cout << "TOTAL LOST BITS " << total_lost << std::endl;
 
   //  boost::archive::binary_oarchive
   //  o_archive(*m_fileParts[eIcovStream::SYNDROME],

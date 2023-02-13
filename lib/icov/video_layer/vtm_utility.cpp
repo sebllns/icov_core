@@ -228,24 +228,6 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
                   curr_tu.getTransformCoeffs(compID), uiAbsSum, cQP,
                   SliceType::I_SLICE, bit_depth, maxLog2TrDynamicRange);
 
-      // BP
-      //      icov::SymboleVal *quantizedBuf = static_cast<icov::SymboleVal *>(
-      //          curr_tu.getQuantizedTransformCoeffs(compID).buf);
-      //      auto quantizedBufSize =
-      //          curr_tu.getQuantizedTransformCoeffs(compID).area();
-      //      icov::SymboleVec quantizedVec(quantizedBuf,
-      //                                    quantizedBuf + quantizedBufSize);
-      //      curr_tu.getBitplanes(compID) =
-      //          icov::BitSymbolProvider::compute_bits(quantizedVec);
-
-      //      // iBP
-      //      icov::SymboleVec inverseBitplane =
-      //          icov::BitSymbolProvider::compute_symboles(
-      //              curr_tu.getBitplanes(compID));
-
-      //      ICOV_ASSERT_MSG(inverseBitplane == quantizedVec, "symboles not
-      //      equal");
-
       // iQ
       quant.dequant(curr_tu.getInverseQuantizedTransformCoeffs(compID),
                     curr_tu.getQuantizedTransformCoeffs(compID), cQP, bit_depth,

@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
+#include "tools/DebugTools.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/vtm_opencv_utility.h"
@@ -295,12 +296,15 @@ void DemoEncoder::processInput(std::ostream &output,
                          cv::Size(icuSize_luma.width, icuSize_luma.height));
   cv::Size size_after = img_src.size();
 
-  if (size_after != size_before)
-    std::cout << "image size is changing from " << size_before << " to "
-              << size_after << ". image aspect ratio is changing from "
-              << double(size_before.width) / double(size_before.height)
-              << " to " << double(size_after.width) / double(size_after.height)
-              << std::endl;
+  if (size_after != size_before) {
+    ICOV_WARNING << "Image resized from " << size_before << " to "
+                 << size_after;
+
+    ICOV_WARNING << "Aspect changed from "
+                 << double(size_before.width) / double(size_before.height)
+                 << " to "
+                 << double(size_after.width) / double(size_after.height);
+  }
 
   const int sourceWidth = img_src.cols;
   const int sourceHeight = img_src.rows;
@@ -333,10 +337,12 @@ void DemoEncoder::processInput(std::ostream &output,
 
   PelUnitBuf mainFrameOrig = m_vvc_bufs.get(PIC_ORIGINAL).getBuf(mainFrameArea);
 
-  std::cout << mainFrameOrig.get(COMPONENT_Y).width << "=" << img_src.cols
-            << std::endl;
-  std::cout << mainFrameOrig.get(COMPONENT_Y).height << "=" << img_src.rows
-            << std::endl;
+  //  std::cout << mainFrameOrig.get(COMPONENT_Y).width << "=" << img_src.cols
+  //            << std::endl;
+  //  std::cout << mainFrameOrig.get(COMPONENT_Y).height << "=" << img_src.rows
+  //            << std::endl;
+
+  ICOV_TRACE << "cvMatToYUV";
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
@@ -344,6 +350,7 @@ void DemoEncoder::processInput(std::ostream &output,
           m_params.margin_x_360luma, icuSize_luma.width, icuSize_luma.height,
           tuSize_luma.width, tuSize_luma.height);
 
+  ICOV_TRACE << "quantizeFrame";
   VTM_Utility::quantizeFrame(
       m_params.qp, m_vvc_bufs.get(PIC_ORIGINAL),
       m_vvc_bufs.get(PIC_RECONSTRUCTION), m_enc_struc,
@@ -354,11 +361,12 @@ void DemoEncoder::processInput(std::ostream &output,
   // .getRecoBuf() ) to the function because vector
   // icues_enc is based on extended frames
 
+  ICOV_TRACE << "calculatePSNR";
   psnr = VTM_Utility::calculatePSNR(
       m_vvc_bufs.getBuf(PIC_ORIGINAL), m_vvc_bufs.getBuf(PIC_RECONSTRUCTION),
       m_params.internalBitDepth, &mse_frame, &maxval);
 
-  std::cout << "PSNR=" << psnr << std::endl;
+  ICOV_INFO << "PSNR between source image and quantized is " << psnr;
 
   // INTRA PRED
   PelUnitBuf mainFrameReco =

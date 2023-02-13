@@ -1,4 +1,4 @@
-#include "CompDecoder.h"
+#include "ChannelDecoder.h"
 
 #include "Common.h"
 #include "Unit.h"
@@ -19,26 +19,29 @@ namespace fs = boost::filesystem;
 using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
-CompDecoder::CompDecoder(
-    const params &p, const std::shared_ptr<icov::video::BufGroups> &vvc_bufs)
+ChannelDecoder::ChannelDecoder(
+    const params &p, const CoderParameters &LDPC_params,
+    const std::shared_ptr<icov::video::BufGroups> &vvc_bufs)
     : m_params(p), m_vvc_bufs(vvc_bufs),
       //      m_blockArea(
       //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
       //          p.icu_size))
       //              .block(p.CompID)),
-      m_ldpc_coder(icov::CoderFactory::create_coder(p.program_args)),
+      m_ldpc_coder(icov::CoderFactory::create_coder(LDPC_params)),
       m_blockBitplane(m_ldpc_coder->get_n(), 0),
-      m_blockSI(m_ldpc_coder->get_n()),
+      m_blockSI(m_ldpc_coder->get_n(), 0),
       // m_syndrome(m_ldpc_coder->get_n()),
       m_bsp(m_ldpc_coder->get_n()),
       m_block_prediction(BlockPrediction::predType::UNKNOWN),
-      mp_icu_enc(nullptr) {}
+      mp_icu_enc(nullptr) {
+  intraPred.init(m_params.QpParam.chromaFomat);
+}
 
-CompDecoder::~CompDecoder() {}
+ChannelDecoder::~ChannelDecoder() {}
 
-void CompDecoder::start_decode_icu(BlockVector::const_iterator &b,
-                                   video::IcuEncoder *icu_enc,
-                                   BlockPrediction::predType block_prediction) {
+void ChannelDecoder::start_decode_icu(
+    BlockVector::const_iterator &b, video::IcuEncoder *icu_enc,
+    BlockPrediction::predType block_prediction) {
   ICOV_ASSERT_MSG(block_prediction != BlockPrediction::predType::UNKNOWN,
                   "Prediction unknown;")
   icov::helpers::assert::not_null(icu_enc, "ICU is NULL");
@@ -46,6 +49,8 @@ void CompDecoder::start_decode_icu(BlockVector::const_iterator &b,
   m_block = b;
   mp_icu_enc = icu_enc;
   m_block_prediction = block_prediction;
+  std::fill(m_blockSI.begin(), m_blockSI.end(), 0);
+  std::fill(m_blockBitplane.begin(), m_blockBitplane.end(), 0);
 
   //  const auto comp_area_value = m_blockArea.area();
 
@@ -53,7 +58,7 @@ void CompDecoder::start_decode_icu(BlockVector::const_iterator &b,
   //  }
 }
 
-void CompDecoder::set_si_dir_mode(int dir_mode) {
+void ChannelDecoder::set_si_dir_mode(int dir_mode) {
 
   auto m_blockArea = mp_icu_enc->get_sourceX().block(m_params.CompID);
 
@@ -86,7 +91,11 @@ void CompDecoder::set_si_dir_mode(int dir_mode) {
               m_params.maxLog2TrDynamicRange);
 }
 
-void CompDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
+void ChannelDecoder::set_access_block_params(int lx) {
+  m_bsp.set_si(m_blockSI, 0, 0, 0, lx);
+}
+
+void ChannelDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
 
   auto currICUintraMap = mp_icu_enc->get_intraSIsMap();
   const auto &si = currICUintraMap.at(m_block_prediction);
@@ -94,35 +103,40 @@ void CompDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
   const auto &si_tu = si.TUs[0];
   auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(m_params.CompID);
 
-  m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
-  m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
+  // SI is perfect => clone it
+  if (lx == 0) {
+    icov::video::TransformUnit &dec_tu = mp_icu_enc->sourceX_TU(0);
+    std::copy(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n(),
+              dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
+  } else {
+    m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
+    m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
+  }
 }
 
-void CompDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
-                                  const Syndrome &synd) {
+void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
+                                     const Syndrome &synd) {
   if (m_block_prediction == BlockPrediction::predType::NONE) {
     ICOV_ASSERT_MSG(numcode == 1,
                     "Numcode value must be set to 1 for access block");
-    //    m_blockBitplane.assign(m_syndrome.data(),
-    //                           m_syndrome.data() + m_syndrome.size());
   }
   m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
   m_bsp.injectBitplane(bp, m_blockBitplane);
+
+  if ((bp + 1) == m_bsp.x_binary_length()) {
+    icov::video::TransformUnit &dec_tu = mp_icu_enc->sourceX_TU(0);
+    std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
+              dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
+  }
 }
 
-void CompDecoder::end_encode_icu() {
+void ChannelDecoder::end_encode_icu() {
 
-  // TODO : fix values
+  icov::video::TransformUnit &dec_tu = mp_icu_enc->sourceX_TU(0);
 
-  UnitArea blockArea;
-
-  icov::video::TransformUnit dec_tu(blockArea, true, true, true);
-
-  PelStorage dec_block;
+  // UnitArea blockArea;
+  // PelStorage dec_block;
   //  dec_block.create(blockArea);
-
-  std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
-            dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
 
   // iQ
   quant.dequant(dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
@@ -132,10 +146,12 @@ void CompDecoder::end_encode_icu() {
 
   // iDCT
   transform2D.invTransformNxN(
-      dec_block, dec_tu.block(m_params.CompID),
+      m_vvc_bufs->get(PIC_RECONSTRUCTION), dec_tu.block(m_params.CompID),
       dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
       m_params.bit_depth, m_params.maxLog2TrDynamicRange);
 
   mp_icu_enc = nullptr;
   m_block_prediction = BlockPrediction::predType::UNKNOWN;
 }
+
+int ChannelDecoder::get_coder_size() const { return m_ldpc_coder->get_n(); }

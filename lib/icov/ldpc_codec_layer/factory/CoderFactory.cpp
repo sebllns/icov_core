@@ -18,7 +18,6 @@ std::unique_ptr<CoderParameters> CoderFactory::parse_coder_parameters(
   if (coder_type == Coder_IMT18::id) {
     return std::make_unique<Coder_IMT18::parameters>(args);
   } else if (coder_type == Coder_IMT64::id) {
-    std::cout << "IMT64\n";
     return std::make_unique<Coder_IMT64::parameters>(args);
   } else if (coder_type == "varodayan") {
     throw std::invalid_argument("Coder type not implemented: " + coder_type);
@@ -40,7 +39,6 @@ p_InteractiveCoder CoderFactory::create_coder(const CoderParameters &args) {
     Coder_IMT18::create(llrProvider, ldpca_dec, syndromeMgr, mp,
                         dynamic_cast<const Coder_IMT18::parameters &>(args));
   } else if (coder_type == Coder_IMT64::id) {
-    std::cout << "IMT64\n";
     const auto &p = dynamic_cast<const Coder_IMT64::parameters &>(args);
     Coder_IMT64::create(llrProvider, ldpca_dec, syndromeMgr, mp, p);
   } else if (coder_type == "varodayan") {

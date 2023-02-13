@@ -1,5 +1,6 @@
 #pragma once
 #include "InteractiveCoder.h"
+#include "common_types.h"
 #include "helpers.h"
 #include <algorithm>
 
@@ -162,7 +163,8 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
   if (output.size() != get_n())
     output.resize(get_n());
 
-  init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
+  if (numcode != 1)
+    init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
 
   if (numcode > 1) {
     this->decode(output, numcode - 2, stored_synd);
@@ -181,9 +183,19 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
   } else if (numcode == 0) {
     ICOV_TRACE << "DECODE: NO CODING";
 
-    for (size_t i = 0; i < get_n(); ++i) {
-      output[i] = m_pllrProvider->llr()[i] < 0 ? 1 : 0;
-    }
+#if ICOV_ASSERTION_ENABLED
+    icov::helpers::assert::equal(output.size(), m_pllrProvider->llr().size(),
+                                 "Size does not match");
+#endif
+
+    //    for (size_t i = 0; i < get_n(); ++i) {
+    //      output[i] = m_pllrProvider->llr()[i] < 0 ? 1 : 0;
+    //    }
+
+    std::transform(m_pllrProvider->llr().cbegin(), m_pllrProvider->llr().cend(),
+                   output.begin(), [](icov::LLRVal l) -> icov::BitVal {
+                     return l < 0 ? 1 : 0;
+                   });
   }
 
   bsp.injectBitplane(bp_idx, output);

@@ -12,6 +12,7 @@
 #define ICOV_TRACE ICOV_LOG(trace)
 #define ICOV_DEBUG ICOV_LOG(debug)
 #define ICOV_INFO ICOV_LOG(info)
+#define ICOV_WARNING ICOV_LOG(warning)
 #define ICOV_ERROR ICOV_LOG(error)
 #define ICOV_FATAL ICOV_LOG(fatal)
 

@@ -106,7 +106,7 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
   enable_z_quantization = args[enable_z_quantization_id].as<bool>();
 
   if (enable_q_quantization) {
-    icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE.string(), q_values);
+    icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
   }
 
   helpers::path::assert_directory_exists(m_dataset_dir.string());
@@ -202,7 +202,7 @@ void SymboleMode::process_input_list(const std::string &file) {
         process_input_file(seq_path.string());
       } catch (...) {
         ICOV_ERROR << "Error: Could not process sequence file "
-                        << sequence_name;
+                   << sequence_name;
         ICOV_ERROR << boost::current_exception_diagnostic_information();
       }
     }

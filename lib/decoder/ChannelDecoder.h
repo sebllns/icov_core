@@ -3,14 +3,14 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup CompDecoder
- * CompDecoder package (client side).
+/** @addtogroup ChannelDecoder
+ * ChannelDecoder package (client side).
  *  @ingroup ICOV
  */
 
-/** @file CompDecoder.h
- *  @brief Defines an actual ICOV CompDecoder.
- *  @ingroup CompDecoder
+/** @file ChannelDecoder.h
+ *  @brief Defines an actual ICOV ChannelDecoder.
+ *  @ingroup ChannelDecoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -66,21 +66,20 @@
 
 namespace icov {
 namespace decoder {
-class CompDecoder {
+class ChannelDecoder {
   // IBlockProcessor interface
 public:
   struct params {
     icov::video::QpParam QpParam;
-    int icu_size;
     ComponentID CompID;
     int bit_depth;
-    po::variables_map program_args;
     int maxLog2TrDynamicRange;
   };
 
-  CompDecoder(const CompDecoder::params &p,
-              const std::shared_ptr<icov::video::BufGroups> &vvc_bufs);
-  ~CompDecoder();
+  ChannelDecoder(const ChannelDecoder::params &p,
+                 const CoderParameters &LDPC_params,
+                 const std::shared_ptr<icov::video::BufGroups> &vvc_bufs);
+  ~ChannelDecoder();
 
   void start_decode_icu(BlockVector::const_iterator &b,
                         icov::video::IcuEncoder *icu_enc,
@@ -88,11 +87,15 @@ public:
 
   void set_si_dir_mode(int dir_mode);
 
+  void set_access_block_params(int lx);
+
   void set_si_params(int zmin, int zmax, float q, int lx);
 
   void decode_bitplane(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
   void end_encode_icu();
+
+  int get_coder_size() const;
 
 protected:
   params m_params;

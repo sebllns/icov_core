@@ -97,8 +97,7 @@ inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
   output[1] = ((z_min + Z_LIMIT) / Z_STEP);
   output[2] = ((z_max + Z_LIMIT) / Z_STEP);
 
-  std::cout << "BSP " << q_idx << ", " << z_min << ", " << z_max << "->"
-            << (uint)output[0] << ", " << (uint)output[1] << ", "
+  std::cout << "Q " << (uint)output[0] << " " << (uint)output[1] << " "
             << (uint)output[2] << std::endl;
 }
 

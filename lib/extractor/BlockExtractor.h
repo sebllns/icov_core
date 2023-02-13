@@ -76,6 +76,7 @@ public:
 protected:
   std::shared_ptr<InputIcov> m_icovFile;
   std::shared_ptr<std::ostream> m_stream;
+  std::vector<float> m_q_values;
   params m_params;
 };
 } // namespace extractor
