@@ -170,6 +170,7 @@ void OutputIcov::writeSIRate(const NumcodeIdx &r) {
 void OutputIcov::writeSIMode(const uint &v) {
   helpers::io::write_value<icov::byte>(*m_fileParts[eIcovStream::ENCODE_PARAMS],
                                        static_cast<rate_t>(v), true);
+  m_total_write_byte_block[0] += sizeof(icov::byte);
 }
 
 void OutputIcov::flush(int id) {

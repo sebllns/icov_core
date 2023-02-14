@@ -40,6 +40,8 @@ public:
 
   size_t get_n() const override;
   int get_m(const NumcodeIdx &numcodeIdx) const;
+  int get_m_min() const;
+  int get_m_max() const;
 
   Rate get_r(const NumcodeIdx &numcodeIdx) const;
   Rate get_r(int m, int n) const;
@@ -99,7 +101,6 @@ protected:
   std::unique_ptr<Syndrome> m_decodage_syndrome;
   BitVec m_decoded_bits;
 };
-
 } // namespace icov
 
 #include "InteractiveCoder.hpp"

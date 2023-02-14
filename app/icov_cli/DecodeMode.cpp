@@ -76,7 +76,7 @@ void DecodeMode::run() {
   const int icu_size = (int)cps.block_fixed_size;
   const int n = icu_size * icu_size;
   const int channelCount = 3;
-  const int block_count = 1;
+  const int block_count = 2;
 
   const int sourceWidth = (int)cps.content_width;
   const int sourceHeight = (int)cps.content_height;
@@ -121,12 +121,11 @@ void DecodeMode::run() {
 
   icov::video::TransformUnit dec_tu(blockArea, true, true, true);
 
-  PelStorage dec_block;
-  dec_block.create(blockArea);
-
-  Syndrome syndrome(n);
+  //  PelStorage dec_block;
+  //  dec_block.create(blockArea);
 
   inputFile.initBuffer(block_count, n);
+  inputFile.readBlockPos();
 
   icov::helpers::assert::check(
       cps.is_block_fixed_size,
@@ -185,7 +184,7 @@ void DecodeMode::run() {
       channelCoder[c]->start_decode_icu(b, &icu_enc, block_prediction);
 
       const int lx = syndSizes[c].size();
-      std::cout << "LX " << lx << std::endl;
+      std::cout << "COMP " << c << " LX " << lx << std::endl;
 
       if (is_access_block) {
         channelCoder[c]->set_access_block_params(lx);
@@ -206,25 +205,29 @@ void DecodeMode::run() {
           channelCoder[c]->set_si_params(0, 0, 0, 0);
         } else {
           const float q = m_q_values[q_idx - 1];
+          std::cout << "QP " << zmin << ", " << zmax << ", " << q << std::endl;
           channelCoder[c]->set_si_params(zmin, zmax, q, lx);
         }
       }
 
       for (int bp = 0; bp < lx; ++bp) {
-
+        std::cout << "BP " << bp << " / " << lx << std::endl;
         size_t stored_syndrome_size = channelCoder[c]->get_coder_size();
         size_t read_syndrome_size = channelCoder[c]->get_coder_size();
         icov::NumcodeIdx numcode = 1;
 
         if (!is_access_block) {
-          //          read_syndrome_size =
+          numcode = inputFile.readByteIntParam();
+          read_syndrome_size = channelCoder[c]->get_m(numcode);
           stored_syndrome_size = syndSizes[c][bp];
         }
 
         if (read_syndrome_size > 0)
-          inputFile.readSyndrome(syndrome, read_syndrome_size,
-                                 stored_syndrome_size);
-        channelCoder[c]->decode_bitplane(bp, numcode, syndrome);
+          inputFile.readSyndrome(channelCoder[c]->syndrome(),
+                                 read_syndrome_size, stored_syndrome_size);
+
+        channelCoder[c]->decode_bitplane(bp, numcode,
+                                         channelCoder[c]->syndrome());
       }
 
       // access block ?

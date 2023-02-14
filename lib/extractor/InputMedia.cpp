@@ -105,7 +105,7 @@ void icov::extractor::InputIcov::readSyndromesSizes(
   for (int c = 0; c < (int)output.size(); ++c) {
     // read bitplane count
     output[c] = NumcodeIdxVec(readByteIntParam());
-    std::cout << "COMP " << c << " N " << output[c].size() << ":";
+    std::cout << "COMP " << c << " N " << output[c].size() << "\n";
     for (int bp = 0; bp < (int)output[c].size(); ++bp) {
       // for each bitplane read stored syndrome size
       output[c][bp] = readByteIntParam();
@@ -166,10 +166,8 @@ void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   }
 }
 
-void extractor::InputIcov::extractBlock(BlockDecoderParams &output)
-{
-
-}
+void extractor::InputIcov::extractBlock(BlockDecoderParams &output,
+                                        int icu_idx) {}
 
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}

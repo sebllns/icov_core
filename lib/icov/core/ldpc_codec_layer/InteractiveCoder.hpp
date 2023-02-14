@@ -15,6 +15,15 @@ int InteractiveCoder<Matrix>::get_m(const NumcodeIdx &numcodeIdx) const {
   return m_psyndromeMgr->get_m(m_matrix_provider->getNumcode(numcodeIdx));
 }
 
+template <class Matrix> int InteractiveCoder<Matrix>::get_m_min() const {
+  return m_psyndromeMgr->get_m(m_matrix_provider->getNumcode(0));
+}
+
+template <class Matrix> int InteractiveCoder<Matrix>::get_m_max() const {
+  return m_psyndromeMgr->get_m(
+      m_matrix_provider->getNumcode(m_matrix_provider->getNumCodesCount() - 1));
+}
+
 template <class Matrix>
 Rate InteractiveCoder<Matrix>::get_r(const NumcodeIdx &numcodeIdx) const {
   return get_r(get_m(numcodeIdx), get_n());

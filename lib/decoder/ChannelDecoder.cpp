@@ -30,8 +30,7 @@ ChannelDecoder::ChannelDecoder(
       m_ldpc_coder(icov::CoderFactory::create_coder(LDPC_params)),
       m_blockBitplane(m_ldpc_coder->get_n(), 0),
       m_blockSI(m_ldpc_coder->get_n(), 0),
-      // m_syndrome(m_ldpc_coder->get_n()),
-      m_bsp(m_ldpc_coder->get_n()),
+      m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),
       m_block_prediction(BlockPrediction::predType::UNKNOWN),
       mp_icu_enc(nullptr) {
   intraPred.init(m_params.QpParam.chromaFomat);
@@ -155,3 +154,18 @@ void ChannelDecoder::end_encode_icu() {
 }
 
 int ChannelDecoder::get_coder_size() const { return m_ldpc_coder->get_n(); }
+
+int ChannelDecoder::get_m(icov::NumcodeIdx numcode) const {
+  if (numcode == 1) {
+    return m_ldpc_coder->get_n();
+  } else if (numcode > 1) {
+    return m_ldpc_coder->get_m(numcode - 2);
+  }
+  return 0;
+}
+
+Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }
+
+const AffInteractiveCoder &ChannelDecoder::ldpc_coder() const {
+  return *m_ldpc_coder;
+}

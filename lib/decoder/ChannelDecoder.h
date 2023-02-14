@@ -97,6 +97,11 @@ public:
 
   int get_coder_size() const;
 
+  Syndrome &syndrome();
+
+  int get_m(icov::NumcodeIdx numcode) const;
+  const AffInteractiveCoder &ldpc_coder() const;
+
 protected:
   params m_params;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
@@ -108,7 +113,7 @@ protected:
   icov::video::IntraPrediction intraPred;
   BitVec m_blockBitplane;
   SIVec m_blockSI;
-  // Syndrome m_syndrome;
+  Syndrome m_syndrome;
   BitSymbolProvider m_bsp;
   BlockPrediction::predType m_block_prediction;
   BlockVector::const_iterator m_block;

@@ -108,7 +108,7 @@ public:
   int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
-  void extractBlock(BlockDecoderParams &output);
+  void extractBlock(BlockDecoderParams &output, int icu_idx);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;

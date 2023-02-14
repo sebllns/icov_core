@@ -86,6 +86,10 @@ inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
 
   z_min = input[1] * Z_STEP - Z_LIMIT;
   z_max = input[2] * Z_STEP - Z_LIMIT;
+
+  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
+            << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
+            << std::endl;
 }
 
 inline void writeQaryParams(QaryParams output, int q_idx, int z_min,

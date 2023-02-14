@@ -124,9 +124,9 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
   // store bitplanes rates per SI and per channel
   for (uint16_t p : PredictionID) {
     for (int c = 0; c < (int)m_numComp; ++c) {
-      std::cout << "<COMP " << c << " SI "
+      std::cout << "<SI "
                 << BlockPrediction::toString(BlockPrediction::toPredType(p))
-                << "> ";
+                << " COMP " << c << "> ";
       if (m_channelCoder[c].si.count(p)) {
         std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
         m_icov_file->writeSIMode(m_channelCoder[c].si[p].dirmode);
