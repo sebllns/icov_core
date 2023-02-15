@@ -1,6 +1,7 @@
 #include "EncodeMode.h"
+#include "encoder/BinaryOutputIcov.h"
 #include "encoder/FrameEncoder.h"
-#include "encoder/OutputMedia.h"
+#include "encoder/TextOutputIcov.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
@@ -88,8 +89,8 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
       3};
 
   auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
-  auto output =
-      std::make_shared<icov::encoder::OutputIcov>(m_parameters.encodedFile);
+  auto output = std::make_shared<icov::encoder::BinaryOutputIcov>(
+      m_parameters.encodedFile);
 
   output->contentParameterSet().icov_version = "icov_test" ICOV_CORE_VERSION;
   output->contentParameterSet().content_framecount = 1;

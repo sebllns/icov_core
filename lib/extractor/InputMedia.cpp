@@ -90,13 +90,13 @@ void icov::extractor::InputIcov::readBlockPos() {
   }
 }
 
-void icov::extractor::InputIcov::selectBlock(uint64_t block) {
+void icov::extractor::InputIcov::selectBlock(const Block &block) {
   getStream(eIcovStream::ENCODE_PARAMS).clear();
+  auto id = block.getIdSelf() - 1;
   getStream(eIcovStream::ENCODE_PARAMS)
-      .seekg(m_rates_pos[block + 1], std::ios_base::beg);
+      .seekg(m_rates_pos[id], std::ios_base::beg);
   getStream(eIcovStream::SYNDROME).clear();
-  getStream(eIcovStream::SYNDROME)
-      .seekg(m_synd_pos[block + 1], std::ios_base::beg);
+  getStream(eIcovStream::SYNDROME).seekg(m_synd_pos[id], std::ios_base::beg);
   m_syndromeOffset = 0;
 }
 

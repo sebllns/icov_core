@@ -84,6 +84,8 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       encodeBlockWithPrediction(output, b, p);
   }
 
+  m_icov_file->startWriteBlock(b);
+
   for (int c = 0; c < (int)m_numComp; ++c) {
     // store syndrome per bitplane
     std::cout << "<COMP " << c << "> BP";
@@ -94,31 +96,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
     for (const auto &s : m_channelCoder[c].bitplanes) {
       m_icov_file->writeSIRate(s.stored_synd_rate);
     }
-
     std::cout << std::endl;
-
-    for (const auto &s : m_channelCoder[c].bitplanes) {
-#ifdef ICOV_ASSERTION_ENABLED
-      icov::helpers::assert::check(s.accessBlock.size() > 0,
-                                   "No access blocks bits !");
-#endif
-      if (access_block) {
-        // std::cout << "COMP " << c << " ACCESS BLOCK " << s.accessBlock.size()
-        //        << std::endl;
-        m_icov_file->writeSyndrome(s.accessBlock);
-      }
-    }
-  }
-
-  for (int c = 0; c < (int)m_numComp; ++c) {
-    // store syndrome per bitplane
-    for (const auto &s : m_channelCoder[c].bitplanes) {
-      //      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
-      //                << std::endl;
-      if (s.stored_synd.size() > 0) {
-        m_icov_file->writeSyndrome(s.stored_synd);
-      }
-    }
   }
 
   // store bitplanes rates per SI and per channel
@@ -148,6 +126,33 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
       }
     }
   }
+
+  // WRITE SYNDROMES
+  // ACCESS BLOCK
+  if (access_block) {
+    for (int c = 0; c < (int)m_numComp; ++c) {
+      // store syndrome per bitplane
+      for (const auto &s : m_channelCoder[c].bitplanes) {
+#ifdef ICOV_ASSERTION_ENABLED
+        icov::helpers::assert::check(s.accessBlock.size() > 0,
+                                     "No access blocks bits !");
+#endif
+        m_icov_file->writeSyndrome(s.accessBlock);
+      }
+    }
+  }
+
+  for (int c = 0; c < (int)m_numComp; ++c) {
+    // store syndrome per bitplane
+    for (const auto &s : m_channelCoder[c].bitplanes) {
+      //      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
+      //                << std::endl;
+      if (s.stored_synd.size() > 0) {
+        m_icov_file->writeSyndrome(s.stored_synd);
+      }
+    }
+  }
+
   m_icov_file->writeBlockSize();
 
   ICOV_DEBUG << "end encode block " << b.getId(Block::SELF);
@@ -287,6 +292,13 @@ void icov::encoder::FrameEncoder::encode_tu(
   BitSymbolProvider bsp =
       x_tu.getBitSymbolProvider(comp, si_tu, m_params.bsp_params);
 
+#pragma omp critical
+  {
+    std::cout << std::endl;
+    icov::helpers::io::write_vector(std::cout, bsp.src_symboles(), ' ');
+    std::cout << std::endl;
+  }
+
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
   if (bsp.q0() == 1) {
@@ -412,12 +424,12 @@ void icov::encoder::FrameEncoder::encode_tu(
   }
 }
 
-const std::shared_ptr<OutputIcov> &FrameEncoder::icovFile() const {
+const std::shared_ptr<OutputIcovBase> &FrameEncoder::icovFile() const {
   return m_icov_file;
 }
 
 void FrameEncoder::setIcovFile(
-    const std::shared_ptr<OutputIcov> &newIcov_file) {
+    const std::shared_ptr<OutputIcovBase> &newIcov_file) {
   m_icov_file = newIcov_file;
 }
 

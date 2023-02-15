@@ -1,45 +1,20 @@
-#include "OutputMedia.h"
+#include "BinaryOutputIcov.h"
 #include "helpers.h"
 #include "icov_stream.h"
 #include "typedef.h"
 #include "video_layer/encoded_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
+#include <ios>
 #include <limits>
 #include <memory>
 #include <string>
 namespace icov {
 namespace encoder {
 
-OutputIcov::OutputIcov(const boost::filesystem::path &path)
-    : icov::IOutputIcov(path), last_bit_shift(0), last_byte(0) {
-  //  m_outputStream = std::make_unique<std::ofstream>(path,
-  //  std::ios_base::binary);
+BinaryOutputIcov::BinaryOutputIcov(const boost::filesystem::path &path)
+    : OutputIcovBase(path, std::ios_base::binary) {}
 
-  for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
-    std::string part_file = path.string() + "." + std::to_string(i);
-    m_fileParts[i] =
-        std::make_unique<std::ofstream>(part_file, std::ios_base::binary);
-  }
-
-  rates_count = 0;
-  total_lost = 0;
-  total_shift = 0;
-  total_write_bits = 0;
-  m_total_write_byte_block[0] = 0;
-  m_total_write_byte_block[1] = 0;
-  m_total_write_byte_frame[0] = 0;
-  m_total_write_byte_frame[1] = 0;
-}
-
-const icov::ContentParameterSet &OutputIcov::contentParameterSet() const {
-  return m_contentParameterSet;
-}
-
-icov::ContentParameterSet &OutputIcov::contentParameterSet() {
-  return m_contentParameterSet;
-}
-
-void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
+void BinaryOutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     std::cout << "Q 0" << std::endl;
@@ -55,25 +30,13 @@ void OutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   }
 }
 
-void OutputIcov::writeContentParameterSet() {
+void BinaryOutputIcov::writeContentParameterSet() {
   boost::archive::binary_oarchive o_archive(
       *m_fileParts[eIcovStream::MEDIA_HEADER], boost::archive::no_header);
   o_archive &m_contentParameterSet;
 }
 
-void OutputIcov::writeSyndromeFlag(bool flag) {
-  if (flag) {
-    icov::helpers::bitstream::setBit(BYTE_SIZE - last_bit_shift, last_byte);
-  }
-  last_bit_shift = (last_bit_shift + 1) % BYTE_SIZE;
-  if (last_bit_shift == 0) {
-    icov::helpers::io::write_value(getStream(eIcovStream::SYNDROME), last_byte,
-                                   true);
-    last_byte = 0;
-  }
-}
-
-void OutputIcov::writeSyndrome(const Syndrome &s) {
+void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
   const int byte_size = bitToByteCount(s.size() + last_bit_shift);
   icov::byte darr[byte_size];
 
@@ -116,7 +79,7 @@ void OutputIcov::writeSyndrome(const Syndrome &s) {
                            byte_size - (last_bit_shift != 0 ? 1 : 0), true);
 }
 
-void OutputIcov::writeFrameSize() {
+void BinaryOutputIcov::writeFrameSize() {
   helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
                                      m_total_write_byte_frame[0], false);
   helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
@@ -125,7 +88,7 @@ void OutputIcov::writeFrameSize() {
   m_total_write_byte_frame[1] = 0;
 }
 
-void OutputIcov::writeBlockSize() {
+void BinaryOutputIcov::writeBlockSize() {
 
   std::cout << "WRITE SIZE " << m_total_write_byte_block[0] << " "
             << m_total_write_byte_block[1] << std::endl;
@@ -142,17 +105,17 @@ void OutputIcov::writeBlockSize() {
   m_total_write_byte_block[1] = 0;
 }
 
-void OutputIcov::writeSIRates(const NumcodeIdxVec &v) {
-  rates_count += v.size() * sizeof(rate_t);
-  // CHECKED RATES
-  std::cout << "WRITE RATES";
-  for (auto r : v) {
-    writeSIRate(r);
-  }
-  std::cout << std::endl;
-}
+// void BinaryOutputIcov::writeSIRates(const NumcodeIdxVec &v) {
+//  rates_count += v.size() * sizeof(rate_t);
+//  // CHECKED RATES
+//  std::cout << "WRITE RATES";
+//  for (auto r : v) {
+//    writeSIRate(r);
+//  }
+//  std::cout << std::endl;
+//}
 
-void OutputIcov::writeSIRate(const NumcodeIdx &r) {
+void BinaryOutputIcov::writeSIRate(const NumcodeIdx &r) {
 #ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(
       r < std::numeric_limits<rate_t>::max(),
@@ -167,21 +130,28 @@ void OutputIcov::writeSIRate(const NumcodeIdx &r) {
   m_total_write_byte_block[0] += sizeof(rate_t);
 }
 
-void OutputIcov::writeSIMode(const uint &v) {
+void BinaryOutputIcov::writeSIMode(const uint &v) {
   helpers::io::write_value<icov::byte>(*m_fileParts[eIcovStream::ENCODE_PARAMS],
                                        static_cast<rate_t>(v), true);
   m_total_write_byte_block[0] += sizeof(icov::byte);
 }
 
-void OutputIcov::flush(int id) {
-  if (id == eIcovStream::COUNT) {
-    for (const auto &p : m_fileParts)
-      p.second->flush();
-  } else {
-    m_fileParts[id]->flush();
-  }
-}
-
-std::ostream &OutputIcov::getStream(int id) { return *m_fileParts[id]; }
 } // namespace encoder
 } // namespace icov
+
+
+void icov::encoder::BinaryOutputIcov::startWriteBlock(const Block &b)
+{
+}
+
+void icov::encoder::BinaryOutputIcov::startWritePrediction(uint16_t pred)
+{
+}
+
+void icov::encoder::BinaryOutputIcov::endWritePrediction(uint16_t pred)
+{
+}
+
+void icov::encoder::BinaryOutputIcov::endWriteBlock(const Block &b)
+{
+}

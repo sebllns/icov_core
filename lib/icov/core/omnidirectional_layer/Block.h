@@ -93,6 +93,7 @@ public:
 
   void setId(NeighborDirection index, size_t id);
   size_t getId(NeighborDirection index) const;
+  size_t getIdSelf() const;
   const point3d &getCartesianCoord(uint16_t i) const;
 
   float u() const;

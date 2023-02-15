@@ -52,7 +52,7 @@
 #include "BitSymbolProvider.h"
 #include "BlockPrediction.h"
 #include "Media.h"
-#include "OutputMedia.h"
+#include "OutputIcovBase.h"
 #include "PredictionsEncoder.h"
 #include "common_types.h"
 #include "encoder/interface/IEncoder.h"
@@ -107,8 +107,8 @@ public:
   FrameEncoder(int frame, const params &p);
   ~FrameEncoder();
 
-  const std::shared_ptr<OutputIcov> &icovFile() const;
-  void setIcovFile(const std::shared_ptr<OutputIcov> &newIcov_file);
+  const std::shared_ptr<OutputIcovBase> &icovFile() const;
+  void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
 
 protected:
   void encodeBlock(std::ostream &output, const Block &b, bool access_block,
@@ -140,7 +140,7 @@ protected:
   icov::video::BufGroups m_vvc_bufs;
   PredictionsEncoder m_pred_encoder;
 
-  std::shared_ptr<OutputIcov> m_icov_file;
+  std::shared_ptr<OutputIcovBase> m_icov_file;
 
   int block_comp;
 

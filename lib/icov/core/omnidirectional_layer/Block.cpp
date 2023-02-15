@@ -21,6 +21,8 @@ size_t Block::getId(NeighborDirection index) const {
   return uid[index];
 }
 
+size_t Block::getIdSelf() const { return getId(NeighborDirection::SELF); }
+
 const point3d &Block::getCartesianCoord(uint16_t i) const {
   assert(i >= 0 && i < 5);
   return cartesian_coords[i];
@@ -40,8 +42,7 @@ float Block::center_v() const { return v() + 0.5f * h(); }
 
 bool Block::isAccessBlock() const { return m_isAccessBlock; }
 
-void Block::setIsAccessBlock(bool newIsAccessBlock)
-{
+void Block::setIsAccessBlock(bool newIsAccessBlock) {
   m_isAccessBlock = newIsAccessBlock;
 }
 

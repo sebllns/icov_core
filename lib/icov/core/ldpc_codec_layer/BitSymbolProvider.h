@@ -44,8 +44,7 @@ public:
    */
   static SymboleVec compute_symboles(const Bitplanes &input);
 
-  static void inject_bitplane(SymboleVec &output, const BitVec &input,
-                              int bp_shift);
+  void inject_bitplane(SymboleVec &output, const BitVec &input, int bp_shift);
 
   ///
   /// \brief BitSymbolProvider

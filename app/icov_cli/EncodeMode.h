@@ -48,7 +48,7 @@
 #include "Media.h"
 #include "common.h"
 #include "encoder/InputMedia.h"
-#include "encoder/OutputMedia.h"
+#include "encoder/OutputIcovBase.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 
@@ -86,6 +86,6 @@ private:
   //  std::unique_ptr<AffInteractiveCoder> m_ycoder;
   //  std::unique_ptr<AffInteractiveCoder> m_uvcoder;
   std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-  std::shared_ptr<icov::encoder::OutputIcov> m_output;
+  std::shared_ptr<icov::encoder::OutputIcovBase> m_output;
   params m_parameters;
 };

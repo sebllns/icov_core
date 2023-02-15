@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include "Block.h"
 #include "Media.h"
 #include "common_types.h"
 #include "encoded_stream.h"
@@ -102,7 +103,7 @@ public:
 
   void readFrameSize();
   void readBlockPos();
-  void selectBlock(uint64_t block);
+  void selectBlock(const Block &block);
   void readSyndromesSizes(std::vector<NumcodeIdxVec> &output);
   void selectPrediction(ushort pred_idx, int channelCount);
   int readByteIntParam();

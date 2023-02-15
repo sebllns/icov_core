@@ -51,6 +51,7 @@
 
 #include "BitSymbolProvider.h"
 #include "Media.h"
+#include "OutputIcovBase.h"
 #include "common_types.h"
 #include "encoded_stream/ContentParameterSet.h"
 #include "icov_stream.h"
@@ -66,48 +67,25 @@
 namespace icov {
 namespace encoder {
 
-class OutputIcov : public icov::IOutputIcov {
+class TextOutputIcov : public OutputIcovBase {
 public:
   using rate_t = icov::bitstream::rate_t;
-  explicit OutputIcov(const fs::path &path);
-  ~OutputIcov() = default;
+  explicit TextOutputIcov(const fs::path &path);
+  ~TextOutputIcov() = default;
 
-  const icov::ContentParameterSet &contentParameterSet() const;
-  icov::ContentParameterSet &contentParameterSet();
-  void writeQaryParams(const BitSymbolProvider::Pz &bsp);
-  void writeContentParameterSet();
-  void writeSyndromeFlag(bool flag);
-  void writeSyndrome(const Syndrome &s);
-  void writeFrameSize();
-  void writeBlockSize();
-  void writeSIRates(const NumcodeIdxVec &v);
-  void writeSIRate(const NumcodeIdx &v);
-  void writeSIMode(const uint &v);
-  void flush(int id);
-  std::ostream &getStream(int id);
-
-private:
-  icov::ContentParameterSet m_contentParameterSet;
-  boost::dynamic_bitset<> m_syndromes;
-  std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
-
-  int syndrome_bitshift;
-  int last_bit_shift;
-  icov::byte last_byte;
-
-  // 0 : RATE, 1: SYNDROME
-  uint32_t m_total_write_byte_block[2];
-  uint32_t m_total_write_byte_frame[2];
-
-  int total_write_bits;
-  int total_lost;
-  int total_shift;
-
-  int rates_count;
-
-  bool m_csvEnabled;
-
-  icov::bitstream::QaryParams m_qaryParams;
+  // OutputIcovBase interface
+public:
+  void writeQaryParams(const BitSymbolProvider::Pz &bsp) override;
+  void writeContentParameterSet() override;
+  void writeSyndrome(const Syndrome &s) override;
+  void writeFrameSize() override;
+  void writeBlockSize() override;
+  void writeSIRate(const NumcodeIdx &v) override;
+  void writeSIMode(const uint &v) override;
+  void startWriteBlock(const Block &b) override;
+  void startWritePrediction(uint16_t pred) override;
+  void endWritePrediction(uint16_t pred) override;
+  void endWriteBlock(const Block &b) override;
 };
 
 } // namespace encoder

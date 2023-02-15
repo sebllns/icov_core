@@ -176,7 +176,7 @@ void DecodeMode::run() {
     const uint icuIndex = encodingStruct.get_icuIndex(pos);
     auto icu_enc = encodingStruct.getICU(icuIndex);
 
-    inputFile.selectBlock(icu);
+    inputFile.selectBlock(*b);
     inputFile.readSyndromesSizes(syndSizes);
 
     for (int c = 0; c < channelCount; c++) {
@@ -211,7 +211,7 @@ void DecodeMode::run() {
       }
 
       for (int bp = 0; bp < lx; ++bp) {
-        std::cout << "BP " << bp << " / " << lx << std::endl;
+        std::cout << "BP " << bp + 1 << " / " << lx << std::endl;
         size_t stored_syndrome_size = channelCoder[c]->get_coder_size();
         size_t read_syndrome_size = channelCoder[c]->get_coder_size();
         icov::NumcodeIdx numcode = 1;
@@ -222,9 +222,12 @@ void DecodeMode::run() {
           stored_syndrome_size = syndSizes[c][bp];
         }
 
-        if (read_syndrome_size > 0)
+        if (read_syndrome_size > 0) {
           inputFile.readSyndrome(channelCoder[c]->syndrome(),
                                  read_syndrome_size, stored_syndrome_size);
+
+          std::cout << channelCoder[c]->syndrome().to_string(" ") << std::endl;
+        }
 
         channelCoder[c]->decode_bitplane(bp, numcode,
                                          channelCoder[c]->syndrome());

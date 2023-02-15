@@ -120,12 +120,13 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                     "Numcode value must be set to 1 for access block");
   }
   m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
-  m_bsp.injectBitplane(bp, m_blockBitplane);
 
   if ((bp + 1) == m_bsp.x_binary_length()) {
     icov::video::TransformUnit &dec_tu = mp_icu_enc->sourceX_TU(0);
     std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
+    icov::helpers::io::write_vector(std::cout, m_bsp.src_symboles(), ' ');
+    std::cout << std::endl;
   }
 }
 

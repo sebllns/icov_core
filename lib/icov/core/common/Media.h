@@ -147,7 +147,9 @@ protected:
 public:
   explicit IOutputMedia(const fs::path &path,
                         int media_type = (int)eMediaType::UNKNOWN)
-      : IMedia(path, media_type), m_outputStream(nullptr) {
+      : IMedia(path, media_type),
+        m_outputStream(std::make_unique<std::ofstream>(path)) {
+    icov::helpers::assert::not_null(m_outputStream.get());
     icov::helpers::path::assert_file_exists(path.string());
   }
 

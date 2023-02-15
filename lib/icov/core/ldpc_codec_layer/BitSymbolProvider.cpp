@@ -69,6 +69,10 @@ void BitSymbolProvider::inject_bitplane(SymboleVec &output, const BitVec &input,
     {
       if (input[i])
         output[i] *= -1;
+
+#if ICOV_ASSERTION_ENABLED
+      ICOV_ASSERT_MSG(output[i] < (1 << m_l), "Value overflows limits");
+#endif
     } else {
       output[i] = (output[i] << shift) + input[i];
     }
@@ -321,11 +325,12 @@ void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
       m_src_bits[i] = x;
 
     // apply decoded bitplane
-    BitSymbolProvider::inject_bitplane(m_src_symboles, x, 1);
+    inject_bitplane(m_src_symboles, x, 1);
 
     // if last apply sign
-    if (i == ((uint)m_l - 1))
-      BitSymbolProvider::inject_bitplane(m_src_symboles, m_src_bits[0], -1);
+    if (i == ((uint)m_l - 1)) {
+      inject_bitplane(m_src_symboles, m_src_bits[0], -1);
+    }
   }
 }
 
