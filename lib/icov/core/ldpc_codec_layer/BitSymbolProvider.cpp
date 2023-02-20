@@ -311,7 +311,10 @@ float BitSymbolProvider::pqks(int yk) const {
     if (i != 0)
       p1 += this->pz(-i - yk);
   }
-  return p0 / (p0 + p1);
+
+  p1 += p0;
+  ICOV_ASSERT_MSG(p1 > 0, "We need p1 > 0");
+  return p0 / p1;
 }
 
 void BitSymbolProvider::injectBitplane(uint i, BitVec x) {

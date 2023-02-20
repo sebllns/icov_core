@@ -95,7 +95,9 @@ void icov::encoder::TextOutputIcov::startWriteBlock(const Block &b) {
       << "BLOCK " << b.getIdSelf() << std::endl;
 }
 
-void icov::encoder::TextOutputIcov::startWritePrediction(uint16_t pred) {}
+void icov::encoder::TextOutputIcov::startWritePrediction(uint16_t pred) {
+  getStream(eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
+}
 
 void icov::encoder::TextOutputIcov::endWritePrediction(uint16_t pred) {}
 

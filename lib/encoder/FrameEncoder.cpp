@@ -101,13 +101,14 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
 
   // store bitplanes rates per SI and per channel
   for (uint16_t p : PredictionID) {
+    m_icov_file->startWritePrediction(p);
     for (int c = 0; c < (int)m_numComp; ++c) {
       std::cout << "<SI "
                 << BlockPrediction::toString(BlockPrediction::toPredType(p))
                 << " COMP " << c << "> ";
       if (m_channelCoder[c].si.count(p)) {
         std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
-        m_icov_file->writeSIMode(m_channelCoder[c].si[p].dirmode);
+        m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
         if (m_channelCoder[c].si[p].stored_pz.lx > 0) {
           std::cout << "R ";
@@ -122,9 +123,10 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
           std::cout << std::endl;
         }
       } else if (p != BlockPrediction::predType::NONE) {
-        m_icov_file->writeQaryParams(BitSymbolProvider::Pz(0, 0, 0, 0));
+        m_icov_file->writeSIMode(0);
       }
     }
+    m_icov_file->endWritePrediction(p);
   }
 
   // WRITE SYNDROMES
@@ -292,13 +294,6 @@ void icov::encoder::FrameEncoder::encode_tu(
   BitSymbolProvider bsp =
       x_tu.getBitSymbolProvider(comp, si_tu, m_params.bsp_params);
 
-#pragma omp critical
-  {
-    std::cout << std::endl;
-    icov::helpers::io::write_vector(std::cout, bsp.src_symboles(), ' ');
-    std::cout << std::endl;
-  }
-
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
   if (bsp.q0() == 1) {
@@ -391,6 +386,13 @@ void icov::encoder::FrameEncoder::encode_tu(
 #endif
 
       for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+
+        {
+          std::cout << BlockPrediction::toString(pred) << " COMP " << comp
+                    << " BP " << i << std::endl;
+          // icov::helpers::io::write_vector(std::cout, si_synd, ' ');
+          std::cout << si_synd[i].to_string(" ") << std::endl;
+        }
 
         if (si_numcodes[i] > 1 &&
             si_numcodes[i] < m_channelCoder[comp].bitplanes[i].minRate)

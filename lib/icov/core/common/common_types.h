@@ -109,15 +109,17 @@ public:
     sstr << "Array " << typeid(T).name() << m_size << "; max" << m_capacity
          << std::endl;
 
-    sstr << "[ ";
+    if (m_size > 0) {
 
-    for (int k = 0; k < m_size - 1; k++) {
+      sstr << "[ ";
 
-      sstr << this->m_data[k] << sep;
+      for (int k = 0; k < m_size - 1; k++) {
+
+        sstr << this->m_data[k] << sep;
+      }
+
+      sstr << this->m_data[m_size - 1] << " ]" << std::endl;
     }
-
-    sstr << this->m_data[m_size - 1] << " ]" << std::endl;
-
     return sstr.str();
   }
 

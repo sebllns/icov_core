@@ -104,8 +104,8 @@ public:
   void readFrameSize();
   void readBlockPos();
   void selectBlock(const Block &block);
-  void readSyndromesSizes(std::vector<NumcodeIdxVec> &output);
-  void selectPrediction(ushort pred_idx, int channelCount);
+  void readSyndromesSizes(std::vector<int> &bitplaneCount, std::vector<NumcodeIdxVec> &output);
+  void selectPrediction(ushort pred_idx, const std::vector<int> &bitplaneCount);
   int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);

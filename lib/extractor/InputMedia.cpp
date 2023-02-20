@@ -101,10 +101,11 @@ void icov::extractor::InputIcov::selectBlock(const Block &block) {
 }
 
 void icov::extractor::InputIcov::readSyndromesSizes(
-    std::vector<NumcodeIdxVec> &output) {
+    std::vector<int> &bitplaneCount, std::vector<NumcodeIdxVec> &output) {
   for (int c = 0; c < (int)output.size(); ++c) {
     // read bitplane count
-    output[c] = NumcodeIdxVec(readByteIntParam());
+    bitplaneCount[c] = readByteIntParam();
+    output[c] = NumcodeIdxVec(bitplaneCount[c]);
     std::cout << "COMP " << c << " N " << output[c].size() << "\n";
     for (int bp = 0; bp < (int)output[c].size(); ++bp) {
       // for each bitplane read stored syndrome size
@@ -115,23 +116,31 @@ void icov::extractor::InputIcov::readSyndromesSizes(
   }
 }
 
-void icov::extractor::InputIcov::selectPrediction(ushort pred_idx,
-                                                  int channelCount) {
+void icov::extractor::InputIcov::selectPrediction(
+    ushort pred_idx, const std::vector<int> &bitplaneCount) {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
 
-  for (int i = 0; i < pred_idx * channelCount; ++i) {
-    // read prediction mode
-    icov::helpers::io::read_value(str, &val);
+  int channelCount = bitplaneCount.size();
 
-    // read q_idx + 1
-    icov::helpers::io::read_value(str, &val);
-    // std::cout << static_cast<int>(val) << std::endl;
-    if (val > 0) {
-      // std::cout << "seek " << (val + 2) << std::endl;
-      // shift qary params
-      str.seekg(((val >> 4) + 2) * sizeof(icov::byte), std::ios_base::cur);
-    } // else no coding
+  for (int i = 0; i < pred_idx; ++i) {
+    for (int c = 0; c < channelCount; ++c) {
+
+      // read prediction mode + 1
+      icov::helpers::io::read_value(str, &val);
+
+      if (val > 0) {
+        // read q_idx + 1
+        icov::helpers::io::read_value(str, &val);
+        // std::cout << static_cast<int>(val) << std::endl;
+        if (val > 0) {
+          // std::cout << "seek " << (val + 2) << std::endl;
+          // shift qary params
+          str.seekg((bitplaneCount[c] + 2) * sizeof(icov::byte),
+                    std::ios_base::cur);
+        } // else no coding
+      }   // else no prediction
+    }
   }
 }
 
@@ -153,6 +162,8 @@ void icov::extractor::InputIcov::readQaryParams(icov::byte header, int &q_idx,
   // z_max
   icov::helpers::io::read_value(str, &m_qaryParams[2]);
   icov::bitstream::readQaryParams(m_qaryParams, q_idx, z_min, z_max);
+
+  ICOV_ASSERT_MSG(z_min < z_max, "z_min >= z_max is not possible");
 }
 
 void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {

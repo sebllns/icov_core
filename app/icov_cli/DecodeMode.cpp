@@ -117,6 +117,7 @@ void DecodeMode::run() {
         *ldpc_args, m_vvc_bufs));
   }
 
+  std::vector<int> bitplaneCount(channelCount);
   std::vector<NumcodeIdxVec> syndSizes(channelCount);
 
   icov::video::TransformUnit dec_tu(blockArea, true, true, true);
@@ -177,7 +178,12 @@ void DecodeMode::run() {
     auto icu_enc = encodingStruct.getICU(icuIndex);
 
     inputFile.selectBlock(*b);
-    inputFile.readSyndromesSizes(syndSizes);
+    inputFile.readSyndromesSizes(bitplaneCount, syndSizes);
+
+    if (!is_access_block) {
+      const int block_prediction_idx = getPredictionOrder(block_prediction);
+      inputFile.selectPrediction(block_prediction_idx, bitplaneCount);
+    }
 
     for (int c = 0; c < channelCount; c++) {
 
@@ -189,10 +195,14 @@ void DecodeMode::run() {
       if (is_access_block) {
         channelCoder[c]->set_access_block_params(lx);
       } else {
-        const int block_prediction_idx = getPredictionOrder(block_prediction);
-        inputFile.selectPrediction(block_prediction_idx, channelCount);
 
-        const int dir_mode = inputFile.readByteIntParam();
+        const int dir_mode = inputFile.readByteIntParam() - 1;
+
+        std::cout << "SELECT PREDICTION " << block_prediction << ", "
+                  << dir_mode << std::endl;
+
+        ICOV_ASSERT_MSG(dir_mode >= 0, "Dir mode not available");
+
         const int pred_hdr = inputFile.readByteIntParam();
         int zmin = 0, zmax = 0, q_idx = 0;
         if (pred_hdr != 0) {
@@ -204,6 +214,7 @@ void DecodeMode::run() {
         if (q_idx == 0) {
           channelCoder[c]->set_si_params(0, 0, 0, 0);
         } else {
+          // ERROR NO CODING HERE !!!!
           const float q = m_q_values[q_idx - 1];
           std::cout << "QP " << zmin << ", " << zmax << ", " << q << std::endl;
           channelCoder[c]->set_si_params(zmin, zmax, q, lx);
@@ -220,6 +231,8 @@ void DecodeMode::run() {
           numcode = inputFile.readByteIntParam();
           read_syndrome_size = channelCoder[c]->get_m(numcode);
           stored_syndrome_size = syndSizes[c][bp];
+          std::cout << "SYND " << numcode << " " << read_syndrome_size << " "
+                    << stored_syndrome_size << std::endl;
         }
 
         if (read_syndrome_size > 0) {
