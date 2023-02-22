@@ -93,7 +93,7 @@ public:
 
   void decode_bitplane(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
-  void end_encode_icu();
+  void end_decode_icu();
 
   int get_coder_size() const;
 

@@ -59,7 +59,20 @@ class IBlockProcessor {
 public:
   virtual ~IBlockProcessor() = default;
 
+  ///
+  /// \brief startProcess : executed BEFORE loop on processBlock
+  ///
   inline virtual void startProcess(){};
+
+  ///
+  /// \brief processBlock executed in a loop on each block to process
+  /// \param b
+  /// \param prediction
+  ///
   virtual void processBlock(const Block &b, uint16_t prediction) = 0;
+
+  ///
+  /// \brief startProcess : executed AFTER loop on processBlock
+  ///
   inline virtual void endProcess(){};
 };

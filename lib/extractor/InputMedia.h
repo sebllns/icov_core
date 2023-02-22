@@ -103,13 +103,14 @@ public:
 
   void readFrameSize();
   void readBlockPos();
-  void selectBlock(const Block &block);
-  void readSyndromesSizes(std::vector<int> &bitplaneCount, std::vector<NumcodeIdxVec> &output);
+  void selectBlock(size_t id);
+  void readSyndromesSizes(std::vector<int> &bitplaneCount,
+                          std::vector<NumcodeIdxVec> &output);
   void selectPrediction(ushort pred_idx, const std::vector<int> &bitplaneCount);
   int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
-  void extractBlock(BlockDecoderParams &output, int icu_idx);
+  void extractBlock(BlockChannelDecoderParams &output, int icu_idx);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;

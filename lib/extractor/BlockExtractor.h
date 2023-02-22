@@ -49,10 +49,13 @@
 
 #pragma once
 
+#include "ChannelExtractor.h"
+#include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
 #include "interface/IBlockProcessor.h"
 #include <memory>
 #include <ostream>
+#include <vector>
 
 namespace icov {
 namespace extractor {
@@ -60,13 +63,12 @@ class BlockExtractor : public IBlockProcessor {
   // IBlockProcessor interface
 public:
   struct params {
-    int block_size;
-    int channel_count;
+    std::vector<int> icu_sizes;
   };
 
-  BlockExtractor(std::shared_ptr<InputIcov> &icovFile,
-                 std::shared_ptr<std::ostream> &stream,
-                 const BlockExtractor::params &p);
+  BlockExtractor(std::shared_ptr<InputIcov> &icovFile, icov::byte *syndrome,
+                 const BlockExtractor::params &p,
+                 const CoderParameters &coder_params);
   ~BlockExtractor();
 
   void startProcess() override;
@@ -75,8 +77,9 @@ public:
 
 protected:
   std::shared_ptr<InputIcov> m_icovFile;
-  std::shared_ptr<std::ostream> m_stream;
+  std::vector<ChannelExtractor> m_channelExtractor;
   std::vector<float> m_q_values;
+  icov::byte *m_syndrome_buf;
   params m_params;
 };
 } // namespace extractor

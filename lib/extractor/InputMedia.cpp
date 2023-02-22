@@ -2,6 +2,7 @@
 #include "BlockPrediction.h"
 #include "Media.h"
 #include "common_types.h"
+#include "extracted_stream.h"
 #include "helpers.h"
 #include "icov_stream.h"
 #include "typedef.h"
@@ -90,9 +91,9 @@ void icov::extractor::InputIcov::readBlockPos() {
   }
 }
 
-void icov::extractor::InputIcov::selectBlock(const Block &block) {
+void icov::extractor::InputIcov::selectBlock(size_t id) {
   getStream(eIcovStream::ENCODE_PARAMS).clear();
-  auto id = block.getIdSelf() - 1;
+  // auto id = id.getIdSelf() - 1;
   getStream(eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[id], std::ios_base::beg);
   getStream(eIcovStream::SYNDROME).clear();
@@ -177,7 +178,7 @@ void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   }
 }
 
-void extractor::InputIcov::extractBlock(BlockDecoderParams &output,
+void extractor::InputIcov::extractBlock(BlockChannelDecoderParams &output,
                                         int icu_idx) {}
 
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,

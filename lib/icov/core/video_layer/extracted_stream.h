@@ -49,30 +49,51 @@
 #include "common_types.h"
 #include "extracted_stream/NalUnit.h"
 #include "extracted_stream/ViewportUnit.h"
+#include "helpers.h"
 #include "icov_stream.h"
 #include "typedef.h"
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/queue.hpp>
+#include <boost/serialization/vector.hpp>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 #include <sys/types.h>
 #include <vector>
 
 namespace icov {
 
-struct BlockDecoderParams {
+// struct BlockBitplaneDecoderParams {
+//  icov::byte Numcode;
+//  BlockBitplaneDecoderParams() : Numcode(0), SyndromeBuf(nullptr) {}
+//};
+
+template <typename T> struct RawByteArray : boost::noncopyable {
+  T Length;
+  icov::byte *Data;
+  void release() {
+    Length = 0;
+    if (Data != nullptr)
+      delete[] Data;
+  }
+  RawByteArray() : Length(0), Data(nullptr) {}
+  ~RawByteArray() {}
+};
+
+struct BlockChannelDecoderParams {
   icov::byte DirMode;
   bool CloneSI;
-  icov::byte LX;
   icov::byte QIdx;
   icov::byte Zmin;
   icov::byte Zmax;
-  icov::byte Numcode;
-
-  explicit BlockDecoderParams()
-      : DirMode(0), CloneSI(false), LX(0), QIdx(0), Zmin(0), Zmax(0),
-        Numcode(0) {}
+  RawByteArray<icov::byte> BitplaneNumcodes;
+  RawByteArray<uint16_t> SyndromeBuf;
+  explicit BlockChannelDecoderParams()
+      : DirMode(0), CloneSI(false), QIdx(0), Zmin(0), Zmax(0) {}
 };
 
 } // namespace icov
@@ -80,17 +101,33 @@ struct BlockDecoderParams {
 namespace boost {
 namespace serialization {
 
+template <class Archive, typename T>
+void serialize(Archive &ar, icov::RawByteArray<T> &io,
+               const unsigned int /*version*/) {
+  ar &io.Length;
+  if (Archive::is_loading::value) {
+    io.release();
+    io.Data = new icov::byte[io.Length];
+  }
+  ar &make_array<icov::byte>(io.Data, io.Length);
+}
+
 template <class Archive>
-void serialize(Archive &ar, icov::BlockDecoderParams &io,
+void serialize(Archive &ar, icov::BlockChannelDecoderParams &io,
                const unsigned int /*version*/) {
 
   ar &io.DirMode;
   ar &io.CloneSI;
-  ar &io.LX;
-  ar &io.QIdx;
-  ar &io.Zmin;
-  ar &io.Zmax;
-  ar &io.Numcode;
+
+  if (!io.CloneSI) {
+    ar &io.BitplaneNumcodes;
+    if (io.BitplaneNumcodes.Length > 0) {
+      ar &io.QIdx;
+      ar &io.Zmin;
+      ar &io.Zmax;
+    }
+    ar &io.SyndromeBuf;
+  }
 
   //  size_t byte_count = bitToByteCount(io.size());
   //  icov::byte *data = new icov::byte[byte_count];

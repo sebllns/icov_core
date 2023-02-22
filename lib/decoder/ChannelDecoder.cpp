@@ -130,7 +130,7 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
   }
 }
 
-void ChannelDecoder::end_encode_icu() {
+void ChannelDecoder::end_decode_icu() {
 
   icov::video::TransformUnit &dec_tu = mp_icu_enc->sourceX_TU(0);
 

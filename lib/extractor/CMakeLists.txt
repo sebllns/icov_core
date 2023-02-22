@@ -11,5 +11,5 @@ file(GLOB_RECURSE INC_FILES "*.h" "*.hpp" "*.hxx")
 
 # library
 add_library(${LIB_NAME} ${SRC_FILES} ${INC_FILES})
-target_link_libraries(${LIB_NAME} IcovCoreLib IcovOmnidirectionalLayer)
-set_target_properties(${LIB_NAME} PROPERTIES FOLDER "public/lib" )
+target_link_libraries(${LIB_NAME} IcovCoreLib IcovOmnidirectionalLayer IcovLdpcCodecLayer)
+set_target_properties(${LIB_NAME} PROPERTIES FOLDER "public/lib")

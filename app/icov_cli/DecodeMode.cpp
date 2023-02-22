@@ -343,7 +343,7 @@ void DecodeMode::run() {
       //      cv::imshow("DECODED", block_output);
       //      cv::waitKeyEx(0);
 
-      channelCoder[c]->end_encode_icu();
+      channelCoder[c]->end_decode_icu();
     }
   }
 

@@ -1,5 +1,6 @@
 #include "RequestManager.h"
 
+#include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
@@ -18,8 +19,10 @@ void RequestManager::setBlockPrediction(
 }
 
 void RequestManager::start() {
-  // TODO CHECK EVERYTHING ASSIGNED
-
+  icov::helpers::assert::not_null(m_blockProcessor.get(),
+                                  "Block processor is not allocated");
+  icov::helpers::assert::not_null(m_accessBlocks.get(),
+                                  "Access block manager is not allocated");
   m_accessBlocks->buildAccessBlocks(*m_picture, *m_viewport);
 }
 
