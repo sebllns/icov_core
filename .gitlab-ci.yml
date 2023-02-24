@@ -1,5 +1,7 @@
 image: alpine
 job_doxygen:
+  script:
+    - echo "test job"
   tags:
    - ci.inria.fr
    - small
