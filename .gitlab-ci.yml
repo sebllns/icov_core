@@ -1,5 +1,8 @@
 image: alpine
-
+job_doxygen:
+  tags:
+   - ci.inria.fr
+   - small
 pages:
   script:
   - apk update && apk add doxygen graphviz ttf-freefont
