@@ -101,12 +101,24 @@ public:
     str.seekg(byte_count, std::ios_base::cur);
   }
 
+  void readSyndrome(icov::byte *output, uint64_t read_size,
+                    uint64_t stored_size);
   void readFrameSize();
   void readBlockPos();
   void selectBlock(size_t id);
   void readSyndromesSizes(std::vector<int> &bitplaneCount,
                           std::vector<NumcodeIdxVec> &output);
+  void readSyndromesSizes(NumcodeIdxVec &output);
   void selectPrediction(ushort pred_idx, const std::vector<int> &bitplaneCount);
+
+  template <typename T> void read(int id, int size, T *output) {
+    icov::helpers::io::read_value(getStream(id), output, size);
+  }
+
+  template <typename T> void read(int id, T &output) {
+    icov::helpers::io::read_value(getStream(id), &output, 1);
+  }
+
   int readByteIntParam();
   void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
   void readSIRates(NumcodeIdxVec &v);
@@ -115,6 +127,8 @@ public:
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;
   std::istream &getStream(int id);
+
+  void passPrediction(int bitplaneCount);
 
 private:
   icov::ContentParameterSet m_contentParameterSet;

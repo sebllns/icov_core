@@ -21,13 +21,14 @@ void TextOutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     getStream(eIcovStream::ENCODE_PARAMS) << "Q 0 ";
-    m_total_write_byte_block[0] += sizeof(icov::byte);
+    m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(icov::byte);
   } else {
     getStream(eIcovStream::ENCODE_PARAMS)
         << "Q " << bsp.q_idx << " Zmin " << bsp.zmin << " Zmax " << bsp.zmax
         << " ";
 
-    m_total_write_byte_block[0] += QARY_PARAMS_SIZE * sizeof(icov::byte);
+    m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
+        QARY_PARAMS_SIZE * sizeof(icov::byte);
   }
 }
 
@@ -38,52 +39,54 @@ void TextOutputIcov::writeContentParameterSet() {
 }
 
 void TextOutputIcov::writeSyndrome(const Syndrome &s) {
-  const int byte_size = bitToByteCount(s.size() + last_bit_shift);
+  const int byte_size = bitToByteCount(s.size());
 
-  last_bit_shift = byteToBitCount(byte_size) - s.size();
-
-  total_write_bits += s.size();
-  total_shift += last_bit_shift;
-
-  m_total_write_byte_block[1] += byte_size;
+  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] += byte_size;
 
   getStream(eIcovStream::SYNDROME) << s.to_string(" ");
 }
 
 void TextOutputIcov::writeFrameSize() {
   //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
-  //                                     m_total_write_byte_frame[0], false);
+  //                                    m_total_write_byte[eWriteCounter::FRAME_RATE],
+  //                                    false);
   //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
-  //                                     m_total_write_byte_frame[1], true);
-  m_total_write_byte_frame[0] = 0;
-  m_total_write_byte_frame[1] = 0;
+  //                                     m_total_write_byte[eWriteCounter::FRAME_SYNDROME],
+  //                                     true);
+  m_total_write_byte[eWriteCounter::FRAME_RATE] = 0;
+  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] = 0;
 }
 
 void TextOutputIcov::writeBlockSize() {
 
-  std::cout << "WRITE SIZE " << m_total_write_byte_block[0] << " "
-            << m_total_write_byte_block[1] << std::endl;
+  std::cout << "WRITE SIZE " << m_total_write_byte[eWriteCounter::BLOCK_RATE]
+            << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
+            << std::endl;
 
   //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
-  //                                     m_total_write_byte_block[0], true);
+  //                                      m_total_write_byte[eWriteCounter::BLOCK_RATE],
+  //                                      true);
   //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
-  //                                     m_total_write_byte_block[1], true);
+  //                                     m_total_write_byte[eWriteCounter::BLOCK_SYNDROME],
+  //                                     true);
 
-  m_total_write_byte_frame[0] += m_total_write_byte_block[0];
-  m_total_write_byte_frame[1] += m_total_write_byte_block[1];
+  m_total_write_byte[eWriteCounter::FRAME_RATE] +=
+      m_total_write_byte[eWriteCounter::BLOCK_RATE];
+  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] +=
+      m_total_write_byte[eWriteCounter::BLOCK_SYNDROME];
 
-  m_total_write_byte_block[0] = 0;
-  m_total_write_byte_block[1] = 0;
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] = 0;
+  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
 void TextOutputIcov::writeSIRate(const NumcodeIdx &r) {
   getStream(eIcovStream::ENCODE_PARAMS) << r << " ";
-  m_total_write_byte_block[0] += sizeof(rate_t);
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
 }
 
 void TextOutputIcov::writeSIMode(const uint &v) {
   getStream(eIcovStream::ENCODE_PARAMS) << "MODE " << v << " ";
-  m_total_write_byte_block[0] += sizeof(icov::byte);
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(icov::byte);
 }
 
 } // namespace encoder

@@ -11,7 +11,7 @@ namespace encoder {
 
 OutputIcovBase::OutputIcovBase(const boost::filesystem::path &path,
                                int openflag)
-    : icov::IOutputIcov(path), last_bit_shift(0), last_byte(0) {
+    : icov::IOutputIcov(path) {
 
   int flags = std::ios_base::out | openflag;
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
@@ -19,15 +19,7 @@ OutputIcovBase::OutputIcovBase(const boost::filesystem::path &path,
     m_fileParts[i] = std::make_unique<std::ofstream>(
         part_file, static_cast<std::ios_base::openmode>(flags));
   }
-
-  total_lost = 0;
-  total_shift = 0;
-  total_write_bits = 0;
-
-  m_total_write_byte_block[0] = 0;
-  m_total_write_byte_block[1] = 0;
-  m_total_write_byte_frame[0] = 0;
-  m_total_write_byte_frame[1] = 0;
+  m_total_write_byte.fill(0);
 }
 
 const icov::ContentParameterSet &OutputIcovBase::contentParameterSet() const {

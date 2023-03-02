@@ -60,10 +60,14 @@
 #include <boost/serialization/queue.hpp>
 #include <boost/serialization/vector.hpp>
 #include <cmath>
+#include <complex>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <sys/types.h>
 #include <vector>
+
+#define BITSTREAM_SIZE 8192
 
 namespace icov {
 
@@ -80,21 +84,76 @@ template <typename T> struct RawByteArray : boost::noncopyable {
     if (Data != nullptr)
       delete[] Data;
   }
+  void reset(T l) {
+    release();
+    Length = l;
+    Data = new icov::byte[l];
+  }
+  explicit RawByteArray(T l) : Length(l), Data(new icov::byte[l]) {}
   RawByteArray() : Length(0), Data(nullptr) {}
   ~RawByteArray() {}
 };
 
 struct BlockChannelDecoderParams {
   icov::byte DirMode;
-  bool CloneSI;
   icov::byte QIdx;
   icov::byte Zmin;
   icov::byte Zmax;
-  RawByteArray<icov::byte> BitplaneNumcodes;
-  RawByteArray<uint16_t> SyndromeBuf;
+  //  RawByteArray<icov::byte> BitplaneNumcodes;
+  //  RawByteArray<uint16_t> SyndromeBuf;
+
+  std::queue<icov::byte> Bitplanes;
+
   explicit BlockChannelDecoderParams()
-      : DirMode(0), CloneSI(false), QIdx(0), Zmin(0), Zmax(0) {}
+      : DirMode(0), QIdx(0), Zmin(0), Zmax(0) {}
 };
+
+struct IcovExtractedBitstream {
+  std::array<icov::byte, BITSTREAM_SIZE> Buffer;
+
+  IcovExtractedBitstream() : WritePosition(0), ReadPosition(0), ActualSize(0) {}
+  void push(const icov::byte &val) {
+    auto pos = WritePosition;
+    shiftWritePosition(1);
+    Buffer[pos] = val;
+  }
+
+  void shiftWritePosition(size_t offset) {
+    WritePosition = (WritePosition + offset) % Buffer.size();
+    ActualSize += offset;
+    ICOV_WARNING_MSG(ActualSize > Buffer.size(), "Buffer overflows");
+  }
+
+  void shiftReadPosition(size_t offset) {
+    ReadPosition = (ReadPosition + offset) % Buffer.size();
+    ActualSize -= offset;
+    ICOV_WARNING_MSG(ActualSize < 0, "Buffer negative overflows");
+  }
+
+  size_t getWritePosition() const;
+  size_t getReadPosition() const;
+  size_t getActualSize() const;
+
+protected:
+  size_t WritePosition;
+  size_t ReadPosition;
+  size_t ActualSize;
+};
+
+// using IcovExtractedBitstream = std::vector<icov::byte>;
+using sp_IcovExtractedBitstream = std::shared_ptr<IcovExtractedBitstream>;
+
+inline size_t IcovExtractedBitstream::getWritePosition() const {
+  return WritePosition;
+}
+
+inline size_t IcovExtractedBitstream::getReadPosition() const {
+  return ReadPosition;
+}
+
+inline size_t IcovExtractedBitstream::getActualSize() const {
+  return ActualSize;
+}
 
 } // namespace icov
 
@@ -117,18 +176,23 @@ void serialize(Archive &ar, icov::BlockChannelDecoderParams &io,
                const unsigned int /*version*/) {
 
   ar &io.DirMode;
-  ar &io.CloneSI;
 
-  if (!io.CloneSI) {
-    ar &io.BitplaneNumcodes;
-    if (io.BitplaneNumcodes.Length > 0) {
-      ar &io.QIdx;
-      ar &io.Zmin;
-      ar &io.Zmax;
-    }
-    ar &io.SyndromeBuf;
+  if (io.DirMode == 0) {
+    // ACCESS BLOCK
+    ar &io.Bitplanes;
+    ICOV_ASSERT_MSG(io.Bitplanes.size() > 0, "No access block data");
+  } else {
+    // NON ACCESS BLOCK
+    ar &io.QIdx;
+    if (io.QIdx > 0) {
+      ar &io.Bitplanes;
+      if (io.Bitplanes.size() > 0) {
+        ar &io.Zmin;
+        ar &io.Zmax;
+        // ar &io.SyndromeBuf;
+      } // ELSE NO BITPLANE => 0
+    }   // else CLONE SI
   }
-
   //  size_t byte_count = bitToByteCount(io.size());
   //  icov::byte *data = new icov::byte[byte_count];
   //  ar &make_array<icov::byte>(data, byte_count);

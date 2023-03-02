@@ -56,6 +56,7 @@
 #include "encoded_stream/ContentParameterSet.h"
 #include "icov_stream.h"
 #include "typedef.h"
+#include <array>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstdint>
@@ -69,6 +70,16 @@ namespace encoder {
 
 class OutputIcovBase : public icov::IOutputIcov {
 public:
+  enum eWriteCounter {
+    BLOCK_RATE = 0,
+    BLOCK_SYNDROME,
+    FRAME_RATE,
+    FRAME_SYNDROME,
+    TOTAL_WRITE,
+    TOTAL_LOST,
+    COUNT
+  };
+
   using rate_t = icov::bitstream::rate_t;
   explicit OutputIcovBase(const fs::path &path, int openflag);
   ~OutputIcovBase() = default;
@@ -94,18 +105,7 @@ public:
 protected:
   icov::ContentParameterSet m_contentParameterSet;
   std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
-
-  int syndrome_bitshift;
-  int last_bit_shift;
-  icov::byte last_byte;
-
-  // 0 : RATE, 1: SYNDROME
-  uint32_t m_total_write_byte_block[2];
-  uint32_t m_total_write_byte_frame[2];
-
-  int total_write_bits;
-  int total_lost;
-  int total_shift;
+  std::array<uint32_t, eWriteCounter::COUNT> m_total_write_byte;
 };
 
 } // namespace encoder

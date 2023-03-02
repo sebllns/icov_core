@@ -47,6 +47,8 @@
  *****************************************************************************/
 #pragma once
 #include "BitSymbolProvider.h"
+#include "IInteractiveCoder.h"
+#include "common_types.h"
 #include "helpers.h"
 #include "typedef.h"
 #include <boost/archive/binary_oarchive.hpp>
@@ -65,6 +67,20 @@
 
 namespace icov {
 namespace bitstream {
+
+inline ushort inverseQuantizedSize(icov::byte input,
+                                   const IInteractiveCoder &coder) {
+  return (input == 0)
+             ? (0)
+             : ((input == 1) ? (static_cast<ushort>(coder.get_n()))
+                             : (static_cast<ushort>(coder.get_m(input - 2))));
+}
+
+inline void getByteCount(int bit_size, ushort &byte_count,
+                         ushort &byte_padding) {
+  byte_count = icov::bitToByteCount(bit_size);
+  byte_padding = bit_size % BYTE_SIZE;
+}
 
 using rate_t =
 #if ICOV_RATE_SIZE == 1

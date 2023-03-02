@@ -67,6 +67,13 @@ void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
   getStream(eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
 }
 
+void extractor::InputIcov::readSyndrome(byte *output, uint64_t read_size,
+                                        uint64_t stored_size) {
+  auto &str = getStream(eIcovStream::SYNDROME);
+  icov::helpers::io::read_value(str, output, read_size);
+  str.seekg(stored_size - read_size, std::ios_base::cur);
+}
+
 void icov::extractor::InputIcov::readBlockPos() {
   std::streampos rate_pos = 0;
   std::streampos synd_pos = 0;
@@ -117,30 +124,46 @@ void icov::extractor::InputIcov::readSyndromesSizes(
   }
 }
 
-void icov::extractor::InputIcov::selectPrediction(
-    ushort pred_idx, const std::vector<int> &bitplaneCount) {
+void extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
+  // read bitplane count
+  int bitplaneCount = readByteIntParam();
+  // output.resize(bitplaneCount);
+  std::cout << " N " << bitplaneCount << "\n";
+  for (int bp = 0; bp < bitplaneCount; ++bp) {
+    // for each bitplane read stored syndrome size
+    output.push_back(readByteIntParam());
+    // std::cout << " " << output[c][bp];
+  }
+  std::cout << std::endl;
+}
+
+void icov::extractor::InputIcov::passPrediction(int bitplaneCount) {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
 
-  int channelCount = bitplaneCount.size();
+  // read prediction mode + 1
+  icov::helpers::io::read_value(str, &val);
 
+  if (val > 0) {
+    // read q_idx + 1
+    icov::helpers::io::read_value(str, &val);
+    // std::cout << static_cast<int>(val) << std::endl;
+    if (val > 0) {
+      // std::cout << "seek " << (val + 2) << std::endl;
+      // shift qary params
+      int byte_shift = (bitplaneCount + 2) * sizeof(icov::byte);
+      str.seekg(byte_shift, std::ios_base::cur);
+    } // else no coding
+  }   // else no prediction
+}
+
+void icov::extractor::InputIcov::selectPrediction(
+    ushort pred_idx, const std::vector<int> &bitplaneCount) {
+
+  int channelCount = bitplaneCount.size();
   for (int i = 0; i < pred_idx; ++i) {
     for (int c = 0; c < channelCount; ++c) {
-
-      // read prediction mode + 1
-      icov::helpers::io::read_value(str, &val);
-
-      if (val > 0) {
-        // read q_idx + 1
-        icov::helpers::io::read_value(str, &val);
-        // std::cout << static_cast<int>(val) << std::endl;
-        if (val > 0) {
-          // std::cout << "seek " << (val + 2) << std::endl;
-          // shift qary params
-          str.seekg((bitplaneCount[c] + 2) * sizeof(icov::byte),
-                    std::ios_base::cur);
-        } // else no coding
-      }   // else no prediction
+      passPrediction(bitplaneCount[c]);
     }
   }
 }

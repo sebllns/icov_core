@@ -62,7 +62,7 @@
 
 using namespace icov;
 
-#define PREDICTION_COUNT 8
+#define PREDICTION_COUNT 9
 #define ACCESS_BLOCK_PREDICTION_COUNT 1
 #define TOTAL_PREDICTION_COUNT                                                 \
   (PREDICTION_COUNT + ACCESS_BLOCK_PREDICTION_COUNT)
@@ -81,6 +81,7 @@ static const uint16_t PredictionID[PREDICTION_COUNT] = {
     BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
     BlockPrediction::RIGHT,        BlockPrediction::LEFT,
     BlockPrediction::TOP,          BlockPrediction::BOTTOM,
+    BlockPrediction::INTER,
 };
 
 inline int getPredictionOrder(BlockPrediction::predType pred) {

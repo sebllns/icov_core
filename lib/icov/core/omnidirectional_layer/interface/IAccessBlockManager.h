@@ -51,6 +51,7 @@
 
 #include "common.h"
 #include "omnidirectional_layer/Block.h"
+#include <string>
 
 class IPicture;
 class IViewportManager;
@@ -64,6 +65,7 @@ protected:
 public:
   const BlockIteratorVector &blocks() const;
   virtual ~IAccessBlockManager() = default;
+  virtual const std::string getID() = 0;
   virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) = 0;
   virtual BlockVector::const_iterator
   findAccessBlock(const IViewportManager &vpm) const;

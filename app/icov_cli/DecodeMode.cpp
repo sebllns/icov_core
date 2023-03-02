@@ -177,7 +177,7 @@ void DecodeMode::run() {
     const uint icuIndex = encodingStruct.get_icuIndex(pos);
     auto icu_enc = encodingStruct.getICU(icuIndex);
 
-    inputFile.selectBlock(*b);
+    // inputFile.selectBlock(*b);
     inputFile.readSyndromesSizes(bitplaneCount, syndSizes);
 
     if (!is_access_block) {

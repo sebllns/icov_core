@@ -66,6 +66,7 @@ public:
   ~IcovAccessBlockManager() = default;
 
   // IAccessBlockManager interface
-  virtual void buildAccessBlocks(IPicture &pic,
-                                 IViewportManager &vpm) override;
+  virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) override;
+
+  const std::string getID() override;
 };

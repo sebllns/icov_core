@@ -13,10 +13,8 @@ void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
   auto pov = vpm.viewportGeometry().getPov();
 
   for (auto it = std::begin(pic.icus()); it != std::end(pic.icus()); ++it) {
-    vpm.viewportGeometry().setPov(
-        angle_radian(pic.angleX(it->center_u()),
-                     pic.angleY(it->center_v()) -
-                         M_PI_2)); // FIXME have to put pic.angleY - M_PI_2
+    vpm.viewportGeometry().setPov(angle_radian(
+        pic.angleX(it->center_u()), pic.angleY(it->center_v()) - M_PI_2));
 
     if (!pic.isValidBlock(findAccessBlock(vpm))) {
       m_blocks.push_back(it);
@@ -35,4 +33,8 @@ void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
   //    }
 
   vpm.viewportGeometry().setPov(pov);
+}
+
+const std::string IcovAccessBlockManager::getID() {
+  return "aa12d096-261c-4ba4-81b1-c9b7c4ff9ffc";
 }
