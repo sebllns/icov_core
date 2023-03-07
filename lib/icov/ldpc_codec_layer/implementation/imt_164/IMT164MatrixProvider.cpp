@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "io/PcmData.h"
+#include "tools/DebugTools.h"
 
 using namespace icov;
 
@@ -26,6 +27,8 @@ void icov::IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H) {
 void IMT164MatrixProvider::_buildMatrix(int numcode, AffMatrix &H) {
   int m = m_tools->get_m(numcode);
   int n = m_tools->get_n();
+
+  ICOV_DEBUG << "Build matrix " << m << " x " << n;
 
   int level_idx = m_tools->is_level(m);
 

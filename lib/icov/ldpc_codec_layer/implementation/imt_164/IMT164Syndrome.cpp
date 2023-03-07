@@ -1,13 +1,16 @@
 #include "IMT164Syndrome.h"
 
+#include "helpers.h"
 #include "tools/DebugTools.h"
 
 using namespace icov;
 
 IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level,
-                                             int max_level)
-    : ISyndromeManager(n), m_min_level(min_level), m_max_level(max_level),
-      accumulated_syndrome(nullptr), current_level(max_level) {
+                                             int max_level, int min_m,
+                                             int max_m)
+    : ISyndromeManager(n), accumulated_syndrome(nullptr),
+      m_min_level(min_level), m_max_level(max_level), m_min_m(min_m),
+      m_max_m(max_m), current_level(max_level) {
   int l = m_min_level;
   while (l <= m_max_level) {
     m_levels.insert(m_levels.begin(), l);
@@ -18,6 +21,9 @@ IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level,
   this->mapping_file.resize(get_level_count() - 1, FastMatrix<index_t>(0, 0));
 
   this->reset_doping();
+
+  ICOV_ASSERT_MSG(m_min_m >= get_m_level(m_max_level), "Min m bad value");
+  ICOV_ASSERT_MSG(m_max_m <= get_m_level(m_min_level), "Max m bad value");
 }
 
 IMT164SyndromeManager::~IMT164SyndromeManager() {
@@ -25,13 +31,9 @@ IMT164SyndromeManager::~IMT164SyndromeManager() {
     delete[] accumulated_syndrome;
 }
 
-int IMT164SyndromeManager::get_m_max() const {
-  return get_m_level(m_min_level);
-}
+int IMT164SyndromeManager::get_m_max() const { return m_max_m; }
 
-int IMT164SyndromeManager::get_m_min() const {
-  return get_m_level(m_max_level);
-}
+int IMT164SyndromeManager::get_m_min() const { return m_min_m; }
 
 int IMT164SyndromeManager::get_m_level(int level) const {
   return get_n() / level;
@@ -148,9 +150,7 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
   // DebugTools::write_str("./acc.txt",
   // DebugTools::array_tostring(accumulated_syndrome, offset, "acc"));
 
-  if (offset != (get_m_max())) {
-    throw std::runtime_error("offset != n/2");
-  }
+  icov::helpers::assert::equal(offset, get_m_max(), "offset != n/2");
 
   // init cache for doping
   doping_synd = Syndrome(get_m_max());
@@ -171,7 +171,7 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
                                           LLRProvider &llr_provider) {
 
   int m = get_m(numcode);
-  int n = get_n();
+  // int n = get_n();
 
   // std::cout << "compute_deacc " << m << std::endl;
 

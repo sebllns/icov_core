@@ -49,13 +49,11 @@
 
 #pragma once
 
-#include "ChannelExtractor.h"
 #include "extracted_stream.h"
 #include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
 #include "interface/IBlockProcessor.h"
 #include <memory>
-#include <ostream>
 #include <queue>
 #include <string>
 #include <vector>
@@ -69,7 +67,7 @@ public:
     std::vector<int> icu_sizes;
   };
 
-  BlockExtractor(std::shared_ptr<InputIcov> &icovFile, icov::byte *syndrome,
+  BlockExtractor(std::shared_ptr<InputIcov> &icovFile,
                  const BlockExtractor::params &p,
                  const CoderParameters &coder_params,
                  const sp_IcovExtractedBitstream &extraction);
@@ -80,13 +78,10 @@ public:
   void endProcess() override;
 
 protected:
-  std::vector<float> m_q_values;
   std::shared_ptr<InputIcov> m_icovFile;
   sp_IcovExtractedBitstream m_extractionBitstream;
   int m_channelCount;
   std::vector<std::unique_ptr<ChannelExtractor>> m_channelExtractor;
-  //  std::vector<int> m_bitplaneCount;
-  icov::byte *m_syndrome_buf;
   params m_params;
 };
 } // namespace extractor

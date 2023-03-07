@@ -27,6 +27,9 @@ std::unique_ptr<CoderParameters> CoderFactory::parse_coder_parameters(
 }
 
 p_InteractiveCoder CoderFactory::create_coder(const CoderParameters &args) {
+  ICOV_INFO << "Initialization of coder with type " << args.type
+            << " and length " << args.n << " >>>> " << args.database;
+
   // SHARED PTR -> RESET
   std::shared_ptr<LLRProvider> llrProvider;
   std::shared_ptr<IDecoder<AffMatrix>> ldpca_dec;
@@ -55,9 +58,6 @@ p_InteractiveCoder CoderFactory::create_coder(const CoderParameters &args) {
                                   "MatrixProvider was not instantiated");
   icov::helpers::assert::not_null(syndromeMgr.get(),
                                   "SyndromeManager was not instantiated");
-
-  ICOV_INFO << "Initialization of coder with type " << coder_type
-            << " and length " << syndromeMgr->get_n();
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(
       ldpca_dec, mp, syndromeMgr, llrProvider);

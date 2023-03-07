@@ -16,13 +16,13 @@ void Coder_IMT64::create(
   int min_level = 2;
   int max_level = 64;
 
-  std::shared_ptr<IMT164SyndromeManager> imt_synd(
-      new IMT164SyndromeManager(p.n, min_level, max_level));
+  auto numcodes_v = p.getNumcodes(p.n, min_level, max_level);
+
+  std::shared_ptr<IMT164SyndromeManager> imt_synd(new IMT164SyndromeManager(
+      p.n, min_level, max_level, numcodes_v.front(), numcodes_v.back()));
   syndromeMgr = imt_synd;
 
   mat_provider.reset(new IMT164MatrixProvider(imt_synd, p.database));
-
-  auto numcodes_v = p.getNumcodes(p.n, min_level, max_level);
 
   // create indexes fromp numcodes
   // last numcode value = where doping starts

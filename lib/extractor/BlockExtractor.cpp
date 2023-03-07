@@ -9,15 +9,11 @@
 #include <memory>
 
 icov::extractor::BlockExtractor::BlockExtractor(
-    std::shared_ptr<InputIcov> &icovFile, byte *syndrome, const params &p,
+    std::shared_ptr<InputIcov> &icovFile, const params &p,
     const CoderParameters &coder_params,
     const sp_IcovExtractedBitstream &extraction)
-    : m_icovFile(icovFile), m_channelCount(p.icu_sizes.size()),
-      /*m_bitplaneCount(m_channelCount),*/ m_syndrome_buf(syndrome),
-      m_params(p), m_extractionBitstream(extraction) {
-
-  icov::helpers::assert::not_null(m_syndrome_buf,
-                                  "Syndrome buffer not allocated");
+    : m_icovFile(icovFile), m_extractionBitstream(extraction),
+      m_channelCount(p.icu_sizes.size()), m_params(p) {
 
   for (int n : p.icu_sizes) {
     auto channel_params = coder_params.clone();

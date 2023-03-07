@@ -99,6 +99,7 @@ void icov::extractor::InputIcov::readBlockPos() {
 }
 
 void icov::extractor::InputIcov::selectBlock(size_t id) {
+  std::cout << "select block " << id << std::endl;
   getStream(eIcovStream::ENCODE_PARAMS).clear();
   // auto id = id.getIdSelf() - 1;
   getStream(eIcovStream::ENCODE_PARAMS)

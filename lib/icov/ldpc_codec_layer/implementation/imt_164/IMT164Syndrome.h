@@ -82,12 +82,15 @@ public:
   int m_min_level;
   int m_max_level;
 
+  int m_min_m, m_max_m;
+
   int current_level;
 
   // n = code length
   // min encoded syndrome length is n/max_level
   // max encoded syndrome length is n/min_level
-  IMT164SyndromeManager(int n, int min_level, int max_level);
+  IMT164SyndromeManager(int n, int min_level, int max_level, int min_m,
+                        int max_m);
   virtual ~IMT164SyndromeManager();
 
   virtual void init_accumulation(const BitVec &source_x) override;
