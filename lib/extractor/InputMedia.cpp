@@ -16,8 +16,7 @@
 #include <string>
 
 icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
-    : icov::IInputIcov<pstream>(path), m_blockCount(0), m_readBuf(nullptr),
-      m_syndromeOffset(0) {
+    : icov::IInputIcov<pstream>(path), m_blockCount(0) {
   for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
     ICOV_TRACE << "Open file part " << part_file << std::endl;
@@ -35,10 +34,7 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
   //  std::cout << static_cast<int>(val) << std::endl;
 }
 
-icov::extractor::InputIcov::~InputIcov() {
-  if (m_readBuf)
-    delete[] m_readBuf;
-}
+icov::extractor::InputIcov::~InputIcov() {}
 
 const icov::ContentParameterSet &
 icov::extractor::InputIcov::contentParameterSet() const {
@@ -55,14 +51,6 @@ void icov::extractor::InputIcov::readContentParameterSet() {
   archive &m_contentParameterSet;
 }
 
-void icov::extractor::InputIcov::initBuffer(size_t block_count,
-                                            size_t bufferSize) {
-  m_blockCount = block_count;
-  m_rates_pos.resize(block_count + 1, 0);
-  m_synd_pos.resize(block_count + 1, 0);
-  m_readBuf = new icov::byte[bufferSize];
-}
-
 void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
   getStream(eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
 }
@@ -74,7 +62,11 @@ void extractor::InputIcov::readSyndrome(byte *output, uint64_t read_size,
   str.seekg(stored_size - read_size, std::ios_base::cur);
 }
 
-void icov::extractor::InputIcov::readBlockPos() {
+void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
+  m_blockCount = block_count;
+  m_rates_pos.resize(block_count + 1, 0);
+  m_synd_pos.resize(block_count + 1, 0);
+
   std::streampos rate_pos = 0;
   std::streampos synd_pos = 0;
 
@@ -106,7 +98,6 @@ void icov::extractor::InputIcov::selectBlock(size_t id) {
       .seekg(m_rates_pos[id], std::ios_base::beg);
   getStream(eIcovStream::SYNDROME).clear();
   getStream(eIcovStream::SYNDROME).seekg(m_synd_pos[id], std::ios_base::beg);
-  m_syndromeOffset = 0;
 }
 
 void icov::extractor::InputIcov::readSyndromesSizes(
@@ -129,7 +120,7 @@ void extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
   // read bitplane count
   int bitplaneCount = readByteIntParam();
   // output.resize(bitplaneCount);
-  std::cout << " N " << bitplaneCount << "\n";
+  std::cout << " bitplaneCount " << bitplaneCount << "\n";
   for (int bp = 0; bp < bitplaneCount; ++bp) {
     // for each bitplane read stored syndrome size
     output.push_back(readByteIntParam());
@@ -173,7 +164,7 @@ int icov::extractor::InputIcov::readByteIntParam() {
   icov::byte val = 0;
   auto &str = getStream(eIcovStream::ENCODE_PARAMS);
   icov::helpers::io::read_value(str, &val);
-  std::cout << (int)val << std::endl;
+  std::cout << "(int) = " << (int)val << std::endl;
   return static_cast<int>(val);
 }
 

@@ -49,7 +49,7 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- try encode prediction " << BlockPrediction::toString(pred)
+  std::cout << "---- try decode prediction " << BlockPrediction::toString(pred)
             << std::endl;
 
   int x_block = b.parent()->col(b.u());
@@ -69,10 +69,10 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
   std::cout << icuIndex << std::endl;
 
   const auto &icu_enc = es.getICU(icuIndex);
-  const auto &si_map = icu_enc.get_intraSIsMap();
+  //  const auto &si_map = icu_enc.get_intraSIsMap();
 
-  if (si_map.count(pred) > 0)
-    decode_icu(b, icu_enc, pred);
+  //  if (si_map.count(pred) > 0)
+  decode_icu(b, icu_enc, pred);
 
   //  // decoding test
   //  icov::SymboleVec decodedVec = bsp.src_symboles();
@@ -125,4 +125,11 @@ void icov::decoder::BlockDecoder::endProcess() {}
 void icov::decoder::BlockDecoder::decode() {}
 
 void BlockDecoder::decode_icu(const Block &b, const video::IcuEncoder &icu_enc,
-                              BlockPrediction::predType pred) {}
+                              BlockPrediction::predType pred) {
+
+  if (pred == BlockPrediction::NONE) {
+    // access block
+    std::cout << "Decode ACCESS BLOCK\n";
+  } else {
+  }
+}

@@ -114,7 +114,7 @@ void BinaryOutputIcov::writeBlockSize() {
 //  std::cout << std::endl;
 //}
 
-void BinaryOutputIcov::writeSIRate(const NumcodeIdx &r) {
+void BinaryOutputIcov::writeSIRate(const uint &r) {
 #ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(
       r < std::numeric_limits<rate_t>::max(),

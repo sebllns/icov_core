@@ -59,6 +59,8 @@ BlockVector::iterator IPicture::addBlock(size_t id, float pu, float pv,
   return std::prev(m_icus.end());
 }
 
+size_t IPicture::blockCount() const { return m_icus.size(); }
+
 size_t IPicture::width() const { return m_width; }
 
 size_t IPicture::height() const { return m_height; }

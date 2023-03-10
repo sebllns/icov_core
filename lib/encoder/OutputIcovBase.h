@@ -97,7 +97,9 @@ public:
   virtual void writeSyndrome(const Syndrome &s) = 0;
   virtual void writeFrameSize() = 0;
   virtual void writeBlockSize() = 0;
-  virtual void writeSIRate(const NumcodeIdx &v) = 0;
+  virtual void writeBitplaneCount(const uint &v) = 0;
+  virtual void writeStoredSyndromeSize(const uint &v) = 0;
+  virtual void writeSIRate(const uint &v) = 0;
   virtual void writeSIMode(const uint &v) = 0;
   void flush(int id);
   std::ostream &getStream(int id);

@@ -49,6 +49,7 @@
 
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/geometry.h"
+#include <cstddef>
 
 class RequestManager;
 
@@ -96,6 +97,8 @@ public:
 
   BlockVector::iterator addBlock(size_t id, float pu, float pv, float pw,
                                  float ph);
+
+  size_t blockCount() const;
 
   virtual void getPixelCoords(float u, float v, int &i, int &j) const;
   virtual int row(float v) const;

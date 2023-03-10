@@ -83,7 +83,8 @@ public:
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;
   void writeBlockSize() override;
-  void writeSIRate(const NumcodeIdx &v) override;
+  void writeBitplaneCount(const uint &v) override;
+  void writeSIRate(const uint &v) override;
   void writeSIMode(const uint &v) override;
   void startWriteBlock(const Block &b) override;
   void startWritePrediction(uint16_t pred) override;

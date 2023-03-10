@@ -51,6 +51,8 @@
 
 #include "BlockPrediction.h"
 #include "Media.h"
+#include "decoder/ChannelDecoder.h"
+#include "extracted_stream.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include "video_layer/Encodingstructure.h"
@@ -100,6 +102,9 @@ protected:
   void decode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                   BlockPrediction::predType pred);
 
+  sp_IcovExtractedBitstream m_extractionBitstream;
+  int m_channelCount;
+  std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
   params m_params;
   icov::video::EncodingStructure m_dec_struc;
 };

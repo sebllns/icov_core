@@ -34,9 +34,11 @@ void icov::extractor::BlockExtractor::processBlock(const Block &b,
       BlockPrediction::toPredType(prediction);
   bool is_access_block = (block_prediction == BlockPrediction::predType::NONE);
 
+  std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf() - 1);
 
   // get stored syndrome size per bitplane
+  std::cout << "extract_syndrome_sizes" << std::endl;
   for (auto &ch : m_channelExtractor) {
     ch->extract_syndrome_sizes(is_access_block);
   }
@@ -44,6 +46,7 @@ void icov::extractor::BlockExtractor::processBlock(const Block &b,
   if (!is_access_block) {
     // pass access block syndrome  per bitplane
     if (b.isAccessBlock()) {
+      std::cout << "PASS ACCESS BLOCK" << std::endl;
       ChannelExtractor::resetSyndromePadding();
       for (auto &ch : m_channelExtractor) {
         ch->pass_access_block();
@@ -51,6 +54,7 @@ void icov::extractor::BlockExtractor::processBlock(const Block &b,
     }
 
     // select prediction
+    std::cout << "SELECT PREDICTION" << std::endl;
     int pred_idx = getPredictionOrder(block_prediction);
     for (int i = 0; i < pred_idx; ++i) {
       for (auto &ch : m_channelExtractor)
@@ -59,6 +63,7 @@ void icov::extractor::BlockExtractor::processBlock(const Block &b,
   }
 
   ChannelExtractor::resetSyndromePadding();
+  std::cout << "extract_block" << std::endl;
   for (auto &ch : m_channelExtractor) {
     ch->extract_block(b, block_prediction);
   }

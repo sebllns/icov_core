@@ -112,6 +112,7 @@ struct IcovExtractedBitstream {
   std::array<icov::byte, BITSTREAM_SIZE> Buffer;
 
   IcovExtractedBitstream() : WritePosition(0), ReadPosition(0), ActualSize(0) {}
+
   void push(const icov::byte &val) {
     auto pos = WritePosition;
     shiftWritePosition(1);
@@ -121,7 +122,8 @@ struct IcovExtractedBitstream {
   void shiftWritePosition(size_t offset) {
     WritePosition = (WritePosition + offset) % Buffer.size();
     ActualSize += offset;
-    ICOV_WARNING_MSG(ActualSize > Buffer.size(), "Buffer overflows");
+    // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
+    ICOV_WARNING_MSG(ActualSize <= Buffer.size(), "Buffer overflows");
   }
 
   void shiftReadPosition(size_t offset) {

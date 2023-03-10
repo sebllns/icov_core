@@ -136,14 +136,14 @@ void DecodeMode::run() {
   //  icov::video::Transform2D transform2D;
   //  icov::video::IntraPrediction intraPred;
 
-  icov::factory::Visualization360 visualization360(
-      {.width = decoder.icovFile().contentParameterSet().content_width,
-       .height = decoder.icovFile().contentParameterSet().content_height,
-       .viewportPadding =
-           decoder.icovFile().contentParameterSet().viewport_padding});
+  //  icov::factory::Visualization360 visualization360(
+  //      {.width = decoder.icovFile().contentParameterSet().content_width,
+  //       .height = decoder.icovFile().contentParameterSet().content_height,
+  //       .viewportPadding =
+  //           decoder.icovFile().contentParameterSet().viewport_padding});
 
-  visualization360.init(
-      decoder.icovFile().contentParameterSet().block_fixed_size);
+  //  visualization360.init(
+  //      decoder.icovFile().contentParameterSet().block_fixed_size);
 
   //  EquiRectPicture icov_pic(cps.content_width, cps.content_height);
   //  IcovAccessBlockManager icov_accessblockMgr;
@@ -175,11 +175,12 @@ void DecodeMode::run() {
         is_access_block ? BlockPrediction::predType::NONE
                         : BlockPrediction::predType::LEFT;
 
-    BlockVector::const_iterator b = visualization360.Picture->getById(icu + 1);
+    BlockVector::const_iterator b =
+        decoder.icovNavigation().Visualization->Picture->getById(icu + 1);
 
-    decoder.startProcess();
-    decoder.processBlock(*b, block_prediction);
-    decoder.endProcess();
+    decoder.blockProcessor().startProcess();
+    decoder.blockProcessor().processBlock(*b, block_prediction);
+    decoder.blockProcessor().endProcess();
 
     //    int x_block = b->parent()->col(b->u());
     //    int y_block = b->parent()->row(b->v());

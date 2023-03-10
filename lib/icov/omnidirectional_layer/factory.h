@@ -64,14 +64,14 @@ struct Visualization360 {
   std::shared_ptr<IcovAccessBlockManager> AccessBlockManager;
 
   struct params {
-    uint width, height;
-    float viewportPadding;
+    uint Width, Height;
+    float ViewportPadding;
   };
 
   explicit Visualization360(params p)
-      : Picture(std::make_shared<EquiRectPicture>(p.width, p.height)),
+      : Picture(std::make_shared<EquiRectPicture>(p.Width, p.Height)),
         ViewportManager(
-            std::make_shared<ViewportManagerCenterPadded>(p.viewportPadding)),
+            std::make_shared<ViewportManagerCenterPadded>(p.ViewportPadding)),
         AccessBlockManager(std::make_shared<IcovAccessBlockManager>()) {}
 
   void init(ushort icu_size) {
@@ -82,7 +82,22 @@ struct Visualization360 {
 
 struct Navigation360 {
   std::unique_ptr<Visualization360> Visualization;
-  std::unique_ptr<RequestManager> RequestManager;
+  std::unique_ptr<RequestManager> Request;
+
+  struct params {
+    Visualization360::params VisualizationParams;
+    ushort IcuSize;
+  };
+
+  void init(params p) {
+    Visualization = std::make_unique<icov::factory::Visualization360>(
+        p.VisualizationParams);
+    Visualization->init(p.IcuSize);
+    Request = std::make_unique<RequestManager>();
+    Request->setPicture(Visualization->Picture);
+    Request->setViewport(Visualization->ViewportManager);
+    Request->setAccessBlocks(Visualization->AccessBlockManager);
+  }
 };
 
 } // namespace factory

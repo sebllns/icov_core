@@ -49,9 +49,11 @@
 
 #pragma once
 
+#include "OrderingDemoMode.h"
 #include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
 #include "interface/IBlockProcessor.h"
+#include "omnidirectional_layer/factory.h"
 #include <memory>
 #include <queue>
 
@@ -59,8 +61,7 @@ using namespace icov::extractor;
 
 namespace icov {
 namespace decoder {
-class SinglePassDecoder : public IBlockProcessor {
-  // IBlockProcessor interface
+class SinglePassDecoder {
 public:
   struct params {};
 
@@ -68,18 +69,41 @@ public:
   ~SinglePassDecoder();
 
   void initialize(const CoderParameters &coder_params);
-  void startProcess() override;
-  void processBlock(const Block &b, uint16_t prediction) override;
-  void endProcess() override;
 
   const InputIcov &icovFile() const;
+  const icov::factory::Navigation360 &icovNavigation() const;
+  IBlockProcessor &blockProcessor();
 
-  protected:
+protected:
+  struct BlockProcessor : public IBlockProcessor {
+    std::unique_ptr<IBlockProcessor> Extractor;
+    std::unique_ptr<IBlockProcessor> Decoder;
+
+    void processBlock(const Block &b, uint16_t prediction) override {
+      if (Extractor)
+        Extractor->processBlock(b, prediction);
+      if (Decoder)
+        Decoder->processBlock(b, prediction);
+    }
+    void startProcess() override {
+      if (Extractor)
+        Extractor->startProcess();
+      if (Decoder)
+        Decoder->startProcess();
+    }
+    void endProcess() override {
+      if (Extractor)
+        Extractor->endProcess();
+      if (Decoder)
+        Decoder->endProcess();
+    }
+  };
+
   std::vector<float> m_q_values;
   std::shared_ptr<InputIcov> m_icovFile;
   sp_IcovExtractedBitstream m_extractionBitstream;
-  std::unique_ptr<IBlockProcessor> m_extractor;
-  std::unique_ptr<IBlockProcessor> m_decoder;
+  icov::factory::Navigation360 m_navigation;
+  BlockProcessor m_blockProcessor;
 };
 } // namespace decoder
 } // namespace icov

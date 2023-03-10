@@ -94,7 +94,7 @@ void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
   // read bitplane count
   m_icovFile->read(eIcovStream::ENCODE_PARAMS, m_bitplaneCount);
   // output.resize(bitplaneCount);
-  std::cout << " N " << m_bitplaneCount << "\n";
+  std::cout << " m_bitplaneCount " << (int)m_bitplaneCount << "\n";
 
   m_bitplanes.resize(m_bitplaneCount);
 

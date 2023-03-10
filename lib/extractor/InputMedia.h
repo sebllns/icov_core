@@ -84,27 +84,12 @@ public:
   icov::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
 
-  void initBuffer(size_t block_count, size_t bufferSize);
-
   void offsetSyndrome(uint offset);
-
-  template <class T>
-  void readSyndrome(T &output, uint64_t read_size, uint64_t stored_size) {
-    output.resize(read_size);
-    auto byte_count = bitToByteCount(read_size);
-    auto &str = getStream(eIcovStream::SYNDROME);
-    icov::helpers::io::read_value(str, m_readBuf, byte_count);
-    m_syndromeOffset = read_bits(output, m_readBuf, m_syndromeOffset);
-    byte_count = bitToByteCount(stored_size) - byte_count;
-    if (m_syndromeOffset)
-      --byte_count;
-    str.seekg(byte_count, std::ios_base::cur);
-  }
 
   void readSyndrome(icov::byte *output, uint64_t read_size,
                     uint64_t stored_size);
   void readFrameSize();
-  void readBlockPos();
+  void readBlockPos(size_t block_count);
   void selectBlock(size_t id);
   void readSyndromesSizes(std::vector<int> &bitplaneCount,
                           std::vector<NumcodeIdxVec> &output);
@@ -145,10 +130,6 @@ private:
   std::vector<std::streampos> m_synd_pos;
 
   bitstream::QaryParams m_qaryParams;
-
-  icov::byte *m_readBuf;
-
-  ushort m_syndromeOffset;
 };
 
 } // namespace extractor

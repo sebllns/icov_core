@@ -79,7 +79,17 @@ void TextOutputIcov::writeBlockSize() {
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
-void TextOutputIcov::writeSIRate(const NumcodeIdx &r) {
+void TextOutputIcov::writeBitplaneCount(const uint &v)
+{
+
+}
+
+void TextOutputIcov::writeStoredSyndromeSize(const uint &v)
+{
+
+}
+
+void TextOutputIcov::writeSIRate(const uint &r) {
   getStream(eIcovStream::ENCODE_PARAMS) << r << " ";
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
 }
