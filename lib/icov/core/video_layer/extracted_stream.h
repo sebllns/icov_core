@@ -53,6 +53,7 @@
 #include "icov_stream.h"
 #include "typedef.h"
 
+#include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -109,52 +110,85 @@ struct BlockChannelDecoderParams {
 };
 
 struct IcovExtractedBitstream {
-  std::array<icov::byte, BITSTREAM_SIZE> Buffer;
 
-  IcovExtractedBitstream() : WritePosition(0), ReadPosition(0), ActualSize(0) {}
+  IcovExtractedBitstream()
+      : m_WritePosition(0), m_ReadPosition(0), m_ActualSize(0) {
+    m_Buffer.fill(0);
+  }
+
+  void reset() {
+    m_WritePosition = 0;
+    m_ReadPosition = 0;
+    m_ActualSize = 0;
+  }
 
   void push(const icov::byte &val) {
-    auto pos = WritePosition;
+    auto pos = m_WritePosition;
     shiftWritePosition(1);
-    Buffer[pos] = val;
+    std::cout << "PUSH " << (int)val << " AT " << pos << " NEW SIZE "
+              << m_ActualSize << std::endl;
+    m_Buffer[pos] = val;
+  }
+
+  icov::byte pop() {
+    icov::helpers::assert::check(m_ActualSize > 0, "Buffer is not empty");
+    auto pos = m_ReadPosition;
+    shiftReadPosition(1);
+    return m_Buffer[pos];
   }
 
   void shiftWritePosition(size_t offset) {
-    WritePosition = (WritePosition + offset) % Buffer.size();
-    ActualSize += offset;
+    m_WritePosition = (m_WritePosition + offset) % m_Buffer.size();
+    m_ActualSize += offset;
     // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
-    ICOV_WARNING_MSG(ActualSize <= Buffer.size(), "Buffer overflows");
+    ICOV_WARNING_MSG(m_ActualSize <= m_Buffer.size(),
+                     "Buffer overflow is forbidden");
+    m_ActualSize = std::clamp(m_ActualSize, (size_t)0, m_Buffer.size());
   }
 
   void shiftReadPosition(size_t offset) {
-    ReadPosition = (ReadPosition + offset) % Buffer.size();
-    ActualSize -= offset;
-    ICOV_WARNING_MSG(ActualSize < 0, "Buffer negative overflows");
+    m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
+    ICOV_WARNING_MSG(m_ActualSize >= offset,
+                     "Buffer negative overflow is forbidden");
+    m_ActualSize = m_ActualSize > offset ? m_ActualSize - offset : 0;
   }
 
   size_t getWritePosition() const;
   size_t getReadPosition() const;
   size_t getActualSize() const;
+  icov::byte *writableData();
+  const icov::byte *readableData() const;
+  bool empty() const { return m_ActualSize > 0; }
+  int remains() const { return (m_WritePosition - m_ReadPosition); }
 
 protected:
-  size_t WritePosition;
-  size_t ReadPosition;
-  size_t ActualSize;
+  size_t m_WritePosition;
+  size_t m_ReadPosition;
+  size_t m_ActualSize;
+  std::array<icov::byte, BITSTREAM_SIZE> m_Buffer;
 };
 
 // using IcovExtractedBitstream = std::vector<icov::byte>;
 using sp_IcovExtractedBitstream = std::shared_ptr<IcovExtractedBitstream>;
 
 inline size_t IcovExtractedBitstream::getWritePosition() const {
-  return WritePosition;
+  return m_WritePosition;
 }
 
 inline size_t IcovExtractedBitstream::getReadPosition() const {
-  return ReadPosition;
+  return m_ReadPosition;
 }
 
 inline size_t IcovExtractedBitstream::getActualSize() const {
-  return ActualSize;
+  return m_ActualSize;
+}
+
+inline byte *IcovExtractedBitstream::writableData() {
+  return m_Buffer.data() + getWritePosition();
+}
+
+inline const byte *IcovExtractedBitstream::readableData() const {
+  return m_Buffer.data() + getReadPosition();
 }
 
 } // namespace icov

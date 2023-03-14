@@ -229,8 +229,8 @@ void icov::video::EncodingStructure::
     UInt icuXPosTopLeft = divresult.rem;
     UInt icuYPosTopLeft = divresult.quot;
 
-    ICOV_TRACE << "create ICU #" << icuIndex << " (" << icuXPosTopLeft
-                    << ", " << icuYPosTopLeft << ")";
+    ICOV_TRACE << "create ICU #" << icuIndex << " (" << icuXPosTopLeft << ", "
+               << icuYPosTopLeft << ")";
 
     Area icuLumaArea =
         Area(icuXPosTopLeft * icuWidth_luma + sourceMargin_x_luma,
@@ -1717,10 +1717,12 @@ void icov::video::EncodingStructure::deallocate() {
 
 icov::video::IcuEncoder &
 icov::video::EncodingStructure::getICU(const UInt icu_index) {
+#ifdef ICOV_ASSERTION_ENABLED
   ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < vec_icus.size(),
                   "Cannot retrieve ICU " + std::to_string(icu_index) +
                       " from vector of size " +
                       std::to_string(vec_icus.size()));
+#endif
   return vec_icus[icu_index];
 }
 

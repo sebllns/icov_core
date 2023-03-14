@@ -46,6 +46,8 @@ void ChannelExtractor::extract_block(
       (block_prediction == BlockPrediction::predType::INTER);
   bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
+  m_bitstream->push(m_bitplaneCount);
+
   if (is_access_block) {
     ushort syndrome_size = 0, syndrome_padding = 0;
     //    bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount -
@@ -147,11 +149,9 @@ void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
 int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
 void ChannelExtractor::extract_bitplane_syndrome(const BitplaneExtractor &bp) {
-  m_icovFile->readSyndrome(m_bitstream->Buffer.data(), bp.ReadSyndromeByteSize,
+  m_icovFile->readSyndrome(m_bitstream->writableData(), bp.ReadSyndromeByteSize,
                            bp.StoredSyndromeByteSize);
   m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);
-  // m_bitstream->insert(m_bitstream->end(), m_readingBuffer, dataArray +
-  // dataArraySize);
 }
 
 int ChannelExtractor::get_coder_size() const { return m_ldpc_coder->get_n(); }

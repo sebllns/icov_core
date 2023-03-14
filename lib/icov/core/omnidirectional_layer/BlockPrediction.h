@@ -110,6 +110,7 @@ public:
   static std::vector<BlockPrediction::predType>
   getAvailablePredictions(borderType b = BORDER_NONE);
   static borderType getBorder(const Block &b);
+  static bool isValidPrediction(BlockPrediction::predType p);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
@@ -268,5 +269,11 @@ inline BlockPrediction::borderType BlockPrediction::getBorder(const Block &b) {
     border = borderType::BORDER_BOTTOM;
   }
   return border;
+}
+
+inline bool BlockPrediction::isValidPrediction(predType p) {
+  if (p == predType::ERROR_PRED || p == predType::MAX || p == predType::UNKNOWN)
+    return false;
+  return true;
 }
 //} // namespace icov

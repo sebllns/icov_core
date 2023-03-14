@@ -60,7 +60,7 @@ void decoder::SinglePassDecoder::initialize(
 
   });
 
-  int block_count = 1;
+  int block_count = 2;
   //  block_count = icovNavigation().Visualization->Picture->blockCount();
   m_icovFile->readBlockPos(block_count);
 
@@ -71,11 +71,39 @@ void decoder::SinglePassDecoder::initialize(
     const auto compID = static_cast<ComponentID>(c);
     extractor_params.icu_sizes.push_back(blockArea.block(compID).area());
   }
+
+  m_blockProcessor.ExtractionBitstream = m_extractionBitstream;
+
   m_blockProcessor.Extractor = std::make_unique<BlockExtractor>(
       m_icovFile, extractor_params, coder_params, m_extractionBitstream);
 
-  m_blockProcessor.Decoder =
-      std::make_unique<BlockDecoder>(BlockDecoder::params{});
+  m_blockProcessor.Decoder = std::make_unique<BlockDecoder>(
+      BlockDecoder::params{
+
+          .qp = cps.qp,
+
+          .chFormat = chFrmt,
+
+          .sourceSize =
+              {
+
+                  (int)cps.content_width,
+
+                  (int)cps.content_height
+
+              },
+
+          .icuSize_luma =
+              {
+
+                  (int)cps.block_fixed_size,
+
+                  (int)cps.block_fixed_size
+
+              }
+
+      },
+      coder_params, m_extractionBitstream);
 }
 
 const InputIcov &decoder::SinglePassDecoder::icovFile() const {

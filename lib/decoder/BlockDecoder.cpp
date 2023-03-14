@@ -1,7 +1,10 @@
 #include "BlockDecoder.h"
 
+#include "decoder/ChannelDecoder.h"
+#include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/vtm_opencv_utility.h"
@@ -11,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -25,19 +29,69 @@ namespace fs = boost::filesystem;
 using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
-BlockDecoder::BlockDecoder(const params &p) : IBlockDecoder(), m_params(p) {
+BlockDecoder::BlockDecoder(const params &p, const CoderParameters &coder_params,
+                           const sp_IcovExtractedBitstream &extraction)
+    : IBlockDecoder(), m_params(p) {
   // CONSTANTS
   const Size icuSize_luma =
       Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
   const Size tuSize_luma =
-      Size(m_params.tuSize_luma.width, m_params.tuSize_luma.height);
+      Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
+
+  const int sourceWidth = (int)p.sourceSize.width;
+  const int sourceHeight = (int)p.sourceSize.height;
+  const int margin_x_360luma = 2;
+
+  const UnitArea extendedFrameArea(
+      p.chFormat,
+      Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight)); //???
+  const UnitArea mainFrameArea(
+      p.chFormat, Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
+
+  m_vvc_bufs = std::make_shared<icov::video::BufGroups>();
+  m_vvc_bufs->create(PIC_ORIGINAL, extendedFrameArea);
+  m_vvc_bufs->create(PIC_RECONSTRUCTION, extendedFrameArea);
+  m_vvc_bufs->create(PIC_PREDICTION, extendedFrameArea);
+
+  m_dec_struc = std::make_shared<video::EncodingStructure>();
 
   m_dec_struc
-      .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
+      ->create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
           m_params.chFormat, m_params.sourceSize.width,
           m_params.sourceSize.height, m_params.margin_x_360luma,
           icuSize_luma.width, icuSize_luma.height, tuSize_luma.width,
           tuSize_luma.height);
+
+  const int channelCount = getNumberValidComponents(p.chFormat);
+
+  UnitArea blockArea(p.chFormat,
+                     Area(0, 0, p.icuSize_luma.width, p.icuSize_luma.height));
+
+  for (int c = 0; c < channelCount; c++) {
+    const auto compID = static_cast<ComponentID>(c);
+    auto coder_channel_params = coder_params.clone();
+    coder_channel_params->n = blockArea.block(compID).area();
+
+    const ChannelType channelType = toChannelType(compID);
+    const int bit_depth = p.internalBitDepth[channelType];
+    const icov::video::QpParam cQP(p.qp, channelType, p.chFormat, bit_depth, 0,
+                                   0);
+    ChannelDecoder::params channel_params{
+
+        .QpParam = cQP,
+
+        .CompID = compID,
+
+        .bit_depth = bit_depth,
+
+        .maxLog2TrDynamicRange = p.maxLog2TrDynamicRange
+
+    };
+
+    m_channelDecoder.push_back(
+        std::make_unique<ChannelDecoder>(channel_params, *coder_channel_params,
+                                         m_vvc_bufs, m_dec_struc, extraction));
+  }
 }
 
 BlockDecoder::~BlockDecoder() {}
@@ -52,6 +106,9 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
   std::cout << "---- try decode prediction " << BlockPrediction::toString(pred)
             << std::endl;
 
+  icov::helpers::assert::check(BlockPrediction::isValidPrediction(pred),
+                               "Bad prediction value");
+
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
 
@@ -63,7 +120,7 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
   std::cout << pos.x << std::endl;
   std::cout << pos.y << std::endl;
 
-  const auto &es = this->m_dec_struc;
+  const auto &es = *this->m_dec_struc;
   uint icuIndex = es.get_icuIndex(pos);
 
   std::cout << icuIndex << std::endl;
@@ -72,7 +129,10 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
   //  const auto &si_map = icu_enc.get_intraSIsMap();
 
   //  if (si_map.count(pred) > 0)
-  decode_icu(b, icu_enc, pred);
+  // decode_icu(b, icu_enc, pred);
+
+  for (auto &dec : m_channelDecoder)
+    dec->decode_icu(icuIndex, pred);
 
   //  // decoding test
   //  icov::SymboleVec decodedVec = bsp.src_symboles();
@@ -126,7 +186,6 @@ void icov::decoder::BlockDecoder::decode() {}
 
 void BlockDecoder::decode_icu(const Block &b, const video::IcuEncoder &icu_enc,
                               BlockPrediction::predType pred) {
-
   if (pred == BlockPrediction::NONE) {
     // access block
     std::cout << "Decode ACCESS BLOCK\n";

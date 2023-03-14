@@ -50,6 +50,7 @@
 #pragma once
 
 #include "BlockPrediction.h"
+#include "Common.h"
 #include "Media.h"
 #include "decoder/ChannelDecoder.h"
 #include "extracted_stream.h"
@@ -57,7 +58,9 @@
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include "video_layer/Encodingstructure.h"
 
+#include <boost/type_traits/extent.hpp>
 #include <map>
+#include <memory>
 #include <opencv2/opencv.hpp>
 
 namespace icov {
@@ -72,14 +75,11 @@ public:
     // TODO: unplug openCV from DECODER
     cv::Size sourceSize;
     cv::Size icuSize_luma;
-    cv::Size tuSize_luma;
 
     BitSymbolProvider::params bsp_params;
     po::variables_map program_args;
-    bool enable_block_encoding;
-    bool write_intra_pred_image;
 
-    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
+    //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
     const int margin_x_360luma = 2; // in fact we need 1 margin for each color
                                     // component, but since UnitArea
@@ -90,7 +90,9 @@ public:
     const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   };
 
-  BlockDecoder(const BlockDecoder::params &p);
+  BlockDecoder(const BlockDecoder::params &p,
+               const CoderParameters &coder_params,
+               const sp_IcovExtractedBitstream &extraction);
   ~BlockDecoder();
 
   void startProcess() override;
@@ -102,11 +104,11 @@ protected:
   void decode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                   BlockPrediction::predType pred);
 
-  sp_IcovExtractedBitstream m_extractionBitstream;
+  std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
+  std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
   int m_channelCount;
   std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
   params m_params;
-  icov::video::EncodingStructure m_dec_struc;
 };
 } // namespace decoder
 } // namespace icov

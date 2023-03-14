@@ -78,6 +78,7 @@ protected:
   struct BlockProcessor : public IBlockProcessor {
     std::unique_ptr<IBlockProcessor> Extractor;
     std::unique_ptr<IBlockProcessor> Decoder;
+    sp_IcovExtractedBitstream ExtractionBitstream;
 
     void processBlock(const Block &b, uint16_t prediction) override {
       if (Extractor)
@@ -96,6 +97,9 @@ protected:
         Extractor->endProcess();
       if (Decoder)
         Decoder->endProcess();
+
+      icov::helpers::assert::equal(ExtractionBitstream->remains(), 0,
+                                   "Buffer was not read in totality");
     }
   };
 

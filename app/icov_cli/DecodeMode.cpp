@@ -14,7 +14,9 @@
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
+#include "opencv2/core/hal/interface.h"
 #include "opencv2/core/mat.hpp"
+#include "opencv2/core/types.hpp"
 #include "opencv2/highgui.hpp"
 #include "tools/DebugTools.h"
 #include "typedef.h"
@@ -78,7 +80,7 @@ void DecodeMode::run() {
   //  const int icu_size = (int)cps.block_fixed_size;
   //  const int n = icu_size * icu_size;
   //  const int channelCount = 3;
-  const int block_count = 2;
+  const int block_count = 1;
 
   //  const int sourceWidth = (int)cps.content_width;
   //  const int sourceHeight = (int)cps.content_height;
@@ -197,10 +199,10 @@ void DecodeMode::run() {
   const char *windows_title = "decoded";
   cv::namedWindow(windows_title, cv::WINDOW_NORMAL);
 
-  cv::Mat frame_output;
-  //  VTM_OPENCV_Utility::toBGRMat(
-  //      m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea),
-  //      frame_output);
+  cv::Mat frame_output(128, 128, CV_8UC3, cv::Scalar(255, 0, 255));
+  //    VTM_OPENCV_Utility::toBGRMat(
+  //        m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea),
+  //        frame_output);
 
   cv::imshow(windows_title, frame_output);
   cv::waitKey(0);

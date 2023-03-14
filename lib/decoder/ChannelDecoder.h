@@ -55,6 +55,8 @@
 #include "Media.h"
 #include "Unit.h"
 #include "common_types.h"
+#include "extracted_stream.h"
+#include "icov_stream.h"
 #include "ldpc_codec_layer/IcovCoder.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
@@ -76,14 +78,14 @@ public:
     int maxLog2TrDynamicRange;
   };
 
-  ChannelDecoder(const ChannelDecoder::params &p,
-                 const CoderParameters &LDPC_params,
-                 const std::shared_ptr<icov::video::BufGroups> &vvc_bufs);
+  ChannelDecoder(
+      const ChannelDecoder::params &p, const CoderParameters &LDPC_params,
+      const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
+      const std::shared_ptr<icov::video::EncodingStructure> &encodingStruct,
+      const sp_IcovExtractedBitstream &extraction);
   ~ChannelDecoder();
 
-  void start_decode_icu(BlockVector::const_iterator &b,
-                        icov::video::IcuEncoder *icu_enc,
-                        BlockPrediction::predType block_prediction);
+  void decode_icu(int icu_enc, BlockPrediction::predType block_prediction);
 
   void set_si_dir_mode(int dir_mode);
 
@@ -91,20 +93,20 @@ public:
 
   void set_si_params(int zmin, int zmax, float q, int lx);
 
+  void read_syndrome(int syndrome_size);
+
   void decode_bitplane(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
   void end_decode_icu();
 
-  int get_coder_size() const;
-
   Syndrome &syndrome();
 
-  int get_m(icov::NumcodeIdx numcode) const;
   const AffInteractiveCoder &ldpc_coder() const;
 
 protected:
   params m_params;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
+  std::shared_ptr<icov::video::EncodingStructure> m_encodingStruct;
   // CompArea m_blockArea;
   std::unique_ptr<AffInteractiveCoder> m_ldpc_coder;
   icov::video::Quant quant;
@@ -116,8 +118,11 @@ protected:
   Syndrome m_syndrome;
   BitSymbolProvider m_bsp;
   BlockPrediction::predType m_block_prediction;
-  BlockVector::const_iterator m_block;
-  icov::video::IcuEncoder *mp_icu_enc;
+  sp_IcovExtractedBitstream m_bitstream;
+  bitstream::QaryParams m_qaryParams;
+  // BlockVector::const_iterator m_block;
+  int m_icuIndex;
+  // icov::video::IcuEncoder *mp_icu_enc;
   // PelBuf roiComp_predictionFrameBuff;
 };
 } // namespace decoder
