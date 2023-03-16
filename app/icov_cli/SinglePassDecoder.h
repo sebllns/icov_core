@@ -49,7 +49,10 @@
 
 #pragma once
 
+#include "Buffer.h"
 #include "OrderingDemoMode.h"
+#include "decoder/BlockDecoder.h"
+#include "extractor/BlockExtractor.h"
 #include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
 #include "interface/IBlockProcessor.h"
@@ -73,11 +76,12 @@ public:
   const InputIcov &icovFile() const;
   const icov::factory::Navigation360 &icovNavigation() const;
   IBlockProcessor &blockProcessor();
+  const PelUnitBuf getOutputBuf() const;
 
 protected:
   struct BlockProcessor : public IBlockProcessor {
-    std::unique_ptr<IBlockProcessor> Extractor;
-    std::unique_ptr<IBlockProcessor> Decoder;
+    std::unique_ptr<BlockExtractor> Extractor;
+    std::unique_ptr<BlockDecoder> Decoder;
     sp_IcovExtractedBitstream ExtractionBitstream;
 
     void processBlock(const Block &b, uint16_t prediction) override {

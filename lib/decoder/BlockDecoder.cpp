@@ -45,7 +45,7 @@ BlockDecoder::BlockDecoder(const params &p, const CoderParameters &coder_params,
   const UnitArea extendedFrameArea(
       p.chFormat,
       Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight)); //???
-  const UnitArea mainFrameArea(
+  mainFrameArea = UnitArea(
       p.chFormat, Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
   m_vvc_bufs = std::make_shared<icov::video::BufGroups>();
@@ -183,6 +183,10 @@ void icov::decoder::BlockDecoder::processBlock(const Block &b,
 void icov::decoder::BlockDecoder::endProcess() {}
 
 void icov::decoder::BlockDecoder::decode() {}
+
+const PelUnitBuf BlockDecoder::decodingOutput() const {
+  return m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
+}
 
 void BlockDecoder::decode_icu(const Block &b, const video::IcuEncoder &icu_enc,
                               BlockPrediction::predType pred) {

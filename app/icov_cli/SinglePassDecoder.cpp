@@ -118,3 +118,7 @@ decoder::SinglePassDecoder::icovNavigation() const {
 IBlockProcessor &decoder::SinglePassDecoder::blockProcessor() {
   return m_blockProcessor;
 }
+
+const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
+  return m_blockProcessor.Decoder->decodingOutput();
+}

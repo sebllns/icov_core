@@ -200,9 +200,7 @@ void DecodeMode::run() {
   cv::namedWindow(windows_title, cv::WINDOW_NORMAL);
 
   cv::Mat frame_output(128, 128, CV_8UC3, cv::Scalar(255, 0, 255));
-  //    VTM_OPENCV_Utility::toBGRMat(
-  //        m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea),
-  //        frame_output);
+  VTM_OPENCV_Utility::toBGRMat(decoder.getOutputBuf(), frame_output);
 
   cv::imshow(windows_title, frame_output);
   cv::waitKey(0);

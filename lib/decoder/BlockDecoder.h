@@ -99,6 +99,7 @@ public:
   void processBlock(const Block &b, uint16_t prediction) override;
   void endProcess() override;
   void decode() override;
+  const PelUnitBuf decodingOutput() const;
 
 protected:
   void decode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
@@ -109,6 +110,7 @@ protected:
   int m_channelCount;
   std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
   params m_params;
+  UnitArea mainFrameArea;
 };
 } // namespace decoder
 } // namespace icov
