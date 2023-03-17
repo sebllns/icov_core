@@ -32,8 +32,8 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
     auto n_id = current.getId(nn);
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_TRACE << "\n    block " << current.getId(Block::SELF)
-                        << ", neighbor " << nn;
+    ICOV_TRACE << "\n    block " << current.getId(Block::SELF) << ", neighbor "
+               << nn;
 #endif
 
     if (pic->blockExists(n_id) && !isBlockProcessed(n_id)) {
@@ -76,7 +76,7 @@ BlockVector::const_iterator
 BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm) {
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
   ICOV_TRACE << "\nblock " << m_elements.size()
-                      << " id = " << current.getId(Block::SELF) << std::endl;
+             << " id = " << current.getId(Block::SELF) << std::endl;
 #endif
 
   auto pic = current.parent();

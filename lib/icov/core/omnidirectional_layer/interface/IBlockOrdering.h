@@ -50,21 +50,16 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
-
 /** @class IBlockOrdering
  *  @brief IBlockOrdering
  *
  *  A IBlockOrdering
  */
-class IBlockOrdering
-{
+class IBlockOrdering {
 public:
-    virtual ~IBlockOrdering() = default;
-
-    virtual BlockVector::const_iterator getNextBlock(const Block &current, const IViewportManager &vpm) = 0;
-
-    virtual void reset() = 0;
-
-    virtual bool isBlockProcessed(size_t id) const = 0;
-
+  virtual ~IBlockOrdering() = default;
+  virtual BlockVector::const_iterator
+  getNextBlock(const Block &current, const IViewportManager &vpm) = 0;
+  virtual void reset() = 0;
+  virtual bool isBlockProcessed(size_t id) const = 0;
 };
