@@ -7,6 +7,9 @@
 #include "common_types.h"
 #include "decoder/ChannelDecoder.h"
 #include "encoded_stream.h"
+#include "encoder/BinaryOutputIcov.h"
+#include "encoder/FrameEncoder.h"
+#include "encoder/InputMedia.h"
 #include "extractor/InputMedia.h"
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
@@ -41,6 +44,9 @@
 #include <vector>
 
 const char *DecodeMode::params::inputFile_id = "decode-input-file";
+const char *DecodeMode::params::icuSize_id = "decode-icu-size";
+const char *DecodeMode::params::qp_id = "decode-qp";
+const char *DecodeMode::params::viewportPadding_id = "decode-viewport-padding";
 
 void DecodeMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
@@ -59,9 +65,65 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 
   m_parameters.coder_params = icov::CoderFactory::parse_coder_parameters(args);
   icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), m_q_values);
+
+  m_parameters.inputFile =
+      args[DecodeMode::params::inputFile_id].as<std::string>();
+
+  auto encodedFile = m_parameters.inputFile;
+  encodedFile = m_parameters.inputFile;
+  encodedFile.replace_extension(".icov");
+
+  m_parameters.icuSize = args[DecodeMode::params::icuSize_id].as<int>();
+  m_parameters.qp = args[DecodeMode::params::qp_id].as<int>();
+
+  m_parameters.viewportPadding =
+      args[DecodeMode::params::viewportPadding_id].as<float>();
+
+  bool enable_z_quantization = true;
+  std::vector<float> q_values;
+  icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
+  BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
+  icov::encoder::FrameEncoder::params enc_params = {
+      m_parameters.qp,
+      CHROMA_420,
+      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+      bsp_params,
+      args,
+      true,
+      false,
+      true,
+      3};
+
+  auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
+  auto output = std::make_shared<icov::encoder::BinaryOutputIcov>(encodedFile);
+
+  output->contentParameterSet().icov_version =
+      "icov_decode_check" ICOV_CORE_VERSION;
+  output->contentParameterSet().content_framecount = 1;
+  output->contentParameterSet().is_block_fixed_size = true;
+  output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
+  output->contentParameterSet().content_chroma_format =
+      (icov::byte)enc_params.chFormat;
+  encoder->setIcovFile(output);
+
+  m_encoder = std::move(encoder);
+  m_output = std::move(output);
+
+  ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
+                   m_parameters.inputFile;
+  ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" % encodedFile;
 }
 
 void DecodeMode::run() {
+
+  std::unique_ptr<icov::encoder::InputMedia> input;
+  icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
+  EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
+  IcovAccessBlockManager icov_accessblockMgr;
+  ViewportManagerCenterPadded icov_viewport(m_parameters.viewportPadding);
+  BlockPrediction icov_blockPrediction;
+
   decoder::SinglePassDecoder decoder(m_parameters.inputFile);
   decoder.initialize(*m_parameters.coder_params);
 

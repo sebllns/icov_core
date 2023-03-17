@@ -110,52 +110,6 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 }
 
 void EncodeMode::run() {
-  //  {
-  //    boost::archive::binary_oarchive o_archive(output,
-  //                                              boost::archive::no_header);
-  //    //    bool *array = new bool[1024];
-  //    //    o_archive &boost::serialization::make_array<bool>(array, 1024);
-  //    //    delete[] array;
-  //    //    output.close();
-
-  //    //    std::vector<bool> array(1024);
-  //    //    o_archive &array;
-
-  //    //    std::bitset<1024> array;
-  //    //    o_archive &array;
-
-  //    Syndrome s(1024);
-  //    s.fill(0);
-  //    for (int i = 0; i < s.size(); i += 2) {
-  //      s[i] = 1;
-  //    }
-
-  //    int byte_size = bitToByteCount(s.size());
-  //    icov::byte darr[byte_size];
-  //    std::fill(darr, darr + byte_size, 0);
-  //    write_syndrome(darr, s);
-
-  //    for (int i = 0; i < byte_size; i++) {
-  //      std::cout << std::bitset<8>(darr[i]) << " ";
-  //    }
-  //    std::cout << std::endl;
-
-  //    Syndrome s2(s.size());
-  //    read_syndrome(s2, darr);
-
-  //    for (int i = 0; i < s.size(); ++i) {
-  //      if (s[i] != s2[i]) {
-  //        ICOV_ERROR << "error";
-  //        break;
-  //      }
-  //    }
-
-  //    o_archive &boost::serialization::make_array(darr, byte_size);
-
-  //    std::cout << "test end" << std::endl;
-  //    std::cout << std::endl;
-  //  }
-
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());

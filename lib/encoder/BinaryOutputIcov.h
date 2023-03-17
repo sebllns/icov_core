@@ -90,6 +90,7 @@ public:
   void startWritePrediction(uint16_t pred) override;
   void endWritePrediction(uint16_t pred) override;
   void endWriteBlock(const Block &b) override;
+  void writeStoredSyndromeSize(const uint &v) override;
 };
 
 } // namespace encoder

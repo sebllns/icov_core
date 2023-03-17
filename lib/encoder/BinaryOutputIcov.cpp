@@ -104,6 +104,8 @@ void BinaryOutputIcov::writeBlockSize() {
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
+void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeSIRate(v); }
+
 // void BinaryOutputIcov::writeSIRates(const NumcodeIdxVec &v) {
 //  rates_count += v.size() * sizeof(rate_t);
 //  // CHECKED RATES
@@ -145,3 +147,5 @@ void icov::encoder::BinaryOutputIcov::startWritePrediction(uint16_t pred) {}
 void icov::encoder::BinaryOutputIcov::endWritePrediction(uint16_t pred) {}
 
 void icov::encoder::BinaryOutputIcov::endWriteBlock(const Block &b) {}
+
+void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(const uint &v) {}

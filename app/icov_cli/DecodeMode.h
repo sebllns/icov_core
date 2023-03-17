@@ -46,7 +46,10 @@
 #pragma once
 
 #include "common.h"
+#include "encoder/OutputIcovBase.h"
+#include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/IcovCoder.h"
+#include "opencv2/core/mat.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -57,7 +60,14 @@ namespace po = boost::program_options;
 class DecodeMode {
   struct params {
     static const char *inputFile_id;
+    static const char *icuSize_id;
+    static const char *qp_id;
+    static const char *viewportPadding_id;
+
     fs::path inputFile;
+    int icuSize;
+    int qp;
+    float viewportPadding;
     std::unique_ptr<CoderParameters> coder_params;
   };
 
@@ -66,10 +76,14 @@ public:
   ~DecodeMode() = default;
 
   void run();
+  void encode();
+  void decode();
 
   static void AddProgramOptions(po::options_description &desc);
 
 private:
   params m_parameters;
   std::vector<float> m_q_values;
+  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
+  std::shared_ptr<icov::encoder::OutputIcovBase> m_output;
 };
