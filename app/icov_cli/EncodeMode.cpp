@@ -2,6 +2,7 @@
 #include "encoder/BinaryOutputIcov.h"
 #include "encoder/FrameEncoder.h"
 #include "encoder/TextOutputIcov.h"
+#include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
@@ -112,20 +113,27 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 void EncodeMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
-  IcovAccessBlockManager icov_accessblockMgr;
-  ViewportManagerCenterPadded icov_viewport(m_parameters.viewportPadding);
   BlockPrediction icov_blockPrediction;
+  factory::Visualization360 icov_visualization(
+      factory::Visualization360::params{
+
+          .Width = static_cast<uint>(input->getWidth()),
+
+          .Height = static_cast<uint>(input->getHeight()),
+
+          .ViewportPadding = m_parameters.viewportPadding
+
+      });
 
   ICOV_DEBUG << "Start encoding";
-  icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
-  icov_accessblockMgr.buildAccessBlocks(icov_pic, icov_viewport);
+  icov_visualization.init(m_parameters.icuSize);
 
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
   m_output->contentParameterSet().content_height =
       static_cast<uint16_t>(input->getHeight());
   m_output->writeContentParameterSet();
-  m_encoder->encode(m_output->stream(), *input, icov_pic, icov_accessblockMgr,
+  m_encoder->encode(m_output->stream(), *input, *icov_visualization.Picture,
+                    *icov_visualization.AccessBlockManager,
                     icov_blockPrediction);
 }
