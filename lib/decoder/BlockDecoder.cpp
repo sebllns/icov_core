@@ -29,7 +29,7 @@ namespace fs = boost::filesystem;
 using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
-BlockDecoder::BlockDecoder(const params &p, const CoderParameters &coder_params,
+BlockDecoder::BlockDecoder(const params &p, const LdpcCoderParameters &coder_params,
                            const sp_IcovExtractedBitstream &extraction)
     : IBlockDecoder(), m_params(p) {
   // CONSTANTS

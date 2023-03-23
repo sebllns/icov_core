@@ -22,9 +22,9 @@ icov::byte ChannelExtractor::SyndromePadding = 0;
 ChannelExtractor::ChannelExtractor(/*const params &p,*/
                                    std::shared_ptr<InputIcov> &icovFile,
                                    const sp_IcovExtractedBitstream &bitstream,
-                                   const CoderParameters &LDPC_params)
+                                   const LdpcCoderParameters &LDPC_params)
     : /*m_params(p),*/ m_ldpc_coder(
-          icov::CoderFactory::create_coder(LDPC_params)),
+          icov::LdpcCoderFactory::create_coder(LDPC_params)),
       m_icovFile(icovFile), m_bitstream(bitstream),
       m_maxSyndromeBufferLength(bitToByteCount(m_ldpc_coder->get_m_max()))
 /*,m_readingBuffer(m_maxSyndromeBufferLength)*/ {

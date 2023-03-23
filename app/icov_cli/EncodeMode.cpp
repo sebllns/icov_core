@@ -1,11 +1,6 @@
 #include "EncodeMode.h"
-#include "encoder/BinaryOutputIcov.h"
-#include "encoder/FrameEncoder.h"
-#include "encoder/TextOutputIcov.h"
-#include "omnidirectional_layer/factory.h"
-#include "omnidirectional_layer/implementation/EquiRectPicture.h"
-#include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
-#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
+#include "encoder/IcovMediaEncoder.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 #include <algorithm>
 #include <boost/format.hpp>
@@ -73,36 +68,10 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
   m_parameters.viewportPadding =
       args[EncodeMode::params::viewportPadding_id].as<float>();
 
-  bool enable_z_quantization = true;
-  std::vector<float> q_values;
-  icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
-  BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
-  icov::encoder::FrameEncoder::params enc_params = {
-      m_parameters.qp,
-      CHROMA_420,
-      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-      bsp_params,
-      args,
-      true,
-      false,
-      true,
-      3};
+  m_parameters.q_valuesPath = ICOV_Q_VALUES_FILE(args);
 
-  auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
-  auto output =
-      std::make_shared<icov::encoder::TextOutputIcov>(m_parameters.encodedFile);
-
-  output->contentParameterSet().icov_version = "icov_test" ICOV_CORE_VERSION;
-  output->contentParameterSet().content_framecount = 1;
-  output->contentParameterSet().is_block_fixed_size = true;
-  output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
-  output->contentParameterSet().content_chroma_format =
-      (icov::byte)enc_params.chFormat;
-  encoder->setIcovFile(output);
-
-  m_encoder = std::move(encoder);
-  m_output = std::move(output);
+  m_parameters.ldpc_params =
+      icov::LdpcCoderFactory::parse_coder_parameters(args);
 
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.inputFile;
@@ -111,29 +80,25 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 }
 
 void EncodeMode::run() {
-  std::unique_ptr<icov::encoder::InputMedia> input;
-  icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  BlockPrediction icov_blockPrediction;
-  factory::Visualization360 icov_visualization(
-      factory::Visualization360::params{
-
-          .Width = static_cast<uint>(input->getWidth()),
-
-          .Height = static_cast<uint>(input->getHeight()),
-
-          .ViewportPadding = m_parameters.viewportPadding
-
-      });
-
   ICOV_DEBUG << "Start encoding";
-  icov_visualization.init(m_parameters.icuSize);
-
-  m_output->contentParameterSet().content_width =
-      static_cast<uint16_t>(input->getWidth());
-  m_output->contentParameterSet().content_height =
-      static_cast<uint16_t>(input->getHeight());
-  m_output->writeContentParameterSet();
-  m_encoder->encode(m_output->stream(), *input, *icov_visualization.Picture,
-                    *icov_visualization.AccessBlockManager,
-                    icov_blockPrediction);
+  bool enable_z_quantization = true;
+  std::vector<float> q_values;
+  icov::helpers::io::read_vector(m_parameters.q_valuesPath.string(), q_values);
+  encoder::IcovMediaEncoder encoder(
+      encoder::IcovMediaEncoder::params{
+          .InputPath = m_parameters.inputFile,
+          .OutputPath = m_parameters.encodedFile,
+          .OutputType = encoder::IcovMediaEncoder::BINARY,
+          .FrameEncoderParams =
+              icov::encoder::FrameEncoder::params{
+                  .QP = m_parameters.qp,
+                  .ChFormat = CHROMA_420,
+                  .ICU_Size =
+                      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+                  .BSP_Params = BitSymbolProvider::params{enable_z_quantization,
+                                                          q_values},
+                  .CheckDecoding = true,
+                  .MaxRateNoCoding = 3}},
+      *m_parameters.ldpc_params);
+  encoder.defaultEncode(m_parameters.viewportPadding);
 }

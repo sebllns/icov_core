@@ -68,13 +68,16 @@ class EncodeMode {
 
     fs::path inputFile;
     fs::path encodedFile;
+    fs::path q_valuesPath;
     int icuSize;
     int qp;
     float viewportPadding;
+
+    std::unique_ptr<LdpcCoderParameters> ldpc_params;
   };
 
 public:
-  EncodeMode(const po::variables_map &args);
+  explicit EncodeMode(const po::variables_map &args);
   ~EncodeMode() = default;
 
   void run();
@@ -83,9 +86,5 @@ public:
 
 private:
   int encode();
-  //  std::unique_ptr<AffInteractiveCoder> m_ycoder;
-  //  std::unique_ptr<AffInteractiveCoder> m_uvcoder;
-  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-  std::shared_ptr<icov::encoder::OutputIcovBase> m_output;
   params m_parameters;
 };

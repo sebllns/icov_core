@@ -5,10 +5,10 @@
 
 namespace icov {
 
-template <class M> class IDecoder {
+template <class M> class ILDPC_Decoder {
 public:
-  IDecoder() = default;
-  virtual ~IDecoder() = default;
+  ILDPC_Decoder() = default;
+  virtual ~ILDPC_Decoder() = default;
 
   virtual void decode(BitVec &o_decoded, int n, int numcode,
                       const std::vector<LLRVal> &llr, Syndrome &syndrome,

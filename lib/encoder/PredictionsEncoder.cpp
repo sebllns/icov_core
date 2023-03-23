@@ -3,8 +3,7 @@
 #include "tools/DebugTools.h"
 #include <vector>
 
-icov::encoder::PredictionsEncoder::PredictionsEncoder(
-    const boost::program_options::variables_map &program_args,
+icov::encoder::PredictionsEncoder::PredictionsEncoder(const LdpcCoderParameters &LDPC_Params,
     std::vector<uint16_t> predictions) {
   // populate the prediction coders
   int count = 1;
@@ -14,7 +13,7 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(
 #pragma omp atomic
     ++count;
     std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-    icov::CoderFactory::create_coder_yuv(program_args, ycoder, uvcoder);
+    icov::LdpcCoderFactory::create_coder_yuv(LDPC_Params, ycoder, uvcoder);
     m_coders[pred][ycoder->get_n()] = std::move(ycoder);
     m_coders[pred][uvcoder->get_n()] = std::move(uvcoder);
   }

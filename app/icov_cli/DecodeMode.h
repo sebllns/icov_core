@@ -68,7 +68,7 @@ class DecodeMode {
     int icuSize;
     int qp;
     float viewportPadding;
-    std::unique_ptr<CoderParameters> coder_params;
+    std::unique_ptr<LdpcCoderParameters> coder_params;
   };
 
 public:

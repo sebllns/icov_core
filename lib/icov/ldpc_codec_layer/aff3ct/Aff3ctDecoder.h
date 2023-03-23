@@ -12,7 +12,7 @@ using AffLDPCA =
     aff3ct::module::Decoder_LDPCA_BP_flooding_SPA<icov::BitVal, icov::LLRVal>;
 
 namespace icov {
-class Aff3ctDecoder : public IDecoder<AffMatrix> {
+class Aff3ctDecoder : public ILDPC_Decoder<AffMatrix> {
 public:
   Aff3ctDecoder(int n_dec);
   ~Aff3ctDecoder() = default;

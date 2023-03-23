@@ -79,7 +79,7 @@ public:
   };
 
   ChannelDecoder(
-      const ChannelDecoder::params &p, const CoderParameters &LDPC_params,
+      const ChannelDecoder::params &p, const LdpcCoderParameters &LDPC_params,
       const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
       const std::shared_ptr<icov::video::EncodingStructure> &encodingStruct,
       const sp_IcovExtractedBitstream &extraction);

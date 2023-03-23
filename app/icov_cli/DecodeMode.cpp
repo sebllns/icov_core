@@ -63,7 +63,8 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.inputFile;
 
-  m_parameters.coder_params = icov::CoderFactory::parse_coder_parameters(args);
+  m_parameters.coder_params =
+      icov::LdpcCoderFactory::parse_coder_parameters(args);
   icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), m_q_values);
 
   m_parameters.inputFile =
@@ -83,19 +84,21 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   std::vector<float> q_values;
   icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
   BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
-  icov::encoder::FrameEncoder::params enc_params = {
-      m_parameters.qp,
-      CHROMA_420,
-      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-      bsp_params,
-      args,
-      true,
-      false,
-      true,
-      3};
+  icov::encoder::FrameEncoder::params enc_params;
+  //  = {
+  //      m_parameters.qp,
+  //      CHROMA_420,
+  //      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+  //      cv::Size(m_parameters.icuSize, m_parameters.icuSize),
+  //      bsp_params,
+  //      args,
+  //      true,
+  //      false,
+  //      true,
+  //      3};
 
-  auto encoder = std::make_unique<icov::encoder::FrameEncoder>(0, enc_params);
+  std::unique_ptr<icov::encoder::FrameEncoder>
+      encoder; //= std::make_unique<icov::encoder::FrameEncoder>(enc_params);
   auto output = std::make_shared<icov::encoder::BinaryOutputIcov>(encodedFile);
 
   output->contentParameterSet().icov_version =
@@ -104,7 +107,7 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   output->contentParameterSet().is_block_fixed_size = true;
   output->contentParameterSet().block_fixed_size = static_cast<icov::byte>(32);
   output->contentParameterSet().content_chroma_format =
-      (icov::byte)enc_params.chFormat;
+      (icov::byte)enc_params.ChFormat;
   encoder->setIcovFile(output);
 
   m_encoder = std::move(encoder);

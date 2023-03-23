@@ -4,7 +4,7 @@
 //#include <chrono>
 
 icov::Aff3ctDecoder::Aff3ctDecoder(int n_dec)
-    : IDecoder(), m_decvector(n_dec) {}
+    : ILDPC_Decoder(), m_decvector(n_dec) {}
 
 void icov::Aff3ctDecoder::decode(BitVec &o_decoded, int n, int idx,
                                  const std::vector<LLRVal> &llr,
@@ -24,7 +24,7 @@ void icov::Aff3ctDecoder::init_decoder(int i, int n, int n_ite,
                                        const AffMatrix &matrix) {
   if (i >= (int)m_decvector.size())
     m_decvector.resize(i + 1);
-  m_decvector[i] = std::unique_ptr<AffLDPCA>(new AffLDPCA(n, n_ite, matrix));
+  m_decvector[i] = std::make_unique<AffLDPCA>(n, n_ite, matrix);
 }
 
 void icov::Aff3ctDecoder::get_llr_order(int i_numcode,

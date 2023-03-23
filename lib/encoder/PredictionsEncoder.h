@@ -57,7 +57,7 @@ namespace encoder {
 
 class PredictionsEncoder {
 public:
-  PredictionsEncoder(const po::variables_map &program_args,
+  PredictionsEncoder(const LdpcCoderParameters &LDPC_Params,
                      std::vector<uint16_t> predictions);
   ~PredictionsEncoder() = default;
 

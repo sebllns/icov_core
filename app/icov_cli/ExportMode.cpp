@@ -39,7 +39,7 @@ ExportMode::ExportMode(const boost::program_options::variables_map &args,
 void ExportMode::run() {
   export_numcode();
   if (export_matrix_enabled) {
-    m_coder = CoderFactory::create_coder(m_options_map);
+    m_coder = LdpcCoderFactory::create_coder(m_options_map);
     export_matrices();
   }
 }

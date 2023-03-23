@@ -89,7 +89,7 @@ public:
   ChannelExtractor(/*const ChannelExtractor::params &p,*/
                    std::shared_ptr<InputIcov> &icovFile,
                    const sp_IcovExtractedBitstream &bitstream,
-                   const CoderParameters &LDPC_params);
+                   const LdpcCoderParameters &LDPC_params);
   ~ChannelExtractor();
 
   int get_coder_size() const;

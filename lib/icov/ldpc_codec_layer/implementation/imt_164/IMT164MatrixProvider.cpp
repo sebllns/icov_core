@@ -1,11 +1,13 @@
 #include "IMT164MatrixProvider.h"
 
+#include <boost/filesystem/path.hpp>
 #include <cstdint>
 #include <fstream>
 #include <sstream>
 
 #include "io/PcmData.h"
 #include "tools/DebugTools.h"
+#include <boost/filesystem.hpp>
 
 using namespace icov;
 
@@ -259,12 +261,19 @@ void icov::IMT164MatrixProvider::computeSyndromeCacheIndex() {
   }
 }
 
+std::string IMT164MatrixProvider::get_matrix_root(std::string root_dir,
+                                                  int coder_length) {
+  return (boost::filesystem::path(root_dir) / std::to_string(coder_length))
+      .string();
+}
+
 std::string IMT164MatrixProvider::get_pcm_path(int level_idx) const {
   std::string filename = "H";
   if (level_idx < m_tools->get_level_count() - 1) {
     filename = "C1" + std::to_string(m_tools->get_level(level_idx));
   }
   // get data dir
-  return root_dir + "/" + std::to_string(m_tools->get_n()) + "/" + filename +
-         ".pcm";
+  return (boost::filesystem::path(get_matrix_root(root_dir, m_tools->get_n())) /
+          (filename + ".pcm"))
+      .string();
 }

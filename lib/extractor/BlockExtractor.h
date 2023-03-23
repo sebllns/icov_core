@@ -69,7 +69,7 @@ public:
 
   BlockExtractor(std::shared_ptr<InputIcov> &icovFile,
                  const BlockExtractor::params &p,
-                 const CoderParameters &coder_params,
+                 const LdpcCoderParameters &coder_params,
                  const sp_IcovExtractedBitstream &extraction);
   ~BlockExtractor();
 

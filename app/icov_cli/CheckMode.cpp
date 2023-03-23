@@ -120,7 +120,7 @@ void CheckMode::compare_matrix(const AffMatrix &m,
 
 CheckMode::CheckMode(const po::variables_map &args,
                      const std::string &data_path)
-    : m_coder(CoderFactory::create_coder(args)),
+    : m_coder(LdpcCoderFactory::create_coder(args)),
       m_stored_syndrome(m_coder->syndromeMgr()->get_n()), datapath(data_path) {}
 
 void CheckMode::run() {

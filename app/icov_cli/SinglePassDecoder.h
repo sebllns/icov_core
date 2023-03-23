@@ -71,7 +71,7 @@ public:
   SinglePassDecoder(const fs::path &path);
   ~SinglePassDecoder();
 
-  void initialize(const CoderParameters &coder_params);
+  void initialize(const LdpcCoderParameters &coder_params);
 
   const InputIcov &icovFile() const;
   const icov::factory::Navigation360 &icovNavigation() const;

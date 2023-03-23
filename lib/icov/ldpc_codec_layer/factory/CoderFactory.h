@@ -51,6 +51,7 @@
 #include "ldpc_codec_layer/IcovCoder.h"
 
 #include <boost/program_options.hpp>
+#include <string>
 namespace po = boost::program_options;
 
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
@@ -59,14 +60,15 @@ using p_InteractiveCoder = std::unique_ptr<InteractiveCoder<AffMatrix>>;
 
 namespace icov {
 
-class CoderFactory {
+class LdpcCoderFactory {
 public:
-  static std::unique_ptr<CoderParameters> parse_coder_parameters(const po::variables_map &args);
+  static std::unique_ptr<LdpcCoderParameters>
+  parse_coder_parameters(const po::variables_map &args);
 
-  static p_InteractiveCoder create_coder(const CoderParameters &args);
+  static p_InteractiveCoder create_coder(const LdpcCoderParameters &args);
   static p_InteractiveCoder create_coder(const po::variables_map &args);
 
-  static void create_coder_yuv(const CoderParameters &args,
+  static void create_coder_yuv(const LdpcCoderParameters &args,
                                p_InteractiveCoder &y_coder,
                                p_InteractiveCoder &uv_coder);
   static void create_coder_yuv(const po::variables_map &args,

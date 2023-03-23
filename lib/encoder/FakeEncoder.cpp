@@ -15,10 +15,11 @@ namespace icov {
 
 namespace encoder {
 
+FakeEncoder::FakeEncoder(std::ofstream &output) : m_output(output) {}
+
 FakeEncoder::~FakeEncoder() { std::cout << "destroy FakeEncoder" << std::endl; }
 
-void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
-                                            const Block &b,
+void FakeEncoder::encodeBlockWithPrediction(const Block &b,
                                             uint16_t prediction) {
   cout << "---- prediction " << prediction << std::endl;
 
@@ -66,16 +67,15 @@ void FakeEncoder::encodeBlockWithPrediction(std::ostream &output,
   cv::Mat pixels = m_frame(rect_block).clone();
   cv::add(0.5 * pixels, 0.5 * color, pixels);
 
-  output.write((char *)pixels.data, rect_block.area() * pixels.elemSize());
+  m_output.write((char *)pixels.data, rect_block.area() * pixels.elemSize());
 }
 
-void FakeEncoder::processInput(std::ostream &output,
-                               const IInputMedia<cv::Mat> &input) {
+void FakeEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   m_frame = input.getCurrentFrame().clone();
   int values[] = {m_frame.rows, m_frame.cols, m_frame.type(),
                   m_frame.channels()};
-  output.write(reinterpret_cast<const char *>(&values), sizeof(values));
+  m_output.write(reinterpret_cast<const char *>(&values), sizeof(values));
 }
 
 std::vector<uint16_t>

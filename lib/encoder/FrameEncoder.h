@@ -70,65 +70,55 @@ namespace encoder {
 class FrameEncoder : public IFrameEncoder<cv::Mat> {
 public:
   struct params {
-    int qp;
-    ChromaFormat chFormat;
-    cv::Size icuSize_luma;
-    cv::Size tuSize_luma;
-    BitSymbolProvider::params bsp_params;
-    po::variables_map program_args;
-    bool enable_block_encoding;
-    bool write_intra_pred_image;
-    bool check_decoding;
-
-    float maxRateNoCoding;
+    int QP = 42;
+    ChromaFormat ChFormat = ChromaFormat::CHROMA_420;
+    cv::Size ICU_Size = cv::Size(32, 32);
+    BitSymbolProvider::params BSP_Params;
+    bool CheckDecoding = true;
+    float MaxRateNoCoding = 3;
     // int maxCountSINoCoding;
 
-    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
-    const int maxLog2TrDynamicRange = 15;
+    const Size TU_SizeAfterRegroupingLuma = Size(1, 1);
+    const int MaxLog2TrDynamicRange = 15;
 
     /// in fact we need 1 margin for each color
     /// component, but since UnitArea
     /// handles division by 2 for chroma 420, it is easier to add 2 pixel
     /// margins per left and right side and this will be divided by 2 for
     /// chroma.
-    const int margin_x_360luma = 2;
+    const int MarginX360Luma = 2;
 
     /// Bit-depth the codec
     /// operates at (input/output files will be converted). (default:
     /// MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data
     /// will be converted
-    const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
+    const Int InternalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   };
 
   const static int PredViewID;
   const static int RecoViewID;
   const static int DecodedDebugViewID;
 
-  FrameEncoder(int frame, const params &p);
+  FrameEncoder(const params &p, const LdpcCoderParameters &LDPC_Params);
   ~FrameEncoder();
 
   const std::shared_ptr<OutputIcovBase> &icovFile() const;
   void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
 
 protected:
-  void encodeBlock(std::ostream &output, const Block &b, bool access_block,
+  void encodeBlock(const Block &b, bool access_block,
                    const IBlockPrediction &block_prediction) override;
 
-  void encodeBlockWithPrediction(std::ostream &output, const Block &b,
-                                 uint16_t prediction) override;
-  void processInput(std::ostream &output,
-                    const IInputMedia<cv::Mat> &input) override;
+  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
+  void processInput(const IInputMedia<cv::Mat> &input) override;
 
 private:
-  void encode_icu(std::ostream &output, const Block &b,
-                  const icov::video::IcuEncoder &icu_enc,
+  void encode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                   BlockPrediction::predType pred);
-  void encode_si(std::ostream &output, const Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
+  void encode_si(const Block &b, const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
                  BlockPrediction::predType pred, ComponentID comp);
-  void encode_tu(std::ostream &output, const Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
+  void encode_tu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
                  BlockPrediction::predType pred, ComponentID comp,
                  int tu_index);

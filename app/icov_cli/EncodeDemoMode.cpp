@@ -75,6 +75,6 @@ void EncodeDemoMode::run() {
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
   ICOV_DEBUG << "Start encoding";
-  m_encoder->encode(std::cout, *input, icov_pic, icov_accessblockMgr,
+  m_encoder->encode(*input, icov_pic,
                     icov_blockPrediction);
 }

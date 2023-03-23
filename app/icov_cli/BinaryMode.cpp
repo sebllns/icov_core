@@ -10,7 +10,7 @@ void BinaryMode::AddProgramOptions(
 }
 
 BinaryMode::BinaryMode(const po::variables_map &args)
-    : m_coder(CoderFactory::create_coder(args)),
+    : m_coder(LdpcCoderFactory::create_coder(args)),
       m_src_bits(m_coder->syndromeMgr()->get_n()),
       m_dec_bits(m_coder->syndromeMgr()->get_n()),
       m_stored_syndrome(m_coder->syndromeMgr()->get_n()), m_numcodeIdx(0),

@@ -23,7 +23,7 @@ using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
 ChannelDecoder::ChannelDecoder(
-    const params &p, const CoderParameters &LDPC_params,
+    const params &p, const LdpcCoderParameters &LDPC_params,
     const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
     const std::shared_ptr<video::EncodingStructure> &encodingStruct,
     const sp_IcovExtractedBitstream &extraction)
@@ -32,7 +32,7 @@ ChannelDecoder::ChannelDecoder(
       //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
       //          p.icu_size))
       //              .block(p.CompID)),
-      m_ldpc_coder(icov::CoderFactory::create_coder(LDPC_params)),
+      m_ldpc_coder(icov::LdpcCoderFactory::create_coder(LDPC_params)),
       m_blockBitplane(m_ldpc_coder->get_n(), 0),
       m_blockSI(m_ldpc_coder->get_n(), 0),
       m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),

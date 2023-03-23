@@ -2,32 +2,23 @@
 
 #include "IInteractiveCoder.h"
 
-#include <memory>
-
 #include "BitSymbolProvider.h"
 #include "LLRProvider.h"
 #include "common.h"
 #include "interface/IDecoder.h"
 #include "interface/IMatrixProvider.h"
 #include "interface/ISyndrome.h"
+#include <memory>
 
 namespace icov {
 
 template <class Matrix> class InteractiveCoder : public IInteractiveCoder {
   using IMatrixProvider_sp = std::shared_ptr<IMatrixProvider<Matrix>>;
-  using IDecoder_sp = std::shared_ptr<IDecoder<Matrix>>;
+  using IDecoder_sp = std::shared_ptr<ILDPC_Decoder<Matrix>>;
   using ISyndromeManager_sp = std::shared_ptr<ISyndromeManager>;
   using LLRProvider_sp = std::shared_ptr<LLRProvider>;
 
 public:
-  //  InteractiveCoder(IDecoder<Matrix> *dec, IMatrixProvider<Matrix> *mp,
-  //                   ISyndromeManager *syndromeMgr, LLRProvider *llrProvider)
-  //      : m_pdecoder(dec), m_psyndromeMgr(syndromeMgr),
-  //        m_pllrProvider(llrProvider), m_matrix_provider(mp) {
-  //    m_decodage_syndrome =
-  //        std::unique_ptr<Syndrome>(new Syndrome(syndromeMgr->get_n()));
-  //  };
-
   InteractiveCoder(const IDecoder_sp &dec, const IMatrixProvider_sp &mp,
                    const ISyndromeManager_sp &syndromeMgr,
                    const LLRProvider_sp &llrProvider)

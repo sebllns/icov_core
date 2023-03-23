@@ -91,7 +91,7 @@ public:
   };
 
   BlockDecoder(const BlockDecoder::params &p,
-               const CoderParameters &coder_params,
+               const LdpcCoderParameters &coder_params,
                const sp_IcovExtractedBitstream &extraction);
   ~BlockDecoder();
 

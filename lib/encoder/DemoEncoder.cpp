@@ -43,11 +43,11 @@ void callBackFuncEncoding(int event, int x, int y, int flags, void *userdata) {
 
 /*****************************************************************************/
 DemoEncoder::DemoEncoder(int frame, const params &p)
-    : IFrameEncoder(frame), m_params(p),
+    : m_params(p),
       m_numComp(getNumberValidComponents(p.chFormat)),
       m_firstDisplayBlocks(true), m_pic_ptr(nullptr) {
   std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-  icov::CoderFactory::create_coder_yuv(p.program_args, ycoder, uvcoder);
+  icov::LdpcCoderFactory::create_coder_yuv(p.program_args, ycoder, uvcoder);
 
   m_coders[ycoder->get_n()] = std::move(ycoder);
   m_coders[uvcoder->get_n()] = std::move(uvcoder);
@@ -112,7 +112,7 @@ void DemoEncoder::onEncodeBlock(int x, int y) {
   std::cout << b->getId(Block::SELF) << std::endl;
 
   if (m_pic_ptr->isValidBlock(b))
-    encodeBlockWithPrediction(std::cout, *b, predid);
+    encodeBlockWithPrediction(*b, predid);
 }
 
 /*****************************************************************************/
@@ -269,8 +269,7 @@ void DemoEncoder::onSelectBlock(int x, int y) {
 }
 
 /*****************************************************************************/
-void DemoEncoder::processInput(std::ostream &output,
-                               const IInputMedia<cv::Mat> &input) {
+void DemoEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   std::cout << input.getPath() << std::endl;
   cv::Mat &img_src = m_cvmat[PIC_ORIGINAL];
@@ -472,8 +471,7 @@ void DemoEncoder::processInput(std::ostream &output,
 
 /*****************************************************************************/
 void icov::encoder::DemoEncoder::encode_tu(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc,
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp, int tu_index) {
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
@@ -507,12 +505,13 @@ void icov::encoder::DemoEncoder::encode_tu(
                  bsp.x_binary_length());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
-    output << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
-           << b.parent()->col(b.u()) << "\t" << BlockPrediction::toString(pred)
-           << "\t" << tu_index << "\t" << (int)comp << "\t" << i << "\t"
-           << m_coders.at(tu_size)->get_r(si_numcodes[i]) << "\t"
-           << si_synd[i].to_string(" ") << "\t";
-    output << std::endl;
+    std::cout << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
+              << b.parent()->col(b.u()) << "\t"
+              << BlockPrediction::toString(pred) << "\t" << tu_index << "\t"
+              << (int)comp << "\t" << i << "\t"
+              << m_coders.at(tu_size)->get_r(si_numcodes[i]) << "\t"
+              << si_synd[i].to_string(" ") << "\t";
+    std::cout << std::endl;
 
     if (m_params.check_decoding) {
 
@@ -554,12 +553,11 @@ void icov::encoder::DemoEncoder::encode_tu(
 }
 
 void icov::encoder::DemoEncoder::encode_si(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc,
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp) {
   for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
-    encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
+    encode_tu(b, icu_enc, si, pred, comp, tu_index);
   }
   ICOV_INFO << "Block was successfully encoded";
 
@@ -569,8 +567,8 @@ void icov::encoder::DemoEncoder::encode_si(
 }
 
 void icov::encoder::DemoEncoder::encode_icu(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
+    BlockPrediction::predType pred) {
 
   ICOV_INFO << "Encode ICU with prediction " << BlockPrediction::toString(pred)
             << std::endl;
@@ -578,13 +576,12 @@ void icov::encoder::DemoEncoder::encode_icu(
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
   for (uint c = 0; c < m_numComp; c++) {
-    encode_si(output, b, icu_enc, *si, pred, static_cast<ComponentID>(c));
+    encode_si(b, icu_enc, *si, pred, static_cast<ComponentID>(c));
   }
 }
 
 /*****************************************************************************/
-void DemoEncoder::encodeBlockWithPrediction(std::ostream &output,
-                                            const Block &b,
+void DemoEncoder::encodeBlockWithPrediction(const Block &b,
                                             uint16_t prediction) {
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
@@ -612,15 +609,13 @@ void DemoEncoder::encodeBlockWithPrediction(std::ostream &output,
   const auto &si_map = icu_enc.get_intraSIsMap();
 
   if (si_map.count(pred) > 0)
-    encode_icu(output, b, icu_enc, pred);
+    encode_icu(b, icu_enc, pred);
 }
 
 void icov::encoder::DemoEncoder::encode(
-    std::ostream &output, IInputMedia<cv::Mat> &input, const IPicture &picture,
-    const IAccessBlockManager &access_blocks,
+    IInputMedia<cv::Mat> &input, const IPicture &picture,
     const IBlockPrediction &block_prediction) {
   m_pic_ptr = &picture;
-  IFrameEncoder::encode(output, input, picture, access_blocks,
-                        block_prediction);
+  IFrameEncoder::encode(input, picture, block_prediction);
   m_pic_ptr = nullptr;
 }

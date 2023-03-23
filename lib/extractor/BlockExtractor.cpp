@@ -10,7 +10,7 @@
 
 icov::extractor::BlockExtractor::BlockExtractor(
     std::shared_ptr<InputIcov> &icovFile, const params &p,
-    const CoderParameters &coder_params,
+    const LdpcCoderParameters &coder_params,
     const sp_IcovExtractedBitstream &extraction)
     : m_icovFile(icovFile), m_extractionBitstream(extraction),
       m_channelCount(p.icu_sizes.size()), m_params(p) {

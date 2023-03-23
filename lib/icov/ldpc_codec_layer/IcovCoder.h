@@ -74,14 +74,14 @@ namespace po = boost::program_options;
 using namespace icov;
 
 namespace icov {
-struct CoderParameters {
+struct LdpcCoderParameters {
   std::string type;
   std::string database;
   std::string numcode_file;
   int n;
   int bp_ite;
 
-  CoderParameters() = default;
+  LdpcCoderParameters() = default;
 
   static std::string parseType(const po::variables_map &args) {
     return args[OPT_CODER_TYPE].as<std::string>();
@@ -103,7 +103,7 @@ struct CoderParameters {
     return args[OPT_NUMCODES].as<std::string>();
   }
 
-  CoderParameters(const po::variables_map &args,
+  LdpcCoderParameters(const po::variables_map &args,
                   const std::string &intented_type) {
     type = parseType(args);
     database = parseDatabase(args);
@@ -147,7 +147,7 @@ struct CoderParameters {
     return numcodes_v;
   }
 
-  virtual std::unique_ptr<CoderParameters> clone() const = 0;
-  virtual ~CoderParameters() = default;
+  virtual std::unique_ptr<LdpcCoderParameters> clone() const = 0;
+  virtual ~LdpcCoderParameters() = default;
 };
 } // namespace icov

@@ -20,7 +20,7 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
 void decoder::SinglePassDecoder::initialize(
-    const CoderParameters &coder_params) {
+    const LdpcCoderParameters &coder_params) {
   ICOV_DEBUG << "INIT SinglePassDecoder";
   m_icovFile->readContentParameterSet();
   const auto cps = m_icovFile->contentParameterSet();

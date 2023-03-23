@@ -290,14 +290,13 @@ void OrderingDemoMode::run() {
 
   boost::filesystem::path encoded_file_path("./encoded.icov");
 
-  icov::encoder::FakeEncoder encoder(0);
+  std::ofstream encoded_file(encoded_file_path.string(),
+                             std::ios::out | std::ios::binary);
+  icov::encoder::FakeEncoder encoder(encoded_file);
   icov::encoder::InputImage input(fileAddr);
   BlockPrediction predMgr;
 
-  std::ofstream encoded_file(encoded_file_path.string(),
-                             std::ios::out | std::ios::binary);
-  encoder.encode(encoded_file, input, *picture, *req_mgr.accessBlocks(),
-                 predMgr);
+  encoder.encode(input, *picture, predMgr);
   encoded_file.close();
 
   auto blockprocessor =

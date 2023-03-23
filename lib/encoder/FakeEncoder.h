@@ -58,19 +58,17 @@ class FakeEncoder : public IFrameEncoder<cv::Mat> {
   using IFrameEncoder<cv::Mat>::IFrameEncoder;
 
 public:
+  explicit FakeEncoder(std::ofstream &output);
   ~FakeEncoder();
 
-  // IEncoder interface
-protected:
+private:
   cv::Mat m_frame;
-
-  void processInput(std::ostream &output,
-                    const IInputMedia<cv::Mat> &input) override;
+  std::ofstream &m_output;
 
   // IFrameEncoder interface
 protected:
-  void encodeBlockWithPrediction(std::ostream &output, const Block &b,
-                                 uint16_t prediction) override;
+  void processInput(const IInputMedia<cv::Mat> &input) override;
+  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
   std::vector<uint16_t>
   getAvailablePredictions(const Block &b, bool access_block,
                           const IBlockPrediction &block_prediction) override;

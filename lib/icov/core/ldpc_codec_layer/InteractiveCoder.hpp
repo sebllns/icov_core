@@ -1,5 +1,7 @@
 #pragma once
+
 #include "InteractiveCoder.h"
+
 #include "common_types.h"
 #include "helpers.h"
 #include <algorithm>

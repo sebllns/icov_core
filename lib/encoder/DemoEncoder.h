@@ -99,29 +99,24 @@ public:
   void onMouseViewPred(int event, int x, int y, int flags);
   void onMouseEncode(int event, int x, int y, int flags);
 
-  void encode(std::ostream &output, IInputMedia<cv::Mat> &input,
-              const IPicture &picture, const IAccessBlockManager &access_blocks,
+  void encode(IInputMedia<cv::Mat> &input, const IPicture &picture,
+
               const IBlockPrediction &block_prediction) override;
 
 protected:
-  void encodeBlockWithPrediction(std::ostream &output, const Block &b,
-                                 uint16_t prediction) override;
-  void processInput(std::ostream &output,
-                    const IInputMedia<cv::Mat> &input) override;
+  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
+  void processInput(const IInputMedia<cv::Mat> &input) override;
 
 private:
   void onSelectBlock(int x, int y);
   void onEncodeBlock(int x, int y);
 
-  void encode_icu(std::ostream &output, const Block &b,
-                  const icov::video::IcuEncoder &icu_enc,
+  void encode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                   BlockPrediction::predType pred);
-  void encode_si(std::ostream &output, const Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
+  void encode_si(const Block &b, const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
                  BlockPrediction::predType pred, ComponentID comp);
-  void encode_tu(std::ostream &output, const Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
+  void encode_tu(const Block &b, const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
                  BlockPrediction::predType pred, ComponentID comp,
                  int tu_index);

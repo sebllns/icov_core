@@ -27,10 +27,10 @@ using namespace icov::encoder;
 using SI_SIDE = BlockPrediction::predType;
 
 /*****************************************************************************/
-FrameEncoder::FrameEncoder(int frame, const params &p)
-    : IFrameEncoder(frame), m_params(p),
-      m_numComp(getNumberValidComponents(p.chFormat)),
-      m_pred_encoder(p.program_args,
+FrameEncoder::FrameEncoder(const params &p,
+                           const LdpcCoderParameters &LDPC_Params)
+    : m_params(p), m_numComp(getNumberValidComponents(p.ChFormat)),
+      m_pred_encoder(LDPC_Params,
                      std::vector<uint16_t>{
                          BlockPrediction::RIGHT,
                          BlockPrediction::LEFT,
@@ -64,8 +64,7 @@ FrameEncoder::FrameEncoder(int frame, const params &p)
 FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 
 /*****************************************************************************/
-void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
-                               bool access_block,
+void FrameEncoder::encodeBlock(const Block &b, bool access_block,
                                const IBlockPrediction &block_prediction) {
 
   if (b.getId(Block::SELF) > 2)
@@ -81,7 +80,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
     block_comp = c;
 #pragma omp parallel for
     for (uint16_t p : v)
-      encodeBlockWithPrediction(output, b, p);
+      encodeBlockWithPrediction(b, p);
   }
 
   m_icov_file->startWriteBlock(b);
@@ -161,8 +160,7 @@ void FrameEncoder::encodeBlock(std::ostream &output, const Block &b,
 }
 
 /*****************************************************************************/
-void FrameEncoder::processInput(std::ostream &output,
-                                const IInputMedia<cv::Mat> &input) {
+void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   cv::Mat img_src = input.getCurrentFrame();
 
@@ -170,9 +168,7 @@ void FrameEncoder::processInput(std::ostream &output,
 
   // CONSTANTS
   const Size icuSize_luma =
-      Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
-  const Size tuSize_luma =
-      Size(m_params.tuSize_luma.width, m_params.tuSize_luma.height);
+      Size(m_params.ICU_Size.width, m_params.ICU_Size.height);
 
   // end constants
 
@@ -197,11 +193,11 @@ void FrameEncoder::processInput(std::ostream &output,
   // end resize
 
   const UnitArea extendedFrameArea(
-      m_params.chFormat,
-      Area(0, 0, sourceWidth + 2 * m_params.margin_x_360luma, sourceHeight));
+      m_params.ChFormat,
+      Area(0, 0, sourceWidth + 2 * m_params.MarginX360Luma, sourceHeight));
   const UnitArea mainFrameArea(
-      m_params.chFormat,
-      Area(m_params.margin_x_360luma, 0, sourceWidth, sourceHeight));
+      m_params.ChFormat,
+      Area(m_params.MarginX360Luma, 0, sourceWidth, sourceHeight));
 
   //  PelStorage picTemp;
   //  picTemp.create(extendedFrameArea);
@@ -234,15 +230,15 @@ void FrameEncoder::processInput(std::ostream &output,
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
   m_enc_struc
       .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-          m_params.chFormat, sourceWidth, sourceHeight,
-          m_params.margin_x_360luma, icuSize_luma.width, icuSize_luma.height,
-          tuSize_luma.width, tuSize_luma.height);
+          m_params.ChFormat, sourceWidth, sourceHeight, m_params.MarginX360Luma,
+          icuSize_luma.width, icuSize_luma.height, icuSize_luma.width,
+          icuSize_luma.height);
 
   VTM_Utility::quantizeFrame(
-      m_params.qp, m_vvc_bufs.get(PIC_ORIGINAL),
+      m_params.QP, m_vvc_bufs.get(PIC_ORIGINAL),
       m_vvc_bufs.get(PIC_RECONSTRUCTION), m_enc_struc,
-      m_params.internalBitDepth,
-      m_params.maxLog2TrDynamicRange); // give the whole extended image (
+      m_params.InternalBitDepth,
+      m_params.MaxLog2TrDynamicRange); // give the whole extended image (
                                        // .getOrigBuf()
   // and
   // .getRecoBuf() ) to the function because vector
@@ -260,10 +256,10 @@ void FrameEncoder::processInput(std::ostream &output,
     VTM_Utility::copyBordersFor360(mainFrameReco, compID);
 
     m_enc_struc.applyPredictionBasedOnEntropy(
-        m_vvc_bufs, compID, m_params.internalBitDepth,
-        m_params.tuSizeAfterRegrouping_luma.width,
-        m_params.tuSizeAfterRegrouping_luma.height, false, m_params.qp,
-        m_params.maxLog2TrDynamicRange);
+        m_vvc_bufs, compID, m_params.InternalBitDepth,
+        m_params.TU_SizeAfterRegroupingLuma.width,
+        m_params.TU_SizeAfterRegroupingLuma.height, false, m_params.QP,
+        m_params.MaxLog2TrDynamicRange);
   }
   ICOV_DEBUG << "Successfully computed intra predictions";
 
@@ -272,8 +268,7 @@ void FrameEncoder::processInput(std::ostream &output,
 
 /*****************************************************************************/
 void icov::encoder::FrameEncoder::encode_tu(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc,
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp, int tu_index) {
 
@@ -292,7 +287,7 @@ void icov::encoder::FrameEncoder::encode_tu(
   icov::SyndromesVec si_synd;
 
   BitSymbolProvider bsp =
-      x_tu.getBitSymbolProvider(comp, si_tu, m_params.bsp_params);
+      x_tu.getBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
@@ -302,7 +297,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
 
     // CHECK DECODING
-    if (m_params.check_decoding) {
+    if (m_params.CheckDecoding) {
 
       BitSymbolProvider bsp_dec(tu_size);
 
@@ -409,7 +404,7 @@ void icov::encoder::FrameEncoder::encode_tu(
               si_numcodes[i];
 
           if (m_channelCoder[comp].bitplanes[i].noSourceThreshold >
-              m_params.maxRateNoCoding) {
+              m_params.MaxRateNoCoding) {
             m_channelCoder[comp].bitplanes[i].sourceFlag = true;
             m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
                 bsp.src_bits()[i]);
@@ -436,8 +431,7 @@ void FrameEncoder::setIcovFile(
 }
 
 void icov::encoder::FrameEncoder::encode_si(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc,
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
     ComponentID comp) {
 
@@ -446,23 +440,21 @@ void icov::encoder::FrameEncoder::encode_si(
       "This version of ICOV can only manage one transform unit per block");
 
   for (int tu_index = 0; tu_index < (int)si.TUs.size(); tu_index++) {
-    encode_tu(output, b, icu_enc, si, pred, comp, tu_index);
+    encode_tu(b, icu_enc, si, pred, comp, tu_index);
   }
 }
 
 void icov::encoder::FrameEncoder::encode_icu(
-    std::ostream &output, const Block &b,
-    const icov::video::IcuEncoder &icu_enc, BlockPrediction::predType pred) {
+    const Block &b, const icov::video::IcuEncoder &icu_enc,
+    BlockPrediction::predType pred) {
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
-  encode_si(output, b, icu_enc, *si, pred,
-            static_cast<ComponentID>(block_comp));
+  encode_si(b, icu_enc, *si, pred, static_cast<ComponentID>(block_comp));
 }
 
 /*****************************************************************************/
-void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
-                                             const Block &b,
+void FrameEncoder::encodeBlockWithPrediction(const Block &b,
                                              uint16_t prediction) {
 
   BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
@@ -471,9 +463,9 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   int y_block = b.parent()->row(b.v());
 
   Position pos(static_cast<float>(x_block) /
-                   static_cast<float>(m_params.icuSize_luma.width),
+                   static_cast<float>(m_params.ICU_Size.width),
                static_cast<float>(y_block) /
-                   static_cast<float>(m_params.icuSize_luma.height));
+                   static_cast<float>(m_params.ICU_Size.height));
 
   const auto &es = this->m_enc_struc;
   uint icuIndex = es.get_icuIndex(pos);
@@ -482,5 +474,5 @@ void FrameEncoder::encodeBlockWithPrediction(std::ostream &output,
   const auto &si_map = icu_enc.get_intraSIsMap();
 
   if (si_map.count(pred) > 0)
-    encode_icu(output, b, icu_enc, pred);
+    encode_icu(b, icu_enc, pred);
 }

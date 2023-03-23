@@ -3,11 +3,11 @@
 #include "implementation/imt/IMTSyndrome.h"
 
 namespace icov {
-const std::string Coder_IMT18::id = "imt18";
+const std::string LdpcCoder_IMT18::id = "imt18";
 
-void Coder_IMT18::create(
+void LdpcCoder_IMT18::create(
     std::shared_ptr<LLRProvider> &llrProvider,
-    std::shared_ptr<IDecoder<AffMatrix>> &ldpca_dec,
+    std::shared_ptr<ILDPC_Decoder<AffMatrix>> &ldpca_dec,
     std::shared_ptr<ISyndromeManager> &syndromeMgr,
     std::shared_ptr<IMatrixProvider<AffMatrix>> &mat_provider,
     const parameters &p) {

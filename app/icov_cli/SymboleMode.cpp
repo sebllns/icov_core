@@ -84,7 +84,7 @@ void SymboleMode::AddProgramOptions(
 }
 
 SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
-    : m_coder(CoderFactory::create_coder(args)) {
+    : m_coder(LdpcCoderFactory::create_coder(args)) {
 
   icov::helpers::assert::check(args.count(dataset_dir_id),
                                dataset_dir_id + " is missing");
