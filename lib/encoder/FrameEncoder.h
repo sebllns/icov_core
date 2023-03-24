@@ -129,6 +129,7 @@ protected:
   icov::video::EncodingStructure m_enc_struc;
   icov::video::BufGroups m_vvc_bufs;
   PredictionsEncoder m_pred_encoder;
+  bool m_init;
 
   std::shared_ptr<OutputIcovBase> m_icov_file;
 

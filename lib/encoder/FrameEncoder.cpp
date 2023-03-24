@@ -41,7 +41,7 @@ FrameEncoder::FrameEncoder(const params &p,
                          BlockPrediction::BOTTOM_RIGHT,
                          BlockPrediction::BOTTOM_LEFT,
                      }),
-      block_comp(0) {
+      block_comp(0), m_init(true) {
 
   //  xData.create(1, 100, CV_64F); // 1 Row, 100 columns, Double
   //  yData.create(1, 100, CV_64F);
@@ -202,21 +202,35 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   //  PelStorage picTemp;
   //  picTemp.create(extendedFrameArea);
 
-  m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
-  m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
-  m_vvc_bufs.create(PIC_PREDICTION, extendedFrameArea);
+  if (m_init) {
+    m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
+    m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
+    m_vvc_bufs.create(PIC_PREDICTION, extendedFrameArea);
 
-  std::vector<BlockPrediction::predType> predVec = {
-      BlockPrediction::RIGHT,        BlockPrediction::LEFT,
-      BlockPrediction::TOP,          BlockPrediction::BOTTOM,
-      BlockPrediction::TOP_LEFT,     // 0b00101
-      BlockPrediction::BOTTOM_LEFT,  // 0b01001
-      BlockPrediction::BOTTOM_RIGHT, // 0b01010
-      BlockPrediction::TOP_RIGHT};
+    std::vector<BlockPrediction::predType> predVec = {
+        BlockPrediction::RIGHT,        BlockPrediction::LEFT,
+        BlockPrediction::TOP,          BlockPrediction::BOTTOM,
+        BlockPrediction::TOP_LEFT,     // 0b00101
+        BlockPrediction::BOTTOM_LEFT,  // 0b01001
+        BlockPrediction::BOTTOM_RIGHT, // 0b01010
+        BlockPrediction::TOP_RIGHT};
 
-  for (auto pk : predVec) {
-    m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
+    for (auto pk : predVec) {
+      m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
+    }
+
+    m_enc_struc
+        .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
+            m_params.ChFormat, sourceWidth, sourceHeight,
+            m_params.MarginX360Luma, icuSize_luma.width, icuSize_luma.height,
+            icuSize_luma.width, icuSize_luma.height);
+
+    m_init = false;
   }
+
+  m_vvc_bufs.get(PIC_ORIGINAL).fill(0);
+  m_vvc_bufs.get(PIC_RECONSTRUCTION).fill(0);
+  m_vvc_bufs.get(PIC_PREDICTION).fill(0);
 
   PelUnitBuf mainFrameOrig = m_vvc_bufs.get(PIC_ORIGINAL).getBuf(mainFrameArea);
 
@@ -226,13 +240,7 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   ICOV_ASSERT_MSG((int)(mainFrameOrig.get(COMPONENT_Y).height) == img_src.rows,
                   "Height does not match");
 
-  /// TODO : MOVE INSIDE SPECIFIC FUNCTION
   VTM_OPENCV_Utility::cvMatToYUV(img_src, mainFrameOrig);
-  m_enc_struc
-      .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-          m_params.ChFormat, sourceWidth, sourceHeight, m_params.MarginX360Luma,
-          icuSize_luma.width, icuSize_luma.height, icuSize_luma.width,
-          icuSize_luma.height);
 
   VTM_Utility::quantizeFrame(
       m_params.QP, m_vvc_bufs.get(PIC_ORIGINAL),
