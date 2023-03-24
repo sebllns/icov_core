@@ -7,16 +7,11 @@
 #include <boost/serialization/array_wrapper.hpp>
 #include <cstdint>
 
-#include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/serialization/vector.hpp>
 #include <cstdlib>
 #include <memory>
 #include <utility>
-
-#include "typedef.h"
-#include "video_layer/encoded_stream.h"
 
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
 const char *EncodeMode::params::outputFile_id = "encode-output-file";

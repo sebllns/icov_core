@@ -65,10 +65,10 @@ public:
   enum eOutputType { UNKNOWN = 0, BINARY = 1, TEXT, COUNT };
 
   struct params {
-    eOutputType OutputType = eOutputType::UNKNOWN;
-    FrameEncoder::params FrameEncoderParams;
     fs::path InputPath;
     fs::path OutputPath;
+    eOutputType OutputType = eOutputType::UNKNOWN;
+    FrameEncoder::params FrameEncoderParams;
   };
 
   IcovMediaEncoder(const params &p, const LdpcCoderParameters &LDPC_params);
