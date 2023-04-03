@@ -29,7 +29,8 @@ namespace fs = boost::filesystem;
 using namespace icov::decoder;
 using SI_SIDE = BlockPrediction::predType;
 
-BlockDecoder::BlockDecoder(const params &p, const LdpcCoderParameters &coder_params,
+BlockDecoder::BlockDecoder(const params &p,
+                           const LdpcCoderParameters &coder_params,
                            const sp_IcovExtractedBitstream &extraction)
     : IBlockDecoder(), m_params(p) {
   // CONSTANTS
@@ -70,7 +71,7 @@ BlockDecoder::BlockDecoder(const params &p, const LdpcCoderParameters &coder_par
   for (int c = 0; c < channelCount; c++) {
     const auto compID = static_cast<ComponentID>(c);
     auto coder_channel_params = coder_params.clone();
-    coder_channel_params->n = blockArea.block(compID).area();
+    coder_channel_params->codeLength = blockArea.block(compID).area();
 
     const ChannelType channelType = toChannelType(compID);
     const int bit_depth = p.internalBitDepth[channelType];

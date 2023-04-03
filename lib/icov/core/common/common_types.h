@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/stacktrace/stacktrace.hpp>
 #include <cstddef>
 
 #include "typedef.h"
@@ -24,11 +25,15 @@ public:
     //    std::cout << "new empty " << m_size << std::endl;
   }
 
-  FastArray(const FastArray &f)
-      : m_capacity(f.m_capacity), m_size(f.m_size),
-        m_data(new T[f.m_capacity]) {
+  FastArray(const FastArray &f) : m_capacity(f.m_capacity), m_size(f.m_size) {
     //    std::cout << "new copy " << m_size << std::endl;
-    std::memcpy(m_data, f.m_data, m_size * sizeof(T));
+    // std::cout << boost::stacktrace::stacktrace();
+    //    ICOV_ASSERT_MSG(m_capacity >= m_size,
+    //                    "Capacity is greater or equal than size");
+    if (m_capacity > 0)
+      m_data = new T[f.m_capacity];
+    if (m_size > 0)
+      std::memcpy(m_data, f.m_data, m_size * sizeof(T));
   }
 
   FastArray(size_t size)

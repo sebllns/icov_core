@@ -51,7 +51,8 @@
 
 #include "BlockPrediction.h"
 #include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <map>
@@ -67,7 +68,6 @@ public:
     cv::Size icuSize_luma;
     cv::Size tuSize_luma;
     BitSymbolProvider::params bsp_params;
-    po::variables_map program_args;
     bool enable_block_encoding;
     bool write_intra_pred_image;
     bool check_decoding;
@@ -93,7 +93,8 @@ public:
   const static int RecoViewID;
   const static int DecodedDebugViewID;
 
-  DemoEncoder(int frame, const params &p);
+  DemoEncoder(int frame, const params &p,
+              const LdpcCoderParameters &ldpc_params);
   ~DemoEncoder();
 
   void onMouseViewPred(int event, int x, int y, int flags);

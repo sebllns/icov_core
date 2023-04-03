@@ -426,6 +426,8 @@ void icov::encoder::FrameEncoder::encode_tu(
         }
       }
     }
+
+    // HERE SAVE INFOS FOR DEBUG
   }
 }
 

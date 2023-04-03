@@ -4,8 +4,7 @@
  *  @ingroup ICOV
  */
 
-
-/** @file EncodeDemoMode.h
+/** @file BinaryMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup CLI
@@ -47,30 +46,15 @@
 #pragma once
 
 #include "common.h"
-#include "encoder/InputMedia.h"
-#include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/IcovCoder.h"
-
-#include <boost/filesystem.hpp>
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
-namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-class EncodeDemoMode {
-  struct params {
-
-    static const char *inputFile_id;
-    static const char *outputFile_id;
-    static const char *icuSize_id;
-
-    fs::path inputFile;
-    fs::path encodedFile;
-    int icuSize;
-  };
-
+class BinaryMode {
 public:
-  EncodeDemoMode(const po::variables_map &args);
-  ~EncodeDemoMode() = default;
+  BinaryMode(const po::variables_map &args);
+  ~BinaryMode() = default;
 
   void run();
 
@@ -78,6 +62,23 @@ public:
 
 private:
   int encode();
-  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-  params m_parameters;
+  void fill_src();
+  void fill_pcrossover();
+  bool check_decoding();
+  void write_results();
+
+  std::unique_ptr<AffInteractiveCoder> m_coder;
+  BitVec m_src_bits;
+  BitVec m_dec_bits;
+  std::vector<double> m_pcrossover;
+  Syndrome m_stored_syndrome;
+  uint32_t m_numcodeIdx;
+  uint32_t m_error_count;
+  int m_nite;
+
+  //  std::vector<LLRVal> llr;
+  std::vector<double> time;
+  std::vector<double> decoding_time;
+  std::vector<double> numerrors;
+  std::vector<double> rate;
 };

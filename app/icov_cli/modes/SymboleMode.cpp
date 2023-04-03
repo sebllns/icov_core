@@ -1,7 +1,8 @@
 #include "SymboleMode.h"
 
-#include "TestSequenceInput.h"
-#include "TestSequenceResult.h"
+#include "bsp_test_sequences/TestSequenceInput.h"
+#include "bsp_test_sequences/TestSequenceResult.h"
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 
@@ -84,7 +85,7 @@ void SymboleMode::AddProgramOptions(
 }
 
 SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
-    : m_coder(LdpcCoderFactory::create_coder(args)) {
+    : m_coder(icov::options::create_coder(args)) {
 
   icov::helpers::assert::check(args.count(dataset_dir_id),
                                dataset_dir_id + " is missing");

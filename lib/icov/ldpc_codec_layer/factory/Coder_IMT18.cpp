@@ -11,9 +11,10 @@ void LdpcCoder_IMT18::create(
     std::shared_ptr<ISyndromeManager> &syndromeMgr,
     std::shared_ptr<IMatrixProvider<AffMatrix>> &mat_provider,
     const parameters &p) {
-  llrProvider.reset(new LLRProvider(p.n));
+  llrProvider.reset(new LLRProvider(p.codeLength));
 
-  std::shared_ptr<IMTSyndromeManager> imt_synd(new IMTSyndromeManager(p.n));
+  std::shared_ptr<IMTSyndromeManager> imt_synd(
+      new IMTSyndromeManager(p.codeLength));
   syndromeMgr = imt_synd;
 
   mat_provider.reset(new IMTMatrixProvider(imt_synd, p.database));
@@ -22,7 +23,7 @@ void LdpcCoder_IMT18::create(
   int n_8 = n / 8;
   int n_2 = n / 2;
 
-  int pow = std::log2f(p.n);
+  int pow = std::log2f(p.codeLength);
 
   std::vector<encode_parameters> encode_params(3);
   encode_params[0].start_code = 0;
@@ -57,7 +58,8 @@ void LdpcCoder_IMT18::create(
 
   for (int i = 0; i < mat_provider->getMatrixCount(); i++) {
     mat_provider->buildMatrix(i);
-    dec->init_decoder(i, p.n, p.bp_ite, mat_provider->getMatrix(i));
+    dec->init_decoder(i, p.codeLength, p.beliefPropagationInterations,
+                      mat_provider->getMatrix(i));
   }
 }
 } // namespace icov

@@ -49,7 +49,8 @@
 
 #pragma once
 
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <map>
 
 namespace icov {

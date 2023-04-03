@@ -4,7 +4,8 @@
  *  @ingroup ICOV
  */
 
-/** @file EncodeMode.h
+
+/** @file EncodeDemoMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup CLI
@@ -45,40 +46,31 @@
  *****************************************************************************/
 #pragma once
 
-#include "Media.h"
 #include "common.h"
 #include "encoder/InputMedia.h"
-#include "encoder/OutputIcovBase.h"
 #include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-class EncodeMode {
+class EncodeDemoMode {
   struct params {
 
     static const char *inputFile_id;
     static const char *outputFile_id;
     static const char *icuSize_id;
-    static const char *qp_id;
-    static const char *viewportPadding_id;
 
     fs::path inputFile;
     fs::path encodedFile;
-    fs::path q_valuesPath;
     int icuSize;
-    int qp;
-    float viewportPadding;
-
-    std::unique_ptr<LdpcCoderParameters> ldpc_params;
   };
 
 public:
-  explicit EncodeMode(const po::variables_map &args);
-  ~EncodeMode() = default;
+  EncodeDemoMode(const po::variables_map &args);
+  ~EncodeDemoMode() = default;
 
   void run();
 
@@ -86,5 +78,6 @@ public:
 
 private:
   int encode();
+  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
   params m_parameters;
 };

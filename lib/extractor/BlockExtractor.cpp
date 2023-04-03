@@ -17,7 +17,7 @@ icov::extractor::BlockExtractor::BlockExtractor(
 
   for (int n : p.icu_sizes) {
     auto channel_params = coder_params.clone();
-    channel_params->n = n;
+    channel_params->codeLength = n;
     m_channelExtractor.push_back(std::make_unique<ChannelExtractor>(
         m_icovFile, m_extractionBitstream, *channel_params));
   }

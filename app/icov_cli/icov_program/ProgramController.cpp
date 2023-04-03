@@ -1,16 +1,16 @@
 #include "ProgramController.h"
 #include <iostream>
 
-#include "BinaryMode.h"
-#include "CheckMode.h"
-#include "DecodeMode.h"
-#include "EncodeDemoMode.h"
-#include "EncodeMode.h"
-#include "ExportMode.h"
-#include "OrderingDemoMode.h"
-#include "SymboleMode.h"
 #include "helpers.h"
-#include "icov_program.h"
+#include "icov_program//icov_program.h"
+#include "modes/BinaryMode.h"
+#include "modes/CheckMode.h"
+#include "modes/DecodeMode.h"
+#include "modes/EncodeDemoMode.h"
+#include "modes/EncodeMode.h"
+#include "modes/ExportMode.h"
+#include "modes/OrderingDemoMode.h"
+#include "modes/SymboleMode.h"
 
 ProgramController::ProgramController()
     : IcovProgramBase("binary, symbole, export, check, encode-demo, "

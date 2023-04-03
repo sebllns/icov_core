@@ -1,5 +1,6 @@
 #include "EncodeDemoMode.h"
 #include "encoder/DemoEncoder.h"
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
@@ -50,18 +51,18 @@ EncodeDemoMode::EncodeDemoMode(const po::variables_map &args) {
         cv::Size(m_parameters.icuSize, m_parameters.icuSize),
         cv::Size(m_parameters.icuSize, m_parameters.icuSize),
         bsp_params,
-        args,
         true,
         false,
         true};
 
-    m_encoder = std::make_unique<icov::encoder::DemoEncoder>(0, enc_params);
+    m_encoder = std::make_unique<icov::encoder::DemoEncoder>(
+        0, enc_params, *options::parseLdpcParams(args));
   }
 
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
-                        m_parameters.inputFile;
+                   m_parameters.inputFile;
   ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
-                        m_parameters.encodedFile;
+                   m_parameters.encodedFile;
 }
 
 void EncodeDemoMode::run() {
@@ -75,6 +76,5 @@ void EncodeDemoMode::run() {
   IcovAccessBlockManager icov_accessblockMgr;
   BlockPrediction icov_blockPrediction;
   ICOV_DEBUG << "Start encoding";
-  m_encoder->encode(*input, icov_pic,
-                    icov_blockPrediction);
+  m_encoder->encode(*input, icov_pic, icov_blockPrediction);
 }

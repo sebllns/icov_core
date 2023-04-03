@@ -48,8 +48,8 @@
  *****************************************************************************/
 #pragma once
 
-#include "IcovCoder.h"
-
+#include "LdpcCoderParameters.h"
+#include "ldpc_codec_layer/implementation/imt_164/IMT164MatrixProvider.h"
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
@@ -65,8 +65,6 @@ class LdpcCoder_IMT64 {
 
 public:
   struct parameters : public LdpcCoderParameters {
-    parameters(const boost::program_options::variables_map &args)
-        : LdpcCoderParameters(args, LdpcCoder_IMT64::id){};
     ~parameters() = default;
     std::unique_ptr<LdpcCoderParameters> clone() const override {
       return std::make_unique<parameters>(*this);
@@ -74,7 +72,7 @@ public:
   };
 
   static const std::string id;
-  static std::map<std::string, std::shared_ptr<IMatrixProvider<AffMatrix>>>
+  static std::map<std::string, std::shared_ptr<IMT164MatrixProvider>>
       matrix_provider_pool;
 
   static void create(std::shared_ptr<LLRProvider> &llrProvider,

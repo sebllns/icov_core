@@ -1,5 +1,6 @@
 #include "EncodeMode.h"
 #include "encoder/IcovMediaEncoder.h"
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
 #include <algorithm>
@@ -65,8 +66,7 @@ EncodeMode::EncodeMode(const po::variables_map &args) {
 
   m_parameters.q_valuesPath = ICOV_Q_VALUES_FILE(args);
 
-  m_parameters.ldpc_params =
-      icov::LdpcCoderFactory::parse_coder_parameters(args);
+  m_parameters.ldpc_params = options::parseLdpcParams(args);
 
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.inputFile;

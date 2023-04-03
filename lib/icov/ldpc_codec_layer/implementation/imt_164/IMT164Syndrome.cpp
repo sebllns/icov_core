@@ -1,29 +1,21 @@
 #include "IMT164Syndrome.h"
 
 #include "helpers.h"
+#include "implementation/imt_164/IMT164SyndromeTools.h"
 #include "tools/DebugTools.h"
 
 using namespace icov;
 
-IMT164SyndromeManager::IMT164SyndromeManager(int n, int min_level,
-                                             int max_level, int min_m,
-                                             int max_m)
-    : ISyndromeManager(n), accumulated_syndrome(nullptr),
-      m_min_level(min_level), m_max_level(max_level), m_min_m(min_m),
-      m_max_m(max_m), current_level(max_level) {
-  int l = m_min_level;
-  while (l <= m_max_level) {
-    m_levels.insert(m_levels.begin(), l);
-    l *= 2;
-  }
-
-  this->h.resize(get_level_count());
-  this->mapping_file.resize(get_level_count() - 1, FastMatrix<index_t>(0, 0));
+IMT164SyndromeManager::IMT164SyndromeManager(
+    const IMT164SyndromeTools &tools,
+    const std::shared_ptr<const IMT164MatrixProvider> &matrix_pvdr)
+    : ISyndromeManager(tools.get_n()), m_tools(tools),
+      m_matrixPvdr(matrix_pvdr), accumulated_syndrome(nullptr) {
 
   this->reset_doping();
 
-  ICOV_ASSERT_MSG(m_min_m >= get_m_level(m_max_level), "Min m bad value");
-  ICOV_ASSERT_MSG(m_max_m <= get_m_level(m_min_level), "Max m bad value");
+  //  ICOV_ASSERT_MSG(m_min_m >= get_m_level(m_max_level), "Min m bad value");
+  //  ICOV_ASSERT_MSG(m_max_m <= get_m_level(m_min_level), "Max m bad value");
 }
 
 IMT164SyndromeManager::~IMT164SyndromeManager() {
@@ -31,38 +23,12 @@ IMT164SyndromeManager::~IMT164SyndromeManager() {
     delete[] accumulated_syndrome;
 }
 
-int IMT164SyndromeManager::get_m_max() const { return m_max_m; }
+int IMT164SyndromeManager::get_m_max() const { return m_tools.get_m_max(); }
 
-int IMT164SyndromeManager::get_m_min() const { return m_min_m; }
-
-int IMT164SyndromeManager::get_m_level(int level) const {
-  return get_n() / level;
-}
-
-int IMT164SyndromeManager::get_level_count() const { return m_levels.size(); }
-
-int IMT164SyndromeManager::get_level(int k) const { return m_levels[k]; }
+int IMT164SyndromeManager::get_m_min() const { return m_tools.get_m_min(); }
 
 int IMT164SyndromeManager::get_numcode(int m) const {
-  return m - this->get_m_min();
-}
-
-///
-/// \brief Get the original matrix level that the given matrix height is
-/// computed from.
-///
-/// \param m Height of decoding matrix
-///
-/// \return Level of the
-/// source file for accumulation
-///
-int IMT164SyndromeManager::is_level(int m) const {
-  for (int i = 0; i < get_level_count(); ++i) {
-    if (get_m_level(get_level(i)) == m) {
-      return i;
-    }
-  }
-  return -1;
+  return m_tools.get_numcode(m);
 }
 
 ///
@@ -75,8 +41,7 @@ int IMT164SyndromeManager::is_level(int m) const {
 /// decoding matrix
 ///
 int IMT164SyndromeManager::get_m(int numcode) const {
-  // m is given by the numcode with an offset of n/8 (minimum rate)
-  return this->get_m_min() + numcode;
+  return m_tools.get_m(numcode);
 }
 
 ///
@@ -116,8 +81,8 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
 
   //    std::cout << "ACCUM" << std::endl;
 
-  for (int k = 0; k < get_level_count(); k++) {
-    int m = get_m_level(m_levels[k]);
+  for (int k = 0; k < m_matrixPvdr->get_level_count(); k++) {
+    int m = m_matrixPvdr->get_m_level(m_matrixPvdr->get_level(k));
     int count = k > 0 ? m / 2 : m;
 
     //        std::cout << h[k].get_n_rows() << "x" << h[k].get_n_cols() <<
@@ -128,11 +93,12 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
     // DebugTools::write_str("./h_"+std::to_string(m), sstr.str());
 
     for (int i = 0; i < count; i++) {
-      int col = k > 0 ? mapping_file[k - 1].at(count - i - 1, 0) : i;
+      int col =
+          k > 0 ? m_matrixPvdr->mapping_file_index(k - 1, count - i - 1, 0) : i;
 
       // compute syndrome = h * x
       icov::bit val = 0;
-      for (const auto &vn : h[k].get_rows_from_col(col)) {
+      for (const auto &vn : m_matrixPvdr->get_decoding_matrix_col(k, col)) {
         val ^= source_x[vn];
       }
 
@@ -157,7 +123,8 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
   for (int i = 0; i < get_m_max(); i++) {
     // compute syndrome = h * x
     icov::bit val = 0;
-    for (const auto &vn : h[get_level_count() - 1].get_rows_from_col(i)) {
+    for (const auto &vn : m_matrixPvdr->get_decoding_matrix_col(
+             m_matrixPvdr->get_level_count() - 1, i)) {
       val ^= source_x[vn];
     }
 
@@ -182,8 +149,7 @@ void IMT164SyndromeManager::compute_deacc(Syndrome &o_syndrome,
 
     //        std::cout << i+1 << "=";
 
-    for (const auto &k : this->m_decoded_syndrome[std::min(
-             numcode, (int)m_decoded_syndrome.size() - 1)][i]) {
+    for (const auto &k : m_matrixPvdr->decode_syndrome_indexes(numcode, i)) {
       // std::cout << k << "(" << acc_syndrome[k-1] << ")";
       o_syndrome[i] ^= acc_syndrome[k - 1];
     }

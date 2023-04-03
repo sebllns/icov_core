@@ -45,11 +45,10 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-#include "encoder/OutputIcovBase.h"
-#include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/IcovCoder.h"
-#include "opencv2/core/mat.hpp"
+#include "BitSymbolProvider.h"
+#include "decoder/SinglePassDecoder.h"
+#include "encoder/IcovMediaEncoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -59,16 +58,17 @@ namespace po = boost::program_options;
 
 class DecodeMode {
   struct params {
-    static const char *inputFile_id;
-    static const char *icuSize_id;
-    static const char *qp_id;
-    static const char *viewportPadding_id;
+    static const char *InputFile_ID;
+    static const char *IcuSize_ID;
+    static const char *QP_ID;
+    static const char *ViewportPadding_ID;
 
-    fs::path inputFile;
-    int icuSize;
+    fs::path input_file;
+    int icu_size;
     int qp;
-    float viewportPadding;
-    std::unique_ptr<LdpcCoderParameters> coder_params;
+    float viewport_padding;
+    std::unique_ptr<LdpcCoderParameters> ldpc_params;
+    BitSymbolProvider::params bsp_params;
   };
 
 public:
@@ -78,12 +78,13 @@ public:
   void run();
   void encode();
   void decode();
+  void check();
+  void display();
 
   static void AddProgramOptions(po::options_description &desc);
 
 private:
   params m_parameters;
-  std::vector<float> m_q_values;
-  std::unique_ptr<icov::encoder::IEncoder<cv::Mat>> m_encoder;
-  std::shared_ptr<icov::encoder::OutputIcovBase> m_output;
+  std::unique_ptr<encoder::IcovMediaEncoder> m_encoder;
+  std::unique_ptr<decoder::SinglePassDecoder> m_decoder;
 };

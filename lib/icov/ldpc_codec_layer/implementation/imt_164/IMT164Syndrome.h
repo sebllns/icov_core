@@ -50,8 +50,11 @@
 #ifndef IMT164SYNDROME_H
 #define IMT164SYNDROME_H
 
-#include "aff3ct/Aff3ctDecoder.h"
-#include "interface/ISyndrome.h"
+#include "implementation/imt_164/IMT164MatrixProvider.h"
+#include "implementation/imt_164/IMT164SyndromeTools.h"
+#include "ldpc_codec_layer/aff3ct/Aff3ctDecoder.h"
+#include "ldpc_codec_layer/interface/ISyndrome.h"
+#include <memory>
 
 using index_t = uint16_t;
 
@@ -65,32 +68,11 @@ namespace icov {
 class IMT164SyndromeManager : public ISyndromeManager {
 
 public:
-  std::vector<uint8_t> m_levels;
-
-  std::vector<AffMatrix> h_dec;
-  std::vector<AffMatrix> h;
-  std::vector<FastMatrix<index_t>> mapping_file;
-
-  std::vector<int> h_indexes;
-
-  icov::bit *accumulated_syndrome;
-  std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
-
-  // Doping syndrome is cached
-  Syndrome doping_synd;
-
-  int m_min_level;
-  int m_max_level;
-
-  int m_min_m, m_max_m;
-
-  int current_level;
-
   // n = code length
   // min encoded syndrome length is n/max_level
   // max encoded syndrome length is n/min_level
-  IMT164SyndromeManager(int n, int min_level, int max_level, int min_m,
-                        int max_m);
+  IMT164SyndromeManager(const IMT164SyndromeTools &tools,
+      const std::shared_ptr<const IMT164MatrixProvider> &matrix_pvdr);
   virtual ~IMT164SyndromeManager();
 
   virtual void init_accumulation(const BitVec &source_x) override;
@@ -112,17 +94,16 @@ public:
 
   int get_m_min() const;
 
-  int get_m_level(int level) const;
-
-  int get_level_count() const;
-
   int get_numcode(int m) const;
 
-  int get_level(int k) const;
-
-  int is_level(int m) const;
-
   void compute_doping_order(LLRProvider &llr_provider, Syndrome &syndrome);
+
+private:
+  std::shared_ptr<const IMT164MatrixProvider> m_matrixPvdr;
+  IMT164SyndromeTools m_tools;
+  icov::bit *accumulated_syndrome;
+  // Doping syndrome is cached
+  Syndrome doping_synd;
 };
 } // namespace icov
 #endif // IMT164SYNDROME_H

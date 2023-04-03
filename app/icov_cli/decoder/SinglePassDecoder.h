@@ -50,10 +50,8 @@
 #pragma once
 
 #include "Buffer.h"
-#include "OrderingDemoMode.h"
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
-#include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
 #include "interface/IBlockProcessor.h"
 #include "omnidirectional_layer/factory.h"
@@ -77,6 +75,7 @@ public:
   const icov::factory::Navigation360 &icovNavigation() const;
   IBlockProcessor &blockProcessor();
   const PelUnitBuf getOutputBuf() const;
+  void decodeFullFrame();
 
 protected:
   struct BlockProcessor : public IBlockProcessor {

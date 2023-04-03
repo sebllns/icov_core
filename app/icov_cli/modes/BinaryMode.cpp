@@ -1,7 +1,9 @@
 #include "BinaryMode.h"
 
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "tools/DebugTools.h"
+#include <chrono>
 
 void BinaryMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
@@ -10,7 +12,7 @@ void BinaryMode::AddProgramOptions(
 }
 
 BinaryMode::BinaryMode(const po::variables_map &args)
-    : m_coder(LdpcCoderFactory::create_coder(args)),
+    : m_coder(icov::options::create_coder(args)),
       m_src_bits(m_coder->syndromeMgr()->get_n()),
       m_dec_bits(m_coder->syndromeMgr()->get_n()),
       m_stored_syndrome(m_coder->syndromeMgr()->get_n()), m_numcodeIdx(0),
@@ -40,10 +42,9 @@ void BinaryMode::run() {
       std::cout << "    " << progress << "%                \r" << std::flush;
 
       ICOV_TRACE << (ite * m_pcrossover.size() + i + 1) << "/"
-                      << (m_pcrossover.size() * m_nite);
+                 << (m_pcrossover.size() * m_nite);
 
-      ICOV_TRACE << "Crossover probability " << m_pcrossover[i]
-                      << std::endl;
+      ICOV_TRACE << "Crossover probability " << m_pcrossover[i] << std::endl;
       // init llr
       llrProvider->initLLRUniform(m_pcrossover[i], m_src_bits);
       //      llr = llrProvider->llr();
@@ -89,8 +90,7 @@ void BinaryMode::fill_src() {
 }
 
 void BinaryMode::fill_pcrossover() {
-  ICOV_DEBUG << CONSOLE_TODO
-                  << "TODO: read crossover probability from file !";
+  ICOV_DEBUG << CONSOLE_TODO << "TODO: read crossover probability from file !";
   m_pcrossover = {0.005607170053021, 0.012986862055522, 0.021539631929892,
                   0.031124460304790, 0.041692690273656, 0.053239040776806,
                   0.065786706354577, 0.079382600480655, 0.094097243346146,

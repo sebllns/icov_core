@@ -1,4 +1,5 @@
 #include "ExportMode.h"
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/io/Alist.h"
 #include "tools/DebugTools.h"
@@ -39,7 +40,7 @@ ExportMode::ExportMode(const boost::program_options::variables_map &args,
 void ExportMode::run() {
   export_numcode();
   if (export_matrix_enabled) {
-    m_coder = LdpcCoderFactory::create_coder(m_options_map);
+    m_coder = icov::options::create_coder(m_options_map);
     export_matrices();
   }
 }

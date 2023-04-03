@@ -122,3 +122,24 @@ IBlockProcessor &decoder::SinglePassDecoder::blockProcessor() {
 const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
   return m_blockProcessor.Decoder->decodingOutput();
 }
+
+void decoder::SinglePassDecoder::decodeFullFrame() {
+  m_blockProcessor.startProcess();
+
+  //  for (int icu = 0; icu < block_count; ++icu) {
+  //    ICOV_DEBUG << "decode block " << icu;
+
+  //    bool is_access_block = (icu == 0);
+
+  //    BlockPrediction::predType block_prediction =
+  //        is_access_block ? BlockPrediction::predType::NONE
+  //                        : BlockPrediction::predType::LEFT;
+
+  //    BlockVector::const_iterator b =
+  //        m_navigation.Visualization->Picture->getById(icu + 1);
+
+  //    m_blockProcessor.processBlock(*b, block_prediction);
+  //  }
+
+  m_blockProcessor.endProcess();
+}

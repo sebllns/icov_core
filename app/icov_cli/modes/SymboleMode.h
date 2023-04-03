@@ -4,8 +4,7 @@
  *  @ingroup ICOV
  */
 
-
-/** @file CheckMode.h
+/** @file SymboleMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup CLI
@@ -47,36 +46,78 @@
 #pragma once
 
 #include "common.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
-class CheckMode {
+///
+/// \brief The SymboleMode class runs the tests sequences from a dataset of
+/// blocks and SI values
+///
+class SymboleMode {
 public:
-  CheckMode(const po::variables_map &args, const std::string &data_path);
-  ~CheckMode() = default;
-
-  void run();
-
+  ///
+  /// \brief AddProgramOptions add options specific to this mode
+  /// \param desc
+  ///
   static void AddProgramOptions(po::options_description &desc);
 
-private:
-  int encode();
-  void fill_src();
-  void fill_pcrossover();
-  bool check_decoding();
-  void write_results();
-  FastMatrix<icov::bit> getHighLevelMatrix();
-  FastMatrix<icov::bit> getHighLevelMatrixImt164();
-  FastMatrix<uint16_t> getMappingVector(int m);
-  int getNextLevel(int current);
-  int getMinLevel();
+  ///
+  /// \brief initialisation of this mode with the parsed options
+  /// \param args
+  ///
+  SymboleMode(const po::variables_map &args);
+  ~SymboleMode() = default;
 
-  void compare_matrix(const AffMatrix &m,
-                      const icov::FastMatrix<icov::bit> &gt);
+  ///
+  /// \brief run this mode
+  ///
+  void run();
+
+private:
+  ///
+  /// \brief write_results writes a file containing measured rates from ICOV and
+  /// the ground truth to compare
+  ///
+  /// \param sequence_name is the processed file
+  /// \param numcodes are the rates measured
+  ///
+  void write_results(const std::string &sequence_name,
+                     const std::vector<NumcodeIdxVec> &numcodes);
+
+  ///
+  /// \brief process_input_list reads a text file that contains the list of
+  /// files to be tested i.e. the dataset
+  /// \param file is dataset: list of test data files separated by newline
+  ///
+  void process_input_list(const std::string &file);
+
+  ///
+  /// \brief process_input_file process one file frome the dataset
+  /// \param file
+  ///
+  void process_input_file(const std::string &file);
 
   std::unique_ptr<AffInteractiveCoder> m_coder;
-  Syndrome m_stored_syndrome;
-  std::string datapath;
+
+  fs::path m_dataset_dir;
+  fs::path m_references_dir;
+  fs::path m_result_dir;
+  std::vector<float> q_values;
+  std::ofstream measure_file;
+  int max_si_count;
+
+  bool enable_q_quantization;
+  bool enable_z_quantization;
+
+  static const std::string dataset_dir_id;
+  static const std::string result_dir_id;
+  static const std::string reference_dir_id;
+  static const std::string max_si_count_id;
+  static const std::string enable_q_quantization_id;
+  static const std::string enable_z_quantization_id;
 };

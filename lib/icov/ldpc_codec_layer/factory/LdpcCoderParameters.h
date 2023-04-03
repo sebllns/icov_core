@@ -48,80 +48,24 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-
 #include "InteractiveCoder.h"
 #include "LLRProvider.h"
-#include "aff3ct/Aff3ctDecoder.h"
 #include "helpers.h"
-#include "icov_program_options.h"
-
-//#include "implementation/imt/IMTSyndrome.h"
-//#include "implementation/imt/IMTMatrixProvider.h"
-
-//#include "implementation/imt_164/IMT164Syndrome.h"
-//#include "implementation/imt_164/IMT164MatrixProvider.h"
-
-//#include "implementation/varodayan/VarodayanSyndrome.hpp"
-//#include "implementation/varodayan/VarodayanMatrixProvider.hpp"
-
-using AffMatrix = aff3ct::tools::Sparse_matrix;
-using AffInteractiveCoder = icov::InteractiveCoder<AffMatrix>;
-
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
-
-using namespace icov;
 
 namespace icov {
 struct LdpcCoderParameters {
   std::string type;
   std::string database;
-  std::string numcode_file;
-  int n;
-  int bp_ite;
+  int codeLength;
+  int beliefPropagationInterations;
+  std::string numcodeFile;
 
   LdpcCoderParameters() = default;
-
-  static std::string parseType(const po::variables_map &args) {
-    return args[OPT_CODER_TYPE].as<std::string>();
-  }
-
-  static std::string parseDatabase(const po::variables_map &args) {
-    return args[OPT_DATA_PATH].as<std::string>();
-  }
-
-  static int parseCodeLength(const po::variables_map &args) {
-    return args[OPT_CODE_LENGTH].as<int>();
-  }
-
-  static int parseBpIte(const po::variables_map &args) {
-    return args[OPT_BP_ITE].as<int>();
-  }
-
-  static std::string parseNumcodeFile(const po::variables_map &args) {
-    return args[OPT_NUMCODES].as<std::string>();
-  }
-
-  LdpcCoderParameters(const po::variables_map &args,
-                  const std::string &intented_type) {
-    type = parseType(args);
-    database = parseDatabase(args);
-    n = parseCodeLength(args);
-    bp_ite = parseBpIte(args);
-    numcode_file = parseNumcodeFile(args);
-
-    if (this->type != intented_type) {
-      throw std::invalid_argument("Given type was \'" + type +
-                                  "\' but intended type was \'" +
-                                  intented_type + "\'\n");
-    }
-  }
 
   inline std::vector<int> getNumcodes(int n, int min_level,
                                       int max_level) const {
     std::string path = icov::helpers::path::combine(
-        icov::helpers::path::get_data_folder(database, n, false), numcode_file);
+        icov::helpers::path::get_data_folder(database, n, false), numcodeFile);
     std::vector<int> numcodes_v;
 
     int min_n = std::ceil(n / max_level);

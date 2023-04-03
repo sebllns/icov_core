@@ -73,6 +73,7 @@ enum eMediaType {
 class IMedia {
 public:
   virtual ~IMedia() = default;
+
   explicit IMedia(const fs::path &path,
                   int media_type = (int)eMediaType::UNKNOWN)
       : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
@@ -89,6 +90,7 @@ public:
   inline int getType() const { return m_type; }
   inline int getFrameCount() const { return m_frameCount; }
   inline size_t getPixelCount() const { return m_width * m_height; }
+  inline const boost::filesystem::path &getPath() const { return m_path; }
 
 protected:
   int m_type;
@@ -126,7 +128,6 @@ public:
   inline int getFrameID() const { return m_frameID; }
 
   virtual inline const T &getCurrentFrame() const { return m_frameData; }
-  inline const fs::path getPath() const { return m_path; }
   inline virtual const boost::any getProperty(std::string id) {
     return boost::any(id);
   }

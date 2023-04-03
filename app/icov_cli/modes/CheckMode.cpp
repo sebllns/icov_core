@@ -1,5 +1,6 @@
 #include "CheckMode.h"
 
+#include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/io/PcmData.h"
 #include "tools/DebugTools.h"
@@ -120,7 +121,7 @@ void CheckMode::compare_matrix(const AffMatrix &m,
 
 CheckMode::CheckMode(const po::variables_map &args,
                      const std::string &data_path)
-    : m_coder(LdpcCoderFactory::create_coder(args)),
+    : m_coder(icov::options::create_coder(args)),
       m_stored_syndrome(m_coder->syndromeMgr()->get_n()), datapath(data_path) {}
 
 void CheckMode::run() {

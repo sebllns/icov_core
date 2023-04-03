@@ -1,26 +1,24 @@
 /****************************************************************************/
-/** @addtogroup ICOV 
- *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
- 
-/** @addtogroup common
+/** @addtogroup CLI
+ *  Command Line Interface
  *  @ingroup ICOV
  */
 
-/** @file povrequest.h
- *  @brief Request object used to transmit a point of view only
- *  @ingroup common
+/** @file EncodeMode.h
+ *  @brief BRIEF_DESCRIPTION
+ *  DESCRIPTION
+ *  @ingroup CLI
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -45,26 +43,48 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
+#pragma once
 
+#include "Media.h"
+#include "common.h"
+#include "encoder/InputMedia.h"
+#include "encoder/OutputIcovBase.h"
+#include "encoder/interface/IEncoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
-#ifndef POVREQUEST_H
-#define POVREQUEST_H
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
-#include "IRequest.h"
+class EncodeMode {
+  struct params {
 
-class PoVRequest : public IRequest
-{
+    static const char *inputFile_id;
+    static const char *outputFile_id;
+    static const char *icuSize_id;
+    static const char *qp_id;
+    static const char *viewportPadding_id;
+
+    fs::path inputFile;
+    fs::path encodedFile;
+    fs::path q_valuesPath;
+    int icuSize;
+    int qp;
+    float viewportPadding;
+
+    std::unique_ptr<LdpcCoderParameters> ldpc_params;
+  };
 
 public:
-  PoVRequest();
-  ~PoVRequest(){}
+  explicit EncodeMode(const po::variables_map &args);
+  ~EncodeMode() = default;
 
-  void serialize() const;
-  void deserialize();
+  void run();
 
+  static void AddProgramOptions(po::options_description &desc);
 
-  // IRequest interface
-  void print();
+private:
+  int encode();
+  params m_parameters;
 };
-
-#endif // POVREQUEST_H

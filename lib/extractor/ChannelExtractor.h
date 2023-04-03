@@ -55,7 +55,8 @@
 #include "common_types.h"
 #include "extracted_stream.h"
 #include "extractor/InputMedia.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include "typedef.h"
 #include <map>
 #include <memory>

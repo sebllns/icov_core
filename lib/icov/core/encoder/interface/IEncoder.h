@@ -154,6 +154,7 @@ void IMediaEncoder<T>::encode(IInputMedia<T> &input, const IPicture &picture,
   auto pFrameEnc = createFrameEncoder();
 
   for (int i = 0; i < frameCount; i++) {
+    ICOV_TRACE << "Encode frame " << i;
     input.setFrame(i);
     pFrameEnc->setFrame(i);
     pFrameEnc->encode(input, picture, block_prediction);

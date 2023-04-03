@@ -50,7 +50,6 @@
 #pragma once
 
 #include "encoder/FrameEncoder.h"
-#include "encoder/InputMedia.h"
 #include "encoder/OutputIcovBase.h"
 #include "encoder/interface/IEncoder.h"
 
@@ -75,6 +74,10 @@ public:
   ~IcovMediaEncoder();
 
   void defaultEncode(float viewportPadding);
+
+  const params &parameters() const;
+  const LdpcCoderParameters &ldpc_parameters() const;
+  const icov::encoder::OutputIcovBase &output_media() const;
 
 private:
   params m_params;

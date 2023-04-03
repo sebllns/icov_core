@@ -4,8 +4,7 @@
  *  @ingroup ICOV
  */
 
-
-/** @file ExportMode.h
+/** @file CheckMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
  *  @ingroup CLI
@@ -47,34 +46,37 @@
 #pragma once
 
 #include "common.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
+
 namespace po = boost::program_options;
 
-class ExportMode {
+class CheckMode {
 public:
-  static void AddProgramOptions(po::options_description &desc);
-  ExportMode(const boost::program_options::variables_map &args, int code_length,
-             const std::string &data_path);
-  ~ExportMode() = default;
-  void run();
-  void export_matrices();
-  void export_numcode();
+  CheckMode(const po::variables_map &args, const std::string &data_path);
+  ~CheckMode() = default;
 
-  static const std::string rate_min_id;
-  static const std::string rate_max_id;
-  static const std::string rate_doping_id;
-  static const std::string export_matrix_id;
-  static const std::string export_numcode_id;
+  void run();
+
+  static void AddProgramOptions(po::options_description &desc);
 
 private:
-  std::unique_ptr<AffInteractiveCoder> m_coder;
+  int encode();
+  void fill_src();
+  void fill_pcrossover();
+  bool check_decoding();
+  void write_results();
+  FastMatrix<icov::bit> getHighLevelMatrix();
+  FastMatrix<icov::bit> getHighLevelMatrixImt164();
+  FastMatrix<uint16_t> getMappingVector(int m);
+  int getNextLevel(int current);
+  int getMinLevel();
 
-  bool export_matrix_enabled;
-  int export_numcode_mode;
-  float min_rate, max_rate, doping_rate;
-  int n;
-  po::variables_map m_options_map;
+  void compare_matrix(const AffMatrix &m,
+                      const icov::FastMatrix<icov::bit> &gt);
+
+  std::unique_ptr<AffInteractiveCoder> m_coder;
+  Syndrome m_stored_syndrome;
   std::string datapath;
-  std::string numcodes_file;
 };

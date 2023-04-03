@@ -74,8 +74,8 @@ struct Visualization360 {
             std::make_shared<ViewportManagerCenterPadded>(p.ViewportPadding)),
         AccessBlockManager(std::make_shared<IcovAccessBlockManager>()) {}
 
-  void init(ushort icu_size) {
-    Picture->buildConstantSizeBlocks(icu_size, icu_size);
+  void init(ushort icu_width) {
+    Picture->buildConstantSizeBlocks(icu_width, icu_width);
     AccessBlockManager->buildAccessBlocks(*Picture, *ViewportManager);
   }
 };

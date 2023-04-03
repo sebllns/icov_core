@@ -1,13 +1,15 @@
 /****************************************************************************/
-/** @addtogroup CLI
- *  Command Line Interface
+/** @addtogroup ICOV
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
+ */
+
+/** @addtogroup common
  *  @ingroup ICOV
  */
 
-/** @file BinaryMode.h
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
- *  @ingroup CLI
+/** @file povrequest.h
+ *  @brief Request object used to transmit a point of view only
+ *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -43,41 +45,23 @@
  * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  *****************************************************************************/
-#pragma once
 
-#include "common.h"
-#include "ldpc_codec_layer/IcovCoder.h"
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+#ifndef POVREQUEST_H
+#define POVREQUEST_H
 
-class BinaryMode {
+#include "interface/IRequest.h"
+
+class PoVRequest : public IRequest {
+
 public:
-  BinaryMode(const po::variables_map &args);
-  ~BinaryMode() = default;
+  PoVRequest();
+  ~PoVRequest() {}
 
-  void run();
+  void serialize() const;
+  void deserialize();
 
-  static void AddProgramOptions(po::options_description &desc);
-
-private:
-  int encode();
-  void fill_src();
-  void fill_pcrossover();
-  bool check_decoding();
-  void write_results();
-
-  std::unique_ptr<AffInteractiveCoder> m_coder;
-  BitVec m_src_bits;
-  BitVec m_dec_bits;
-  std::vector<double> m_pcrossover;
-  Syndrome m_stored_syndrome;
-  uint32_t m_numcodeIdx;
-  uint32_t m_error_count;
-  int m_nite;
-
-  //  std::vector<LLRVal> llr;
-  std::vector<double> time;
-  std::vector<double> decoding_time;
-  std::vector<double> numerrors;
-  std::vector<double> rate;
+  // IRequest interface
+  void print();
 };
+
+#endif // POVREQUEST_H

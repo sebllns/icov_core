@@ -48,7 +48,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "IcovCoder.h"
+#include "LdpcCoderParameters.h"
 
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include <memory>
@@ -66,10 +66,6 @@ class LdpcCoder_IMT18 {
 
 public:
   struct parameters : LdpcCoderParameters {
-    parameters(const boost::program_options::variables_map &args)
-        : LdpcCoderParameters(args, LdpcCoder_IMT18::id){
-
-          };
     ~parameters() = default;
     std::unique_ptr<LdpcCoderParameters> clone() const override {
       return std::make_unique<parameters>(*this);

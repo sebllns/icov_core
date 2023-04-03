@@ -54,7 +54,7 @@
 #include "Media.h"
 #include "decoder/ChannelDecoder.h"
 #include "extracted_stream.h"
-#include "ldpc_codec_layer/IcovCoder.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include "video_layer/Encodingstructure.h"
 
@@ -77,7 +77,6 @@ public:
     cv::Size icuSize_luma;
 
     BitSymbolProvider::params bsp_params;
-    po::variables_map program_args;
 
     //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;

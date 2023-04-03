@@ -42,12 +42,12 @@ void callBackFuncEncoding(int event, int x, int y, int flags, void *userdata) {
 }
 
 /*****************************************************************************/
-DemoEncoder::DemoEncoder(int frame, const params &p)
-    : m_params(p),
-      m_numComp(getNumberValidComponents(p.chFormat)),
+DemoEncoder::DemoEncoder(int frame, const params &p,
+                         const LdpcCoderParameters &ldpc_params)
+    : m_params(p), m_numComp(getNumberValidComponents(p.chFormat)),
       m_firstDisplayBlocks(true), m_pic_ptr(nullptr) {
   std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-  icov::LdpcCoderFactory::create_coder_yuv(p.program_args, ycoder, uvcoder);
+  icov::LdpcCoderFactory::create_coder_yuv(ldpc_params, ycoder, uvcoder);
 
   m_coders[ycoder->get_n()] = std::move(ycoder);
   m_coders[uvcoder->get_n()] = std::move(uvcoder);
