@@ -7,8 +7,8 @@
  *  @ingroup ICOV
  */
 
-/** @file InteractiveCodedUnit.h
- *  @brief InteractiveCodedUnit VCL data for ICOV coder
+/** @file SequenceOfViewports.h
+ *  @brief SequenceOfViewports conveying Viewport Units (VPU) for VCL data
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -47,31 +47,20 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-
-/** @class InteractiveCodedUnit
- *  @brief class InteractiveCodedUnit
+namespace icov {
+namespace bitstream {
+/** @class SequenceOfViewports
+ *  @brief SequenceOfViewports
  *
- *  Conveys the encoded blocks inside the bitstream.
+ *  A SequenceOfViewports is a part of ICOV bitstream that is conveying a set of
+ * Viewport Units (VPU).
  */
-class InteractiveCodedUnit
-{
-public:
-  InteractiveCodedUnit(const icov::byte *encodedData, icov::int8b dataLength) : m_encodedData(encodedData), m_dataLength(dataLength)
-  {
-  }
-
-  const icov::int8b GetDataLength() const
-  {
-    return m_dataLength;
-  }
-
-  const icov::byte *GetEncodedData() const
-  {
-    return m_encodedData;
-  }
-
+class SequenceOfViewports {
 private:
-  const icov::byte *m_encodedData;
-  icov::int8b m_dataLength;
+  int m_num_viewports;
+
+public:
+  SequenceOfViewports() = default;
 };
+} // namespace bitstream
+} // namespace icov

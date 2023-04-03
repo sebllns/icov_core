@@ -1,12 +1,12 @@
 #include "ChannelExtractor.h"
 
-#include "encoded_stream.h"
-#include "extracted_stream.h"
 #include "helpers.h"
-#include "icov_stream.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "typedef.h"
+#include "video_layer/encoded_stream.h"
+#include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include <algorithm>
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
@@ -17,16 +17,18 @@ namespace fs = boost::filesystem;
 using namespace icov::extractor;
 using SI_SIDE = BlockPrediction::predType;
 
-icov::byte ChannelExtractor::SyndromePadding = 0;
+bitstream::byte ChannelExtractor::SyndromePadding = 0;
 
 ChannelExtractor::ChannelExtractor(/*const params &p,*/
                                    std::shared_ptr<InputIcov> &icovFile,
-                                   const sp_IcovExtractedBitstream &bitstream,
+                                   const bitstream::sp_IcovExtractedBitstream
+                                       &bitstream,
                                    const LdpcCoderParameters &LDPC_params)
     : /*m_params(p),*/ m_ldpc_coder(
           icov::LdpcCoderFactory::create_coder(LDPC_params)),
       m_icovFile(icovFile), m_bitstream(bitstream),
-      m_maxSyndromeBufferLength(bitToByteCount(m_ldpc_coder->get_m_max()))
+      m_maxSyndromeBufferLength(
+          bitstream::bitToByteCount(m_ldpc_coder->get_m_max()))
 /*,m_readingBuffer(m_maxSyndromeBufferLength)*/ {
   m_bitplanes.reserve(MAX_BITPLANE_COUNT);
   //  m_extractData.BitplaneNumcodes.reset(MAX_BITPLANE_COUNT);
@@ -59,21 +61,21 @@ void ChannelExtractor::extract_block(
     //        ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
 
   } else if (is_intra_prediction) {
-    icov::byte dirmode = 0;
-    m_icovFile->read(eIcovStream::ENCODE_PARAMS, dirmode);
+    bitstream::byte dirmode = 0;
+    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
     ICOV_ASSERT_MSG(dirmode > 0, "No direction mode for the prediction");
     m_bitstream->push(dirmode);
-    icov::byte pred_hdr = 0;
-    m_icovFile->read(eIcovStream::ENCODE_PARAMS, pred_hdr);
-    icov::byte zmin = 0, zmax = 0;
+    bitstream::byte pred_hdr = 0;
+    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
+    bitstream::byte zmin = 0, zmax = 0;
     if (pred_hdr != 0) {
-      m_icovFile->read(eIcovStream::ENCODE_PARAMS, zmin);
+      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
       m_bitstream->push(zmin);
-      m_icovFile->read(eIcovStream::ENCODE_PARAMS, zmax);
+      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
       m_bitstream->push(zmax);
     }
     for (auto &bp : m_bitplanes) {
-      m_icovFile->read(eIcovStream::ENCODE_PARAMS,
+      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
                        bp.ReadSyndromeQuantizedSize);
 
       bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
@@ -94,7 +96,8 @@ void ChannelExtractor::extract_block(
 
 void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
   // read bitplane count
-  m_icovFile->read(eIcovStream::ENCODE_PARAMS, m_bitplaneCount);
+  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
+                   m_bitplaneCount);
   // output.resize(bitplaneCount);
   std::cout << " m_bitplaneCount " << (int)m_bitplaneCount << "\n";
 
@@ -114,7 +117,7 @@ void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
     if (is_access_block) {
       bp.StoredSyndromeQuantizedSize = 1;
     } else {
-      m_icovFile->read(eIcovStream::ENCODE_PARAMS,
+      m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
                        bp.StoredSyndromeQuantizedSize);
     }
 

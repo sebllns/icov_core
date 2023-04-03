@@ -1,15 +1,13 @@
 /****************************************************************************/
-/** @addtogroup ICOV
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup ICOV
- */
-
-/** @file SequenceOfViewports.h
- *  @brief SequenceOfViewports conveying Viewport Units (VPU) for VCL data
- *  @ingroup common
+/** @file decoder.h
+ *  @brief Defines an actual ICOV decoder.
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -47,16 +45,4 @@
  *****************************************************************************/
 #pragma once
 
-/** @class SequenceOfViewports
- *  @brief SequenceOfViewports
- *
- *  A SequenceOfViewports is a part of ICOV bitstream that is conveying a set of
- * Viewport Units (VPU).
- */
-class SequenceOfViewports {
-private:
-  int m_num_viewports;
-
-public:
-  SequenceOfViewports() = default;
-};
+class ExtractedStreamDebugger {};

@@ -7,14 +7,8 @@
  *  @ingroup ICOV
  */
 
-/** @file NalUnit.h
- *  @brief Defines NAL structure needed to convey video (VCL) and non-video
- *(NON-VCL) data
- * +---------------+---------------+
- * |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |F|Z| LayerID   |  Type   | TID |
- * +---------------+---------------+
+/** @file ContentParameterSet.h
+ *  @brief ContentParameterSet VCL data for ICOV coder
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -52,50 +46,55 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common.h"
 
-class NalUnit {
-public:
-  /** construct an NALunit structure with given header values. */
-  NalUnit(icov::enum_t::NalUnitType nalUnitType, int temporalId = 0,
-          uint32_t nuhReservedZeroBit = 0, uint32_t forbiddenZeroBit = 0,
-          int nuhLayerId = 0)
-      : m_nalUnitType(nalUnitType), m_temporalId(temporalId),
-        m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit),
-        m_nuhReservedZeroBit(nuhReservedZeroBit), m_rbsp(nullptr),
-        m_rbsp_length(0) {}
+#include "video_layer/icov_stream.h"
+#include <cstdint>
 
-  NalUnit()
-      : m_nalUnitType(icov::enum_t::NalUnitType::NAL_UNIT_INVALID),
-        m_temporalId(0), m_nuhLayerId(0), m_forbiddenZeroBit(0),
-        m_nuhReservedZeroBit(0), m_rbsp(nullptr), m_rbsp_length(0) {}
+namespace icov {
+namespace bitstream {
 
-  void serialize(icov::byte *&dst) const;
-  void deserialize(icov::byte *src);
+/** @class ContentParameterSet
+ *  @brief class ContentParameterSet
+ *
+ *  Conveys the video parameters part of bitstream.
+ */
+struct ContentParameterSet {
+  std::string icov_version;
 
-  void setRbsp(icov::byte *data, int length);
-  icov::enum_t::NalUnitType getType() const;
-  int getRbspLength() const;
-  const icov::byte *getRbsp() const;
-  void readRbsp(icov::byte *dst, int length, int offset = 0) const;
-  icov::byte getRbspByte(int position) const;
+  byte content_type;
 
-private:
-  /// 3 bits
-  icov::int8b m_temporalId;
+  uint16_t content_width;
+  uint16_t content_height;
 
-  /// 5 bits
-  icov::enum_t::NalUnitType m_nalUnitType;
+  uint16_t qp;
 
-  /// 6 bits
-  icov::int8b m_nuhLayerId;
+  byte content_chroma_format;
 
-  /// 1 bit
-  bool m_nuhReservedZeroBit;
+  int content_framecount;
+  float content_framerate;
+  float content_duration;
+  float viewport_padding;
 
-  /// 1 bit
-  bool m_forbiddenZeroBit;
+  bool is_sov_fixed_size;
+  byte sov_fixed_size;
 
-  icov::byte *m_rbsp;
-  int m_rbsp_length;
+  bool is_block_fixed_size;
+  byte block_fixed_size;
+
+  bool is_tu_count_fixed;
+  byte fixed_tu_count;
+
+  byte numcode_byte_count;
+
+  bool has_metadata;
+
+  ContentParameterSet()
+      : content_type(0), content_width(0), content_height(0), qp(42),
+        content_chroma_format(0), content_framecount(0), content_framerate(0),
+        content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
+        sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
+        is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
+        has_metadata(false) {}
 };
+} // namespace bitstream
+} // namespace icov

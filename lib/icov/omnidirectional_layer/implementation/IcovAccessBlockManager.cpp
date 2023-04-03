@@ -1,5 +1,5 @@
 #include "IcovAccessBlockManager.h"
-#include "Block.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 

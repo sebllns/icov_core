@@ -49,10 +49,10 @@
 
 #pragma once
 
-#include "extracted_stream.h"
 #include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
-#include "interface/IBlockProcessor.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include "video_layer/extracted_stream.h"
 #include <memory>
 #include <queue>
 #include <string>
@@ -70,7 +70,7 @@ public:
   BlockExtractor(std::shared_ptr<InputIcov> &icovFile,
                  const BlockExtractor::params &p,
                  const LdpcCoderParameters &coder_params,
-                 const sp_IcovExtractedBitstream &extraction);
+                 const bitstream::sp_IcovExtractedBitstream &extraction);
   ~BlockExtractor();
 
   void startProcess() override;
@@ -79,7 +79,7 @@ public:
 
 protected:
   std::shared_ptr<InputIcov> m_icovFile;
-  sp_IcovExtractedBitstream m_extractionBitstream;
+  bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
   int m_channelCount;
   std::vector<std::unique_ptr<ChannelExtractor>> m_channelExtractor;
   params m_params;

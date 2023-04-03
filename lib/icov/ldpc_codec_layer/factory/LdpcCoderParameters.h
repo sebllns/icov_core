@@ -48,8 +48,6 @@
  *****************************************************************************/
 #pragma once
 
-#include "InteractiveCoder.h"
-#include "LLRProvider.h"
 #include "helpers.h"
 
 namespace icov {

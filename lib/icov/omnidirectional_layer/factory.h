@@ -46,15 +46,12 @@
  *
  *****************************************************************************/
 #pragma once
-#include "RequestManager.h"
-#include "implementation/EquiRectPicture.h"
-#include "implementation/IcovAccessBlockManager.h"
-#include "implementation/ViewportManagerCenterPadded.h"
-#include "interface/IPicture.h"
+#include "omnidirectional_layer/RequestManager.h"
+#include "omnidirectional_layer/implementation/EquiRectPicture.h"
+#include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
+#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
+#include "omnidirectional_layer/interface/IPicture.h"
 #include <memory>
-#include <omnidirectional_layer/interface/IAccessBlockManager.h>
-#include <omnidirectional_layer/interface/IPicture.h>
-#include <omnidirectional_layer/interface/IViewportManager.h>
 
 namespace icov {
 namespace factory {

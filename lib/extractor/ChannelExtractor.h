@@ -49,15 +49,12 @@
 
 #pragma once
 
-#include "Block.h"
-#include "BlockPrediction.h"
-#include "Media.h"
-#include "common_types.h"
-#include "extracted_stream.h"
 #include "extractor/InputMedia.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
-#include "typedef.h"
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/extracted_stream.h"
 #include <map>
 #include <memory>
 #include <sys/types.h>
@@ -69,11 +66,11 @@ namespace icov {
 namespace extractor {
 
 struct BitplaneExtractor {
-  icov::byte StoredSyndromeQuantizedSize;
+  bitstream::byte StoredSyndromeQuantizedSize;
   ushort StoredSyndromeBitSize;
   ushort StoredSyndromeByteSize;
 
-  icov::byte ReadSyndromeQuantizedSize;
+  bitstream::byte ReadSyndromeQuantizedSize;
   ushort ReadSyndromeBitSize;
   ushort ReadSyndromeByteSize;
   ushort ReadSyndromePadding;
@@ -89,13 +86,13 @@ public:
 
   ChannelExtractor(/*const ChannelExtractor::params &p,*/
                    std::shared_ptr<InputIcov> &icovFile,
-                   const sp_IcovExtractedBitstream &bitstream,
+                   const bitstream::sp_IcovExtractedBitstream &bitstream,
                    const LdpcCoderParameters &LDPC_params);
   ~ChannelExtractor();
 
   int get_coder_size() const;
 
-  void extract_access_block(const Block &b, icov::byte *syndrome_buf);
+  void extract_access_block(const Block &b, bitstream::byte *syndrome_buf);
 
   void extract_block(const Block &b,
                      BlockPrediction::predType block_prediction);
@@ -116,13 +113,13 @@ protected:
   /*params m_params;*/
   std::unique_ptr<AffInteractiveCoder> m_ldpc_coder;
   std::shared_ptr<InputIcov> m_icovFile;
-  sp_IcovExtractedBitstream m_bitstream;
+  bitstream::sp_IcovExtractedBitstream m_bitstream;
   std::vector<BitplaneExtractor> m_bitplanes;
-  icov::byte m_bitplaneCount;
+  bitstream::byte m_bitplaneCount;
   // BlockChannelDecoderParams m_extractData;
   int m_maxSyndromeBufferLength;
   //  RawByteArray<int> m_readingBuffer;
-  static icov::byte SyndromePadding;
+  static bitstream::byte SyndromePadding;
 };
 } // namespace extractor
 } // namespace icov

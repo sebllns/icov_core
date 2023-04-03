@@ -49,19 +49,17 @@
 
 #pragma once
 
-#include "BitSymbolProvider.h"
-#include "Block.h"
-#include "BlockPrediction.h"
-#include "Media.h"
 #include "Unit.h"
 #include "common_types.h"
-#include "extracted_stream.h"
-#include "icov_stream.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
+#include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 
 #include <map>
 #include <memory>
@@ -83,7 +81,7 @@ public:
       const ChannelDecoder::params &p, const LdpcCoderParameters &LDPC_params,
       const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
       const std::shared_ptr<icov::video::EncodingStructure> &encodingStruct,
-      const sp_IcovExtractedBitstream &extraction);
+      const bitstream::sp_IcovExtractedBitstream &extraction);
   ~ChannelDecoder();
 
   void decode_icu(int icu_enc, BlockPrediction::predType block_prediction);
@@ -119,7 +117,7 @@ protected:
   Syndrome m_syndrome;
   BitSymbolProvider m_bsp;
   BlockPrediction::predType m_block_prediction;
-  sp_IcovExtractedBitstream m_bitstream;
+  bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;
   // BlockVector::const_iterator m_block;
   int m_icuIndex;

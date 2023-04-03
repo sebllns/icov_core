@@ -1,6 +1,6 @@
 #include "Coder_IMT18.h"
-#include "implementation/imt/IMTMatrixProvider.h"
-#include "implementation/imt/IMTSyndrome.h"
+#include "ldpc_codec_layer/implementation/imt/IMTMatrixProvider.h"
+#include "ldpc_codec_layer/implementation/imt/IMTSyndrome.h"
 
 namespace icov {
 const std::string LdpcCoder_IMT18::id = "imt18";

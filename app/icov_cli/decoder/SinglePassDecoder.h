@@ -53,8 +53,8 @@
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
-#include "interface/IBlockProcessor.h"
 #include "omnidirectional_layer/factory.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include <memory>
 #include <queue>
 
@@ -81,7 +81,7 @@ protected:
   struct BlockProcessor : public IBlockProcessor {
     std::unique_ptr<BlockExtractor> Extractor;
     std::unique_ptr<BlockDecoder> Decoder;
-    sp_IcovExtractedBitstream ExtractionBitstream;
+    bitstream::sp_IcovExtractedBitstream ExtractionBitstream;
 
     void processBlock(const Block &b, uint16_t prediction) override {
       if (Extractor)
@@ -108,7 +108,7 @@ protected:
 
   std::vector<float> m_q_values;
   std::shared_ptr<InputIcov> m_icovFile;
-  sp_IcovExtractedBitstream m_extractionBitstream;
+  bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
   icov::factory::Navigation360 m_navigation;
   BlockProcessor m_blockProcessor;
 };

@@ -7,8 +7,14 @@
  *  @ingroup ICOV
  */
 
-/** @file ViewportUnit.h
- *  @brief ViewportUnit (VPU) for VCL data
+/** @file NalUnit.h
+ *  @brief Defines NAL structure needed to convey video (VCL) and non-video
+ *(NON-VCL) data
+ * +---------------+---------------+
+ * |0|1|2|3|4|5|6|7|0|1|2|3|4|5|6|7|
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |F|Z| LayerID   |  Type   | TID |
+ * +---------------+---------------+
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -46,28 +52,56 @@
  *
  *****************************************************************************/
 #pragma once
+#include "video_layer/icov_stream.h"
 
-#include "InteractiveCodedUnit.h"
-#include "NalUnit.h"
-#include <fstream>
+namespace icov {
+namespace bitstream {
 
-/** @class ViewportUnit
- *  @brief ViewportUnit
- *
- *  A ViewportUnit is a part of ICOV bitstream that is conveying a set of
- * Interactive Coded Units (ICUs) as Video Coding Layer data.
- */
-class ViewportUnit {
-
+class NalUnit {
 public:
-  ViewportUnit() = default;
-  NalUnit ToNal();
-  bool TryParse(NalUnit nal);
-  void addIcu(InteractiveCodedUnit icu);
+  /** construct an NALunit structure with given header values. */
+  NalUnit(enum_t::NalUnitType nalUnitType, int temporalId = 0,
+          uint32_t nuhReservedZeroBit = 0, uint32_t forbiddenZeroBit = 0,
+          int nuhLayerId = 0)
+      : m_nalUnitType(nalUnitType), m_temporalId(temporalId),
+        m_nuhLayerId(nuhLayerId), m_forbiddenZeroBit(forbiddenZeroBit),
+        m_nuhReservedZeroBit(nuhReservedZeroBit), m_rbsp(nullptr),
+        m_rbsp_length(0) {}
 
-  int getIcuCount() { return m_icus.size(); }
-  const std::vector<InteractiveCodedUnit> &getIcus() const { return m_icus; }
+  NalUnit()
+      : m_nalUnitType(enum_t::NalUnitType::NAL_UNIT_INVALID), m_temporalId(0),
+        m_nuhLayerId(0), m_forbiddenZeroBit(0), m_nuhReservedZeroBit(0),
+        m_rbsp(nullptr), m_rbsp_length(0) {}
+
+  void serialize(byte *&dst) const;
+  void deserialize(byte *src);
+
+  void setRbsp(byte *data, int length);
+  enum_t::NalUnitType getType() const;
+  int getRbspLength() const;
+  const byte *getRbsp() const;
+  void readRbsp(byte *dst, int length, int offset = 0) const;
+  byte getRbspByte(int position) const;
 
 private:
-  std::vector<InteractiveCodedUnit> m_icus;
+  /// 3 bits
+  int8b m_temporalId;
+
+  /// 5 bits
+  enum_t::NalUnitType m_nalUnitType;
+
+  /// 6 bits
+  int8b m_nuhLayerId;
+
+  /// 1 bit
+  bool m_nuhReservedZeroBit;
+
+  /// 1 bit
+  bool m_forbiddenZeroBit;
+
+  byte *m_rbsp;
+  int m_rbsp_length;
 };
+
+} // namespace bitstream
+} // namespace icov

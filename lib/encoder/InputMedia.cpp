@@ -1,5 +1,4 @@
 #include "InputMedia.h"
-#include "common.h"
 #include "helpers.h"
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;

@@ -45,8 +45,8 @@
  *****************************************************************************/
 #pragma once
 
-#include "geometry.h"
-#include "interface/IBlockProcessor.h"
+#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/mat.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>

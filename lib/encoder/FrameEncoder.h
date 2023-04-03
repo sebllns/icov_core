@@ -49,13 +49,13 @@
 
 #pragma once
 
-#include "BitSymbolProvider.h"
-#include "BlockPrediction.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
 #include "PredictionsEncoder.h"
 #include "common_types.h"
 #include "encoder/interface/IEncoder.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <opencv2/plot.hpp>

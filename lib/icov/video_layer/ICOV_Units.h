@@ -46,10 +46,10 @@
 #pragma once
 #include <memory>
 
-#include "BitSymbolProvider.h"
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "tools/DebugTools.h"
 #include <vector>
 

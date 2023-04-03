@@ -49,10 +49,10 @@
 
 #pragma once
 
-#include "BlockPrediction.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <map>

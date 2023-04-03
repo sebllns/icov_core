@@ -4,12 +4,13 @@
 #include "Unit.h"
 #include "common_types.h"
 #include "helpers.h"
-#include "icov_stream.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "typedef.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
+#include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 
@@ -26,7 +27,7 @@ ChannelDecoder::ChannelDecoder(
     const params &p, const LdpcCoderParameters &LDPC_params,
     const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
     const std::shared_ptr<video::EncodingStructure> &encodingStruct,
-    const sp_IcovExtractedBitstream &extraction)
+    const bitstream::sp_IcovExtractedBitstream &extraction)
     : m_params(p), m_vvc_bufs(vvc_bufs), m_encodingStruct(encodingStruct),
       //      m_blockArea(
       //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
@@ -69,7 +70,7 @@ void ChannelDecoder::decode_icu(int icu_enc,
   std::cout << " BT " << bitplaneCount << std::endl;
 
   for (int i = 0; i < bitplaneCount; ++i) {
-    icov::byte quantizedNumcode =
+    bitstream::byte quantizedNumcode =
         (block_prediction == BlockPrediction::predType::NONE)
             ? 1
             : m_bitstream->pop();
@@ -144,7 +145,7 @@ void ChannelDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
 
 void ChannelDecoder::read_syndrome(int syndrome_size) {
   m_syndrome.resize(syndrome_size);
-  icov::byte bitstream_value = 0;
+  bitstream::byte bitstream_value = 0;
   for (int i = 0; i < syndrome_size; ++i) {
     if ((i % BYTE_SIZE) == 0) {
       bitstream_value = m_bitstream->pop();

@@ -73,7 +73,7 @@ class EncodeMode {
     int qp;
     float viewportPadding;
 
-    std::unique_ptr<LdpcCoderParameters> ldpc_params;
+    std::unique_ptr<icov::LdpcCoderParameters> ldpc_params;
   };
 
 public:

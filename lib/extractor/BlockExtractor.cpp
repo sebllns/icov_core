@@ -1,9 +1,9 @@
 #include "BlockExtractor.h"
-#include "BlockPrediction.h"
-#include "encoded_stream.h"
-#include "extracted_stream.h"
 #include "extractor/ChannelExtractor.h"
 #include "helpers.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/encoded_stream.h"
+#include "video_layer/extracted_stream.h"
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -11,7 +11,7 @@
 icov::extractor::BlockExtractor::BlockExtractor(
     std::shared_ptr<InputIcov> &icovFile, const params &p,
     const LdpcCoderParameters &coder_params,
-    const sp_IcovExtractedBitstream &extraction)
+    const bitstream::sp_IcovExtractedBitstream &extraction)
     : m_icovFile(icovFile), m_extractionBitstream(extraction),
       m_channelCount(p.icu_sizes.size()), m_params(p) {
 
@@ -55,7 +55,7 @@ void icov::extractor::BlockExtractor::processBlock(const Block &b,
 
     // select prediction
     std::cout << "SELECT PREDICTION" << std::endl;
-    int pred_idx = getPredictionOrder(block_prediction);
+    int pred_idx = bitstream::getPredictionOrder(block_prediction);
     for (int i = 0; i < pred_idx; ++i) {
       for (auto &ch : m_channelExtractor)
         ch->pass_prediction();

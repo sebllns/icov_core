@@ -1,21 +1,18 @@
 #include "SinglePassDecoder.h"
-#include "BlockPrediction.h"
-#include "RequestManager.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
-#include "encoded_stream.h"
-#include "extracted_stream.h"
 #include "extractor/BlockExtractor.h"
-#include "extractor/ChannelExtractor.h"
 #include "helpers.h"
 #include "omnidirectional_layer/factory.h"
+#include "video_layer/extracted_stream.h"
 #include <algorithm>
 #include <iterator>
 #include <memory>
 
 icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
     : m_icovFile(std::make_shared<InputIcov>(path)),
-      m_extractionBitstream(std::make_shared<IcovExtractedBitstream>()) {}
+      m_extractionBitstream(
+          std::make_shared<bitstream::IcovExtractedBitstream>()) {}
 
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 

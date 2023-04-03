@@ -49,14 +49,11 @@
 
 #pragma once
 
-#include "Block.h"
 #include "Media.h"
 #include "common_types.h"
-#include "encoded_stream.h"
-#include "encoded_stream/ContentParameterSet.h"
-#include "extracted_stream.h"
-#include "icov_stream.h"
-#include "typedef.h"
+#include "video_layer/ContentParameterSet.h"
+#include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstddef>
@@ -80,13 +77,13 @@ public:
   InputIcov(const fs::path &path);
   ~InputIcov();
 
-  const icov::ContentParameterSet &contentParameterSet() const;
-  icov::ContentParameterSet &contentParameterSet();
+  const bitstream::ContentParameterSet &contentParameterSet() const;
+  bitstream::ContentParameterSet &contentParameterSet();
   void readContentParameterSet();
 
   void offsetSyndrome(uint offset);
 
-  void readSyndrome(icov::byte *output, uint64_t read_size,
+  void readSyndrome(bitstream::byte *output, uint64_t read_size,
                     uint64_t stored_size);
   void readFrameSize();
   void readBlockPos(size_t block_count);
@@ -105,9 +102,10 @@ public:
   }
 
   int readByteIntParam();
-  void readQaryParams(byte header, int &q_idx, int &z_min, int &z_max);
+  void readQaryParams(bitstream::byte header, int &q_idx, int &z_min,
+                      int &z_max);
   void readSIRates(NumcodeIdxVec &v);
-  void extractBlock(BlockChannelDecoderParams &output, int icu_idx);
+  void extractBlock(bitstream::BlockChannelDecoderParams &output, int icu_idx);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;
@@ -116,13 +114,13 @@ public:
   void passPrediction(int bitplaneCount);
 
 private:
-  icov::ContentParameterSet m_contentParameterSet;
+  bitstream::ContentParameterSet m_contentParameterSet;
   boost::dynamic_bitset<> m_syndromes;
   std::map<int, pstream> m_fileParts;
 
   int syndrome_bitshift;
   int last_bit_shift;
-  icov::byte last_byte;
+  bitstream::byte last_byte;
 
   size_t m_blockCount;
 

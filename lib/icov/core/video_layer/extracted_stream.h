@@ -46,12 +46,8 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common_types.h"
-#include "extracted_stream/NalUnit.h"
-#include "extracted_stream/ViewportUnit.h"
 #include "helpers.h"
 #include "icov_stream.h"
-#include "typedef.h"
 
 #include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
@@ -71,15 +67,16 @@
 #define BITSTREAM_SIZE 8192
 
 namespace icov {
+namespace bitstream {
 
 // struct BlockBitplaneDecoderParams {
-//  icov::byte Numcode;
+//  icov::bitstream::byte Numcode;
 //  BlockBitplaneDecoderParams() : Numcode(0), SyndromeBuf(nullptr) {}
 //};
 
 template <typename T> struct RawByteArray : boost::noncopyable {
   T Length;
-  icov::byte *Data;
+  icov::bitstream::byte *Data;
   void release() {
     Length = 0;
     if (Data != nullptr)
@@ -88,22 +85,22 @@ template <typename T> struct RawByteArray : boost::noncopyable {
   void reset(T l) {
     release();
     Length = l;
-    Data = new icov::byte[l];
+    Data = new icov::bitstream::byte[l];
   }
-  explicit RawByteArray(T l) : Length(l), Data(new icov::byte[l]) {}
+  explicit RawByteArray(T l) : Length(l), Data(new icov::bitstream::byte[l]) {}
   RawByteArray() : Length(0), Data(nullptr) {}
   ~RawByteArray() {}
 };
 
 struct BlockChannelDecoderParams {
-  icov::byte DirMode;
-  icov::byte QIdx;
-  icov::byte Zmin;
-  icov::byte Zmax;
-  //  RawByteArray<icov::byte> BitplaneNumcodes;
+  icov::bitstream::byte DirMode;
+  icov::bitstream::byte QIdx;
+  icov::bitstream::byte Zmin;
+  icov::bitstream::byte Zmax;
+  //  RawByteArray<icov::bitstream::byte> BitplaneNumcodes;
   //  RawByteArray<uint16_t> SyndromeBuf;
 
-  std::queue<icov::byte> Bitplanes;
+  std::queue<icov::bitstream::byte> Bitplanes;
 
   explicit BlockChannelDecoderParams()
       : DirMode(0), QIdx(0), Zmin(0), Zmax(0) {}
@@ -122,7 +119,7 @@ struct IcovExtractedBitstream {
     m_ActualSize = 0;
   }
 
-  void push(const icov::byte &val) {
+  void push(const icov::bitstream::byte &val) {
     auto pos = m_WritePosition;
     shiftWritePosition(1);
     std::cout << "PUSH " << (int)val << " AT " << pos << " NEW SIZE "
@@ -130,7 +127,7 @@ struct IcovExtractedBitstream {
     m_Buffer[pos] = val;
   }
 
-  icov::byte pop() {
+  icov::bitstream::byte pop() {
     icov::helpers::assert::check(m_ActualSize > 0, "Buffer is not empty");
     auto pos = m_ReadPosition;
     shiftReadPosition(1);
@@ -156,8 +153,8 @@ struct IcovExtractedBitstream {
   size_t getWritePosition() const;
   size_t getReadPosition() const;
   size_t getActualSize() const;
-  icov::byte *writableData();
-  const icov::byte *readableData() const;
+  icov::bitstream::byte *writableData();
+  const icov::bitstream::byte *readableData() const;
   bool empty() const { return m_ActualSize > 0; }
   int remains() const { return (m_WritePosition - m_ReadPosition); }
 
@@ -165,10 +162,10 @@ protected:
   size_t m_WritePosition;
   size_t m_ReadPosition;
   size_t m_ActualSize;
-  std::array<icov::byte, BITSTREAM_SIZE> m_Buffer;
+  std::array<icov::bitstream::byte, BITSTREAM_SIZE> m_Buffer;
 };
 
-// using IcovExtractedBitstream = std::vector<icov::byte>;
+// using IcovExtractedBitstream = std::vector<icov::bitstream::byte>;
 using sp_IcovExtractedBitstream = std::shared_ptr<IcovExtractedBitstream>;
 
 inline size_t IcovExtractedBitstream::getWritePosition() const {
@@ -191,24 +188,25 @@ inline const byte *IcovExtractedBitstream::readableData() const {
   return m_Buffer.data() + getReadPosition();
 }
 
+} // namespace bitstream
 } // namespace icov
 
 namespace boost {
 namespace serialization {
 
 template <class Archive, typename T>
-void serialize(Archive &ar, icov::RawByteArray<T> &io,
+void serialize(Archive &ar, icov::bitstream::RawByteArray<T> &io,
                const unsigned int /*version*/) {
   ar &io.Length;
   if (Archive::is_loading::value) {
     io.release();
-    io.Data = new icov::byte[io.Length];
+    io.Data = new icov::bitstream::byte[io.Length];
   }
-  ar &make_array<icov::byte>(io.Data, io.Length);
+  ar &make_array<icov::bitstream::byte>(io.Data, io.Length);
 }
 
 template <class Archive>
-void serialize(Archive &ar, icov::BlockChannelDecoderParams &io,
+void serialize(Archive &ar, icov::bitstream::BlockChannelDecoderParams &io,
                const unsigned int /*version*/) {
 
   ar &io.DirMode;
@@ -230,8 +228,8 @@ void serialize(Archive &ar, icov::BlockChannelDecoderParams &io,
     }   // else CLONE SI
   }
   //  size_t byte_count = bitToByteCount(io.size());
-  //  icov::byte *data = new icov::byte[byte_count];
-  //  ar &make_array<icov::byte>(data, byte_count);
+  //  icov::bitstream::byte *data = new icov::bitstream::byte[byte_count];
+  //  ar &make_array<icov::bitstream::byte>(data, byte_count);
 }
 
 } // namespace serialization

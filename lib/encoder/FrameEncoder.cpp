@@ -1,25 +1,23 @@
 #include "FrameEncoder.h"
 
-#include "BitSymbolProvider.h"
-#include "Block.h"
 #include "common_types.h"
 #include "enc_helpers.h"
-#include "encoded_stream.h"
 #include "encoder/interface/IEncoder.h"
 #include "helpers.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPrediction.h"
-#include "opencv2/plot.hpp"
 #include "tools/DebugTools.h"
+#include "video_layer/encoded_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
-
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-
 #include <cstdint>
 #include <omp.h>
+#include <opencv2/plot.hpp>
 #include <vector>
 
 namespace fs = boost::filesystem;
@@ -99,7 +97,7 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
   }
 
   // store bitplanes rates per SI and per channel
-  for (uint16_t p : PredictionID) {
+  for (uint16_t p : bitstream::PredictionID) {
     m_icov_file->startWritePrediction(p);
     for (int c = 0; c < (int)m_numComp; ++c) {
       std::cout << "<SI "

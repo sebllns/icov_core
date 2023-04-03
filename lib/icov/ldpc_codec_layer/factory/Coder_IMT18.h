@@ -49,6 +49,10 @@
 #pragma once
 
 #include "LdpcCoderParameters.h"
+#include "ldpc_codec_layer/LLRProvider.h"
+#include "ldpc_codec_layer/interface/IDecoder.h"
+#include "ldpc_codec_layer/interface/IMatrixProvider.h"
+#include "ldpc_codec_layer/interface/ISyndrome.h"
 
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include <memory>

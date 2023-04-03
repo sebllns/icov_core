@@ -49,14 +49,12 @@
 
 #pragma once
 
-#include "BlockPrediction.h"
-#include "Common.h"
-#include "Media.h"
 #include "decoder/ChannelDecoder.h"
-#include "extracted_stream.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include "video_layer/Encodingstructure.h"
+#include "video_layer/extracted_stream.h"
 
 #include <boost/type_traits/extent.hpp>
 #include <map>
@@ -91,7 +89,7 @@ public:
 
   BlockDecoder(const BlockDecoder::params &p,
                const LdpcCoderParameters &coder_params,
-               const sp_IcovExtractedBitstream &extraction);
+               const bitstream::sp_IcovExtractedBitstream &extraction);
   ~BlockDecoder();
 
   void startProcess() override;

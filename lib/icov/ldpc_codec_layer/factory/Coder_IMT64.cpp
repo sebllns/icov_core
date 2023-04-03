@@ -20,8 +20,6 @@ void LdpcCoder_IMT64::create(
     std::shared_ptr<IMatrixProvider<AffMatrix>> &mat_provider,
     const parameters &p) {
 
-  ICOV_TRACE << "aaaa";
-
   llrProvider.reset(new LLRProvider(p.codeLength));
 
   int min_level = 2;
@@ -35,8 +33,6 @@ void LdpcCoder_IMT64::create(
   std::string root_matrix =
       IMT164MatrixProvider::get_matrix_root(p.database, synd_tools.get_n());
 
-  ICOV_TRACE << "bbbb";
-
   bool init_matrix = false;
 
   if (matrix_provider_pool.count(root_matrix) == 0) {
@@ -45,8 +41,6 @@ void LdpcCoder_IMT64::create(
         root_matrix, std::make_shared<IMT164MatrixProvider>(
                          p.database, min_level, max_level, synd_tools));
   }
-
-  ICOV_TRACE << "ccccc";
 
   mat_provider = matrix_provider_pool.at(root_matrix);
 
@@ -74,7 +68,5 @@ void LdpcCoder_IMT64::create(
       std::make_shared<IMT164SyndromeManager>(
           synd_tools, matrix_provider_pool.at(root_matrix));
   syndromeMgr = imt_synd;
-
-  ICOV_TRACE << "ccc";
 }
 } // namespace icov

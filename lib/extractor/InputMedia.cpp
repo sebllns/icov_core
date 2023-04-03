@@ -1,12 +1,11 @@
 #include "InputMedia.h"
-#include "BlockPrediction.h"
 #include "Media.h"
 #include "common_types.h"
-#include "extracted_stream.h"
 #include "helpers.h"
-#include "icov_stream.h"
-#include "typedef.h"
+#include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
+#include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
 #include <cstdint>
 #include <fstream>
@@ -17,14 +16,15 @@
 
 icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
     : icov::IInputIcov<pstream>(path), m_blockCount(0) {
-  for (int i = eIcovStream::MEDIA_HEADER; i < eIcovStream::COUNT; ++i) {
+  for (int i = bitstream::eIcovStream::MEDIA_HEADER;
+       i < bitstream::eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
     ICOV_TRACE << "Open file part " << part_file << std::endl;
     m_fileParts[i] = std::make_unique<std::ifstream>(
         part_file, std::ios_base::binary | std::ios_base::in);
   }
 
-  //  icov::byte val = 0;
+  //  bitstream::byte val = 0;
   //  getStream(eIcovStream::RATES).seekg(11, std::ios_base::beg);
   //    icov::helpers::io::read_value(getStream(eIcovStream::RATES), &val);
 
@@ -36,28 +36,31 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
 
 icov::extractor::InputIcov::~InputIcov() {}
 
-const icov::ContentParameterSet &
+const icov::bitstream::ContentParameterSet &
 icov::extractor::InputIcov::contentParameterSet() const {
   return m_contentParameterSet;
 }
 
-icov::ContentParameterSet &icov::extractor::InputIcov::contentParameterSet() {
+icov::bitstream::ContentParameterSet &
+icov::extractor::InputIcov::contentParameterSet() {
   return m_contentParameterSet;
 }
 
 void icov::extractor::InputIcov::readContentParameterSet() {
   boost::archive::binary_iarchive archive(
-      *m_fileParts[eIcovStream::MEDIA_HEADER], boost::archive::no_header);
+      *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
+      boost::archive::no_header);
   archive &m_contentParameterSet;
 }
 
 void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
-  getStream(eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
+  getStream(bitstream::eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
 }
 
-void extractor::InputIcov::readSyndrome(byte *output, uint64_t read_size,
-                                        uint64_t stored_size) {
-  auto &str = getStream(eIcovStream::SYNDROME);
+void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
+                                              uint64_t read_size,
+                                              uint64_t stored_size) {
+  auto &str = getStream(icov::bitstream::eIcovStream::SYNDROME);
   icov::helpers::io::read_value(str, output, read_size);
   str.seekg(stored_size - read_size, std::ios_base::cur);
 }
@@ -74,10 +77,10 @@ void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
     uint32_t rate_size = 0;
     uint32_t synd_size = 0;
 
-    icov::helpers::io::read_value(getStream(eIcovStream::BLOCKS_SIZE),
-                                  &rate_size);
-    icov::helpers::io::read_value(getStream(eIcovStream::BLOCKS_SIZE),
-                                  &synd_size);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::BLOCKS_SIZE), &rate_size);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::BLOCKS_SIZE), &synd_size);
 
     rate_pos += rate_size;
     synd_pos += synd_size;
@@ -92,12 +95,13 @@ void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
 
 void icov::extractor::InputIcov::selectBlock(size_t id) {
   std::cout << "select block " << id << std::endl;
-  getStream(eIcovStream::ENCODE_PARAMS).clear();
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS).clear();
   // auto id = id.getIdSelf() - 1;
-  getStream(eIcovStream::ENCODE_PARAMS)
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[id], std::ios_base::beg);
-  getStream(eIcovStream::SYNDROME).clear();
-  getStream(eIcovStream::SYNDROME).seekg(m_synd_pos[id], std::ios_base::beg);
+  getStream(bitstream::eIcovStream::SYNDROME).clear();
+  getStream(bitstream::eIcovStream::SYNDROME)
+      .seekg(m_synd_pos[id], std::ios_base::beg);
 }
 
 void icov::extractor::InputIcov::readSyndromesSizes(
@@ -116,7 +120,7 @@ void icov::extractor::InputIcov::readSyndromesSizes(
   }
 }
 
-void extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
+void icov::extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
   // read bitplane count
   int bitplaneCount = readByteIntParam();
   // output.resize(bitplaneCount);
@@ -130,8 +134,8 @@ void extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
 }
 
 void icov::extractor::InputIcov::passPrediction(int bitplaneCount) {
-  icov::byte val = 0;
-  auto &str = getStream(eIcovStream::ENCODE_PARAMS);
+  bitstream::byte val = 0;
+  auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
 
   // read prediction mode + 1
   icov::helpers::io::read_value(str, &val);
@@ -143,7 +147,7 @@ void icov::extractor::InputIcov::passPrediction(int bitplaneCount) {
     if (val > 0) {
       // std::cout << "seek " << (val + 2) << std::endl;
       // shift qary params
-      int byte_shift = (bitplaneCount + 2) * sizeof(icov::byte);
+      int byte_shift = (bitplaneCount + 2) * sizeof(bitstream::byte);
       str.seekg(byte_shift, std::ios_base::cur);
     } // else no coding
   }   // else no prediction
@@ -161,18 +165,19 @@ void icov::extractor::InputIcov::selectPrediction(
 }
 
 int icov::extractor::InputIcov::readByteIntParam() {
-  icov::byte val = 0;
-  auto &str = getStream(eIcovStream::ENCODE_PARAMS);
+  bitstream::byte val = 0;
+  auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
   icov::helpers::io::read_value(str, &val);
   std::cout << "(int) = " << (int)val << std::endl;
   return static_cast<int>(val);
 }
 
-void icov::extractor::InputIcov::readQaryParams(icov::byte header, int &q_idx,
-                                                int &z_min, int &z_max) {
+void icov::extractor::InputIcov::readQaryParams(bitstream::byte header,
+                                                int &q_idx, int &z_min,
+                                                int &z_max) {
   // q
   m_qaryParams[0] = header;
-  auto &str = getStream(eIcovStream::ENCODE_PARAMS);
+  auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
   // z_min
   icov::helpers::io::read_value(str, &m_qaryParams[1]);
   // z_max
@@ -184,17 +189,17 @@ void icov::extractor::InputIcov::readQaryParams(icov::byte header, int &q_idx,
 
 void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   for (int i = 0; i < (int)v.size(); ++i) {
-    // note : type icov::byte should be selected depending on the rate byte
+    // note : type bitstream::byte should be selected depending on the rate byte
     // encoding length
-    icov::byte val = 0;
-    auto &str = getStream(eIcovStream::ENCODE_PARAMS);
+    bitstream::byte val = 0;
+    auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
     icov::helpers::io::read_value(str, &val);
     v[i] = static_cast<NumcodeIdx>(val);
   }
 }
 
-void extractor::InputIcov::extractBlock(BlockChannelDecoderParams &output,
-                                        int icu_idx) {}
+void icov::extractor::InputIcov::extractBlock(
+    icov::bitstream::BlockChannelDecoderParams &output, int icu_idx) {}
 
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}
@@ -205,10 +210,10 @@ void icov::extractor::InputIcov::setFrame(int frame) {
   uint32_t frameSyndromeSize = 0;
 
   while (frame > m_frameID) {
-    icov::helpers::io::read_value(getStream(eIcovStream::FRAMES_SIZE),
-                                  &frameRateSize);
-    icov::helpers::io::read_value(getStream(eIcovStream::FRAMES_SIZE),
-                                  &frameSyndromeSize);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
 
     m_rates_pos[0] += frameRateSize;
     m_synd_pos[0] += frameSyndromeSize;
@@ -218,18 +223,18 @@ void icov::extractor::InputIcov::setFrame(int frame) {
 
   while (frame < m_frameID) {
 
-    getStream(eIcovStream::FRAMES_SIZE)
+    getStream(bitstream::eIcovStream::FRAMES_SIZE)
         .seekg(-2 * (int)sizeof(frameRateSize), std::ios_base::cur);
 
-    icov::helpers::io::read_value(getStream(eIcovStream::FRAMES_SIZE),
-                                  &frameRateSize);
-    icov::helpers::io::read_value(getStream(eIcovStream::FRAMES_SIZE),
-                                  &frameSyndromeSize);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
+    icov::helpers::io::read_value(
+        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
 
     m_rates_pos[0] -= frameRateSize;
     m_synd_pos[0] -= frameSyndromeSize;
 
-    getStream(eIcovStream::FRAMES_SIZE)
+    getStream(bitstream::eIcovStream::FRAMES_SIZE)
         .seekg(-2 * (int)sizeof(frameRateSize), std::ios_base::cur);
 
     --m_frameID;
@@ -237,11 +242,12 @@ void icov::extractor::InputIcov::setFrame(int frame) {
 
   IInputIcov<pstream>::setFrame(frame);
 
-  getStream(eIcovStream::BLOCKS_SIZE)
+  getStream(bitstream::eIcovStream::BLOCKS_SIZE)
       .seekg(m_frameID * m_blockCount, std::ios_base::beg);
-  getStream(eIcovStream::ENCODE_PARAMS)
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[0], std::ios_base::beg);
-  getStream(eIcovStream::SYNDROME).seekg(m_synd_pos[0], std::ios_base::beg);
+  getStream(bitstream::eIcovStream::SYNDROME)
+      .seekg(m_synd_pos[0], std::ios_base::beg);
 }
 
 std::istream &icov::extractor::InputIcov::getStream(int id) {

@@ -1,5 +1,5 @@
 #include "IPicture.h"
-#include "Block.h"
+#include "omnidirectional_layer/Block.h"
 
 RequestManager *IPicture::requestManager() const {
   assert(m_requestManager != nullptr);

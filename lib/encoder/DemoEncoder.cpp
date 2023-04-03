@@ -5,8 +5,6 @@
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "tools/DebugTools.h"
-#include "video_layer/ICOV_Quant.h"
-#include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 

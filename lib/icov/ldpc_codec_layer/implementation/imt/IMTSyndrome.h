@@ -1,9 +1,8 @@
 #ifndef IMTSYNDROME_H
 #define IMTSYNDROME_H
 
-#include "interface/ISyndrome.h"
-
 #include "ldpc_codec_layer/aff3ct/Aff3ctDecoder.h"
+#include "ldpc_codec_layer/interface/ISyndrome.h"
 #include <aff3ct.hpp>
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;

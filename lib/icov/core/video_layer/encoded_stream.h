@@ -46,11 +46,10 @@
  *
  *****************************************************************************/
 #pragma once
-#include "BlockPrediction.h"
-#include "encoded_stream/ContentParameterSet.h"
 #include "helpers.h"
-#include "icov_stream.h"
-#include "typedef.h"
+#include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/ContentParameterSet.h"
+#include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/array_wrapper.hpp>
@@ -60,12 +59,14 @@
 #include <sys/types.h>
 #include <vector>
 
-using namespace icov;
-
 #define PREDICTION_COUNT 9
 #define ACCESS_BLOCK_PREDICTION_COUNT 1
 #define TOTAL_PREDICTION_COUNT                                                 \
   (PREDICTION_COUNT + ACCESS_BLOCK_PREDICTION_COUNT)
+
+namespace icov {
+
+namespace bitstream {
 
 typedef enum {
   MEDIA_HEADER = 0,
@@ -118,20 +119,20 @@ inline int getPredictionOrder(BlockPrediction::predType pred) {
 }
 
 template <typename T>
-int read_bits(T &output, const icov::byte *input, int offset = 0) {
+int read_bits(T &output, const icov::bitstream::byte *input, int offset = 0) {
   int bit_shift = 0;
   for (size_t i = 0; i < output.size(); ++i) {
     size_t bit_idx = i + offset;
     bit_shift = BYTE_SIZE - bit_idx % BYTE_SIZE - 1;
     size_t byte_idx = bit_idx / BYTE_SIZE;
-    output[i] = icov::helpers::bitstream::getBit(bit_shift, input[byte_idx]);
+    output[i] = icov::bitstream::getBit(bit_shift, input[byte_idx]);
   }
   return bit_shift;
 }
 
 template <typename T>
-int write_bits(const T &input, icov::byte *output, int offset = 0) {
-  // data = (icov::byte *)calloc(s.size(), sizeof(icov::byte));
+int write_bits(const T &input, icov::bitstream::byte *output, int offset = 0) {
+  // data = (bitstream::byte *)calloc(s.size(), sizeof(bitstream::byte));
   int bit_shift = 0;
   for (size_t i = 0; i < input.size(); ++i) {
     size_t bit_idx = i + offset;
@@ -146,6 +147,8 @@ int write_bits(const T &input, icov::byte *output, int offset = 0) {
                     // size bytesize(bit_size + bit_shift)
 }
 
+} // namespace bitstream
+} // namespace icov
 namespace boost {
 namespace serialization {
 
@@ -154,14 +157,15 @@ namespace serialization {
 // is a type of input archive the & operator is defined similar to >>.
 
 template <class Archive>
-void serialize(Archive &ar, Syndrome &io, const unsigned int /*version*/) {
-  size_t byte_count = bitToByteCount(io.size());
-  icov::byte *data = new icov::byte[byte_count];
-  ar &make_array<icov::byte>(data, byte_count);
+void serialize(Archive &ar, icov::Syndrome &io,
+               const unsigned int /*version*/) {
+  size_t byte_count = icov::bitstream::bitToByteCount(io.size());
+  icov::bitstream::byte *data = new icov::bitstream::byte[byte_count];
+  ar &make_array<icov::bitstream::byte>(data, byte_count);
 }
 
 template <class Archive>
-void serialize(Archive &ar, ContentParameterSet &io,
+void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
                const unsigned int /*version*/) {
 
   ar &io.icov_version;

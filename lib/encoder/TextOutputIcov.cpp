@@ -1,10 +1,8 @@
 #include "TextOutputIcov.h"
-#include "Block.h"
 #include "encoder/OutputIcovBase.h"
-#include "helpers.h"
-#include "icov_stream.h"
-#include "typedef.h"
+#include "omnidirectional_layer/Block.h"
 #include "video_layer/encoded_stream.h"
+#include "video_layer/icov_stream.h"
 #include <algorithm>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/array_wrapper.hpp>
@@ -20,30 +18,31 @@ TextOutputIcov::TextOutputIcov(const boost::filesystem::path &path)
 void TextOutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
   if (bsp.lx == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
-    getStream(eIcovStream::ENCODE_PARAMS) << "Q 0 ";
-    m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(icov::byte);
+    getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "Q 0 ";
+    m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
   } else {
-    getStream(eIcovStream::ENCODE_PARAMS)
+    getStream(bitstream::eIcovStream::ENCODE_PARAMS)
         << "Q " << bsp.q_idx << " Zmin " << bsp.zmin << " Zmax " << bsp.zmax
         << " ";
 
     m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
-        QARY_PARAMS_SIZE * sizeof(icov::byte);
+        QARY_PARAMS_SIZE * sizeof(bitstream::byte);
   }
 }
 
 void TextOutputIcov::writeContentParameterSet() {
   boost::archive::text_oarchive o_archive(
-      *m_fileParts[eIcovStream::MEDIA_HEADER], boost::archive::no_header);
+      *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
+      boost::archive::no_header);
   o_archive &m_contentParameterSet;
 }
 
 void TextOutputIcov::writeSyndrome(const Syndrome &s) {
-  const int byte_size = bitToByteCount(s.size());
+  const int byte_size = bitstream::bitToByteCount(s.size());
 
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] += byte_size;
 
-  getStream(eIcovStream::SYNDROME) << s.to_string(" ");
+  getStream(bitstream::eIcovStream::SYNDROME) << s.to_string(" ");
 }
 
 void TextOutputIcov::writeFrameSize() {
@@ -79,37 +78,31 @@ void TextOutputIcov::writeBlockSize() {
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
-void TextOutputIcov::writeBitplaneCount(const uint &v)
-{
+void TextOutputIcov::writeBitplaneCount(const uint &v) {}
 
-}
-
-void TextOutputIcov::writeStoredSyndromeSize(const uint &v)
-{
-
-}
+void TextOutputIcov::writeStoredSyndromeSize(const uint &v) {}
 
 void TextOutputIcov::writeSIRate(const uint &r) {
-  getStream(eIcovStream::ENCODE_PARAMS) << r << " ";
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << r << " ";
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
 }
 
 void TextOutputIcov::writeSIMode(const uint &v) {
-  getStream(eIcovStream::ENCODE_PARAMS) << "MODE " << v << " ";
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(icov::byte);
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "MODE " << v << " ";
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
 }
 
 } // namespace encoder
 } // namespace icov
 
 void icov::encoder::TextOutputIcov::startWriteBlock(const Block &b) {
-  getStream(eIcovStream::ENCODE_PARAMS)
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       << std::endl
       << "BLOCK " << b.getIdSelf() << std::endl;
 }
 
 void icov::encoder::TextOutputIcov::startWritePrediction(uint16_t pred) {
-  getStream(eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
 }
 
 void icov::encoder::TextOutputIcov::endWritePrediction(uint16_t pred) {}

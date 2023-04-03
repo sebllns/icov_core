@@ -31,7 +31,7 @@ using SI_SIDE = BlockPrediction::predType;
 
 BlockDecoder::BlockDecoder(const params &p,
                            const LdpcCoderParameters &coder_params,
-                           const sp_IcovExtractedBitstream &extraction)
+                           const bitstream::sp_IcovExtractedBitstream &extraction)
     : IBlockDecoder(), m_params(p) {
   // CONSTANTS
   const Size icuSize_luma =

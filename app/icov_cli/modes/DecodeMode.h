@@ -45,9 +45,9 @@
  *****************************************************************************/
 #pragma once
 
-#include "BitSymbolProvider.h"
 #include "decoder/SinglePassDecoder.h"
 #include "encoder/IcovMediaEncoder.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
 #include <boost/filesystem.hpp>

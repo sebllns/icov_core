@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common.h"
 #include "common_types.h"
 
 #define Z_STEP 16

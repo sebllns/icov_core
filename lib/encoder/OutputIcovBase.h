@@ -49,13 +49,12 @@
 
 #pragma once
 
-#include "BitSymbolProvider.h"
-#include "Block.h"
 #include "Media.h"
 #include "common_types.h"
-#include "encoded_stream/ContentParameterSet.h"
-#include "icov_stream.h"
-#include "typedef.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "omnidirectional_layer/Block.h"
+#include "video_layer/ContentParameterSet.h"
+#include "video_layer/icov_stream.h"
 #include <array>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
@@ -84,8 +83,8 @@ public:
   explicit OutputIcovBase(const fs::path &path, int openflag);
   ~OutputIcovBase() = default;
 
-  const icov::ContentParameterSet &contentParameterSet() const;
-  icov::ContentParameterSet &contentParameterSet();
+  const bitstream::ContentParameterSet &contentParameterSet() const;
+  bitstream::ContentParameterSet &contentParameterSet();
 
   virtual void startWriteBlock(const Block &b) = 0;
   virtual void startWritePrediction(uint16_t pred) = 0;
@@ -105,7 +104,7 @@ public:
   std::ostream &getStream(int id);
 
 protected:
-  icov::ContentParameterSet m_contentParameterSet;
+  bitstream::ContentParameterSet m_contentParameterSet;
   std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
   std::array<uint32_t, eWriteCounter::COUNT> m_total_write_byte;
 };

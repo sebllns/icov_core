@@ -55,9 +55,9 @@ void encoder::IcovMediaEncoder::defaultEncode(float viewportPadding) {
   m_output->contentParameterSet().content_framecount = 1;
   m_output->contentParameterSet().is_block_fixed_size = true;
   m_output->contentParameterSet().block_fixed_size =
-      static_cast<icov::byte>(32);
+      static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
-      (icov::byte)m_params.FrameEncoderParams.ChFormat;
+      (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
 
   m_output->writeContentParameterSet();
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);

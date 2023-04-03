@@ -49,13 +49,13 @@
 
 #pragma once
 
-#include "BitSymbolProvider.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
 #include "common_types.h"
-#include "encoded_stream/ContentParameterSet.h"
-#include "icov_stream.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "typedef.h"
+#include "video_layer/ContentParameterSet.h"
+#include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstdint>
