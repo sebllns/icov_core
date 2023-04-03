@@ -1,7 +1,6 @@
-
 # ICOV-core 
 
-Core part  of the ADT project ICOV.
+Core part  of the ADT project ICOV (Interactive Coder for Omnidirectional Videos)
 All the source code in this project are meant to be shared publicly 
 
 ## Links
