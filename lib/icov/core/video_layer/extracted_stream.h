@@ -48,7 +48,8 @@
 #pragma once
 #include "helpers.h"
 #include "icov_stream.h"
-
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPrediction.h"
 #include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -90,6 +91,19 @@ template <typename T> struct RawByteArray : boost::noncopyable {
   explicit RawByteArray(T l) : Length(l), Data(new icov::bitstream::byte[l]) {}
   RawByteArray() : Length(0), Data(nullptr) {}
   ~RawByteArray() {}
+};
+
+struct BitplaneStream {
+  NumcodeIdx numcode;
+  Syndrome syndrome;
+};
+
+struct SIStream {
+  BitSymbolProvider::Pz stored_pz;
+  byte mode;
+
+  std::vector<BitplaneStream> bitplanes;
+  int inverseModeQuant() { return mode - 1; }
 };
 
 struct BlockChannelDecoderParams {

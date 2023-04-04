@@ -21,17 +21,17 @@ IPicture::IPicture(size_t w, size_t h, float center_angle_x,
 
 const BlockVector &IPicture::icus() const { return m_icus; }
 
-bool IPicture::blockExists(size_t id) const {
+bool IPicture::blockExists(Block::id_t id) const {
   return id > 0 && id <= m_icus.size();
 }
 
-BlockVector::iterator IPicture::getById(size_t id) {
+BlockVector::iterator IPicture::getById(Block::id_t id) {
   if (!blockExists(id))
     return m_icus.end();
   return m_icus.begin() + id - 1;
 }
 
-BlockVector::const_iterator IPicture::getById(size_t id) const {
+BlockVector::const_iterator IPicture::getById(Block::id_t id) const {
   if (!blockExists(id))
     return m_icus.end();
   return m_icus.begin() + id - 1;
@@ -45,7 +45,7 @@ bool IPicture::isValidBlock(BlockVector::const_iterator it) const {
   return it != invalidBlock();
 }
 
-void IPicture::setAccessBlockFlag(size_t id) {
+void IPicture::setAccessBlockFlag(Block::id_t id) {
   getById(id)->setIsAccessBlock(true);
 }
 
@@ -53,7 +53,7 @@ BlockVector::const_iterator IPicture::invalidBlock() const {
   return m_icus.end();
 }
 
-BlockVector::iterator IPicture::addBlock(size_t id, float pu, float pv,
+BlockVector::iterator IPicture::addBlock(Block::id_t id, float pu, float pv,
                                          float pw, float ph) {
   m_icus.push_back(Block(id, this, pu, pv, pw, ph));
   return std::prev(m_icus.end());
@@ -77,7 +77,7 @@ float IPicture::fov_x() const { return m_fov_x; }
 
 float IPicture::fov_y() const { return m_fov_y; }
 
-point3d IPicture::getCartesianCoords(size_t id) const {
+point3d IPicture::getCartesianCoords(Block::id_t id) const {
   angle_radian p_spher(angleX(getById(id)->center_u()),
                        angleY(getById(id)->center_v()));
   point3d p_cart(0.0f, 0.0f, 0.0f);

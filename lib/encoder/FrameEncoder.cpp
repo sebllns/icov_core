@@ -8,6 +8,7 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "tools/DebugTools.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
@@ -426,6 +427,29 @@ void icov::encoder::FrameEncoder::encode_tu(
     }
 
     // HERE SAVE INFOS FOR DEBUG
+    if (frame() < (int)m_debugger.size()) {
+      auto &frameDbg = m_debugger[frame()];
+      if (b.getIdSelf() > frameDbg.size()) {
+        frameDbg.emplace_back();
+      }
+      auto &blockDbg = frameDbg[b.getIdSelf()];
+      blockDbg.resize(m_numComp);
+      auto &chDbg = blockDbg[comp];
+      if (!chDbg.count(pred)) {
+        chDbg.insert_or_assign(pred, bitstream::SIStream());
+      }
+      auto &predDbg = chDbg[pred];
+      predDbg.mode = m_channelCoder[comp].si[predID].dirmode;
+      predDbg.stored_pz = m_channelCoder[comp].si[predID].stored_pz;
+      icov::helpers::assert::equal(
+          si_synd.size(), si_numcodes.size(),
+          "Numcode vector and syndrome vector have same length");
+      predDbg.bitplanes.resize(si_synd.size());
+      for (int i = 0; i < (int)predDbg.bitplanes.size(); ++i) {
+        predDbg.bitplanes[i].syndrome = si_synd[i];
+        predDbg.bitplanes[i].numcode = si_numcodes[i];
+      }
+    }
   }
 }
 
@@ -436,6 +460,10 @@ const std::shared_ptr<OutputIcovBase> &FrameEncoder::icovFile() const {
 void FrameEncoder::setIcovFile(
     const std::shared_ptr<OutputIcovBase> &newIcov_file) {
   m_icov_file = newIcov_file;
+}
+
+void FrameEncoder::setDebuggerFrameCount(int framecount) {
+  m_debugger.resize(framecount);
 }
 
 void icov::encoder::FrameEncoder::encode_si(

@@ -57,6 +57,7 @@
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/Encodingstructure.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 
 #include <opencv2/plot.hpp>
 
@@ -104,6 +105,8 @@ public:
 
   const std::shared_ptr<OutputIcovBase> &icovFile() const;
   void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
+
+  void setDebuggerFrameCount(int framecount);
 
 protected:
   void encodeBlock(const Block &b, bool access_block,
@@ -168,6 +171,8 @@ protected:
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;
+
+  bitstream::VideoStreamDebugger m_debugger;
 };
 
 } // namespace encoder

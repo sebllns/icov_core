@@ -82,20 +82,20 @@ public:
 
   const BlockVector &icus() const;
 
-  bool blockExists(size_t id) const;
+  bool blockExists(Block::id_t id) const;
 
-  BlockVector::iterator getById(size_t id);
-  BlockVector::const_iterator getById(size_t id) const;
+  BlockVector::iterator getById(Block::id_t id);
+  BlockVector::const_iterator getById(Block::id_t id) const;
 
   BlockVector::const_iterator getBlock(int i, int j) const;
 
   bool isValidBlock(BlockVector::const_iterator it) const;
 
-  void setAccessBlockFlag(size_t id);
+  void setAccessBlockFlag(Block::id_t id);
 
   BlockVector::const_iterator invalidBlock() const;
 
-  BlockVector::iterator addBlock(size_t id, float pu, float pv, float pw,
+  BlockVector::iterator addBlock(Block::id_t id, float pu, float pv, float pw,
                                  float ph);
 
   size_t blockCount() const;
@@ -126,7 +126,7 @@ public:
   float fov_x() const;
   float fov_y() const;
 
-  point3d getCartesianCoords(size_t id) const;
+  point3d getCartesianCoords(Block::id_t id) const;
 
   RequestManager *requestManager() const;
   void setRequestManager(RequestManager *newRequestManager);

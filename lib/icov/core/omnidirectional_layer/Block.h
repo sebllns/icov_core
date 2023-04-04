@@ -47,8 +47,9 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
 #include "omnidirectional_layer/geometry.h"
+#include <memory>
+#include <vector>
 
 class IPicture;
 
@@ -63,6 +64,8 @@ class Block {
   friend class IPicture;
 
 public:
+  typedef unsigned long id_t;
+
   enum NeighborDirection {
     SELF = 0,
     RIGHT = 1,
@@ -79,21 +82,22 @@ protected:
   float m_w;
   float m_h;
   bool m_isAccessBlock;
-  size_t uid[NeighborDirection::COUNT];
+  Block::id_t uid[NeighborDirection::COUNT];
 
   // center, topleft, topright, bottomright, bottomleft
   point3d cartesian_coords[5];
 
-  Block(size_t id, IPicture *parent, float pu, float pv, float pw, float ph);
+  Block(Block::id_t id, IPicture *parent, float pu, float pv, float pw,
+        float ph);
 
 public:
   ~Block();
 
   const IPicture *parent() const;
 
-  void setId(NeighborDirection index, size_t id);
-  size_t getId(NeighborDirection index) const;
-  size_t getIdSelf() const;
+  void setId(NeighborDirection index, Block::id_t id);
+  Block::id_t getId(NeighborDirection index) const;
+  Block::id_t getIdSelf() const;
   const point3d &getCartesianCoord(uint16_t i) const;
 
   float u() const;

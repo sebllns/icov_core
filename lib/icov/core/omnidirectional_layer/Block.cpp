@@ -1,13 +1,14 @@
 #include "Block.h"
 #include "helpers.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include <sys/types.h>
 
 const IPicture *Block::parent() const {
   assert(m_parent != nullptr);
   return m_parent;
 }
 
-void Block::setId(NeighborDirection index, size_t id) {
+void Block::setId(NeighborDirection index, Block::id_t id) {
   assert(index >= NeighborDirection::SELF && index < NeighborDirection::COUNT);
   uid[index] = id;
 }
@@ -15,7 +16,7 @@ void Block::setId(NeighborDirection index, size_t id) {
 /// \brief Block::getId
 /// \param index
 /// \return 0 if not exist, id else
-size_t Block::getId(NeighborDirection index) const {
+Block::id_t Block::getId(NeighborDirection index) const {
   if (index < NeighborDirection::SELF || index >= NeighborDirection::COUNT)
     return 0;
   return uid[index];
@@ -46,7 +47,7 @@ void Block::setIsAccessBlock(bool newIsAccessBlock) {
   m_isAccessBlock = newIsAccessBlock;
 }
 
-Block::Block(size_t id, IPicture *parent, float pu, float pv, float pw,
+Block::Block(Block::id_t id, IPicture *parent, float pu, float pv, float pw,
              float ph)
     : m_parent(parent), m_u(pu), m_v(pv), m_w(pw), m_h(ph) {
   icov::helpers::assert::check(parent != nullptr,

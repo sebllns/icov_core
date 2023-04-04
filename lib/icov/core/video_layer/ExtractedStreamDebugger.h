@@ -45,4 +45,18 @@
  *****************************************************************************/
 #pragma once
 
-class ExtractedStreamDebugger {};
+#include "omnidirectional_layer/Block.h"
+#include "video_layer/extracted_stream.h"
+#include <map>
+#include <vector>
+namespace icov {
+namespace bitstream {
+
+typedef std::map<BlockPrediction::predType, SIStream>
+    ChannelBlockStreamDebugger;
+typedef std::vector<ChannelBlockStreamDebugger> MultiChannelBlockStreamDebugger;
+typedef std::vector<MultiChannelBlockStreamDebugger> FrameStreamDebugger;
+typedef std::vector<FrameStreamDebugger> VideoStreamDebugger;
+
+} // namespace bitstream
+} // namespace icov
