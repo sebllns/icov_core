@@ -48,12 +48,14 @@
 #pragma once
 
 #include "boost/geometry.hpp"
+#include <boost/geometry/algorithms/transform.hpp>
 #include <boost/geometry/geometries/point_xyz.hpp>
 #include <boost/qvm/all.hpp>
 
 namespace bg = boost::geometry;
 
 typedef float coord_precision;
+
 typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::degree>>
     angle_degree;
 typedef bg::model::d2::point_xy<coord_precision, bg::cs::spherical<bg::radian>>
@@ -81,3 +83,15 @@ bool is_visible(const point3d &p, const point2d &viewport_size);
 
 point3d inverse_YPR(const point3d &p, float yaw, float pitch, float roll);
 point3d rotate_YPR(const point3d &p, float yaw, float pitch, float roll);
+
+inline angle_radian d2r(const angle_degree &d) {
+  angle_radian r;
+  bg::transform(d, r);
+  return r;
+}
+
+inline angle_degree r2d(const angle_radian &r) {
+  angle_degree d;
+  bg::transform(r, d);
+  return d;
+}

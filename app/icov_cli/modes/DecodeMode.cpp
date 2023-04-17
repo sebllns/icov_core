@@ -3,11 +3,14 @@
 #include "encoder/IcovMediaEncoder.h"
 #include "helpers.h"
 #include "icov_program/icov_program_options.h"
+#include "omnidirectional_layer/factory.h"
+#include "omnidirectional_layer/geometry.h"
 #include "opencv2/core/hal/interface.h"
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"
 #include "opencv2/highgui.hpp"
 #include "tools/DebugTools.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/vtm_opencv_utility.h"
 
 #include <boost/format.hpp>
@@ -62,6 +65,9 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   m_parameters.viewport_padding =
       args[DecodeMode::params::ViewportPadding_ID].as<float>();
 
+  bitstream::VideoEncodingStreamCache::get_mutable_instance().setFrameCount(
+      100);
+
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.input_file;
 }
@@ -94,7 +100,13 @@ void DecodeMode::encode() {
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
-  m_encoder->defaultEncode(m_parameters.viewport_padding);
+
+  const float fov_x_degree = 60;
+  const point2d resolution(1920, 1080);
+  angle_radian fov =
+      icov::factory::fov(fov_x_degree, icov::factory::y_x_ratio(resolution));
+  viewport_geometry vpg = icov::factory::default_geometry(fov, resolution);
+  m_encoder->defaultEncode(m_parameters.viewport_padding, vpg);
 }
 
 void DecodeMode::decode() {

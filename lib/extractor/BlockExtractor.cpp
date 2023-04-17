@@ -2,8 +2,10 @@
 #include "extractor/ChannelExtractor.h"
 #include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -15,11 +17,17 @@ icov::extractor::BlockExtractor::BlockExtractor(
     : m_icovFile(icovFile), m_extractionBitstream(extraction),
       m_channelCount(p.icu_sizes.size()), m_params(p) {
 
+  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingFrame = 0;
+
+  bitstream::int8b compID = 0;
   for (int n : p.icu_sizes) {
     auto channel_params = coder_params.clone();
     channel_params->codeLength = n;
+    ChannelExtractor::params channel_extractor_params{.CompID = compID};
     m_channelExtractor.push_back(std::make_unique<ChannelExtractor>(
-        m_icovFile, m_extractionBitstream, *channel_params));
+        channel_extractor_params, m_icovFile, m_extractionBitstream,
+        *channel_params));
+    compID++;
   }
 }
 

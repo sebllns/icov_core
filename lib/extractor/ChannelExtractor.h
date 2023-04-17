@@ -78,13 +78,11 @@ struct BitplaneExtractor {
 
 class ChannelExtractor {
 public:
-  //  struct params {
-  //    icov::int8b ChannelType;
-  //    icov::int8b ChromaFomat;
-  //    icov::int8b CompID;
-  //  };
+  struct params {
+    bitstream::int8b CompID;
+  };
 
-  ChannelExtractor(/*const ChannelExtractor::params &p,*/
+  ChannelExtractor(const ChannelExtractor::params &p,
                    std::shared_ptr<InputIcov> &icovFile,
                    const bitstream::sp_IcovExtractedBitstream &bitstream,
                    const LdpcCoderParameters &LDPC_params);
@@ -110,7 +108,7 @@ public:
 protected:
   void extract_bitplane_syndrome(const BitplaneExtractor &bp);
 
-  /*params m_params;*/
+  params m_params;
   std::unique_ptr<AffInteractiveCoder> m_ldpc_coder;
   std::shared_ptr<InputIcov> m_icovFile;
   bitstream::sp_IcovExtractedBitstream m_bitstream;

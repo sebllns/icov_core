@@ -177,6 +177,9 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
   ar &io.content_framerate;
   ar &io.content_duration;
   ar &io.viewport_padding;
+  ar &io.viewport_fov_x;
+  ar &io.viewport_height;
+  ar &io.viewport_width;
 
   ar &io.is_sov_fixed_size;
   if (io.is_sov_fixed_size)

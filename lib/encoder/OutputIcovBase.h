@@ -91,7 +91,7 @@ public:
   virtual void endWritePrediction(uint16_t pred) = 0;
   virtual void endWriteBlock(const Block &b) = 0;
 
-  virtual void writeQaryParams(const BitSymbolProvider::Pz &bsp) = 0;
+  virtual void writeQaryParams(const BitSymbolProvider::PzParams &bsp) = 0;
   virtual void writeContentParameterSet() = 0;
   virtual void writeSyndrome(const Syndrome &s) = 0;
   virtual void writeFrameSize() = 0;

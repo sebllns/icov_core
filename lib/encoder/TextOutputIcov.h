@@ -75,7 +75,7 @@ public:
 
   // OutputIcovBase interface
 public:
-  void writeQaryParams(const BitSymbolProvider::Pz &bsp) override;
+  void writeQaryParams(const BitSymbolProvider::PzParams &bsp) override;
   void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;

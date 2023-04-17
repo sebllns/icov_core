@@ -2,6 +2,7 @@
 #include "encoder/IcovMediaEncoder.h"
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "omnidirectional_layer/factory.h"
 #include "tools/DebugTools.h"
 #include <algorithm>
 #include <boost/format.hpp>
@@ -95,5 +96,11 @@ void EncodeMode::run() {
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
-  encoder.defaultEncode(m_parameters.viewportPadding);
+
+  const float fov_x_degree = 60;
+  const point2d resolution(1920, 1080);
+  angle_radian fov =
+      icov::factory::fov(fov_x_degree, icov::factory::y_x_ratio(resolution));
+  viewport_geometry vpg = icov::factory::default_geometry(fov, resolution);
+  encoder.defaultEncode(m_parameters.viewportPadding, vpg);
 }

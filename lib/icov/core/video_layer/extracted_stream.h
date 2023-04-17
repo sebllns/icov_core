@@ -99,7 +99,7 @@ struct BitplaneStream {
 };
 
 struct SIStream {
-  BitSymbolProvider::Pz stored_pz;
+  BitSymbolProvider::PzParams pz;
   byte mode;
 
   std::vector<BitplaneStream> bitplanes;

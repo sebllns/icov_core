@@ -10,6 +10,7 @@
 #include "tools/DebugTools.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
+#include "video_layer/icov_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 #include <boost/algorithm/algorithm.hpp>
@@ -17,6 +18,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <cstdint>
+#include <memory>
 #include <omp.h>
 #include <opencv2/plot.hpp>
 #include <vector>
@@ -40,7 +42,7 @@ FrameEncoder::FrameEncoder(const params &p,
                          BlockPrediction::BOTTOM_RIGHT,
                          BlockPrediction::BOTTOM_LEFT,
                      }),
-      block_comp(0), m_init(true) {
+      m_init(true), block_comp(0) {
 
   //  xData.create(1, 100, CV_64F); // 1 Row, 100 columns, Double
   //  yData.create(1, 100, CV_64F);
@@ -108,13 +110,13 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
         std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
         m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
-        if (m_channelCoder[c].si[p].stored_pz.lx > 0) {
+        if (m_channelCoder[c].si[p].stored_pz.getZAmplitude() > 0) {
           std::cout << "R ";
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
               m_icov_file->writeSIRate(
                   m_channelCoder[c].bitplanes[bp].sourceFlag
-                      ? 1
+                      ? bitstream::enum_t::SyndromeType::SOURCE
                       : m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p));
             }
           }
@@ -132,12 +134,10 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
   if (access_block) {
     for (int c = 0; c < (int)m_numComp; ++c) {
       // store syndrome per bitplane
-      for (const auto &s : m_channelCoder[c].bitplanes) {
-#ifdef ICOV_ASSERTION_ENABLED
-        icov::helpers::assert::check(s.accessBlock.size() > 0,
-                                     "No access blocks bits !");
-#endif
-        m_icov_file->writeSyndrome(s.accessBlock);
+      Syndrome access_block_syndrome(m_channelCoder[c].access_block[0].size());
+      for (const auto &s : m_channelCoder[c].access_block) {
+        access_block_syndrome.fillFrom(s);
+        m_icov_file->writeSyndrome(access_block_syndrome);
       }
     }
   }
@@ -298,7 +298,7 @@ void icov::encoder::FrameEncoder::encode_tu(
 
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
-  if (bsp.q0() == 1) {
+  if (bsp.pz_params().getZAmplitude() == 0) {
     ICOV_TRACE << "SI identical... no coding...";
   } else {
     encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
@@ -309,13 +309,12 @@ void icov::encoder::FrameEncoder::encode_tu(
       BitSymbolProvider bsp_dec(tu_size);
 
       ICOV_TRACE << bsp.si_symboles().size();
-      ICOV_TRACE << bsp.z_min();
-      ICOV_TRACE << bsp.z_max();
-      ICOV_TRACE << bsp.q0();
-      ICOV_TRACE << bsp.x_binary_length();
+      ICOV_TRACE << bsp.pz_params().getZmin();
+      ICOV_TRACE << bsp.pz_params().getZmax();
+      ICOV_TRACE << bsp.pz_params().getQ0();
+      ICOV_TRACE << bsp.bitplane_count();
 
-      bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                     bsp.x_binary_length());
+      bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
 
       for (size_t i = 0; i < si_numcodes.size(); i++) {
 
@@ -335,8 +334,7 @@ void icov::encoder::FrameEncoder::encode_tu(
       }
 
       try {
-        bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                       bsp.x_binary_length());
+        bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
         encoder.decode_symboles(bsp_dec, si_numcodes, si_synd);
 
         icov::helpers::assert::check(
@@ -352,42 +350,45 @@ void icov::encoder::FrameEncoder::encode_tu(
 // saved
 #pragma omp critical
   {
+    int bitplaneCount = bsp.bitplane_count();
     //    std::cout << "COMP " << comp << " PRED " << predID << ": "
     //              << m_channelCoder[comp].bitplanes.size() << ", " <<
     //              si_synd.size()
     //              << ", " << si_numcodes.size() << std::endl;
 
-    m_channelCoder[comp].si[predID].stored_pz = bsp.getPz();
+    m_channelCoder[comp].si[predID].stored_pz = bsp.pz_params();
     m_channelCoder[comp].si[predID].dirmode =
         icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp];
 
     // first SI stored (no bitplanes stored for comp)
     if (m_channelCoder[comp].bitplanes.size() == 0) {
-      m_channelCoder[comp].bitplanes =
-          std::vector<BitplaneCoder>(si_synd.size());
-      for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+      if (b.isAccessBlock())
+        m_channelCoder[comp].access_block = bsp.src_bits();
+      m_channelCoder[comp].bitplanes = std::vector<BitplaneCoder>(
+          bitplaneCount, BitplaneCoder{.minRate = 0,
+                                       .stored_synd_rate = 0,
+                                       .stored_synd = icov::Syndrome(),
+                                       .noSourceThreshold = 0.0,
+                                       .sourceFlag = false});
+      for (size_t i = 0; i < si_synd.size(); ++i) {
         m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
         m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
         m_channelCoder[comp].bitplanes[i].noSourceThreshold = 0.0;
         m_channelCoder[comp].bitplanes[i].sourceFlag = false;
         m_channelCoder[comp].bitplanes[i].minRate = si_numcodes[i];
-        if (b.isAccessBlock()) {
-          m_channelCoder[comp].bitplanes[i].accessBlock.fillFrom(
-              bsp.src_bits()[i]);
-        }
       }
     }
 
-    if (bsp.q0() < 1) {
+    if (bsp.pz_params().getZAmplitude() > 0) {
 
 #ifdef ICOV_ASSERTION_ENABLED
       icov::helpers::assert::check(
-          m_channelCoder[comp].bitplanes.size() == si_synd.size() &&
-              m_channelCoder[comp].bitplanes.size() == si_numcodes.size(),
+          m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
+              si_synd.size() == si_numcodes.size(),
           "Bitplane count does not match between SI of same block");
 #endif
 
-      for (size_t i = 0; i < m_channelCoder[comp].bitplanes.size(); ++i) {
+      for (int i = 0; i < bitplaneCount; ++i) {
 
         {
           std::cout << BlockPrediction::toString(pred) << " COMP " << comp
@@ -427,25 +428,52 @@ void icov::encoder::FrameEncoder::encode_tu(
     }
 
     // HERE SAVE INFOS FOR DEBUG
-    if (frame() < (int)m_debugger.size()) {
-      auto &frameDbg = m_debugger[frame()];
-      if (b.getIdSelf() > frameDbg.size()) {
-        frameDbg.emplace_back();
+    if (frame() < bitstream::VideoEncodingStreamCache::get_const_instance()
+                      .getFrameCount()) {
+      auto &frameDbg =
+          bitstream::VideoEncodingStreamCache::get_mutable_instance().getFrame(
+              frame());
+      Block::id_t blockID = b.getIdSelf();
+      if (blockID > frameDbg.size()) {
+        frameDbg.resize((size_t)(blockID),
+                        bitstream::VideoEncodingStreamCache::
+                            MultiChannelBlockStreamDebugger(m_numComp));
       }
-      auto &blockDbg = frameDbg[b.getIdSelf()];
-      blockDbg.resize(m_numComp);
+      auto &blockDbg = frameDbg[blockID - 1];
+
       auto &chDbg = blockDbg[comp];
+
+      if (b.isAccessBlock() && !chDbg.count(BlockPrediction::predType::NONE)) {
+        chDbg.insert_or_assign(BlockPrediction::predType::NONE,
+                               bitstream::SIStream());
+        auto &predDbg = chDbg[pred];
+        predDbg.mode = 0;
+        predDbg.pz = BitSymbolProvider::PzParams();
+
+        predDbg.bitplanes.resize(bitplaneCount);
+
+        std::cout << "\n\n\n\nDBG >>>>>>>>> ACCESS BLOCK " << blockID << " "
+                  << comp << " " << predDbg.bitplanes.size() << std::endl;
+
+        //        for (int i = 0; i < bitplaneCount; ++i) {
+        //          predDbg.bitplanes[i].syndrome =
+        //              m_channelCoder[comp].bitplanes[i].accessBlock;
+        //          predDbg.bitplanes[i].numcode =
+        //              bitstream::enum_t::SyndromeType::SOURCE;
+        //        }
+      }
+
       if (!chDbg.count(pred)) {
         chDbg.insert_or_assign(pred, bitstream::SIStream());
       }
       auto &predDbg = chDbg[pred];
       predDbg.mode = m_channelCoder[comp].si[predID].dirmode;
-      predDbg.stored_pz = m_channelCoder[comp].si[predID].stored_pz;
+      predDbg.pz = m_channelCoder[comp].si[predID].stored_pz;
       icov::helpers::assert::equal(
           si_synd.size(), si_numcodes.size(),
           "Numcode vector and syndrome vector have same length");
-      predDbg.bitplanes.resize(si_synd.size());
-      for (int i = 0; i < (int)predDbg.bitplanes.size(); ++i) {
+      predDbg.bitplanes.resize(bitplaneCount);
+      for (int i = 0; i < bitplaneCount; ++i) {
         predDbg.bitplanes[i].syndrome = si_synd[i];
         predDbg.bitplanes[i].numcode = si_numcodes[i];
       }
@@ -460,10 +488,6 @@ const std::shared_ptr<OutputIcovBase> &FrameEncoder::icovFile() const {
 void FrameEncoder::setIcovFile(
     const std::shared_ptr<OutputIcovBase> &newIcov_file) {
   m_icov_file = newIcov_file;
-}
-
-void FrameEncoder::setDebuggerFrameCount(int framecount) {
-  m_debugger.resize(framecount);
 }
 
 void icov::encoder::FrameEncoder::encode_si(

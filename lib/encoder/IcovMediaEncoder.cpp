@@ -5,6 +5,7 @@
 #include "encoder/TextOutputIcov.h"
 #include "helpers.h"
 #include "omnidirectional_layer/factory.h"
+#include "omnidirectional_layer/geometry.h"
 #include <exception>
 #include <memory>
 
@@ -22,7 +23,8 @@ icov::encoder::IcovMediaEncoder::~IcovMediaEncoder() {
 }
 
 /*****************************************************************************/
-void encoder::IcovMediaEncoder::defaultEncode(float viewportPadding) {
+void encoder::IcovMediaEncoder::defaultEncode(float viewportPadding,
+                                              const viewport_geometry &vpg) {
 
   std::unique_ptr<icov::encoder::InputMedia> input;
 
@@ -44,7 +46,7 @@ void encoder::IcovMediaEncoder::defaultEncode(float viewportPadding) {
                                m_params.FrameEncoderParams.ICU_Size.height,
                                "Assert square ICU");
 
-  icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width);
+  icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());

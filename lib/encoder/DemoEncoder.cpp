@@ -499,8 +499,7 @@ void icov::encoder::DemoEncoder::encode_tu(
   m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
 
   BitSymbolProvider bsp_dec(tu_size);
-  bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                 bsp.x_binary_length());
+  bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
     std::cout << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
@@ -535,8 +534,7 @@ void icov::encoder::DemoEncoder::encode_tu(
     try {
       ICOV_DEBUG << "Decode channel " << comp;
 
-      bsp_dec.set_si(bsp.si_symboles(), bsp.z_min(), bsp.z_max(), bsp.q0(),
-                     bsp.x_binary_length());
+      bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
       m_coders.at(tu_size)->decode_symboles(bsp_dec, si_numcodes, si_synd);
 
       icov::helpers::assert::check(bsp_dec.src_symboles() == bsp.src_symboles(),

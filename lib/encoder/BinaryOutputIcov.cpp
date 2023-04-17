@@ -1,6 +1,5 @@
 #include "BinaryOutputIcov.h"
 #include "helpers.h"
-#include "typedef.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
@@ -14,16 +13,16 @@ namespace encoder {
 BinaryOutputIcov::BinaryOutputIcov(const boost::filesystem::path &path)
     : OutputIcovBase(path, std::ios_base::binary) {}
 
-void BinaryOutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
-  if (bsp.lx == 0) {
+void BinaryOutputIcov::writeQaryParams(const BitSymbolProvider::PzParams &bsp) {
+  if (bsp.getZAmplitude() == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     std::cout << "Q 0" << std::endl;
     icov::helpers::io::write_value<bitstream::byte>(
         getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, true);
     m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
   } else {
-    icov::bitstream::writeQaryParams(m_qaryParams, bsp.q_idx, bsp.zmin,
-                                     bsp.zmax);
+    icov::bitstream::writeQaryParams(m_qaryParams, bsp.getQ0Quantized(),
+                                     bsp.getZmin(), bsp.getZmax());
     icov::helpers::io::write_array(
         getStream(bitstream::eIcovStream::ENCODE_PARAMS), m_qaryParams,
         QARY_PARAMS_SIZE, true);

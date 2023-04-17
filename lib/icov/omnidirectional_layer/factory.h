@@ -47,19 +47,62 @@
  *****************************************************************************/
 #pragma once
 #include "omnidirectional_layer/RequestManager.h"
+#include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "typedef.h"
+#include <boost/geometry/algorithms/transform.hpp>
+#include <math.h>
 #include <memory>
+#include <valarray>
+
+//// Fallback, in case M_PI doesn't exist.
+//#ifndef M_PI
+//#define M_PI 3.14159265358979323846
+//#endif
 
 namespace icov {
 namespace factory {
+
+inline float x_y_ratio(const point2d &resolution) {
+  return resolution.x() / resolution.y();
+}
+
+inline float y_x_ratio(const point2d &resolution) {
+  return 1.0 / x_y_ratio(resolution);
+}
+
+inline angle_radian fov(float fov_x_degrees, float y_x_ratio) {
+  float fovX_radian = fov_x_degrees * DEG2RAD;
+  float fovY_radian = 2 * atan(tan(fovX_radian * 0.5) * y_x_ratio);
+  return angle_radian(fovX_radian, fovY_radian);
+}
+
+inline viewport_geometry default_geometry(const angle_radian &fov,
+                                          const point2d &screen_resolution) {
+  viewport_geometry vpg;
+  vpg.focale = 1 / (2.0f * tan(fov.x() * 0.5)); // focale
+  vpg.center = point2d(0.5f, 0.5f);             // center normalised coords
+  vpg.fov = fov;                                // field of view in radians
+  vpg.resolution = screen_resolution;           // resolution in pixels
+
+  // viewport geometry in cartesian coords
+  vpg.roi_size =
+      point2d(std::abs(2 * tan(fov.x())), std::abs(2 * tan(fov.y())));
+
+  return vpg;
+}
+
 struct Visualization360 {
   std::shared_ptr<EquiRectPicture> Picture;
   std::shared_ptr<ViewportManagerCenterPadded> ViewportManager;
   std::shared_ptr<IcovAccessBlockManager> AccessBlockManager;
 
+  ///
+  /// \brief The params class
+  ///
   struct params {
     uint Width, Height;
     float ViewportPadding;
@@ -71,8 +114,9 @@ struct Visualization360 {
             std::make_shared<ViewportManagerCenterPadded>(p.ViewportPadding)),
         AccessBlockManager(std::make_shared<IcovAccessBlockManager>()) {}
 
-  void init(ushort icu_width) {
+  void init(ushort icu_width, const viewport_geometry &vpg) {
     Picture->buildConstantSizeBlocks(icu_width, icu_width);
+    ViewportManager->viewportGeometry() = vpg;
     AccessBlockManager->buildAccessBlocks(*Picture, *ViewportManager);
   }
 };
@@ -86,10 +130,10 @@ struct Navigation360 {
     ushort IcuSize;
   };
 
-  void init(params p) {
+  void init(params p, const viewport_geometry &vpg) {
     Visualization = std::make_unique<icov::factory::Visualization360>(
         p.VisualizationParams);
-    Visualization->init(p.IcuSize);
+    Visualization->init(p.IcuSize, vpg);
     Request = std::make_unique<RequestManager>();
     Request->setPicture(Visualization->Picture);
     Request->setViewport(Visualization->ViewportManager);

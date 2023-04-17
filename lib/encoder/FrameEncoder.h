@@ -106,8 +106,6 @@ public:
   const std::shared_ptr<OutputIcovBase> &icovFile() const;
   void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
 
-  void setDebuggerFrameCount(int framecount);
-
 protected:
   void encodeBlock(const Block &b, bool access_block,
                    const IBlockPrediction &block_prediction) override;
@@ -146,7 +144,7 @@ protected:
   // bitplane coding
   typedef struct {
 
-    icov::Syndrome accessBlock;
+    //    icov::Syndrome accessBlock;
     icov::Syndrome stored_synd;
     NumcodeIdx stored_synd_rate;
     icov::Rate noSourceThreshold;
@@ -159,7 +157,7 @@ protected:
   } BitplaneCoder;
 
   typedef struct {
-    BitSymbolProvider::Pz stored_pz;
+    BitSymbolProvider::PzParams stored_pz;
     // mode
     uint dirmode;
   } SiCoder;
@@ -167,12 +165,11 @@ protected:
   // channel coding
   typedef struct {
     std::vector<BitplaneCoder> bitplanes;
+    std::vector<BitVec> access_block;
     std::map<uint16_t, SiCoder> si;
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;
-
-  bitstream::VideoStreamDebugger m_debugger;
 };
 
 } // namespace encoder

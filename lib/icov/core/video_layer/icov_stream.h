@@ -78,6 +78,8 @@ typedef char int8b;
 
 namespace enum_t {
 
+enum SyndromeType { NO_CODING = 0, SOURCE = 1 };
+
 enum ContentType {
   CONTENT_TYPE_VIDEO = 0,
   CONTENT_TYPE_MESH = 1,
@@ -220,10 +222,11 @@ private:
 
 inline ushort inverseQuantizedSize(icov::bitstream::byte input,
                                    const IInteractiveCoder &coder) {
-  return (input == 0)
+  return (input == enum_t::SyndromeType::NO_CODING)
              ? (0)
-             : ((input == 1) ? (static_cast<ushort>(coder.get_n()))
-                             : (static_cast<ushort>(coder.get_m(input - 2))));
+             : ((input == enum_t::SyndromeType::SOURCE)
+                    ? (static_cast<ushort>(coder.get_n()))
+                    : (static_cast<ushort>(coder.get_m(input - 2))));
 }
 
 inline void getByteCount(int bit_size, ushort &byte_count,

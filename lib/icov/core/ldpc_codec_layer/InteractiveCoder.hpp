@@ -148,7 +148,7 @@ void InteractiveCoder<Matrix>::decode_symboles(
 
   int lx = stored_synd.size();
 
-  ICOV_ASSERT_MSG(lx == io_bsp.x_binary_length(),
+  ICOV_ASSERT_MSG(lx == io_bsp.bitplane_count(),
                   "Bitplanes count does not match");
 
   size_t n = get_n();
@@ -244,12 +244,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
     syndromes.resize(si.size(), SyndromesVec());
   }
 
-  typedef struct {
-    int zmin, zmax, l;
-    float q;
-  } pz;
-
-  std::vector<pz> sipz(si.size());
+  std::vector<BitSymbolProvider::PzParams> sipz(si.size());
 
   // symboles to bitplanes
 
@@ -258,14 +253,14 @@ void InteractiveCoder<Matrix>::encode_symboles(
     ICOV_INFO << "SI=" << i + 1 << "/" << si.size();
     BitSymbolProvider bsp(src);
     bsp.set_si(si[i], p);
-    sipz[i] = {bsp.z_min(), bsp.z_max(), bsp.x_binary_length(), bsp.q0()};
+    sipz[i] = bsp.pz_params();
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }
 
   // TEST DECODE WITH WORST SI for EACH BITPLANE
   BitSymbolProvider bsp(src);
-  std::vector<Syndrome> worst_syndromes(bsp.x_binary_length());
-  for (int i = 0; i < bsp.x_binary_length(); ++i) {
+  std::vector<Syndrome> worst_syndromes(bsp.bitplane_count());
+  for (int i = 0; i < bsp.bitplane_count(); ++i) {
     ICOV_INFO << "TEST DECODING BITPLANE " << i;
     NumcodeIdx worst_rate = 0;
     worst_syndromes[i] = syndromes[0][i];
@@ -285,7 +280,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
   // Now decode EACH SI with ITS RATE and THE WORST SYNDROME
   for (int k = 0; k < (int)numcodesIdx.size(); ++k) {
     BitSymbolProvider bsp_dec(get_n());
-    bsp_dec.set_si(si[k], sipz[k].zmin, sipz[k].zmax, sipz[k].q, sipz[k].l);
+    bsp_dec.set_si(si[k], sipz[k]);
     // NumcodeIdx rate_k = numcodesIdx[k][i];
     //    ICOV_INFO << "SI has rate " << rate_k;
     //    ICOV_DEBUG << "Resize syndrome " << get_m(rate_k);
@@ -299,7 +294,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
     //      ICOV_ERROR << "ERROR";
 
     this->decode_symboles(bsp_dec, numcodesIdx[k], worst_syndromes);
-    for (int i = 0; i < bsp.x_binary_length(); ++i) {
+    for (int i = 0; i < bsp.bitplane_count(); ++i) {
       ICOV_INFO << "CHECK BITPLANE " << i << " at rate "
                 << get_r(numcodesIdx[k][i]) << " using syndrome from rate "
                 << get_r(worst_syndromes[i].size(), get_n());
@@ -317,7 +312,7 @@ void InteractiveCoder<Matrix>::encode_bitplanes(const BitSymbolProvider &bsp,
 
   auto syndromeMgr = this->syndromeMgr();
   int n = syndromeMgr->get_n();
-  size_t lx = bsp.x_binary_length();
+  size_t lx = bsp.bitplane_count();
 
   numcodeIdx = NumcodeIdxVec(lx, 0);
 
@@ -350,7 +345,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   const auto &sign_bits = src_bits[0];
 
   int n = syndromeMgr->get_n();
-  int lx = bsp.x_binary_length();
+  int lx = bsp.bitplane_count();
   int bitplane = (lx - bitplane_idx - 1);
 
   //    syndrome accumulation

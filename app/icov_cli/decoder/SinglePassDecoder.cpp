@@ -4,6 +4,7 @@
 #include "extractor/BlockExtractor.h"
 #include "helpers.h"
 #include "omnidirectional_layer/factory.h"
+#include "omnidirectional_layer/geometry.h"
 #include "video_layer/extracted_stream.h"
 #include <algorithm>
 #include <iterator>
@@ -39,23 +40,30 @@ void decoder::SinglePassDecoder::initialize(
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
 
-  m_navigation.init({
+  const point2d resolution(cps.viewport_width, cps.viewport_height);
+  const angle_radian fov(cps.viewport_fov_x, cps.viewport_fov_y);
 
-      .VisualizationParams =
-          {
+  viewport_geometry vpg = factory::default_geometry(fov, resolution);
 
-              .Width = icovFile().contentParameterSet().content_width,
+  m_navigation.init(
+      {
 
-              .Height = icovFile().contentParameterSet().content_height,
+          .VisualizationParams =
+              {
 
-              .ViewportPadding =
-                  icovFile().contentParameterSet().viewport_padding
+                  .Width = icovFile().contentParameterSet().content_width,
 
-          },
+                  .Height = icovFile().contentParameterSet().content_height,
 
-      .IcuSize = icovFile().contentParameterSet().block_fixed_size
+                  .ViewportPadding =
+                      icovFile().contentParameterSet().viewport_padding
 
-  });
+              },
+
+          .IcuSize = icovFile().contentParameterSet().block_fixed_size
+
+      },
+      vpg);
 
   int block_count = 2;
   //  block_count = icovNavigation().Visualization->Picture->blockCount();

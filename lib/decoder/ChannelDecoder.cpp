@@ -121,7 +121,7 @@ void ChannelDecoder::set_si_dir_mode(int dir_mode) {
 }
 
 void ChannelDecoder::set_access_block_params(int lx) {
-  m_bsp.set_si(m_blockSI, 0, 0, 0, lx);
+  // m_bsp.set_si(m_blockSI, 0, 0, 0, lx);
 }
 
 void ChannelDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
@@ -139,7 +139,7 @@ void ChannelDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
   } else {
     m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
-    m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
+    // m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
   }
 }
 
@@ -157,14 +157,14 @@ void ChannelDecoder::read_syndrome(int syndrome_size) {
 void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                                      const Syndrome &synd) {
   if (m_block_prediction == BlockPrediction::predType::NONE) {
-    ICOV_ASSERT_MSG(numcode == 1,
+    ICOV_ASSERT_MSG(numcode == bitstream::enum_t::SyndromeType::SOURCE,
                     "Numcode value must be set to 1 for access block");
   }
   m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
 
   auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
 
-  if ((bp + 1) == m_bsp.x_binary_length()) {
+  if ((bp + 1) == m_bsp.bitplane_count()) {
     icov::video::TransformUnit &dec_tu = mp_icu_enc.sourceX_TU(0);
     std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);

@@ -45,18 +45,66 @@
  *****************************************************************************/
 #pragma once
 
-#include "omnidirectional_layer/Block.h"
+#include "helpers.h"
 #include "video_layer/extracted_stream.h"
+#include <boost/serialization/singleton.hpp>
 #include <map>
 #include <vector>
 namespace icov {
 namespace bitstream {
 
-typedef std::map<BlockPrediction::predType, SIStream>
-    ChannelBlockStreamDebugger;
-typedef std::vector<ChannelBlockStreamDebugger> MultiChannelBlockStreamDebugger;
-typedef std::vector<MultiChannelBlockStreamDebugger> FrameStreamDebugger;
-typedef std::vector<FrameStreamDebugger> VideoStreamDebugger;
+class VideoEncodingStreamCache
+    : public boost::serialization::singleton<VideoEncodingStreamCache> {
+  friend class boost::serialization::singleton<VideoEncodingStreamCache>;
 
+public:
+  typedef std::map<BlockPrediction::predType, SIStream>
+      ChannelBlockStreamDebugger;
+  typedef std::vector<ChannelBlockStreamDebugger>
+      MultiChannelBlockStreamDebugger;
+  typedef std::vector<MultiChannelBlockStreamDebugger> FrameStreamDebugger;
+  typedef std::vector<FrameStreamDebugger> MultiFrameStreamDebugger;
+
+  VideoEncodingStreamCache() = default;
+  ~VideoEncodingStreamCache() = default;
+  void setFrameCount(int count) { m_framesDbg.resize(count); }
+  int getFrameCount() const { return m_framesDbg.size(); }
+  const FrameStreamDebugger &getFrame(int i) const { return m_framesDbg[i]; }
+  FrameStreamDebugger &getFrame(int i) { return m_framesDbg[i]; }
+
+private:
+  MultiFrameStreamDebugger m_framesDbg;
+};
+
+class VideoStreamDebbuger
+    : public boost::serialization::singleton<VideoStreamDebbuger> {
+  friend class boost::serialization::singleton<VideoStreamDebbuger>;
+
+public:
+  int DebuggingFrame;
+  int DebuggingBlock;
+  int DebuggingChannel;
+  BlockPrediction::predType DebuggingPrediction;
+
+  bool frameAvailable() const {
+    return DebuggingFrame <
+           VideoEncodingStreamCache::get_const_instance().getFrameCount();
+  }
+
+  //  const VideoEncodingStreamCache::FrameStreamDebugger &
+  //  getDebuggingFrame() const {
+  //    icov::helpers::assert::check(frameAvailable(), "No more frame to
+  //    debug"); return VideoEncodingStreamCache::get_const_instance().getFrame(
+  //        DebuggingFrame);
+  //  }
+  const SIStream &getDebuggingSI() const {
+    icov::helpers::assert::check(frameAvailable(), "No more frame to debug");
+    return VideoEncodingStreamCache::get_const_instance()
+        .getFrame(DebuggingFrame)
+        .at(DebuggingBlock)
+        .at(DebuggingChannel)
+        .at(DebuggingPrediction);
+  }
+};
 } // namespace bitstream
 } // namespace icov

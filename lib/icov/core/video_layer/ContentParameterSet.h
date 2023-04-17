@@ -62,9 +62,11 @@ struct ContentParameterSet {
   std::string icov_version;
 
   byte content_type;
-
   uint16_t content_width;
   uint16_t content_height;
+
+  uint16_t viewport_width, viewport_height;
+  float viewport_fov_x, viewport_fov_y;
 
   uint16_t qp;
 
@@ -96,5 +98,29 @@ struct ContentParameterSet {
         is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
         has_metadata(false) {}
 };
+
+inline bool operator==(const ContentParameterSet &a,
+                       const ContentParameterSet &b) {
+  return a.icov_version == b.icov_version && a.content_type == b.content_type &&
+         a.content_width == b.content_width &&
+         a.content_height == b.content_height &&
+         a.viewport_width == b.viewport_width &&
+         a.viewport_height == b.viewport_height &&
+         a.viewport_fov_x == b.viewport_fov_x &&
+         a.viewport_fov_y == b.viewport_fov_y && a.qp == b.qp &&
+         a.content_chroma_format == b.content_chroma_format &&
+         a.content_framecount == b.content_framecount &&
+         a.content_framerate == b.content_framerate &&
+         a.content_duration == b.content_duration &&
+         a.viewport_padding == b.viewport_padding &&
+         a.is_sov_fixed_size == b.is_sov_fixed_size &&
+         a.sov_fixed_size == b.sov_fixed_size &&
+         a.is_block_fixed_size == b.is_block_fixed_size &&
+         a.block_fixed_size == b.block_fixed_size &&
+         a.is_tu_count_fixed == b.is_tu_count_fixed &&
+         a.fixed_tu_count == b.fixed_tu_count &&
+         a.numcode_byte_count == b.numcode_byte_count &&
+         a.has_metadata == b.has_metadata;
+}
 } // namespace bitstream
 } // namespace icov

@@ -1,6 +1,7 @@
 #include "OrderingDemoMode.h"
 #include "encoder/FakeEncoder.h"
 #include "encoder/InputMedia.h"
+#include "helpers.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/geometry.h"
@@ -10,7 +11,6 @@
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv_interactive_viewport/single360degreecamerahandler.h"
-#include "tools/DebugTools.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/filesystem.hpp>
@@ -101,6 +101,8 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
     case BlockPrediction::BOTTOM_LEFT:
       si_offset += 7;
       break;
+    default:
+      ICOV_THROW_LOGICAL_EXCEPTION("Undefined");
     }
 
     m_encoded_image.seekg(sizeof(header) +
@@ -163,6 +165,8 @@ void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
       m_double_si_count++;
       line_color = cv::Scalar(150, 0, 0);
     } break;
+    default:
+      ICOV_THROW_LOGICAL_EXCEPTION("Undefined");
     }
 
     // LEFT
@@ -346,35 +350,6 @@ void OrderingDemoMode::run() {
     cv::imshow("requested blocks", blockRequested);
     cv::imshow("viewport", blocksOverlay);
     //    cv::imshow("mask", maskRequested);
-
-    // viewport mesh method
-
-    //        point3d pt_viewport(1, -0.5*viewport_size.x(),
-    //        -0.5*viewport_size.y());
-
-    //        bg::model::d3::point_xyz<coord_precision,
-    //        bg::cs::spherical<bg::radian> > angle;
-
-    //        point2d delta(viewport_size.x()/100, viewport_size.y()/100);
-
-    //        while (pt_viewport.z() < viewport_size.y()/2)
-    //        {
-    //            pt_viewport.y( -0.5*viewport_size.x());
-    //            while (pt_viewport.y() < viewport_size.x()/2)
-    //            {
-    //                bg::transform(rotate_YPR(pt_viewport, vpg.pov.x(),
-    //                vpg.pov.y(), 0), angle);
-
-    //                int jj = (int)(p.u(angle.x()) * p.width());
-    //                int ii = (int)(p.v(angle.y()) * p.height());
-
-    //                cv::circle(blockRequested, cv::Point(jj, ii), 4,
-    //                cv::Scalar(255,255,0), 6);
-
-    //                pt_viewport.y(pt_viewport.y() + delta.x());
-    //            }
-    //            pt_viewport.z(pt_viewport.z() + delta.y());
-    //        }
 
     key = cv::waitKey(0);
 

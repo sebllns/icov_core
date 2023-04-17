@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common_types.h"
+#include <sys/types.h>
 
 #define Z_STEP 16
 #define Z_LIMIT 1024
@@ -13,18 +14,31 @@ public:
     std::vector<float> q_values;
   };
 
-  struct Pz {
-    int zmin, zmax, z0;
-    int q_idx, lx;
-    float q0, q1;
+  struct PzParams {
 
-    Pz() = default;
+  public:
+    PzParams() = default;
+    PzParams(int p_bp_count, int pzmin, int pzmax, int pq_quant, float pq)
+        : zmin(pzmin), zmax(pzmax), q0_quantized(pq_quant),
+          bp_count(p_bp_count), q0(pq) {}
 
-    Pz(int pzmin, int pzmax, int pq_idx, float pq)
-        : zmin(pzmin), zmax(pzmax), q_idx(pq_idx), lx(0), q0(pq) {
-      q1 = (zmin == zmax) ? 0.0 : ((1 - q0) / (zmax - zmin));
-      z0 = (zmin > 0) ? zmin : (zmax < 0 ? zmax : 0);
-    }
+    int getZmin() const;
+    int getZmax() const;
+    int getZ0() const;
+    float getQ0() const;
+    int getQ0Quantized() const;
+
+    int getZAmplitude() const;
+    float getQ1() const;
+
+    void setBpCount(ushort newBp_count);
+
+    ushort getBitplaneCount() const;
+
+  private:
+    ushort zmin, zmax, z0;
+    ushort q0_quantized, bp_count;
+    float q0;
   };
 
   /**
@@ -43,6 +57,13 @@ public:
    */
   static SymboleVec compute_symboles(const Bitplanes &input);
 
+  ///
+  /// \brief set_si for encode mode: set SI and update Pz distribution
+  /// parameters \param si \param enable_z_quantization \param q_values
+  ///
+  static PzParams get_pz(const SymboleVec &src_symboles, int bitplane_count,
+                         const SIVec &si, const params &p);
+
   void inject_bitplane(SymboleVec &output, const BitVec &input, int bp_shift);
 
   ///
@@ -57,14 +78,7 @@ public:
   ///
   BitSymbolProvider(const SymboleVec &src_symbols);
 
-  ///
-  /// \brief set_si for encode mode: set SI and update Pz distribution
-  /// parameters \param si \param enable_z_quantization \param q_values
-  ///
-  bool set_si(const SIVec &si, bool enable_z_quantization,
-              const std::vector<float> &q_values = std::vector<float>());
-
-  bool set_si(const SIVec &si, const params &p);
+  void set_si(const SIVec &si, const params &p);
 
   ///
   /// \brief set_si for decoding
@@ -73,24 +87,24 @@ public:
   /// \param z_max
   /// \param q
   ///
-  void set_si(const SIVec &si, int z_min, int z_max, float q, int l);
+  void set_si(const SIVec &si, const PzParams &pz);
 
-  int z_min() const;
-  int z_max() const;
+  //  int z_min() const;
+  //  int z_max() const;
 
-  float y_min() const;
-  float y_max() const;
+  //  float y_min() const;
+  //  float y_max() const;
 
-  int q_idx() const;
+  //  int q_idx() const;
 
-  // q
-  float q0() const;
+  //  // q
+  //  float q0() const;
 
-  // q'
-  float q1() const;
+  //  // q'
+  //  float q1() const;
 
-  // z associated with q0 = min(|zk|)
-  int z0() const;
+  //  // z associated with q0 = min(|zk|)
+  //  int z0() const;
 
   //..0..0 [q'..q' q q'..q'] 0..0..
   float pz(int z) const;
@@ -98,7 +112,8 @@ public:
   float pz(int zmin, int zmax) const;
 
   // L
-  int x_binary_length() const;
+  int bitplane_count() const;
+  int code_length() const;
 
   bool pqkb(bool negative, int abs_predec, int l, int b, int yk, float &p0,
             float &p1, float &p) const;
@@ -111,13 +126,10 @@ public:
 
   void injectBitplane(uint i, BitVec x);
 
-  const Pz getPz() const;
+  const PzParams pz_params() const;
 
 private:
-  Pz m_pz_params;
-
-  int m_l;
-
+  PzParams m_pz_params;
   SymboleVec m_src_symboles;
   SIVec m_si_symboles;
   Bitplanes m_src_bits;

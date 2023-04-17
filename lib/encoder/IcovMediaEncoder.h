@@ -73,7 +73,7 @@ public:
   IcovMediaEncoder(const params &p, const LdpcCoderParameters &LDPC_params);
   ~IcovMediaEncoder();
 
-  void defaultEncode(float viewportPadding);
+  void defaultEncode(float viewportPadding, const viewport_geometry &vpg);
 
   const params &parameters() const;
   const LdpcCoderParameters &ldpc_parameters() const;

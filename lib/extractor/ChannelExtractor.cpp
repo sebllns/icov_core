@@ -4,6 +4,7 @@
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPrediction.h"
 #include "typedef.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
@@ -19,13 +20,12 @@ using SI_SIDE = BlockPrediction::predType;
 
 bitstream::byte ChannelExtractor::SyndromePadding = 0;
 
-ChannelExtractor::ChannelExtractor(/*const params &p,*/
-                                   std::shared_ptr<InputIcov> &icovFile,
-                                   const bitstream::sp_IcovExtractedBitstream
-                                       &bitstream,
-                                   const LdpcCoderParameters &LDPC_params)
-    : /*m_params(p),*/ m_ldpc_coder(
-          icov::LdpcCoderFactory::create_coder(LDPC_params)),
+ChannelExtractor::ChannelExtractor(
+    const params &p, std::shared_ptr<InputIcov> &icovFile,
+    const bitstream::sp_IcovExtractedBitstream &bitstream,
+    const LdpcCoderParameters &LDPC_params)
+    : m_params(p),
+      m_ldpc_coder(icov::LdpcCoderFactory::create_coder(LDPC_params)),
       m_icovFile(icovFile), m_bitstream(bitstream),
       m_maxSyndromeBufferLength(
           bitstream::bitToByteCount(m_ldpc_coder->get_m_max()))
@@ -40,6 +40,14 @@ ChannelExtractor::~ChannelExtractor() {}
 
 void ChannelExtractor::extract_block(
     const Block &b, BlockPrediction::predType block_prediction) {
+
+  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingBlock =
+      b.getIdSelf() - 1;
+  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingChannel =
+      m_params.CompID;
+  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingPrediction =
+      block_prediction;
+
   ICOV_ASSERT_MSG(block_prediction != BlockPrediction::predType::UNKNOWN,
                   "Prediction unknown");
 
@@ -63,6 +71,9 @@ void ChannelExtractor::extract_block(
   } else if (is_intra_prediction) {
     bitstream::byte dirmode = 0;
     m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
+    //    std::cout << dirmode << " == "
+    //              << bitstream::VideoStreamDebbuger::get_const_instance()
+    //                     .getDebuggingFrame()
     ICOV_ASSERT_MSG(dirmode > 0, "No direction mode for the prediction");
     m_bitstream->push(dirmode);
     bitstream::byte pred_hdr = 0;
@@ -74,6 +85,8 @@ void ChannelExtractor::extract_block(
       m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
       m_bitstream->push(zmax);
     }
+
+    int bp_i = 0;
     for (auto &bp : m_bitplanes) {
       m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
                        bp.ReadSyndromeQuantizedSize);
@@ -84,6 +97,17 @@ void ChannelExtractor::extract_block(
       bitstream::getByteCount(bp.StoredSyndromeBitSize,
                               bp.StoredSyndromeByteSize,
                               bp.ReadSyndromePadding);
+
+      // CHECK BITPLANE
+
+      std::cout << "EXTRACT BITPLANE " << bp.ReadSyndromeBitSize << " "
+                << bitstream::VideoStreamDebbuger::get_const_instance()
+                       .getDebuggingSI()
+                       .bitplanes[bp_i]
+                       .numcode
+                << std::endl;
+
+      bp_i++;
     }
   } else if (is_inter_prediction) {
     // TODO IMPLEMENT

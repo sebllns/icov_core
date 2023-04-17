@@ -33,8 +33,8 @@ void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
                                   const std::vector<int> &sign,
                                   const std::vector<int> &abs_predec) {
   reset();
-
-  int l = bsp.x_binary_length() - 1;
+  
+  int l = bsp.bitplane_count() - 1;
   LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
   for (size_t i = 0; i < side_info.size(); i++) {
     bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);

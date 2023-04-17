@@ -15,15 +15,15 @@ namespace encoder {
 TextOutputIcov::TextOutputIcov(const boost::filesystem::path &path)
     : OutputIcovBase(path, 0) {}
 
-void TextOutputIcov::writeQaryParams(const BitSymbolProvider::Pz &bsp) {
-  if (bsp.lx == 0) {
+void TextOutputIcov::writeQaryParams(const BitSymbolProvider::PzParams &bsp) {
+  if (bsp.getZAmplitude() == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "Q 0 ";
     m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
   } else {
     getStream(bitstream::eIcovStream::ENCODE_PARAMS)
-        << "Q " << bsp.q_idx << " Zmin " << bsp.zmin << " Zmax " << bsp.zmax
-        << " ";
+        << "Q " << bsp.getQ0() << " Zmin " << bsp.getZmin() << " Zmax "
+        << bsp.getZmax() << " ";
 
     m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
         QARY_PARAMS_SIZE * sizeof(bitstream::byte);
