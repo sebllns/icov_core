@@ -9,8 +9,7 @@
 
 BOOST_AUTO_TEST_SUITE(binary_tests)
 
-BOOST_AUTO_TEST_CASE(bit_operations)
-{
+BOOST_AUTO_TEST_CASE(bit_operations) {
 
   for (int i = 0; i < 16; i++) {
     int val = icov::helpers::maths::pow2(i);
@@ -22,7 +21,7 @@ BOOST_AUTO_TEST_CASE(bit_operations)
     int expected_length = i + 1;
     BOOST_REQUIRE_MESSAGE(length == expected_length,
                           std::to_string(length) +
-                            " == " + std::to_string(expected_length));
+                              " == " + std::to_string(expected_length));
   }
 
   /*    // seven ways to detect and report the same error:
@@ -44,20 +43,20 @@ BOOST_AUTO_TEST_CASE(bit_operations)
       BOOST_CHECK_EQUAL( add( 2,2 ), 4 );	*/  // #7 continues on error
 }
 
-BOOST_AUTO_TEST_CASE(bit_symboles)
-{
+BOOST_AUTO_TEST_CASE(bit_symboles) {
   std::vector<icov::SymboleVal> symboles(8192);
   std::iota(symboles.begin(), symboles.end(), 0);
 
-  BOOST_REQUIRE(symboles == icov::BitSymbolProvider::compute_symboles(
-                              icov::BitSymbolProvider::compute_bits(symboles)));
+  BOOST_REQUIRE(
+      symboles ==
+      icov::ldpc_codec_layer::BitSymbolProvider::compute_symboles(
+          icov::ldpc_codec_layer::BitSymbolProvider::compute_bits(symboles)));
 }
 BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE(args_tests)
 
-BOOST_AUTO_TEST_CASE(no_arg)
-{
+BOOST_AUTO_TEST_CASE(no_arg) {
   // DOES NOT WORK on WINDOWS
   // BOOST_CHECK_NE(WEXITSTATUS(std::system("./icov_cmd")), 0);
   // BOOST_CHECK_EQUAL(WEXITSTATUS(std::system("./icov_cmd -h")), 0);
@@ -72,8 +71,7 @@ BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE(io)
 
-BOOST_AUTO_TEST_CASE(vector)
-{
+BOOST_AUTO_TEST_CASE(vector) {
   std::vector<icov::SymboleVal> values(8192);
   std::iota(values.begin(), values.end(), 0);
 

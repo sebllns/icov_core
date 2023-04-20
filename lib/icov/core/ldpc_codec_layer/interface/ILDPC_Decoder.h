@@ -1,9 +1,9 @@
-#ifndef IDECODER_H
-#define IDECODER_H
+#pragma once
 
-#include "common.h"
+#include "common_types.h"
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 template <class M> class ILDPC_Decoder {
 public:
@@ -17,5 +17,5 @@ public:
   virtual void get_llr_order(int i_numcode,
                              std::vector<size_t> &o_idx) const = 0;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
-#endif // IDECODER_H

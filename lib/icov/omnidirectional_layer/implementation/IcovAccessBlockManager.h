@@ -48,6 +48,9 @@
 #include "common.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 /** @class IcovAccessBlockManager
  *  @brief IcovAccessBlockManager
  *
@@ -70,3 +73,5 @@ public:
 
   const std::string getID() override;
 };
+} // namespace omnidirectional_layer
+} // namespace icov

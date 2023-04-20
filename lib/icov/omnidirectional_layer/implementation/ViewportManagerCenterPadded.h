@@ -45,10 +45,11 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common.h"
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
+
+namespace icov {
+namespace omnidirectional_layer {
 
 /** @class ViewportManagerCenterPadded
  *  @brief ViewportManagerCenterPadded
@@ -68,3 +69,6 @@ public:
   // IViewportManager interface
   virtual bool isBlockVisible(const Block &b) const override;
 };
+
+} // namespace omnidirectional_layer
+} // namespace icov

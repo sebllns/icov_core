@@ -49,10 +49,9 @@
 #pragma once
 
 #include "BitSymbolProvider.h"
-#include "common.h"
 
 namespace icov {
-
+namespace ldpc_codec_layer {
 ///
 /// \brief The LLRProvider class computes LLR and manages Doping for LDPC rate
 /// adaptive coder
@@ -109,4 +108,5 @@ protected:
 
   bool m_floor_type;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov

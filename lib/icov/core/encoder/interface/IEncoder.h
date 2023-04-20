@@ -50,9 +50,11 @@
 #pragma once
 
 #include "Media.h"
-#include "omnidirectional_layer/BlockPrediction.h"
-#include "omnidirectional_layer/interface/IAccessBlockManager.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 
 namespace icov {
 namespace encoder {
@@ -66,8 +68,10 @@ namespace encoder {
 template <typename T> class IEncoder {
 public:
   virtual ~IEncoder() = default;
-  virtual void encode(IInputMedia<T> &input, const IPicture &picture,
-                      const IBlockPrediction &block_prediction) = 0;
+  virtual void encode(IInputMedia<T> &input,
+                      const omnidirectional_layer::IPicture &picture,
+                      const omnidirectional_layer::IBlockPredictionManager
+                          &block_prediction) = 0;
 
 protected:
   virtual void processInput(const IInputMedia<T> &input) = 0;
@@ -85,20 +89,26 @@ protected:
 
 public:
   IFrameEncoder() = default;
-  virtual void encode(IInputMedia<T> &input, const IPicture &picture,
-                      const IBlockPrediction &block_prediction);
+  virtual void encode(
+      IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+      const omnidirectional_layer::IBlockPredictionManager &block_prediction);
 
   int frame() const { return m_frame; }
   void setFrame(int newFrame) { m_frame = newFrame; }
 
 protected:
-  virtual void encodeBlock(const Block &b, bool access_block,
-                           const IBlockPrediction &block_prediction);
-  virtual void encodeBlockWithPrediction(const Block &b,
-                                         uint16_t prediction) = 0;
-  virtual std::vector<uint16_t>
-  getAvailablePredictions(const Block &b, bool access_block,
-                          const IBlockPrediction &block_prediction) {
+  virtual void encodeBlock(
+      const omnidirectional_layer::Block &b, bool access_block,
+      const omnidirectional_layer::IBlockPredictionManager &block_prediction);
+  virtual void encodeBlockWithPrediction(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t
+          prediction) = 0;
+  virtual std::vector<
+      omnidirectional_layer::IBlockPredictionManager::prediction_t>
+  getAvailablePredictions(
+      const omnidirectional_layer::Block &b, bool access_block,
+      const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
     return block_prediction.getAvailablePredictions(b, access_block);
   }
 
@@ -107,8 +117,9 @@ private:
 };
 
 template <typename T>
-void IFrameEncoder<T>::encode(IInputMedia<T> &input, const IPicture &picture,
-                              const IBlockPrediction &block_prediction) {
+void IFrameEncoder<T>::encode(
+    IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+    const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
 
 #ifdef ICOV_ASSERTION_ENABLED
   ICOV_ASSERT_MSG(input.getPixelCount() > 0, "Cannot encode empty frame");
@@ -119,15 +130,23 @@ void IFrameEncoder<T>::encode(IInputMedia<T> &input, const IPicture &picture,
 
   this->processInput(input);
   for (const auto &b : picture.icus()) {
+    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlock(
+        b.getIdSelf() - 1);
     encodeBlock(b, b.isAccessBlock(), block_prediction);
   }
 }
 
 template <typename T>
-void IFrameEncoder<T>::encodeBlock(const Block &b, bool access_block,
-                                   const IBlockPrediction &block_prediction) {
-  for (uint16_t p : getAvailablePredictions(b, access_block, block_prediction))
+void IFrameEncoder<T>::encodeBlock(
+    const omnidirectional_layer::Block &b, bool access_block,
+    const omnidirectional_layer::IBlockPredictionManager
+        &block_prediction_mgr) {
+  for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
+       getAvailablePredictions(b, access_block, block_prediction_mgr)) {
+    // bitstream::VideoStreamDebugger::get_mutable_instance()
+    //   .DebuggingPrediction.
     encodeBlockWithPrediction(b, p);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,22 +158,25 @@ void IFrameEncoder<T>::encodeBlock(const Block &b, bool access_block,
 template <typename T> class IMediaEncoder : public IEncoder<T> {
 
 public:
-  virtual void encode(IInputMedia<T> &input, const IPicture &picture,
-                      const IBlockPrediction &block_prediction);
+  virtual void encode(
+      IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+      const omnidirectional_layer::IBlockPredictionManager &block_prediction);
 
 protected:
   virtual std::unique_ptr<IFrameEncoder<T>> createFrameEncoder() const = 0;
 };
 
 template <typename T>
-void IMediaEncoder<T>::encode(IInputMedia<T> &input, const IPicture &picture,
-                              const IBlockPrediction &block_prediction) {
+void IMediaEncoder<T>::encode(
+    IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+    const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
   this->processInput(input);
   int frameCount = input.getFrameCount();
   auto pFrameEnc = createFrameEncoder();
 
   for (int i = 0; i < frameCount; i++) {
     ICOV_TRACE << "Encode frame " << i;
+    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrame(i);
     input.setFrame(i);
     pFrameEnc->setFrame(i);
     pFrameEnc->encode(input, picture, block_prediction);

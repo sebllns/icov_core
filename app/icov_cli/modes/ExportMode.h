@@ -49,6 +49,9 @@
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
+
+using namespace icov;
+using namespace icov::ldpc_codec_layer;
 namespace po = boost::program_options;
 
 class ExportMode {

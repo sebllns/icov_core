@@ -51,7 +51,7 @@
 
 #include "Media.h"
 #include "common.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 
@@ -73,7 +73,7 @@ public:
   virtual void decode(std::istream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
-                      const IBlockPrediction &block_prediction) = 0;
+                      const IBlockPredictionManager &block_prediction) = 0;
 
   virtual const IInputMedia<T> *media() const { return m_pMedia.get(); }
 
@@ -97,17 +97,17 @@ public:
   virtual void encode(std::ostream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
-                      const IBlockPrediction &block_prediction);
+                      const IBlockPredictionManager &block_prediction);
 
 protected:
   virtual void encodeBlock(std::ostream &output, const Block &b,
                            bool access_block,
-                           const IBlockPrediction &block_prediction);
+                             const IBlockPredictionManager &block_prediction);
   virtual void encodeBlockWithPrediction(std::ostream &output, const Block &b,
-                                         uint16_t prediction) = 0;
-  virtual std::vector<uint16_t>
+                                         IBlockPredictionManager::prediction_t prediction) = 0;
+  virtual std::vector<IBlockPredictionManager::prediction_t>
   getAvailablePredictions(const Block &b, bool access_block,
-                          const IBlockPrediction &block_prediction) {
+                          const IBlockPredictionManager &block_prediction) {
     return block_prediction.getAvailablePredictions(b, access_block);
   }
 
@@ -120,7 +120,7 @@ template <typename T>
 void IFrameDecoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
                               const IPicture &picture,
                               const IAccessBlockManager &access_blocks,
-                              const IBlockPrediction &block_prediction) {
+                              const IBlockPredictionManager &block_prediction) {
 
   input.setFrame(m_frame);
 
@@ -139,8 +139,8 @@ void IFrameDecoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
 template <typename T>
 void IFrameDecoder<T>::encodeBlock(std::ostream &output, const Block &b,
                                    bool access_block,
-                                   const IBlockPrediction &block_prediction) {
-  for (uint16_t p : getAvailablePredictions(b, access_block, block_prediction))
+                                   const IBlockPredictionManager &block_prediction) {
+  for (IBlockPredictionManager::prediction_t p : getAvailablePredictions(b, access_block, block_prediction))
     encodeBlockWithPrediction(output, b, p);
 }
 
@@ -156,7 +156,7 @@ public:
   virtual void encode(std::ostream &output, IInputMedia<T> &input,
                       const IPicture &picture,
                       const IAccessBlockManager &access_blocks,
-                      const IBlockPrediction &block_prediction);
+                        const IBlockPredictionManager &block_prediction);
 
 protected:
   virtual std::unique_ptr<IFrameDecoder<T>> createFrameDecoder(int frame) = 0;
@@ -166,7 +166,7 @@ template <typename T>
 void IMediaDecoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
                               const IPicture &picture,
                               const IAccessBlockManager &access_blocks,
-                              const IBlockPrediction &block_prediction) {
+                              const IBlockPredictionManager &block_prediction) {
   processInput(output, input);
   int frameCount = input.getFrameCount();
 

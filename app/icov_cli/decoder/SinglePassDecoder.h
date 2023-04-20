@@ -58,7 +58,11 @@
 #include <memory>
 #include <queue>
 
+using namespace icov;
 using namespace icov::extractor;
+using namespace icov::omnidirectional_layer;
+using namespace icov::ldpc_codec_layer;
+using namespace icov::bitstream;
 
 namespace icov {
 namespace decoder {
@@ -72,7 +76,7 @@ public:
   void initialize(const LdpcCoderParameters &coder_params);
 
   const InputIcov &icovFile() const;
-  const icov::factory::Navigation360 &icovNavigation() const;
+  const factory::Navigation360 &icovNavigation() const;
   IBlockProcessor &blockProcessor();
   const PelUnitBuf getOutputBuf() const;
   void decodeFullFrame();
@@ -83,7 +87,10 @@ protected:
     std::unique_ptr<BlockDecoder> Decoder;
     bitstream::sp_IcovExtractedBitstream ExtractionBitstream;
 
-    void processBlock(const Block &b, uint16_t prediction) override {
+    void
+    processBlock(const icov::omnidirectional_layer::Block &b,
+                 omnidirectional_layer::IBlockPredictionManager::prediction_t
+                     prediction) override {
       if (Extractor)
         Extractor->processBlock(b, prediction);
       if (Decoder)
@@ -109,7 +116,7 @@ protected:
   std::vector<float> m_q_values;
   std::shared_ptr<InputIcov> m_icovFile;
   bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
-  icov::factory::Navigation360 m_navigation;
+  factory::Navigation360 m_navigation;
   BlockProcessor m_blockProcessor;
 };
 } // namespace decoder

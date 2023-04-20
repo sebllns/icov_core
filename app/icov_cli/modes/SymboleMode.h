@@ -54,6 +54,9 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
+using namespace icov;
+using namespace icov::ldpc_codec_layer;
+
 ///
 /// \brief The SymboleMode class runs the tests sequences from a dataset of
 /// blocks and SI values

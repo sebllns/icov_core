@@ -2,7 +2,7 @@
 #include "encoder/FakeEncoder.h"
 #include "encoder/InputMedia.h"
 #include "helpers.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/implementation/BlockOrdering.h"
@@ -23,6 +23,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <time.h> /* time */
+
+using namespace icov::omnidirectional_layer;
 
 const char *OrderingDemoMode::params::inputFile_id = "ordering-demo-input-file";
 const char *OrderingDemoMode::params::icuSize_id = "ordering-demo-icu-size";
@@ -60,7 +62,8 @@ BlockProcessor::BlockProcessor(const std::string &encoded_image)
 BlockProcessor::~BlockProcessor() { m_csv_file.close(); }
 
 // draw the requested blocks
-void BlockProcessor::processBlock(const Block &b, uint16_t prediction) {
+void BlockProcessor::processBlock(
+    const Block &b, IBlockPredictionManager::prediction_t prediction) {
   const IPicture &p = *(b.parent());
   int bw = (int)(b.w() * p.width());
   int bh = (int)(b.h() * p.height());

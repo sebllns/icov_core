@@ -50,6 +50,8 @@
 #pragma once
 
 #include "encoder/interface/IEncoder.h"
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include <opencv2/opencv.hpp>
 
 namespace icov {
@@ -68,10 +70,15 @@ private:
   // IFrameEncoder interface
 protected:
   void processInput(const IInputMedia<cv::Mat> &input) override;
-  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
-  std::vector<uint16_t>
-  getAvailablePredictions(const Block &b, bool access_block,
-                          const IBlockPrediction &block_prediction) override;
+  void encodeBlockWithPrediction(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+      override;
+  std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
+  getAvailablePredictions(const omnidirectional_layer::Block &b,
+                          bool access_block,
+                          const omnidirectional_layer::IBlockPredictionManager
+                              &block_prediction) override;
 };
 } // namespace encoder
 } // namespace icov

@@ -1,6 +1,8 @@
 #include "EquiRectPicture.h"
 #include <cmath>
 
+namespace icov {
+namespace omnidirectional_layer {
 //*/phi = y
 // theta = x
 EquiRectPicture::EquiRectPicture(int pw, int ph)
@@ -63,3 +65,5 @@ float EquiRectPicture::angleX(float u) const {
 float EquiRectPicture::angleY(float v) const {
   return v * m_fov_y + minAngleY();
 }
+} // namespace omnidirectional_layer
+} // namespace icov

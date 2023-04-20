@@ -2,7 +2,6 @@
 
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "ldpc_codec_layer/factory/Coder_IMT18.h"
 #include "ldpc_codec_layer/factory/Coder_IMT64.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
@@ -69,12 +68,8 @@ parseLdpcParams(const boost::program_options::variables_map &args) {
   std::string coder_type = parseType(args);
   std::unique_ptr<LdpcCoderParameters> params;
 
-  if (coder_type == LdpcCoder_IMT18::id) {
-    params = std::make_unique<LdpcCoder_IMT18::parameters>();
-  } else if (coder_type == LdpcCoder_IMT64::id) {
-    params = std::make_unique<LdpcCoder_IMT64::parameters>();
-  } else if (coder_type == "varodayan") {
-    throw std::invalid_argument("Coder type not implemented: " + coder_type);
+  if (coder_type == ldpc_codec_layer::LdpcCoder_IMT64::id) {
+    params = std::make_unique<ldpc_codec_layer::LdpcCoder_IMT64::parameters>();
   } else {
     throw std::invalid_argument("Unknown coder type: " + coder_type);
   }
@@ -84,10 +79,10 @@ parseLdpcParams(const boost::program_options::variables_map &args) {
   return params;
 }
 
-inline p_InteractiveCoder
+inline ldpc_codec_layer::p_InteractiveCoder
 create_coder(const boost::program_options::variables_map &args) {
   auto params = parseLdpcParams(args);
-  return LdpcCoderFactory::create_coder(*params);
+  return ldpc_codec_layer::LdpcCoderFactory::create_coder(*params);
 }
 } // namespace options
 } // namespace icov

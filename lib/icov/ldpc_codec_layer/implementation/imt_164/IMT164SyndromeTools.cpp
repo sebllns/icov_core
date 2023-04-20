@@ -1,7 +1,7 @@
 #include "IMT164SyndromeTools.h"
 
-using namespace icov;
-
+namespace icov {
+namespace ldpc_codec_layer {
 IMT164SyndromeTools::IMT164SyndromeTools(int n, int min_m, int max_m)
     : m_n(n), m_min_m(min_m), m_max_m(max_m) {}
 
@@ -28,3 +28,5 @@ int IMT164SyndromeTools::get_m(int numcode) const {
   // m is given by the numcode with an offset of n/8 (minimum rate)
   return this->get_m_min() + numcode;
 }
+} // namespace ldpc_codec_layer
+} // namespace icov

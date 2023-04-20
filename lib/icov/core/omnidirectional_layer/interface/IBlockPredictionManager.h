@@ -7,16 +7,15 @@
  *  @ingroup ICOV
  */
 
-/** @file Coder_IMT18.hpp
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
- *  @ingroup ldpc_codec_layer
+/** @file BlockPrediction.h
+ *  @brief BlockPrediction conveying BlockPrediction Units (VPU) for VCL data
+ *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
  * The copyright in this software is being made available under
- * the terms of the GNU Affero Gener al Public License as published by
+ * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
@@ -48,41 +47,30 @@
  *****************************************************************************/
 #pragma once
 
-#include "LdpcCoderParameters.h"
-#include "ldpc_codec_layer/LLRProvider.h"
-#include "ldpc_codec_layer/interface/IDecoder.h"
-#include "ldpc_codec_layer/interface/IMatrixProvider.h"
-#include "ldpc_codec_layer/interface/ISyndrome.h"
-
-#include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
-#include <memory>
-
-using AffMatrix = aff3ct::tools::Sparse_matrix;
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockOrdering.h"
+#include <boost/algorithm/string/trim.hpp>
 
 namespace icov {
+namespace omnidirectional_layer {
 
-class LdpcCoder_IMT18 {
-  struct encode_parameters {
-    icov::index_t start_code;
-    icov::index_t stop_code;
-    icov::index_t step;
-  };
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IBlockPrediction
+/// @brief Interface to manage the predictions of block
+///
+///////////////////////////////////////////////////////////////////////////////
 
+class IBlockPredictionManager {
 public:
-  struct parameters : LdpcCoderParameters {
-    ~parameters() = default;
-    std::unique_ptr<LdpcCoderParameters> clone() const override {
-      return std::make_unique<parameters>(*this);
-    }
-  };
-
-  static const std::string id;
-
-  static void create(std::shared_ptr<LLRProvider> &llrProvider,
-                     std::shared_ptr<ILDPC_Decoder<AffMatrix>> &ldpca_dec,
-                     std::shared_ptr<ISyndromeManager> &syndromeMgr,
-                     std::shared_ptr<IMatrixProvider<AffMatrix>> &mb,
-                     const parameters &p);
+  typedef uint16_t prediction_t;
+  virtual ~IBlockPredictionManager() = default;
+  virtual IBlockPredictionManager::prediction_t
+  getPrediction(const Block &b, const IBlockOrdering &ordering) const = 0;
+  virtual std::vector<IBlockPredictionManager::prediction_t>
+  getAvailablePredictions(const Block &b,
+                          bool is_access_block = false) const = 0;
 };
 
+} // namespace omnidirectional_layer
 } // namespace icov

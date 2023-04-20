@@ -6,7 +6,9 @@
 #include "helpers.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "tools/DebugTools.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
@@ -23,25 +25,28 @@
 #include <opencv2/plot.hpp>
 #include <vector>
 
+namespace icov {
+namespace encoder {
 namespace fs = boost::filesystem;
-using namespace icov::encoder;
-using SI_SIDE = BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
 
 /*****************************************************************************/
 FrameEncoder::FrameEncoder(const params &p,
                            const LdpcCoderParameters &LDPC_Params)
     : m_params(p), m_numComp(getNumberValidComponents(p.ChFormat)),
-      m_pred_encoder(LDPC_Params,
-                     std::vector<uint16_t>{
-                         BlockPrediction::RIGHT,
-                         BlockPrediction::LEFT,
-                         BlockPrediction::TOP,
-                         BlockPrediction::BOTTOM,
-                         BlockPrediction::TOP_RIGHT,
-                         BlockPrediction::TOP_LEFT,
-                         BlockPrediction::BOTTOM_RIGHT,
-                         BlockPrediction::BOTTOM_LEFT,
-                     }),
+      m_pred_encoder(
+          LDPC_Params,
+          std::vector<
+              omnidirectional_layer::IBlockPredictionManager::prediction_t>{
+              omnidirectional_layer::BlockPrediction::RIGHT,
+              omnidirectional_layer::BlockPrediction::LEFT,
+              omnidirectional_layer::BlockPrediction::TOP,
+              omnidirectional_layer::BlockPrediction::BOTTOM,
+              omnidirectional_layer::BlockPrediction::TOP_RIGHT,
+              omnidirectional_layer::BlockPrediction::TOP_LEFT,
+              omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
+              omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
+          }),
       m_init(true), block_comp(0) {
 
   //  xData.create(1, 100, CV_64F); // 1 Row, 100 columns, Double
@@ -65,22 +70,25 @@ FrameEncoder::FrameEncoder(const params &p,
 FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 
 /*****************************************************************************/
-void FrameEncoder::encodeBlock(const Block &b, bool access_block,
-                               const IBlockPrediction &block_prediction) {
+void FrameEncoder::encodeBlock(
+    const omnidirectional_layer::Block &b, bool access_block,
+    const icov::omnidirectional_layer::IBlockPredictionManager
+        &block_prediction_mgr) {
 
-  if (b.getId(Block::SELF) > 2)
+  if (b.getId(omnidirectional_layer::Block::SELF) > 2)
     return;
 
-  ICOV_DEBUG << "start encode block " << b.getId(Block::SELF);
+  ICOV_DEBUG << "start encode block "
+             << b.getId(omnidirectional_layer::Block::SELF);
 
-  const auto v = getAvailablePredictions(b, access_block, block_prediction);
+  const auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
 
   m_channelCoder = std::vector<ChannelCoder>(m_numComp);
 
   for (int c = 0; c < (int)m_numComp; ++c) {
     block_comp = c;
 #pragma omp parallel for
-    for (uint16_t p : v)
+    for (omnidirectional_layer::IBlockPredictionManager::prediction_t p : v)
       encodeBlockWithPrediction(b, p);
   }
 
@@ -100,11 +108,13 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
   }
 
   // store bitplanes rates per SI and per channel
-  for (uint16_t p : bitstream::PredictionID) {
+  for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
+       bitstream::PredictionID) {
     m_icov_file->startWritePrediction(p);
     for (int c = 0; c < (int)m_numComp; ++c) {
       std::cout << "<SI "
-                << BlockPrediction::toString(BlockPrediction::toPredType(p))
+                << omnidirectional_layer::BlockPrediction::toString(
+                       omnidirectional_layer::BlockPrediction::toPredType(p))
                 << " COMP " << c << "> ";
       if (m_channelCoder[c].si.count(p)) {
         std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
@@ -122,7 +132,7 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
           }
           std::cout << std::endl;
         }
-      } else if (p != BlockPrediction::predType::NONE) {
+      } else if (p != omnidirectional_layer::BlockPrediction::predType::NONE) {
         m_icov_file->writeSIMode(0);
       }
     }
@@ -138,6 +148,9 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
       for (const auto &s : m_channelCoder[c].access_block) {
         access_block_syndrome.fillFrom(s);
         m_icov_file->writeSyndrome(access_block_syndrome);
+
+        if (debug_enabled()) {
+        }
       }
     }
   }
@@ -155,12 +168,12 @@ void FrameEncoder::encodeBlock(const Block &b, bool access_block,
 
   m_icov_file->writeBlockSize();
 
-  ICOV_DEBUG << "end encode block " << b.getId(Block::SELF);
+  ICOV_DEBUG << "end encode block "
+             << b.getId(omnidirectional_layer::Block::SELF);
 }
 
 /*****************************************************************************/
 void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
-
   cv::Mat img_src = input.getCurrentFrame();
 
   ICOV_ASSERT_MSG(img_src.total() > 0, "Cannot encode empty image");
@@ -206,13 +219,15 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
     m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
     m_vvc_bufs.create(PIC_PREDICTION, extendedFrameArea);
 
-    std::vector<BlockPrediction::predType> predVec = {
-        BlockPrediction::RIGHT,        BlockPrediction::LEFT,
-        BlockPrediction::TOP,          BlockPrediction::BOTTOM,
-        BlockPrediction::TOP_LEFT,     // 0b00101
-        BlockPrediction::BOTTOM_LEFT,  // 0b01001
-        BlockPrediction::BOTTOM_RIGHT, // 0b01010
-        BlockPrediction::TOP_RIGHT};
+    std::vector<omnidirectional_layer::BlockPrediction::predType> predVec = {
+        omnidirectional_layer::BlockPrediction::RIGHT,
+        omnidirectional_layer::BlockPrediction::LEFT,
+        omnidirectional_layer::BlockPrediction::TOP,
+        omnidirectional_layer::BlockPrediction::BOTTOM,
+        omnidirectional_layer::BlockPrediction::TOP_LEFT,     // 0b00101
+        omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,  // 0b01001
+        omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT, // 0b01010
+        omnidirectional_layer::BlockPrediction::TOP_RIGHT};
 
     for (auto pk : predVec) {
       m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
@@ -275,11 +290,15 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
 /*****************************************************************************/
 void icov::encoder::FrameEncoder::encode_tu(
-    const Block &b, const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
+    const icov::omnidirectional_layer::Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    const icov::video::SideInformationUnit &si,
+    icov::omnidirectional_layer::BlockPrediction::predType pred,
     ComponentID comp, int tu_index) {
 
-  const auto predID = static_cast<uint16_t>(pred);
+  const auto predID =
+      static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
+          pred);
 
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
   const auto &si_tu = si.TUs[tu_index];
@@ -293,7 +312,7 @@ void icov::encoder::FrameEncoder::encode_tu(
   icov::NumcodeIdxVec si_numcodes;
   icov::SyndromesVec si_synd;
 
-  BitSymbolProvider bsp =
+  ldpc_codec_layer::BitSymbolProvider bsp =
       x_tu.getBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
@@ -306,7 +325,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     // CHECK DECODING
     if (m_params.CheckDecoding) {
 
-      BitSymbolProvider bsp_dec(tu_size);
+      ldpc_codec_layer::BitSymbolProvider bsp_dec(tu_size);
 
       ICOV_TRACE << bsp.si_symboles().size();
       ICOV_TRACE << bsp.pz_params().getZmin();
@@ -391,8 +410,8 @@ void icov::encoder::FrameEncoder::encode_tu(
       for (int i = 0; i < bitplaneCount; ++i) {
 
         {
-          std::cout << BlockPrediction::toString(pred) << " COMP " << comp
-                    << " BP " << i << std::endl;
+          std::cout << omnidirectional_layer::BlockPrediction::toString(pred)
+                    << " COMP " << comp << " BP " << i << std::endl;
           // icov::helpers::io::write_vector(std::cout, si_synd, ' ');
           std::cout << si_synd[i].to_string(" ") << std::endl;
         }
@@ -428,57 +447,65 @@ void icov::encoder::FrameEncoder::encode_tu(
     }
 
     // HERE SAVE INFOS FOR DEBUG
-    if (frame() < bitstream::VideoEncodingStreamCache::get_const_instance()
-                      .getFrameCount()) {
-      auto &frameDbg =
-          bitstream::VideoEncodingStreamCache::get_mutable_instance().getFrame(
-              frame());
-      Block::id_t blockID = b.getIdSelf();
-      if (blockID > frameDbg.size()) {
-        frameDbg.resize((size_t)(blockID),
-                        bitstream::VideoEncodingStreamCache::
-                            MultiChannelBlockStreamDebugger(m_numComp));
-      }
-      auto &blockDbg = frameDbg[blockID - 1];
+    //    if (frame() <
+    //    bitstream::VideoEncodingStreamCache::get_const_instance()
+    //                      .getFrameCount()) {
+    //      auto &frameDbg =
+    //          bitstream::VideoEncodingStreamCache::get_mutable_instance().getFrame(
+    //              frame());
+    //      Block::id_t blockID = b.getIdSelf();
+    //      if (blockID > frameDbg.size()) {
+    //        frameDbg.resize((size_t)(blockID),
+    //                        bitstream::VideoEncodingStreamCache::
+    //                            MultiChannelBlockStreamDebugger(m_numComp));
+    //      }
+    //      auto &blockDbg = frameDbg[blockID - 1];
 
-      auto &chDbg = blockDbg[comp];
+    //      auto &chDbg = blockDbg[comp];
 
-      if (b.isAccessBlock() && !chDbg.count(BlockPrediction::predType::NONE)) {
-        chDbg.insert_or_assign(BlockPrediction::predType::NONE,
-                               bitstream::SIStream());
-        auto &predDbg = chDbg[pred];
-        predDbg.mode = 0;
-        predDbg.pz = BitSymbolProvider::PzParams();
+    //      if (b.isAccessBlock() &&
+    //      !chDbg.count(BlockPrediction::predType::NONE)) {
+    //        chDbg.insert_or_assign(BlockPrediction::predType::NONE,
+    //                               bitstream::SIStream());
+    //        auto &predDbg = chDbg[pred];
+    //        predDbg.mode = 0;
+    //        predDbg.pz = BitSymbolProvider::PzParams();
+    //        predDbg.bitplanes.resize(bitplaneCount);
 
-        predDbg.bitplanes.resize(bitplaneCount);
+    //        std::cout << "\n\n\n\nDBG >>>>>>>>> ACCESS BLOCK " << blockID << "
+    //        "
+    //                  << comp << " " << predDbg.bitplanes.size() << std::endl;
 
-        std::cout << "\n\n\n\nDBG >>>>>>>>> ACCESS BLOCK " << blockID << " "
-                  << comp << " " << predDbg.bitplanes.size() << std::endl;
+    //        for (int i = 0; i < bitplaneCount; ++i) {
+    //          // predDbg.bitplanes[i].syndrome =
+    //          m_channelCoder[comp].access_block[i];
+    //          predDbg.bitplanes[i].numcode =
+    //              bitstream::enum_t::SyndromeType::SOURCE;
+    //        }
+    //      }
 
-        //        for (int i = 0; i < bitplaneCount; ++i) {
-        //          predDbg.bitplanes[i].syndrome =
-        //              m_channelCoder[comp].bitplanes[i].accessBlock;
-        //          predDbg.bitplanes[i].numcode =
-        //              bitstream::enum_t::SyndromeType::SOURCE;
-        //        }
-      }
-
-      if (!chDbg.count(pred)) {
-        chDbg.insert_or_assign(pred, bitstream::SIStream());
-      }
-      auto &predDbg = chDbg[pred];
-      predDbg.mode = m_channelCoder[comp].si[predID].dirmode;
-      predDbg.pz = m_channelCoder[comp].si[predID].stored_pz;
-      icov::helpers::assert::equal(
-          si_synd.size(), si_numcodes.size(),
-          "Numcode vector and syndrome vector have same length");
-      predDbg.bitplanes.resize(bitplaneCount);
-      for (int i = 0; i < bitplaneCount; ++i) {
-        predDbg.bitplanes[i].syndrome = si_synd[i];
-        predDbg.bitplanes[i].numcode = si_numcodes[i];
-      }
-    }
+    //      if (!chDbg.count(pred)) {
+    //        chDbg.insert_or_assign(pred, bitstream::SIStream());
+    //      }
+    //      auto &predDbg = chDbg[pred];
+    //      predDbg.mode = m_channelCoder[comp].si[predID].dirmode;
+    //      predDbg.pz = m_channelCoder[comp].si[predID].stored_pz;
+    //      icov::helpers::assert::equal(
+    //          si_synd.size(), si_numcodes.size(),
+    //          "Numcode vector and syndrome vector have same length");
+    //      predDbg.bitplanes.resize(bitplaneCount);
+    //      for (int i = 0; i < bitplaneCount; ++i) {
+    //        predDbg.bitplanes[i].syndrome = si_synd[i];
+    //        predDbg.bitplanes[i].numcode = si_numcodes[i];
+    //      }
+    //    }
+    /* save for debug*/
   }
+  /*#pragma omp critical*/
+}
+
+bool FrameEncoder::debug_enabled() const {
+  return bitstream::VideoStreamDebugger::get_const_instance().frameAvailable();
 }
 
 const std::shared_ptr<OutputIcovBase> &FrameEncoder::icovFile() const {
@@ -491,9 +518,10 @@ void FrameEncoder::setIcovFile(
 }
 
 void icov::encoder::FrameEncoder::encode_si(
-    const Block &b, const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
-    ComponentID comp) {
+    const omnidirectional_layer::Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    const icov::video::SideInformationUnit &si,
+    omnidirectional_layer::BlockPrediction::predType pred, ComponentID comp) {
 
   icov::helpers::assert::equal(
       (int)si.TUs.size(), 1,
@@ -505,8 +533,9 @@ void icov::encoder::FrameEncoder::encode_si(
 }
 
 void icov::encoder::FrameEncoder::encode_icu(
-    const Block &b, const icov::video::IcuEncoder &icu_enc,
-    BlockPrediction::predType pred) {
+    const omnidirectional_layer::Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    omnidirectional_layer::BlockPrediction::predType pred) {
 
   auto si = icu_enc.get_sideInformation(pred);
   icov::helpers::assert::not_null(si);
@@ -514,10 +543,12 @@ void icov::encoder::FrameEncoder::encode_icu(
 }
 
 /*****************************************************************************/
-void FrameEncoder::encodeBlockWithPrediction(const Block &b,
-                                             uint16_t prediction) {
+void FrameEncoder::encodeBlockWithPrediction(
+    const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
 
-  BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
+  omnidirectional_layer::BlockPrediction::predType pred =
+      omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
@@ -536,3 +567,5 @@ void FrameEncoder::encodeBlockWithPrediction(const Block &b,
   if (si_map.count(pred) > 0)
     encode_icu(b, icu_enc, pred);
 }
+} // namespace encoder
+} // namespace icov

@@ -53,6 +53,9 @@
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "omnidirectional_layer/interface/IRenderer.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 class IBlockDecoder : public IBlockProcessor {
 protected:
   // std::istream m_bitstream;
@@ -70,7 +73,18 @@ public:
   virtual ~IBlockDecoder() = default;
   virtual void decode(/*stream*/) = 0;
   virtual void setTexture(unsigned char *pixels, int width, int height,
-                          int rowPitch);
-  void setRenderer(IRenderer *);
-  const IRenderer &getRenderer() const;
+                          int rowPitch) {
+    m_pixels = pixels;
+    m_height = height;
+    m_width = width;
+    m_rowPitch = rowPitch;
+  }
+  void setRenderer(IRenderer *r) {
+    std::cout << "Decoder::setRenderer" << std::endl;
+    m_renderer = std::unique_ptr<IRenderer>(r);
+  }
+  const IRenderer &getRenderer() const { return *m_renderer; }
 };
+
+} // namespace omnidirectional_layer
+} // namespace icov

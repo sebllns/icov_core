@@ -47,7 +47,9 @@
  *****************************************************************************/
 #pragma once
 #include "helpers.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
@@ -77,39 +79,40 @@ typedef enum {
   COUNT
 } eIcovStream;
 
-static const uint16_t PredictionID[PREDICTION_COUNT] = {
-    BlockPrediction::TOP_RIGHT,    BlockPrediction::TOP_LEFT,
-    BlockPrediction::BOTTOM_RIGHT, BlockPrediction::BOTTOM_LEFT,
-    BlockPrediction::RIGHT,        BlockPrediction::LEFT,
-    BlockPrediction::TOP,          BlockPrediction::BOTTOM,
-    BlockPrediction::INTER,
+static const omnidirectional_layer::IBlockPredictionManager::prediction_t
+    PredictionID[PREDICTION_COUNT] = {
+        omnidirectional_layer::BlockPrediction::TOP_RIGHT,    omnidirectional_layer::BlockPrediction::TOP_LEFT,
+        omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT, omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
+        omnidirectional_layer::BlockPrediction::RIGHT,        omnidirectional_layer::BlockPrediction::LEFT,
+        omnidirectional_layer::BlockPrediction::TOP,          omnidirectional_layer::BlockPrediction::BOTTOM,
+        omnidirectional_layer::BlockPrediction::INTER,
 };
 
-inline int getPredictionOrder(BlockPrediction::predType pred) {
+inline int getPredictionOrder(omnidirectional_layer::BlockPrediction::predType pred) {
   switch (pred) {
 
-  case BlockPrediction::TOP_RIGHT:
+    case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
     return 0;
 
-  case BlockPrediction::TOP_LEFT:
+    case omnidirectional_layer::BlockPrediction::TOP_LEFT:
     return 1;
 
-  case BlockPrediction::BOTTOM_RIGHT:
+    case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
     return 2;
 
-  case BlockPrediction::BOTTOM_LEFT:
+    case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
     return 3;
 
-  case BlockPrediction::RIGHT:
+    case omnidirectional_layer::BlockPrediction::RIGHT:
     return 4;
 
-  case BlockPrediction::LEFT:
+    case omnidirectional_layer::BlockPrediction::LEFT:
     return 5;
 
-  case BlockPrediction::TOP:
+    case omnidirectional_layer::BlockPrediction::TOP:
     return 6;
 
-  case BlockPrediction::BOTTOM:
+    case omnidirectional_layer::BlockPrediction::BOTTOM:
     return 7;
 
   default:

@@ -1,10 +1,13 @@
 #include "PredictionsEncoder.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "tools/DebugTools.h"
 #include <vector>
 
-icov::encoder::PredictionsEncoder::PredictionsEncoder(const LdpcCoderParameters &LDPC_Params,
-    std::vector<uint16_t> predictions) {
+icov::encoder::PredictionsEncoder::PredictionsEncoder(
+    const LdpcCoderParameters &LDPC_Params,
+    std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
+        predictions) {
   // populate the prediction coders
   int count = 1;
   for (auto pred : predictions) {
@@ -12,8 +15,9 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(const LdpcCoderParameters 
               << predictions.size();
 #pragma omp atomic
     ++count;
-    std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-    icov::LdpcCoderFactory::create_coder_yuv(LDPC_Params, ycoder, uvcoder);
+    std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> ycoder, uvcoder;
+    ldpc_codec_layer::LdpcCoderFactory::create_coder_yuv(LDPC_Params, ycoder,
+                                                         uvcoder);
     m_coders[pred][ycoder->get_n()] = std::move(ycoder);
     m_coders[pred][uvcoder->get_n()] = std::move(uvcoder);
   }
@@ -21,8 +25,11 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(const LdpcCoderParameters 
   ICOV_INFO << "Prediction coders initialized";
 }
 
-AffInteractiveCoder &encoder::PredictionsEncoder::get_coder(uint16_t prediction,
-                                                            size_t code_size) {
+icov::ldpc_codec_layer::AffInteractiveCoder &
+icov::encoder::PredictionsEncoder::get_coder(
+    icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
+        prediction,
+    size_t code_size) {
 
   ICOV_ASSERT_MSG(m_coders.count(prediction) > 0,
                   "Coder not found for the given prediction: " +
@@ -35,7 +42,7 @@ AffInteractiveCoder &encoder::PredictionsEncoder::get_coder(uint16_t prediction,
   return *(m_coders.at(prediction).at(code_size).get());
 }
 
-std::vector<size_t> encoder::PredictionsEncoder::getCoderSizes() const {
+std::vector<size_t> icov::encoder::PredictionsEncoder::getCoderSizes() const {
   std::vector<size_t> sizes;
   for (const auto &p : m_coders.begin()->second)
     sizes.push_back(p.first);

@@ -52,11 +52,20 @@
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 
 #include <map>
 #include <opencv2/opencv.hpp>
+
+using namespace icov;
+using namespace icov::omnidirectional_layer;
+using namespace icov::ldpc_codec_layer;
+using namespace icov::bitstream;
+using namespace icov::encoder;
 
 namespace icov {
 namespace encoder {
@@ -67,7 +76,7 @@ public:
     ChromaFormat chFormat;
     cv::Size icuSize_luma;
     cv::Size tuSize_luma;
-    BitSymbolProvider::params bsp_params;
+    ldpc_codec_layer::BitSymbolProvider::params bsp_params;
     bool enable_block_encoding;
     bool write_intra_pred_image;
     bool check_decoding;
@@ -100,38 +109,48 @@ public:
   void onMouseViewPred(int event, int x, int y, int flags);
   void onMouseEncode(int event, int x, int y, int flags);
 
-  void encode(IInputMedia<cv::Mat> &input, const IPicture &picture,
+  void encode(IInputMedia<cv::Mat> &input,
+              const omnidirectional_layer::IPicture &picture,
 
-              const IBlockPrediction &block_prediction) override;
+              const omnidirectional_layer::IBlockPredictionManager
+                  &block_prediction) override;
 
 protected:
-  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
+  void encodeBlockWithPrediction(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+      override;
   void processInput(const IInputMedia<cv::Mat> &input) override;
 
 private:
   void onSelectBlock(int x, int y);
   void onEncodeBlock(int x, int y);
 
-  void encode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
-                  BlockPrediction::predType pred);
-  void encode_si(const Block &b, const icov::video::IcuEncoder &icu_enc,
+  void encode_icu(const omnidirectional_layer::Block &b,
+                  const icov::video::IcuEncoder &icu_enc,
+                  omnidirectional_layer::BlockPrediction::predType pred);
+  void encode_si(const omnidirectional_layer::Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 BlockPrediction::predType pred, ComponentID comp);
-  void encode_tu(const Block &b, const icov::video::IcuEncoder &icu_enc,
+                 omnidirectional_layer::BlockPrediction::predType pred,
+                 ComponentID comp);
+  void encode_tu(const omnidirectional_layer::Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 BlockPrediction::predType pred, ComponentID comp,
-                 int tu_index);
+                 omnidirectional_layer::BlockPrediction::predType pred,
+                 ComponentID comp, int tu_index);
 
 protected:
   params m_params;
   uint m_numComp;
   std::map<int, cv::Mat> m_cvmat;
-  std::map<size_t, std::unique_ptr<AffInteractiveCoder>> m_coders;
+  std::map<size_t, std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder>>
+      m_coders;
   bool m_firstDisplayBlocks;
   icov::video::EncodingStructure m_enc_struc;
   cv::Point m_currentBlockPosition;
   icov::video::BufGroups m_vvc_bufs;
-  const IPicture *m_pic_ptr;
+  const omnidirectional_layer::IPicture *m_pic_ptr;
 };
 } // namespace encoder
 } // namespace icov

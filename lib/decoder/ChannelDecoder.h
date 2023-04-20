@@ -54,13 +54,12 @@
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
-
 #include <map>
 #include <memory>
 #include <opencv2/opencv.hpp>
@@ -84,7 +83,9 @@ public:
       const bitstream::sp_IcovExtractedBitstream &extraction);
   ~ChannelDecoder();
 
-  void decode_icu(int icu_enc, BlockPrediction::predType block_prediction);
+  void
+  decode_icu(int icu_enc,
+             omnidirectional_layer::BlockPrediction::predType block_prediction);
 
   void set_si_dir_mode(int dir_mode);
 
@@ -100,14 +101,14 @@ public:
 
   Syndrome &syndrome();
 
-  const AffInteractiveCoder &ldpc_coder() const;
+  const ldpc_codec_layer::AffInteractiveCoder &ldpc_coder() const;
 
 protected:
   params m_params;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
   std::shared_ptr<icov::video::EncodingStructure> m_encodingStruct;
   // CompArea m_blockArea;
-  std::unique_ptr<AffInteractiveCoder> m_ldpc_coder;
+  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> m_ldpc_coder;
   icov::video::Quant quant;
   TCoeff uiAbsSum;
   icov::video::Transform2D transform2D;
@@ -115,8 +116,8 @@ protected:
   BitVec m_blockBitplane;
   SIVec m_blockSI;
   Syndrome m_syndrome;
-  BitSymbolProvider m_bsp;
-  BlockPrediction::predType m_block_prediction;
+  ldpc_codec_layer::BitSymbolProvider m_bsp;
+  omnidirectional_layer::BlockPrediction::predType m_block_prediction;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;
   // BlockVector::const_iterator m_block;

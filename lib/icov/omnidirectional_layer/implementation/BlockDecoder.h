@@ -44,10 +44,13 @@
  *
  *****************************************************************************/
 
-#ifndef DECODER_H
-#define DECODER_H
+#pragma once
 
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
+
+namespace icov {
+namespace omnidirectional_layer {
 
 class BlockDecoder : public IBlockDecoder {
 private:
@@ -61,7 +64,10 @@ public:
 
   // IBlockManager interface
 public:
-  virtual void processBlock(const Block &b, uint16_t prediction) override;
+  virtual void
+  processBlock(const Block &b,
+                 IBlockPredictionManager::prediction_t prediction) override;
 };
 
-#endif // DECODER_H
+} // namespace omnidirectional_layer
+} // namespace icov

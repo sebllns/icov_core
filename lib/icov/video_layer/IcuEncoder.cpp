@@ -13,9 +13,10 @@ bool icov::video::IcuEncoder::addIntraSI(
     bool createTransformBuffer, bool createQuantizedTransformBuffer,
     bool createInverseQuantizedTransformBuffer) {
 
-  ICOV_ASSERT_MSG(_mapIntraSIs.count(refSampSide) == 0,
-                  "key already found " +
-                      BlockPrediction::toString(refSampSide));
+  ICOV_ASSERT_MSG(
+      _mapIntraSIs.count(refSampSide) == 0,
+      "key already found " +
+          icov::omnidirectional_layer::BlockPrediction::toString(refSampSide));
 
   std::pair<std::map<icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE,
                      SideInformationUnit>::iterator,

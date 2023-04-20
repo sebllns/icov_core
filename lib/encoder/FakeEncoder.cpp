@@ -1,6 +1,8 @@
 #include "FakeEncoder.h"
 #include "CommonLib/Unit.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include <boost/filesystem.hpp>
 #include <cmath>
 #include <opencv2/core.hpp>
@@ -19,11 +21,12 @@ FakeEncoder::FakeEncoder(std::ofstream &output) : m_output(output) {}
 
 FakeEncoder::~FakeEncoder() { std::cout << "destroy FakeEncoder" << std::endl; }
 
-void FakeEncoder::encodeBlockWithPrediction(const Block &b,
-                                            uint16_t prediction) {
+void FakeEncoder::encodeBlockWithPrediction(
+    const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
   cout << "---- prediction " << prediction << std::endl;
 
-  const IPicture &p = *(b.parent());
+  const omnidirectional_layer::IPicture &p = *(b.parent());
   int bw = (int)(b.w() * p.width());
   int bh = (int)(b.h() * p.height());
   int bx = (int)(p.u(p.angleX(b.u())) * p.width());
@@ -32,32 +35,33 @@ void FakeEncoder::encodeBlockWithPrediction(const Block &b,
 
   cv::Scalar color;
 
-  switch (static_cast<BlockPrediction::predType>(prediction)) {
-  case BlockPrediction::NONE:
+  switch (static_cast<omnidirectional_layer::BlockPrediction::predType>(
+      prediction)) {
+  case omnidirectional_layer::BlockPrediction::NONE:
     color = cv::Scalar(0, 255, 0);
     break;
-  case BlockPrediction::RIGHT:
+  case omnidirectional_layer::BlockPrediction::RIGHT:
     color = cv::Scalar(255, 0, 0);
     break;
-  case BlockPrediction::LEFT:
+  case omnidirectional_layer::BlockPrediction::LEFT:
     color = cv::Scalar(0, 0, 255);
     break;
-  case BlockPrediction::TOP:
+  case omnidirectional_layer::BlockPrediction::TOP:
     color = cv::Scalar(0, 255, 255);
     break;
-  case BlockPrediction::BOTTOM:
+  case omnidirectional_layer::BlockPrediction::BOTTOM:
     color = cv::Scalar(255, 0, 255);
     break;
-  case BlockPrediction::TOP_RIGHT:
+  case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
     color = cv::Scalar(255, 255, 0);
     break;
-  case BlockPrediction::TOP_LEFT:
+  case omnidirectional_layer::BlockPrediction::TOP_LEFT:
     color = cv::Scalar(127, 255, 64);
     break;
-  case BlockPrediction::BOTTOM_RIGHT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
     color = cv::Scalar(64, 255, 127);
     break;
-  case BlockPrediction::BOTTOM_LEFT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
     color = cv::Scalar(65, 124, 64);
     break;
   default:
@@ -78,11 +82,12 @@ void FakeEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   m_output.write(reinterpret_cast<const char *>(&values), sizeof(values));
 }
 
-std::vector<uint16_t>
-FakeEncoder::getAvailablePredictions(const Block &b, bool access_block,
-                                     const IBlockPrediction &block_prediction) {
-  auto v = BlockPrediction::getAvailablePredictions();
-  return std::vector<uint16_t>(v.begin(), v.end());
+std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
+FakeEncoder::getAvailablePredictions(
+    const omnidirectional_layer::Block &b, bool access_block,
+    const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
+  auto v = omnidirectional_layer::BlockPrediction::getAvailablePredictions();
+  return std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>(v.begin(), v.end());
 }
 } // namespace encoder
 } // namespace icov

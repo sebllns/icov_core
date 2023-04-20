@@ -48,7 +48,7 @@
 #pragma once
 #include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
-#include "ldpc_codec_layer/IInteractiveCoder.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
@@ -220,8 +220,9 @@ private:
   size_type read_pos;
 };
 
-inline ushort inverseQuantizedSize(icov::bitstream::byte input,
-                                   const IInteractiveCoder &coder) {
+inline ushort
+inverseQuantizedSize(icov::bitstream::byte input,
+                     const ldpc_codec_layer::IInteractiveCoder &coder) {
   return (input == enum_t::SyndromeType::NO_CODING)
              ? (0)
              : ((input == enum_t::SyndromeType::SOURCE)

@@ -50,34 +50,19 @@
 #include "Block.h"
 #include "helpers.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include <boost/algorithm/string/trim.hpp>
 
-// namespace icov {
-
-///////////////////////////////////////////////////////////////////////////////
-///
-/// @class IBlockPrediction
-/// @brief Interface to manage the predictions of block
-///
-///////////////////////////////////////////////////////////////////////////////
-class IBlockPrediction {
-public:
-  virtual ~IBlockPrediction() = default;
-  virtual uint16_t getPrediction(const Block &b,
-                                 const IBlockOrdering &ordering) const = 0;
-  virtual std::vector<uint16_t>
-  getAvailablePredictions(const Block &b,
-                          bool is_access_block = false) const = 0;
-};
-
+namespace icov {
+namespace omnidirectional_layer {
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// @class BlockPrediction
 /// @brief Manages the different prediction scenarios for a block
 ///
 ///////////////////////////////////////////////////////////////////////////////
-class BlockPrediction : public IBlockPrediction {
+class BlockPrediction : public IBlockPredictionManager {
 public:
   enum predType {
     UNKNOWN = -1,
@@ -117,20 +102,20 @@ public:
 
   // IBlockPrediction interface
 public:
-  uint16_t getPrediction(const Block &b,
-                         const IBlockOrdering &ordering) const override;
+  IBlockPredictionManager::prediction_t
+  getPrediction(const Block &b, const IBlockOrdering &ordering) const override;
 
-  std::vector<uint16_t>
+  std::vector<IBlockPredictionManager::prediction_t>
   getAvailablePredictions(const Block &b,
                           bool is_access_block = false) const override;
 };
 
-inline std::vector<uint16_t>
+inline std::vector<IBlockPredictionManager::prediction_t>
 BlockPrediction::getAvailablePredictions(const Block &b,
                                          bool is_access_block) const {
 
   auto v0 = BlockPrediction::getAvailablePredictions(getBorder(b));
-  std::vector<uint16_t> v(v0.begin(), v0.end());
+  std::vector<IBlockPredictionManager::prediction_t> v(v0.begin(), v0.end());
   if (is_access_block)
     v.insert(v.begin(), predType::NONE);
 
@@ -227,7 +212,7 @@ BlockPrediction::getAvailablePredictions(borderType b) {
   return v;
 }
 
-inline uint16_t
+inline IBlockPredictionManager::prediction_t
 BlockPrediction::getPrediction(const Block &b,
                                const IBlockOrdering &ordering) const {
   predType pred = NONE;
@@ -258,7 +243,7 @@ BlockPrediction::getPrediction(const Block &b,
   icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
 #endif
 
-  return static_cast<uint16_t>(pred);
+  return static_cast<IBlockPredictionManager::prediction_t>(pred);
 }
 
 inline BlockPrediction::borderType BlockPrediction::getBorder(const Block &b) {
@@ -276,4 +261,5 @@ inline bool BlockPrediction::isValidPrediction(predType p) {
     return false;
   return true;
 }
-//} // namespace icov
+} // namespace omnidirectional_layer
+} // namespace icov

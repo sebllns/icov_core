@@ -1,6 +1,5 @@
 #include "CoderFactory.h"
 
-#include "Coder_IMT18.h"
 #include "Coder_IMT64.h"
 #include "LdpcCoderParameters.h"
 #include <boost/program_options.hpp>
@@ -8,7 +7,7 @@
 namespace po = boost::program_options;
 
 namespace icov {
-
+namespace ldpc_codec_layer {
 p_InteractiveCoder
 LdpcCoderFactory::create_coder(const LdpcCoderParameters &args) {
   ICOV_INFO << "Initialization of coder with type " << args.type
@@ -22,15 +21,9 @@ LdpcCoderFactory::create_coder(const LdpcCoderParameters &args) {
 
   const std::string &coder_type = args.type;
 
-  if (coder_type == LdpcCoder_IMT18::id) {
-    LdpcCoder_IMT18::create(
-        llrProvider, ldpca_dec, syndromeMgr, mp,
-        dynamic_cast<const LdpcCoder_IMT18::parameters &>(args));
-  } else if (coder_type == LdpcCoder_IMT64::id) {
+  if (coder_type == LdpcCoder_IMT64::id) {
     const auto &p = dynamic_cast<const LdpcCoder_IMT64::parameters &>(args);
     LdpcCoder_IMT64::create(llrProvider, ldpca_dec, syndromeMgr, mp, p);
-  } else if (coder_type == "varodayan") {
-    throw std::invalid_argument("Coder type not implemented: " + coder_type);
   } else {
     throw std::invalid_argument("Unknown coder type: " + coder_type);
   }
@@ -63,4 +56,5 @@ void LdpcCoderFactory::create_coder_yuv(const LdpcCoderParameters &args,
   ICOV_INFO << "Chroma coder instanciated";
 }
 
+} // namespace ldpc_codec_layer
 } // namespace icov

@@ -1,5 +1,4 @@
 #include "OutputIcovBase.h"
-#include "typedef.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
 #include <algorithm>

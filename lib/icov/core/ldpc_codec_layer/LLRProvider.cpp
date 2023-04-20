@@ -8,16 +8,19 @@
 
 #include "helpers.h"
 
-icov::LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) {
+namespace icov {
+namespace ldpc_codec_layer {
+
+LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) {
   reset();
 }
 
-icov::LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
+LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
     : m_llr(llr), m_floor_type(0) {
   reset();
 }
 
-void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
+void LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info) {
   reset();
 
@@ -28,12 +31,12 @@ void icov::LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
   }
 }
 
-void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
+void LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
                                   const std::vector<SIVal> &side_info,
                                   const std::vector<int> &sign,
                                   const std::vector<int> &abs_predec) {
   reset();
-  
+
   int l = bsp.bitplane_count() - 1;
   LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
   for (size_t i = 0; i < side_info.size(); i++) {
@@ -43,7 +46,7 @@ void icov::LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
   }
 }
 
-bool icov::LLRProvider::no_coding(const BitVec &src) const {
+bool LLRProvider::no_coding(const BitVec &src) const {
   bool nocoding = true;
   int i = -1;
 
@@ -55,7 +58,7 @@ bool icov::LLRProvider::no_coding(const BitVec &src) const {
   return nocoding;
 }
 
-void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
+void LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
   icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
                                "Length "
                                "of arrays are not equal");
@@ -74,7 +77,7 @@ void icov::LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
   }
 }
 
-void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info,
+void LLRProvider::initLLR(const std::vector<SIVal> &side_info,
                                 const BitVec &src_bits) {
   icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
                                "Length "
@@ -99,7 +102,7 @@ void icov::LLRProvider::initLLR(const std::vector<SIVal> &side_info,
   }
 }
 
-void icov::LLRProvider::initLLRUniform(float pcrossover,
+void LLRProvider::initLLRUniform(float pcrossover,
                                        const BitVec &src_bits) {
   icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
                                "Length "
@@ -128,7 +131,7 @@ void icov::LLRProvider::initLLRUniform(float pcrossover,
   m_floor_type = !m_floor_type;
 }
 
-std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
+std::vector<icov::BitVal> LLRProvider::initSrcRand(int n) {
   BitVec src(n, 0);
   std::generate(src.begin(), src.end(), []() {
     return (BitVal)(((((double)rand() / (double)RAND_MAX) < 0.5)) ? 1.0 : 0.0);
@@ -136,7 +139,7 @@ std::vector<icov::BitVal> icov::LLRProvider::initSrcRand(int n) {
   return src;
 }
 
-void icov::LLRProvider::init_doping() {
+void LLRProvider::init_doping() {
   if (!m_doping_ready) {
     ICOV_DEBUG << "Compute doping";
     m_llr_doping = m_llr;
@@ -148,7 +151,7 @@ void icov::LLRProvider::init_doping() {
   }
 }
 
-void icov::LLRProvider::apply_doping(int index, BitVal x) {
+void LLRProvider::apply_doping(int index, BitVal x) {
 #ifdef ICOV_ASSERTION_ENABLED
   icov::helpers::assert::check(m_doping_ready,
                                "Cannot use doping if not initialized");
@@ -161,11 +164,11 @@ void icov::LLRProvider::apply_doping(int index, BitVal x) {
             : std::numeric_limits<LLRVal>::max();
 }
 
-int icov::LLRProvider::doping_order(int index) const {
+int LLRProvider::doping_order(int index) const {
   return m_doping_order[index];
 }
 
-uint32_t icov::LLRProvider::index_min() const {
+uint32_t LLRProvider::index_min() const {
   uint32_t idx = 0;
 
   for (int i = 0; i < (int)m_llr.size(); i++) {
@@ -176,15 +179,15 @@ uint32_t icov::LLRProvider::index_min() const {
   return idx;
 }
 
-icov::LLRVal icov::LLRProvider::limit_max() {
+icov::LLRVal LLRProvider::limit_max() {
   return std::numeric_limits<LLRVal>::max();
 }
 
-icov::LLRVal icov::LLRProvider::epsilon() {
+icov::LLRVal LLRProvider::epsilon() {
   return std::numeric_limits<LLRVal>::epsilon();
 }
 
-void icov::LLRProvider::reset() {
+void LLRProvider::reset() {
   std::fill(m_llr.begin(), m_llr.end(), 0);
   std::fill(m_llr_doping.begin(), m_llr_doping.end(), 0);
   m_doping_order.resize(m_llr.size());
@@ -192,4 +195,7 @@ void icov::LLRProvider::reset() {
   m_doping_ready = false;
 }
 
-bool icov::LLRProvider::doping_ready() const { return m_doping_ready; }
+bool LLRProvider::doping_ready() const { return m_doping_ready; }
+
+} // namespace ldpc_codec_layer
+} // namespace icov

@@ -53,6 +53,7 @@
 #include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
 #include <array>
@@ -86,12 +87,15 @@ public:
   const bitstream::ContentParameterSet &contentParameterSet() const;
   bitstream::ContentParameterSet &contentParameterSet();
 
-  virtual void startWriteBlock(const Block &b) = 0;
-  virtual void startWritePrediction(uint16_t pred) = 0;
-  virtual void endWritePrediction(uint16_t pred) = 0;
-  virtual void endWriteBlock(const Block &b) = 0;
+  virtual void startWriteBlock(const omnidirectional_layer::Block &b) = 0;
+  virtual void startWritePrediction(
+      omnidirectional_layer::IBlockPredictionManager::prediction_t pred) = 0;
+  virtual void endWritePrediction(
+      omnidirectional_layer::IBlockPredictionManager::prediction_t pred) = 0;
+  virtual void endWriteBlock(const omnidirectional_layer::Block &b) = 0;
 
-  virtual void writeQaryParams(const BitSymbolProvider::PzParams &bsp) = 0;
+  virtual void
+  writeQaryParams(const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) = 0;
   virtual void writeContentParameterSet() = 0;
   virtual void writeSyndrome(const Syndrome &s) = 0;
   virtual void writeFrameSize() = 0;

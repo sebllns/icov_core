@@ -1,26 +1,26 @@
 #ifndef Decoder_LDPCA_BP_flooding_SPA_HPP_
 #define Decoder_LDPCA_BP_flooding_SPA_HPP_
 
+#include "Module/Decoder/Decoder_SISO.hpp"
+#include "Module/Decoder/LDPC/BP/Decoder_LDPC_BP.hpp"
+#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
+#include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
+#include "common_types.h"
 #include <cstdint>
 #include <fstream>
 #include <vector>
 
-#include "Module/Decoder/LDPC/BP/Flooding/Decoder_LDPC_BP_flooding.hpp"
-#include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
-#include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
-
-#include "common.h"
-
-namespace aff3ct {
-namespace module {
+namespace icov {
+namespace ldpc_codec_layer {
 template <typename B = int, typename R = float>
-class Decoder_LDPCA_BP_flooding_SPA : public Decoder_SISO<B, R>,
-                                      public Decoder_LDPC_BP {
+class Decoder_LDPCA_BP_flooding_SPA : public aff3ct::module::Decoder_SISO<B, R>,
+                                      public aff3ct::module::Decoder_LDPC_BP {
+
 protected:
   std::vector<R> values;
   icov::Syndrome *m_syndrome;
 
-  tools::Update_rule_SPA<R> up_rule;
+  aff3ct::tools::Update_rule_SPA<R> up_rule;
 
   std::vector<uint32_t> transpose;
   std::vector<R> post; // a posteriori information
@@ -31,7 +31,7 @@ protected:
 
 public:
   Decoder_LDPCA_BP_flooding_SPA(const int N, const int n_ite,
-                                const tools::Sparse_matrix &H);
+                                const aff3ct::tools::Sparse_matrix &H);
   virtual ~Decoder_LDPCA_BP_flooding_SPA() = default;
 
   void get_llr_order(std::vector<size_t> &idx) const;
@@ -58,8 +58,8 @@ protected:
                      std::vector<R> &post);
 };
 
-} // namespace module
-} // namespace aff3ct
+} // namespace ldpc_codec_layer
+} // namespace icov
 
 #include "Decoder_LDPCA_BP_flooding_SPA.hxx"
 

@@ -48,8 +48,8 @@
 #pragma once
 #include "helpers.h"
 #include "icov_stream.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/BlockPrediction.h"
 #include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -99,7 +99,7 @@ struct BitplaneStream {
 };
 
 struct SIStream {
-  BitSymbolProvider::PzParams pz;
+  ldpc_codec_layer::BitSymbolProvider::PzParams pz;
   byte mode;
 
   std::vector<BitplaneStream> bitplanes;

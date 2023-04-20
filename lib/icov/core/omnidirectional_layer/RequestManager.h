@@ -47,17 +47,16 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-
 #include "Block.h"
+#include <memory>
 
-using namespace icov;
-
+namespace icov {
+namespace omnidirectional_layer {
 class IBlockOrdering;
 class IViewportManager;
 class IBlockProcessor;
 class IAccessBlockManager;
-class IBlockPrediction;
+class IBlockPredictionManager;
 
 /** @class RequestManager
  *  @brief RequestManager
@@ -73,7 +72,7 @@ private:
   std::shared_ptr<IViewportManager> m_viewport;
   std::shared_ptr<IPicture> m_picture;
   std::shared_ptr<IBlockProcessor> m_blockProcessor;
-  std::shared_ptr<IBlockPrediction> m_blockPrediction;
+  std::shared_ptr<IBlockPredictionManager> m_blockPrediction;
 
 public:
   RequestManager() = default;
@@ -94,7 +93,9 @@ public:
   const std::shared_ptr<IAccessBlockManager> &accessBlocks() const;
   void
   setAccessBlocks(const std::shared_ptr<IAccessBlockManager> &newAccessBlocks);
-  const std::shared_ptr<IBlockPrediction> &blockPrediction() const;
+  const std::shared_ptr<IBlockPredictionManager> &blockPrediction() const;
   void setBlockPrediction(
-      const std::shared_ptr<IBlockPrediction> &newBlockPrediction);
+      const std::shared_ptr<IBlockPredictionManager> &newBlockPrediction);
 };
+} // namespace omnidirectional_layer
+} // namespace icov

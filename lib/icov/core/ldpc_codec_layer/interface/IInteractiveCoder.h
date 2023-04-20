@@ -1,8 +1,10 @@
 #pragma once
 
-#include "common.h"
+#include "common_types.h"
+#include <cstddef>
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 class IInteractiveCoder {
 public:
@@ -13,5 +15,5 @@ public:
   virtual Rate get_r(const NumcodeIdx &numcodeIdx) const = 0;
   virtual Rate get_r(int m, int n) const = 0;
 };
-
+} // namespace ldpc_codec_layer
 } // namespace icov

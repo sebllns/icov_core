@@ -52,7 +52,7 @@
 #include <string>
 
 namespace icov {
-
+namespace ldpc_codec_layer {
 class LdpcCoderFactory {
 public:
   static p_InteractiveCoder create_coder(const LdpcCoderParameters &args);
@@ -62,8 +62,5 @@ public:
                                p_InteractiveCoder &uv_coder);
 };
 
-// template<>
-// std::shared_ptr<InteractiveCoder<AffMatrix>> CoderFactory::create_coder(int
-// argc, char* argv[]);
-
+} // namespace ldpc_codec_layer
 } // namespace icov

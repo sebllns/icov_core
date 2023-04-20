@@ -3,9 +3,11 @@
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/io/PcmData.h"
-#include "tools/DebugTools.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/filesystem.hpp>
+
+using namespace icov;
+using namespace icov::ldpc_codec_layer;
 
 namespace fs = boost::filesystem;
 void CheckMode::AddProgramOptions(
@@ -29,8 +31,8 @@ FastMatrix<bit> CheckMode::getHighLevelMatrix() {
   }
 }
 
-FastMatrix<bit> CheckMode::getHighLevelMatrixImt164() {
-  FastMatrix<icov::bit> h;
+icov::FastMatrix<icov::bit> CheckMode::getHighLevelMatrixImt164() {
+  icov::FastMatrix<icov::bit> h;
 
   auto sm = m_coder->syndromeMgr();
   auto mp = m_coder->matrixProvider();
@@ -57,8 +59,8 @@ FastMatrix<bit> CheckMode::getHighLevelMatrixImt164() {
   return h;
 }
 
-FastMatrix<uint16_t> CheckMode::getMappingVector(int m) {
-  FastMatrix<uint16_t> v;
+icov::FastMatrix<uint16_t> CheckMode::getMappingVector(int m) {
+  icov::FastMatrix<uint16_t> v;
 
   assert(m > 0 && m >= m_coder->syndromeMgr()->get_m(
                            m_coder->matrixProvider()->getNumcode(0)));
@@ -94,7 +96,7 @@ int CheckMode::getMinLevel() {
   return sm->get_m(mp->getNumcode(0));
 }
 
-void CheckMode::compare_matrix(const AffMatrix &m,
+void CheckMode::compare_matrix(const icov::ldpc_codec_layer::AffMatrix &m,
                                const icov::FastMatrix<icov::bit> &gt) {
   if (m.get_n_rows() != gt.cols()) {
     BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -139,8 +141,8 @@ void CheckMode::run() {
   int j = 0;
   int i = mp->getMatrixCount();
 
-  Syndrome stored_syndrome(sm->get_n());
-  Syndrome decoded_syndrome(sm->get_n());
+  icov::Syndrome stored_syndrome(sm->get_n());
+  icov::Syndrome decoded_syndrome(sm->get_n());
 
   while ((int)m_src.rows() > sm->get_m(mp->getNumcode(0))) {
     auto m = mp->getMatrix(--i);
@@ -221,7 +223,7 @@ void CheckMode::run() {
     }
 
     for (int k = 0; k < row_count; k++) {
-      bit s = 0;
+      icov::bit s = 0;
 
       for (int ki = 0; ki < col_count; ki++) {
         s ^= src[ki] * m_gt.at(k, ki);

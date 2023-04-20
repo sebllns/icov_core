@@ -3,6 +3,8 @@
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
+namespace icov {
+namespace omnidirectional_layer {
 IcovAccessBlockManager::IcovAccessBlockManager(angle_radian delta)
     : m_angle_delta(delta) {}
 
@@ -38,3 +40,5 @@ void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
 const std::string IcovAccessBlockManager::getID() {
   return "aa12d096-261c-4ba4-81b1-c9b7c4ff9ffc";
 }
+} // namespace omnidirectional_layer
+} // namespace icov

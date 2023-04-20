@@ -2,6 +2,7 @@
 
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "vtm_utility.h"
 #include <opencv2/imgproc.hpp>
 
@@ -202,14 +203,14 @@ void icov::video::EncodingStructure::
 
   std::map<int, icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE>
       mapOfSidesCondition;
-  mapOfSidesCondition[0] = BlockPrediction::LEFT;
-  mapOfSidesCondition[1] = BlockPrediction::RIGHT;
-  mapOfSidesCondition[2] = BlockPrediction::TOP;
-  mapOfSidesCondition[3] = BlockPrediction::BOTTOM;
-  mapOfSidesCondition[4] = BlockPrediction::TOP_LEFT;
-  mapOfSidesCondition[5] = BlockPrediction::BOTTOM_LEFT;
-  mapOfSidesCondition[6] = BlockPrediction::BOTTOM_RIGHT;
-  mapOfSidesCondition[7] = BlockPrediction::TOP_RIGHT;
+  mapOfSidesCondition[0] = omnidirectional_layer::BlockPrediction::LEFT;
+  mapOfSidesCondition[1] = omnidirectional_layer::BlockPrediction::RIGHT;
+  mapOfSidesCondition[2] = omnidirectional_layer::BlockPrediction::TOP;
+  mapOfSidesCondition[3] = omnidirectional_layer::BlockPrediction::BOTTOM;
+  mapOfSidesCondition[4] = omnidirectional_layer::BlockPrediction::TOP_LEFT;
+  mapOfSidesCondition[5] = omnidirectional_layer::BlockPrediction::BOTTOM_LEFT;
+  mapOfSidesCondition[6] = omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT;
+  mapOfSidesCondition[7] = omnidirectional_layer::BlockPrediction::TOP_RIGHT;
 
   unsigned int mapSize = mapOfSidesCondition.size();
 
@@ -1296,7 +1297,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
 
     std::cout << "    " << progress << "%                \r" << std::flush;
     IcuEncoder &icu_enc = vec_icus[i];
-    std::map<BlockPrediction::predType, SideInformationUnit> &currICUintraMap =
+    std::map<omnidirectional_layer::BlockPrediction::predType, SideInformationUnit> &currICUintraMap =
         icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);

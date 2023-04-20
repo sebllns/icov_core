@@ -50,9 +50,13 @@
 #pragma once
 
 #include "decoder/ChannelDecoder.h"
+#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/extracted_stream.h"
 
@@ -63,7 +67,7 @@
 
 namespace icov {
 namespace decoder {
-class BlockDecoder : public IBlockDecoder {
+class BlockDecoder : public omnidirectional_layer::IBlockDecoder {
   // IBlockProcessor interface
 public:
   struct params {
@@ -74,7 +78,7 @@ public:
     cv::Size sourceSize;
     cv::Size icuSize_luma;
 
-    BitSymbolProvider::params bsp_params;
+    ldpc_codec_layer::BitSymbolProvider::params bsp_params;
 
     //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
@@ -93,14 +97,17 @@ public:
   ~BlockDecoder();
 
   void startProcess() override;
-  void processBlock(const Block &b, uint16_t prediction) override;
+  void processBlock(const omnidirectional_layer::Block &b,
+                    omnidirectional_layer::IBlockPredictionManager::prediction_t
+                        prediction) override;
   void endProcess() override;
   void decode() override;
   const PelUnitBuf decodingOutput() const;
 
 protected:
-  void decode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
-                  BlockPrediction::predType pred);
+  void decode_icu(const omnidirectional_layer::Block &b,
+                  const icov::video::IcuEncoder &icu_enc,
+                  omnidirectional_layer::BlockPrediction::predType pred);
 
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;

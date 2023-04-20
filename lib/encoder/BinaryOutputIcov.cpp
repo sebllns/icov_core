@@ -1,5 +1,6 @@
 #include "BinaryOutputIcov.h"
 #include "helpers.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
 #include <boost/serialization/array_wrapper.hpp>
@@ -13,7 +14,8 @@ namespace encoder {
 BinaryOutputIcov::BinaryOutputIcov(const boost::filesystem::path &path)
     : OutputIcovBase(path, std::ios_base::binary) {}
 
-void BinaryOutputIcov::writeQaryParams(const BitSymbolProvider::PzParams &bsp) {
+void BinaryOutputIcov::writeQaryParams(
+    const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) {
   if (bsp.getZAmplitude() == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     std::cout << "Q 0" << std::endl;
@@ -143,12 +145,16 @@ void BinaryOutputIcov::writeSIMode(const uint &v) {
 } // namespace encoder
 } // namespace icov
 
-void icov::encoder::BinaryOutputIcov::startWriteBlock(const Block &b) {}
+void icov::encoder::BinaryOutputIcov::startWriteBlock(
+    const icov::omnidirectional_layer::Block &b) {}
 
-void icov::encoder::BinaryOutputIcov::startWritePrediction(uint16_t pred) {}
+void icov::encoder::BinaryOutputIcov::startWritePrediction(
+    icov::omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {}
 
-void icov::encoder::BinaryOutputIcov::endWritePrediction(uint16_t pred) {}
+void icov::encoder::BinaryOutputIcov::endWritePrediction(
+    omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {}
 
-void icov::encoder::BinaryOutputIcov::endWriteBlock(const Block &b) {}
+void icov::encoder::BinaryOutputIcov::endWriteBlock(
+    const omnidirectional_layer::Block &b) {}
 
 void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(const uint &v) {}

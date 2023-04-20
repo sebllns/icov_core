@@ -47,8 +47,7 @@
  *
  *****************************************************************************/
 
-#ifndef IMT164SYNDROME_H
-#define IMT164SYNDROME_H
+#pragma once
 
 #include "implementation/imt_164/IMT164MatrixProvider.h"
 #include "implementation/imt_164/IMT164SyndromeTools.h"
@@ -56,9 +55,10 @@
 #include "ldpc_codec_layer/interface/ISyndrome.h"
 #include <memory>
 
-using index_t = uint16_t;
-
 namespace icov {
+namespace ldpc_codec_layer {
+
+using index_t = uint16_t;
 
 ///
 /// \brief The IMT164SyndromeManager class is manager for the syndrome given by
@@ -71,7 +71,8 @@ public:
   // n = code length
   // min encoded syndrome length is n/max_level
   // max encoded syndrome length is n/min_level
-  IMT164SyndromeManager(const IMT164SyndromeTools &tools,
+  IMT164SyndromeManager(
+      const IMT164SyndromeTools &tools,
       const std::shared_ptr<const IMT164MatrixProvider> &matrix_pvdr);
   virtual ~IMT164SyndromeManager();
 
@@ -105,5 +106,5 @@ private:
   // Doping syndrome is cached
   Syndrome doping_synd;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
-#endif // IMT164SYNDROME_H

@@ -1,23 +1,25 @@
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
 #endif
-#include "Decoder_LDPCA_BP_flooding_SPA.hpp"
-#include "Tools/Exception/exception.hpp"
-#include "helpers.h"
-#include "tools/DebugTools.h"
+
+#include "Module/Decoder/Decoder_SISO.hpp"
+#include "Module/Decoder/LDPC/BP/Decoder_LDPC_BP.hpp"
+#include "Tools/Perf/common/hard_decide.h"
+#include "aff3ct/Decoder_LDPCA_BP_flooding_SPA.hpp"
 #include <cmath>
 #include <limits>
 #include <mipp.h>
 #include <string>
 
-namespace aff3ct {
-namespace module {
+namespace icov {
+namespace ldpc_codec_layer {
 template <typename B, typename R>
 Decoder_LDPCA_BP_flooding_SPA<B, R>::Decoder_LDPCA_BP_flooding_SPA(
-    const int N, const int n_ite, const tools::Sparse_matrix &_H)
-    : Decoder_SISO<B, R>(N, N), Decoder_LDPC_BP(N, N, n_ite, _H, false, 1),
-      up_rule(
-          tools::Update_rule_SPA<R>((unsigned int)_H.get_cols_max_degree())),
+    const int N, const int n_ite, const aff3ct::tools::Sparse_matrix &_H)
+    : aff3ct::module::Decoder_SISO<B, R>(N, N), aff3ct::module::Decoder_LDPC_BP(
+                                                    N, N, n_ite, _H, false, 1),
+      up_rule(aff3ct::tools::Update_rule_SPA<R>(
+          (unsigned int)_H.get_cols_max_degree())),
       transpose(this->H.get_n_connections()), post(N, -1),
       msg_chk_to_var(this->n_frames,
                      std::vector<R>(this->H.get_n_connections())),
@@ -52,7 +54,8 @@ Decoder_LDPCA_BP_flooding_SPA<B, R>::Decoder_LDPCA_BP_flooding_SPA(
                 << ", 'connections[var_id]' = " << connections[var_id]
                 << ", 'msg_var_to_chk_id[var_id].size()' = "
                 << msg_var_to_chk_id[var_id].size() << ").";
-        throw tools::runtime_error(__FILE__, __LINE__, __func__, message.str());
+        throw aff3ct::tools::runtime_error(__FILE__, __LINE__, __func__,
+                                           message.str());
       }
 
       this->transpose[k] = branch_id;
@@ -131,7 +134,7 @@ int Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode_siho_cw(
 
   //	auto t_store = std::chrono::steady_clock::now(); //
   //--------------------------------------------------------- STORE
-  tools::hard_decide(this->post.data(), V_N, this->N);
+  aff3ct::tools::hard_decide(this->post.data(), V_N, this->N);
   //	auto d_store = std::chrono::steady_clock::now() - t_store;
 
   //	(*this)[dec::tsk::decode_siho_cw].update_timer(dec::tm::decode_siho_cw::load,
@@ -305,7 +308,7 @@ template <typename B, typename R>
 void Decoder_LDPCA_BP_flooding_SPA<B, R>::set_n_frames(const size_t n_frames) {
   const auto old_n_frames = this->get_n_frames();
   if (old_n_frames != n_frames) {
-    Decoder_SISO<B, R>::set_n_frames(n_frames);
+    aff3ct::module::Decoder_SISO<B, R>::set_n_frames(n_frames);
 
     const auto vec_size = this->msg_chk_to_var[0].size();
     const auto old_msg_chk_to_var_size = this->msg_chk_to_var.size();
@@ -322,5 +325,5 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::set_n_frames(const size_t n_frames) {
                                 std::vector<R>(vec_size2));
   }
 }
-} // namespace module
-} // namespace aff3ct
+} // namespace ldpc_codec_layer
+} // namespace icov

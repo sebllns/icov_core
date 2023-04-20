@@ -9,7 +9,8 @@
 #include <fstream>
 #include <sstream>
 
-using namespace icov;
+namespace icov {
+namespace ldpc_codec_layer {
 
 IMT164MatrixProvider::IMT164MatrixProvider(const std::string &root,
                                            int min_level, int max_level,
@@ -26,7 +27,7 @@ IMT164MatrixProvider::IMT164MatrixProvider(const std::string &root,
   this->mapping_file.resize(get_level_count() - 1, FastMatrix<index_t>(0, 0));
 }
 
-void icov::IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H) {
+void IMT164MatrixProvider::buildHighMatrix(int level_idx, AffMatrix &H) {
   ICOV_TRACE << "build high matrix";
   this->current_level = level_idx;
 
@@ -148,9 +149,9 @@ void IMT164MatrixProvider::accumulateRows(int numcode, AffMatrix &dst) {
   }
 }
 
-void icov::IMT164MatrixProvider::accumulateRows(int numcode, int level_idx,
-                                                AffMatrix &dst,
-                                                const AffMatrix &src) {
+void IMT164MatrixProvider::accumulateRows(int numcode, int level_idx,
+                                          AffMatrix &dst,
+                                          const AffMatrix &src) {
   dst = AffMatrix(m_tools.get_n(), m_tools.get_m(numcode));
 
   int row_count = this->get_m_level(this->get_level(this->current_level)) -
@@ -208,7 +209,7 @@ void icov::IMT164MatrixProvider::accumulateRows(int numcode, int level_idx,
   indexes = indexes2;
 }
 
-void icov::IMT164MatrixProvider::computeSyndromeCacheIndex() {
+void IMT164MatrixProvider::computeSyndromeCacheIndex() {
   std::vector<std::vector<index_t>> syndrome_index;
 
   for (int k = 0; k < this->get_level_count(); k++) {
@@ -312,7 +313,7 @@ index_t IMT164MatrixProvider::mapping_file_index(int i, int j, int k) const {
   return mapping_file[i].at(j, k);
 }
 
-const std::vector<Sparse_matrix::Idx_t> &
+const std::vector<aff3ct::tools::Sparse_matrix::Idx_t> &
 IMT164MatrixProvider::get_decoding_matrix_col(int h_idx, int col_idx) const {
   return h[h_idx].get_rows_from_col(col_idx);
 }
@@ -333,3 +334,5 @@ std::string IMT164MatrixProvider::get_pcm_path(int level_idx) const {
           (filename + ".pcm"))
       .string();
 }
+} // namespace ldpc_codec_layer
+} // namespace icov

@@ -49,25 +49,47 @@
 
 #pragma once
 
-#include "common.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IPicture.h"
+#include "omnidirectional_layer/interface/IViewportManager.h"
 #include <string>
 
-class IPicture;
-class IViewportManager;
-struct viewport_geometry;
-
+namespace icov {
+namespace omnidirectional_layer {
 class IAccessBlockManager {
 protected:
   BlockIteratorVector m_blocks;
   BlockVector::const_iterator m_invalidBlock;
 
 public:
-  const BlockIteratorVector &blocks() const;
   virtual ~IAccessBlockManager() = default;
+
   virtual const std::string getID() = 0;
   virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) = 0;
+
+  const BlockIteratorVector &blocks() const { return m_blocks; }
+
   virtual BlockVector::const_iterator
-  findAccessBlock(const IViewportManager &vpm) const;
-  virtual bool isAccessBlock(size_t id) const;
+  findAccessBlock(const IViewportManager &vpm) const {
+    //    std::cout << "find in " << m_blocks.size() << " access blocks\n" <<
+    //    std::endl;
+    for (const auto &b : m_blocks) {
+      if (vpm.isBlockVisible(*b))
+        return b;
+    }
+    return m_invalidBlock;
+  }
+
+  virtual bool isAccessBlock(size_t id) const {
+    auto b = m_blocks.begin();
+
+    while (b != m_blocks.end()) {
+      if ((*b)->getId(Block::SELF) == id)
+        return true;
+      ++b;
+    }
+    return false;
+  }
 };
+} // namespace omnidirectional_layer
+} // namespace icov

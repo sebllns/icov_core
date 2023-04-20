@@ -3,6 +3,9 @@
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 BlockOrdering::BlockOrdering(size_t blocks_count)
     : m_path_info(std::vector<block_path_info>(blocks_count)) {
   m_elements.reserve(blocks_count);
@@ -155,3 +158,5 @@ bool BlockOrdering::isBlockProcessed(size_t id) const {
 bool BlockOrdering::blockExists(size_t id) const {
   return id > 0 && id <= m_path_info.size();
 }
+} // namespace omnidirectional_layer
+} // namespace icov

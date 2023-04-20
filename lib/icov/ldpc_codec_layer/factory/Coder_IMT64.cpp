@@ -4,6 +4,7 @@
 #include <memory>
 
 namespace icov {
+namespace ldpc_codec_layer {
 const std::string LdpcCoder_IMT64::id = "imt164";
 // std::map<std::string, std::shared_ptr<IMatrixProvider<AffMatrix>>>
 //    LdpcCoder_IMT64::matrix_provider_pool =
@@ -69,4 +70,5 @@ void LdpcCoder_IMT64::create(
           synd_tools, matrix_provider_pool.at(root_matrix));
   syndromeMgr = imt_synd;
 }
+} // namespace ldpc_codec_layer
 } // namespace icov

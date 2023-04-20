@@ -46,22 +46,18 @@
  *
  *****************************************************************************/
 
-#ifndef POVREQUEST_H
-#define POVREQUEST_H
+#pragma once
 
 #include "interface/IRequest.h"
+
+namespace icov {
+namespace omnidirectional_layer {
 
 class PoVRequest : public IRequest {
 
 public:
   PoVRequest();
   ~PoVRequest() {}
-
-  void serialize() const;
-  void deserialize();
-
-  // IRequest interface
-  void print();
 };
-
-#endif // POVREQUEST_H
+} // namespace omnidirectional_layer
+} // namespace icov

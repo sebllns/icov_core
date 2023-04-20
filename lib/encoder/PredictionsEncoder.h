@@ -51,6 +51,7 @@
 
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include <map>
 
 namespace icov {
@@ -58,16 +59,22 @@ namespace encoder {
 
 class PredictionsEncoder {
 public:
-  PredictionsEncoder(const LdpcCoderParameters &LDPC_Params,
-                     std::vector<uint16_t> predictions);
+  PredictionsEncoder(
+      const LdpcCoderParameters &LDPC_Params,
+      std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
+          predictions);
   ~PredictionsEncoder() = default;
 
-  AffInteractiveCoder &get_coder(uint16_t prediction, size_t code_size);
+  ldpc_codec_layer::AffInteractiveCoder &get_coder(
+      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
+      size_t code_size);
 
   std::vector<size_t> getCoderSizes() const;
 
 protected:
-  std::map<uint16_t, std::map<size_t, std::unique_ptr<AffInteractiveCoder>>>
+  std::map<
+      omnidirectional_layer::IBlockPredictionManager::prediction_t,
+      std::map<size_t, std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder>>>
       m_coders;
 };
 } // namespace encoder

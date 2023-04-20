@@ -51,6 +51,9 @@
 
 #include <stack>
 
+namespace icov {
+namespace omnidirectional_layer {
+
 /** @class BlockOrdering
  *  @brief BlockOrdering class performs the loop on blocks starting from a
  *viewport request, until all blocks in the viewport are processed in the order
@@ -107,3 +110,5 @@ public:
   bool isBlockProcessed(size_t id) const override;
   bool blockExists(size_t id) const;
 };
+} // namespace omnidirectional_layer
+} // namespace icov

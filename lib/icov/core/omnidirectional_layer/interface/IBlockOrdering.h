@@ -50,6 +50,9 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 /** @class IBlockOrdering
  *  @brief IBlockOrdering
  *
@@ -63,3 +66,6 @@ public:
   virtual void reset() = 0;
   virtual bool isBlockProcessed(size_t id) const = 0;
 };
+
+} // namespace omnidirectional_layer
+} // namespace icov

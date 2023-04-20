@@ -1,11 +1,15 @@
 #include "EncodeDemoMode.h"
 #include "encoder/DemoEncoder.h"
 #include "icov_program/icov_program_options.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "tools/DebugTools.h"
 #include <boost/format.hpp>
+
+using namespace icov;
+using namespace icov::omnidirectional_layer;
+using namespace icov::bitstream;
+using namespace icov::encoder;
 
 const char *EncodeDemoMode::params::inputFile_id = "demo-input-file";
 const char *EncodeDemoMode::params::outputFile_id = "demo-output-file";

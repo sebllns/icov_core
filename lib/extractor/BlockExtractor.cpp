@@ -1,7 +1,5 @@
 #include "BlockExtractor.h"
 #include "extractor/ChannelExtractor.h"
-#include "helpers.h"
-#include "omnidirectional_layer/BlockPrediction.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -10,6 +8,11 @@
 #include <iterator>
 #include <memory>
 
+using namespace icov;
+using namespace icov::extractor;
+using namespace icov::omnidirectional_layer;
+using namespace icov::bitstream;
+
 icov::extractor::BlockExtractor::BlockExtractor(
     std::shared_ptr<InputIcov> &icovFile, const params &p,
     const LdpcCoderParameters &coder_params,
@@ -17,7 +20,7 @@ icov::extractor::BlockExtractor::BlockExtractor(
     : m_icovFile(icovFile), m_extractionBitstream(extraction),
       m_channelCount(p.icu_sizes.size()), m_params(p) {
 
-  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingFrame = 0;
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrame(0);
 
   bitstream::int8b compID = 0;
   for (int n : p.icu_sizes) {
@@ -35,12 +38,16 @@ icov::extractor::BlockExtractor::~BlockExtractor() {}
 
 void icov::extractor::BlockExtractor::startProcess() {}
 
-void icov::extractor::BlockExtractor::processBlock(const Block &b,
-                                                   uint16_t prediction) {
+void icov::extractor::BlockExtractor::processBlock(
+    const Block &b,
+    icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
+        prediction) {
 
-  BlockPrediction::predType block_prediction =
-      BlockPrediction::toPredType(prediction);
-  bool is_access_block = (block_prediction == BlockPrediction::predType::NONE);
+  icov::omnidirectional_layer::BlockPrediction::predType block_prediction =
+      icov::omnidirectional_layer::BlockPrediction::toPredType(prediction);
+  bool is_access_block =
+      (block_prediction ==
+       icov::omnidirectional_layer::BlockPrediction::predType::NONE);
 
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf() - 1);

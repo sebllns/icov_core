@@ -53,6 +53,7 @@
 #include "OutputIcovBase.h"
 #include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "omnidirectional_layer/Block.h"
 #include "typedef.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
@@ -78,7 +79,8 @@ private:
 
   // OutputIcovBase interface
 public:
-  void writeQaryParams(const BitSymbolProvider::PzParams &bsp) override;
+  void writeQaryParams(
+      const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) override;
   void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;
@@ -86,10 +88,14 @@ public:
   void writeBitplaneCount(const uint &v) override;
   void writeSIRate(const uint &v) override;
   void writeSIMode(const uint &v) override;
-  void startWriteBlock(const Block &b) override;
-  void startWritePrediction(uint16_t pred) override;
-  void endWritePrediction(uint16_t pred) override;
-  void endWriteBlock(const Block &b) override;
+  void startWriteBlock(const omnidirectional_layer::Block &b) override;
+  void startWritePrediction(
+      omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
+      override;
+  void endWritePrediction(
+      omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
+      override;
+  void endWriteBlock(const omnidirectional_layer::Block &b) override;
   void writeStoredSyndromeSize(const uint &v) override;
 };
 

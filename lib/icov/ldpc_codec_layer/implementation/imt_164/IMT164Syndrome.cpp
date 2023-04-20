@@ -4,7 +4,8 @@
 #include "implementation/imt_164/IMT164SyndromeTools.h"
 #include "tools/DebugTools.h"
 
-using namespace icov;
+namespace icov {
+namespace ldpc_codec_layer {
 
 IMT164SyndromeManager::IMT164SyndromeManager(
     const IMT164SyndromeTools &tools,
@@ -239,3 +240,5 @@ void IMT164SyndromeManager::compute_stored(Syndrome &o_stored_syndrome,
     }
   }
 }
+} // namespace ldpc_codec_layer
+} // namespace icov

@@ -104,8 +104,8 @@ void DecodeMode::encode() {
   const float fov_x_degree = 60;
   const point2d resolution(1920, 1080);
   angle_radian fov =
-      icov::factory::fov(fov_x_degree, icov::factory::y_x_ratio(resolution));
-  viewport_geometry vpg = icov::factory::default_geometry(fov, resolution);
+      factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
+  viewport_geometry vpg = factory::default_geometry(fov, resolution);
   m_encoder->defaultEncode(m_parameters.viewport_padding, vpg);
 }
 

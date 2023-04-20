@@ -7,6 +7,8 @@
 #define Z_LIMIT 1024
 
 namespace icov {
+namespace ldpc_codec_layer {
+
 class BitSymbolProvider {
 public:
   struct params {
@@ -134,4 +136,5 @@ private:
   SIVec m_si_symboles;
   Bitplanes m_src_bits;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov

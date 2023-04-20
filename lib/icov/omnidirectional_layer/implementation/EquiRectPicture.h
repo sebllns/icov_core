@@ -48,6 +48,9 @@
 
 #include "omnidirectional_layer/interface/IPicture.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 /** @class EquiRectPicture
  *  @brief EquiRectPicture
  *
@@ -72,3 +75,5 @@ public:
   void buildConstantSizeBlocks(int pw, int ph);
   EquiRectPicture(int pw, int ph);
 };
+} // namespace omnidirectional_layer
+} // namespace icov

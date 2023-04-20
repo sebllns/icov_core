@@ -55,7 +55,10 @@
 #include "common_types.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 
@@ -74,7 +77,7 @@ public:
     int QP = 42;
     ChromaFormat ChFormat = ChromaFormat::CHROMA_420;
     cv::Size ICU_Size = cv::Size(32, 32);
-    BitSymbolProvider::params BSP_Params;
+    ldpc_codec_layer::BitSymbolProvider::params BSP_Params;
     bool CheckDecoding = true;
     float MaxRateNoCoding = 3;
     // int maxCountSINoCoding;
@@ -107,22 +110,32 @@ public:
   void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
 
 protected:
-  void encodeBlock(const Block &b, bool access_block,
-                   const IBlockPrediction &block_prediction) override;
+  void encodeBlock(const omnidirectional_layer::Block &b, bool access_block,
+                   const omnidirectional_layer::IBlockPredictionManager
+                       &block_prediction_mgr) override;
 
-  void encodeBlockWithPrediction(const Block &b, uint16_t prediction) override;
+  void encodeBlockWithPrediction(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+      override;
   void processInput(const IInputMedia<cv::Mat> &input) override;
 
 private:
-  void encode_icu(const Block &b, const icov::video::IcuEncoder &icu_enc,
-                  BlockPrediction::predType pred);
-  void encode_si(const Block &b, const icov::video::IcuEncoder &icu_enc,
+  void encode_icu(const omnidirectional_layer::Block &b,
+                  const icov::video::IcuEncoder &icu_enc,
+                  omnidirectional_layer::BlockPrediction::predType pred);
+  void encode_si(const omnidirectional_layer::Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 BlockPrediction::predType pred, ComponentID comp);
-  void encode_tu(const Block &b, const icov::video::IcuEncoder &icu_enc,
+                 omnidirectional_layer::BlockPrediction::predType pred,
+                 ComponentID comp);
+  void encode_tu(const omnidirectional_layer::Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 BlockPrediction::predType pred, ComponentID comp,
-                 int tu_index);
+                 omnidirectional_layer::BlockPrediction::predType pred,
+                 ComponentID comp, int tu_index);
+
+  bool debug_enabled() const;
 
 protected:
   params m_params;
@@ -152,12 +165,14 @@ protected:
     bool sourceFlag;
 
     // one numcode per SI and per bitplane
-    std::map<uint16_t, NumcodeIdx> stored_numcodes;
+    std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+             NumcodeIdx>
+        stored_numcodes;
 
   } BitplaneCoder;
 
   typedef struct {
-    BitSymbolProvider::PzParams stored_pz;
+    ldpc_codec_layer::BitSymbolProvider::PzParams stored_pz;
     // mode
     uint dirmode;
   } SiCoder;
@@ -166,7 +181,9 @@ protected:
   typedef struct {
     std::vector<BitplaneCoder> bitplanes;
     std::vector<BitVec> access_block;
-    std::map<uint16_t, SiCoder> si;
+    std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+             SiCoder>
+        si;
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;

@@ -53,7 +53,7 @@
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/extracted_stream.h"
 #include <map>
 #include <memory>
@@ -90,10 +90,12 @@ public:
 
   int get_coder_size() const;
 
-  void extract_access_block(const Block &b, bitstream::byte *syndrome_buf);
+  void extract_access_block(const omnidirectional_layer::Block &b,
+                            bitstream::byte *syndrome_buf);
 
-  void extract_block(const Block &b,
-                     BlockPrediction::predType block_prediction);
+  void extract_block(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::BlockPrediction::predType block_prediction);
 
   void extract_syndrome_sizes(bool is_access_block);
 
@@ -109,7 +111,7 @@ protected:
   void extract_bitplane_syndrome(const BitplaneExtractor &bp);
 
   params m_params;
-  std::unique_ptr<AffInteractiveCoder> m_ldpc_coder;
+  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> m_ldpc_coder;
   std::shared_ptr<InputIcov> m_icovFile;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   std::vector<BitplaneExtractor> m_bitplanes;

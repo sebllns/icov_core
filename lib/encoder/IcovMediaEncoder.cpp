@@ -9,6 +9,10 @@
 #include <exception>
 #include <memory>
 
+using namespace icov;
+using namespace icov::encoder;
+using namespace icov::omnidirectional_layer;
+
 /*****************************************************************************/
 icov::encoder::IcovMediaEncoder::IcovMediaEncoder(
     const params &p, const LdpcCoderParameters &LDPC_params)
@@ -23,16 +27,16 @@ icov::encoder::IcovMediaEncoder::~IcovMediaEncoder() {
 }
 
 /*****************************************************************************/
-void encoder::IcovMediaEncoder::defaultEncode(float viewportPadding,
-                                              const viewport_geometry &vpg) {
+void icov::encoder::IcovMediaEncoder::defaultEncode(float viewportPadding,
+    const viewport_geometry &vpg) {
 
   std::unique_ptr<icov::encoder::InputMedia> input;
 
   icov::encoder::instantiateInputMedia(m_params.InputPath, input);
 
-  BlockPrediction icov_blockPrediction;
-  icov::factory::Visualization360 icov_visualization(
-      icov::factory::Visualization360::params{
+  omnidirectional_layer::BlockPrediction icov_blockPrediction;
+  omnidirectional_layer::factory::Visualization360 icov_visualization(
+      omnidirectional_layer::factory::Visualization360::params{
 
           .Width = static_cast<uint>(input->getWidth()),
 
@@ -80,7 +84,7 @@ icov::encoder::IcovMediaEncoder::createFrameEncoder() const {
 }
 
 /*****************************************************************************/
-std::unique_ptr<encoder::OutputIcovBase>
+std::unique_ptr<icov::encoder::OutputIcovBase>
 icov::encoder::IcovMediaEncoder::createOutputFile() const {
   std::unique_ptr<encoder::OutputIcovBase> ptr;
   switch (m_params.OutputType) {

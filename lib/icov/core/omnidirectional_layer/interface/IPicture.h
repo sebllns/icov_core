@@ -49,7 +49,11 @@
 
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/geometry.h"
+#include <boost/geometry/algorithms/transform.hpp>
 #include <cstddef>
+
+namespace icov {
+namespace omnidirectional_layer {
 
 class RequestManager;
 
@@ -76,36 +80,70 @@ protected:
 
 public:
   IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y,
-           float fov_x, float fov_y);
+           float fov_x, float fov_y)
+      : m_width(w), m_height(h), m_total_w(w), m_total_h(h),
+        m_center_angle_x(center_angle_x), m_center_angle_y(center_angle_y),
+        m_fov_x(fov_x), m_fov_y(fov_y) {}
 
   virtual ~IPicture() = default;
 
-  const BlockVector &icus() const;
+  const BlockVector &icus() const { return m_icus; }
 
-  bool blockExists(Block::id_t id) const;
+  bool blockExists(Block::id_t id) const {
+    return id > 0 && id <= m_icus.size();
+  }
 
-  BlockVector::iterator getById(Block::id_t id);
-  BlockVector::const_iterator getById(Block::id_t id) const;
+  BlockVector::iterator getById(Block::id_t id) {
+    if (!blockExists(id))
+      return m_icus.end();
+    return m_icus.begin() + id - 1;
+  }
 
-  BlockVector::const_iterator getBlock(int i, int j) const;
+  BlockVector::const_iterator getById(Block::id_t id) const {
+    if (!blockExists(id))
+      return m_icus.end();
+    return m_icus.begin() + id - 1;
+  }
 
-  bool isValidBlock(BlockVector::const_iterator it) const;
+  BlockVector::const_iterator getBlock(int i, int j) const {
+    return getById(getId(i, j));
+  }
 
-  void setAccessBlockFlag(Block::id_t id);
+  bool isValidBlock(BlockVector::const_iterator it) const {
+    return it != invalidBlock();
+  }
 
-  BlockVector::const_iterator invalidBlock() const;
+  void setAccessBlockFlag(Block::id_t id) {
+    getById(id)->setIsAccessBlock(true);
+  }
+
+  BlockVector::const_iterator invalidBlock() const { return m_icus.end(); }
 
   BlockVector::iterator addBlock(Block::id_t id, float pu, float pv, float pw,
-                                 float ph);
+                                 float ph) {
+    m_icus.push_back(Block(id, this, pu, pv, pw, ph));
+    return std::prev(m_icus.end());
+  }
 
-  size_t blockCount() const;
+  size_t blockCount() const { return m_icus.size(); }
 
-  virtual void getPixelCoords(float u, float v, int &i, int &j) const;
-  virtual int row(float v) const;
-  virtual int col(float u) const;
+  virtual void getPixelCoords(float u, float v, int &i, int &j) const {
+    i = this->row(u);
+    j = this->col(v);
+  }
+  virtual int row(float v) const {
+    return static_cast<int>(std::floor(v * static_cast<float>(m_total_h)));
+  }
+  virtual int col(float u) const {
+    return static_cast<int>(std::floor(u * static_cast<float>(m_total_w)));
+  }
 
-  virtual float u(int i) const;
-  virtual float v(int j) const;
+  virtual float u(int i) const {
+    return static_cast<float>(i) / static_cast<float>(m_total_w);
+  }
+  virtual float v(int j) const {
+    return static_cast<float>(j) / static_cast<float>(m_total_h);
+  }
 
   virtual size_t getId(int i, int j) const = 0;
   virtual float u(float angle_x) const = 0;
@@ -113,22 +151,37 @@ public:
   virtual float angleX(float u) const = 0;
   virtual float angleY(float v) const = 0;
 
-  float minAngleX() const;
-  float maxAngleX() const;
-  float minAngleY() const;
-  float maxAngleY() const;
-  size_t width() const;
-  size_t height() const;
-  size_t total_w() const;
-  size_t total_h() const;
-  float center_angle_x() const;
-  float center_angle_y() const;
-  float fov_x() const;
-  float fov_y() const;
+  float minAngleX() const { return m_center_angle_x - 0.5f * m_fov_x; }
+  float maxAngleX() const { return m_center_angle_x + 0.5f * m_fov_x; }
+  float minAngleY() const { return m_center_angle_y - 0.5f * m_fov_y; }
+  float maxAngleY() const { return m_center_angle_y + 0.5f * m_fov_y; }
+  size_t width() const { return m_width; }
+  size_t height() const { return m_height; }
+  size_t total_w() const { return m_total_w; }
+  size_t total_h() const { return m_total_h; }
+  float center_angle_x() const { return m_center_angle_x; }
+  float center_angle_y() const { return m_center_angle_y; }
+  float fov_x() const { return m_fov_x; }
+  float fov_y() const { return m_fov_y; }
 
-  point3d getCartesianCoords(Block::id_t id) const;
+  point3d getCartesianCoords(Block::id_t id) const {
+    angle_radian p_spher(angleX(getById(id)->center_u()),
+                         angleY(getById(id)->center_v()));
+    point3d p_cart(0.0f, 0.0f, 0.0f);
+    bg::transform(p_spher, p_cart);
+    return p_cart;
+  }
 
-  RequestManager *requestManager() const;
-  void setRequestManager(RequestManager *newRequestManager);
-  void releaseRequestManager();
+  RequestManager *requestManager() const {
+    assert(m_requestManager != nullptr);
+    return m_requestManager;
+  }
+  void setRequestManager(RequestManager *newRequestManager) {
+    m_requestManager = newRequestManager;
+    assert(m_requestManager != nullptr);
+  }
+  void releaseRequestManager() { m_requestManager = nullptr; }
 };
+
+} // namespace omnidirectional_layer
+} // namespace icov

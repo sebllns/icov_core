@@ -1,8 +1,8 @@
 /****************************************************************************/
-/** @addtogroup ICOV 
+/** @addtogroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
- 
+
 /** @addtogroup common
  *  @ingroup ICOV
  */
@@ -14,13 +14,13 @@
  *  @version 1.0.3
  *  @date 2023
  *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
- * The copyright in this software is being made available under 
+ * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version. 
+ * (at your option) any later version.
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details.
  * <br/>
  * You should have received a copy of the GNU Affero General Public License
@@ -46,32 +46,61 @@
  *
  *****************************************************************************/
 
-#ifndef IREQUEST_H
-#define IREQUEST_H
+#pragma once
 
-#include "common.h"
-
+namespace icov {
+namespace omnidirectional_layer {
 /****************************************************************************/
-/** @ingroup common
- *  @brief Defines the interface for any Request object sent to extractor.
+/**
+ * @brief Interface definition for a Request object used in the ICOV system.
+ *
+ * This abstract class defines the interface for a Request object used in the
+ * Interactive Coder for Omnidirectional Videos (ICOV) project. A Request object
+ * represents a viewpoint of the viewer's navigation in a 360-degree video,
+ * specified by its Y and X angles in the video frame.
  */
-class IRequest
-{
+class IRequest {
 protected:
-  float m_angleY;
-  float m_angleX;
+  float m_angleY; /**< Y angle of the Request object, representing the vertical
+                     rotation of the viewer's viewpoint in the video frame. */
+  float
+      m_angleX; /**< X angle of the Request object, representing the horizontal
+                   rotation of the viewer's viewpoint in the video frame. */
+
 public:
-  virtual void serialize() const  = 0;
-  virtual void deserialize()  = 0;
-  virtual void print()  = 0;
+  /**
+   * @brief Virtual destructor for the IRequest class.
+   */
+  virtual ~IRequest() {}
 
-  void setAngleX(float value);
-  void setAngleY(float value);
+  /**
+   * @brief Get the current Y angle of the Request object.
+   * @return The current Y angle of the Request object, representing the
+   * vertical rotation of the viewer's viewpoint in the video frame.
+   */
+  float angleY() const { return m_angleY; }
 
-  float getAngleX() const;
-  float getAngleY() const;
+  /**
+   * @brief Set the Y angle of the Request object to a new value.
+   * @param newAngleY The new Y angle to set, representing the vertical rotation
+   * of the viewer's viewpoint in the video frame.
+   */
+  void setAngleY(float newAngleY) { m_angleY = newAngleY; }
 
-  virtual ~IRequest(){}
+  /**
+   * @brief Get the current X angle of the Request object.
+   * @return The current X angle of the Request object, representing the
+   * horizontal rotation of the viewer's viewpoint in the video frame.
+   */
+  float angleX() const { return m_angleX; }
+
+  /**
+   * @brief Set the X angle of the Request object to a new value.
+   * @param newAngleX The new X angle to set, representing the horizontal
+   * rotation of the viewer's viewpoint in the video frame.
+   */
+  void setAngleX(float newAngleX) { m_angleX = newAngleX; }
 };
 
-#endif // IREQUEST_H
+} // namespace omnidirectional_layer
+} // namespace icov

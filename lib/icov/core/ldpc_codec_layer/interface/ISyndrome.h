@@ -46,13 +46,12 @@
  *
  *****************************************************************************/
 
-#ifndef ISYNDROME_H
-#define ISYNDROME_H
+#pragma once
 
-#include "common.h"
 #include "ldpc_codec_layer/LLRProvider.h"
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 class ISyndromeManager {
 public:
@@ -97,6 +96,5 @@ public:
 protected:
   uint32_t n;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
-
-#endif // ISYNDROME_H

@@ -21,7 +21,6 @@
 #endif
 
 namespace icov {
-
 namespace debug {
 
 static const bool debug_trace_enabled =

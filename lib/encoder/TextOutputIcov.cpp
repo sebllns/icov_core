@@ -1,6 +1,7 @@
 #include "TextOutputIcov.h"
 #include "encoder/OutputIcovBase.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
 #include <algorithm>
@@ -15,7 +16,8 @@ namespace encoder {
 TextOutputIcov::TextOutputIcov(const boost::filesystem::path &path)
     : OutputIcovBase(path, 0) {}
 
-void TextOutputIcov::writeQaryParams(const BitSymbolProvider::PzParams &bsp) {
+void TextOutputIcov::writeQaryParams(
+    const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) {
   if (bsp.getZAmplitude() == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "Q 0 ";
@@ -95,16 +97,20 @@ void TextOutputIcov::writeSIMode(const uint &v) {
 } // namespace encoder
 } // namespace icov
 
-void icov::encoder::TextOutputIcov::startWriteBlock(const Block &b) {
+void icov::encoder::TextOutputIcov::startWriteBlock(
+    const omnidirectional_layer::Block &b) {
   getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       << std::endl
       << "BLOCK " << b.getIdSelf() << std::endl;
 }
 
-void icov::encoder::TextOutputIcov::startWritePrediction(uint16_t pred) {
+void icov::encoder::TextOutputIcov::startWritePrediction(
+    icov::omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {
   getStream(bitstream::eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
 }
 
-void icov::encoder::TextOutputIcov::endWritePrediction(uint16_t pred) {}
+void icov::encoder::TextOutputIcov::endWritePrediction(
+    omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {}
 
-void icov::encoder::TextOutputIcov::endWriteBlock(const Block &b) {}
+void icov::encoder::TextOutputIcov::endWriteBlock(
+    const omnidirectional_layer::Block &b) {}

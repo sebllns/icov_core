@@ -3,7 +3,10 @@
 #include "enc_helpers.h"
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "tools/DebugTools.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
@@ -22,10 +25,16 @@
 #define WIN_PRED "Predictions"
 #define WIN_DEBUG_DECODE "Decoded"
 
+using namespace icov;
+using namespace icov::omnidirectional_layer;
+using namespace icov::bitstream;
+using namespace icov::encoder;
+
 namespace fs = boost::filesystem;
 using namespace icov::encoder;
-using SI_SIDE = BlockPrediction::predType;
-const int DemoEncoder::PredViewID = PIC_PREDICTION + BlockPrediction::MAX;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
+const int DemoEncoder::PredViewID =
+    PIC_PREDICTION + omnidirectional_layer::BlockPrediction::MAX;
 const int DemoEncoder::RecoViewID = DemoEncoder::PredViewID + 1;
 const int DemoEncoder::DecodedDebugViewID = DemoEncoder::RecoViewID + 1;
 
@@ -44,8 +53,9 @@ DemoEncoder::DemoEncoder(int frame, const params &p,
                          const LdpcCoderParameters &ldpc_params)
     : m_params(p), m_numComp(getNumberValidComponents(p.chFormat)),
       m_firstDisplayBlocks(true), m_pic_ptr(nullptr) {
-  std::unique_ptr<AffInteractiveCoder> ycoder, uvcoder;
-  icov::LdpcCoderFactory::create_coder_yuv(ldpc_params, ycoder, uvcoder);
+  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> ycoder, uvcoder;
+  ldpc_codec_layer::LdpcCoderFactory::create_coder_yuv(ldpc_params, ycoder,
+                                                       uvcoder);
 
   m_coders[ycoder->get_n()] = std::move(ycoder);
   m_coders[uvcoder->get_n()] = std::move(uvcoder);
@@ -84,30 +94,32 @@ void DemoEncoder::onEncodeBlock(int x, int y) {
 
   std::cout << x << ", " << y << std::endl;
 
-  uint predid = BlockPrediction::NONE;
+  uint predid = omnidirectional_layer::BlockPrediction::NONE;
 
   if (x == 0)
-    predid |= BlockPrediction::LEFT;
+    predid |= omnidirectional_layer::BlockPrediction::LEFT;
 
   if (x == 2)
-    predid |= BlockPrediction::RIGHT;
+    predid |= omnidirectional_layer::BlockPrediction::RIGHT;
 
   if (y == 0)
-    predid |= BlockPrediction::TOP;
+    predid |= omnidirectional_layer::BlockPrediction::TOP;
 
   if (y == 2)
-    predid |= BlockPrediction::BOTTOM;
+    predid |= omnidirectional_layer::BlockPrediction::BOTTOM;
 
-  BlockPrediction::predType pred = BlockPrediction::toPredType(predid);
+  omnidirectional_layer::BlockPrediction::predType pred =
+      omnidirectional_layer::BlockPrediction::toPredType(predid);
 
-  std::cout << BlockPrediction::toString(pred) << std::endl;
+  std::cout << omnidirectional_layer::BlockPrediction::toString(pred)
+            << std::endl;
 
   // encode with prediction
   auto b = m_pic_ptr->getBlock(
       m_currentBlockPosition.y / m_params.icuSize_luma.height,
       m_currentBlockPosition.x / m_params.icuSize_luma.width);
 
-  std::cout << b->getId(Block::SELF) << std::endl;
+  std::cout << b->getId(omnidirectional_layer::Block::SELF) << std::endl;
 
   if (m_pic_ptr->isValidBlock(b))
     encodeBlockWithPrediction(*b, predid);
@@ -469,9 +481,11 @@ void DemoEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
 /*****************************************************************************/
 void icov::encoder::DemoEncoder::encode_tu(
-    const Block &b, const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
-    ComponentID comp, int tu_index) {
+    const omnidirectional_layer::Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    const icov::video::SideInformationUnit &si,
+    omnidirectional_layer::BlockPrediction::predType pred, ComponentID comp,
+    int tu_index) {
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
   auto x_tuCoeff = x_tu.getQuantizedTransformCoeffs(comp);
 
@@ -563,8 +577,9 @@ void icov::encoder::DemoEncoder::encode_si(
 }
 
 void icov::encoder::DemoEncoder::encode_icu(
-    const Block &b, const icov::video::IcuEncoder &icu_enc,
-    BlockPrediction::predType pred) {
+    const omnidirectional_layer::Block &b,
+    const icov::video::IcuEncoder &icu_enc,
+    omnidirectional_layer::BlockPrediction::predType pred) {
 
   ICOV_INFO << "Encode ICU with prediction " << BlockPrediction::toString(pred)
             << std::endl;
@@ -577,12 +592,15 @@ void icov::encoder::DemoEncoder::encode_icu(
 }
 
 /*****************************************************************************/
-void DemoEncoder::encodeBlockWithPrediction(const Block &b,
-                                            uint16_t prediction) {
+void DemoEncoder::encodeBlockWithPrediction(
+    const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
 
-  BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
+  omnidirectional_layer::BlockPrediction::predType pred =
+      omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  ICOV_DEBUG << "try encode prediction " << BlockPrediction::toString(pred)
+  ICOV_DEBUG << "try encode prediction "
+             << omnidirectional_layer::BlockPrediction::toString(pred)
              << std::endl;
 
   int x_block = b.parent()->col(b.u());
@@ -609,8 +627,8 @@ void DemoEncoder::encodeBlockWithPrediction(const Block &b,
 }
 
 void icov::encoder::DemoEncoder::encode(
-    IInputMedia<cv::Mat> &input, const IPicture &picture,
-    const IBlockPrediction &block_prediction) {
+    IInputMedia<cv::Mat> &input, const omnidirectional_layer::IPicture &picture,
+    const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
   m_pic_ptr = &picture;
   IFrameEncoder::encode(input, picture, block_prediction);
   m_pic_ptr = nullptr;

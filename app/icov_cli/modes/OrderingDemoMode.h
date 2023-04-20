@@ -54,6 +54,9 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
+namespace icov {
+namespace omnidirectional_layer {
+
 class BlockProcessor : public IBlockProcessor {
 
 private:
@@ -79,7 +82,8 @@ public:
   ~BlockProcessor();
 
   // IBlockProcessor interface
-  void processBlock(const Block &b, uint16_t prediction) override;
+  void processBlock(const Block &b,
+                    IBlockPredictionManager::prediction_t prediction) override;
   void endProcess() override;
   void startProcess() override;
   std::ostream encodingStream();
@@ -106,3 +110,5 @@ private:
     float viewportFov;
   } m_parameters;
 };
+} // namespace omnidirectional_layer
+} // namespace icov

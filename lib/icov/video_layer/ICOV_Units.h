@@ -92,15 +92,15 @@ public:
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
 
-  icov::BitSymbolProvider
+  ldpc_codec_layer::BitSymbolProvider
   getBitSymbolProvider(const ComponentID id, const TransformUnit &si_tu,
-                       const BitSymbolProvider::params &bsp_params) const {
+                       const ldpc_codec_layer::BitSymbolProvider::params &bsp_params) const {
     auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
     size_t tu_size = x_tuCoeff.area();
 
     ICOV_TRACE << tu_size;
 
-    BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+    ldpc_codec_layer::BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
 
     auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(id);
 

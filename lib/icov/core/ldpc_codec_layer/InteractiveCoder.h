@@ -1,16 +1,15 @@
 #pragma once
 
-#include "IInteractiveCoder.h"
-
 #include "BitSymbolProvider.h"
 #include "LLRProvider.h"
-#include "common.h"
-#include "interface/IDecoder.h"
+#include "interface/IInteractiveCoder.h"
+#include "interface/ILDPC_Decoder.h"
 #include "interface/IMatrixProvider.h"
 #include "interface/ISyndrome.h"
 #include <memory>
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 template <class Matrix> class InteractiveCoder : public IInteractiveCoder {
   using IMatrixProvider_sp = std::shared_ptr<IMatrixProvider<Matrix>>;
@@ -92,6 +91,7 @@ protected:
   std::unique_ptr<Syndrome> m_decodage_syndrome;
   BitVec m_decoded_bits;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
 
 #include "InteractiveCoder.hpp"

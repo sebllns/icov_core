@@ -3,7 +3,9 @@
 #include "decoder/ChannelDecoder.h"
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
@@ -27,11 +29,11 @@
 
 namespace fs = boost::filesystem;
 using namespace icov::decoder;
-using SI_SIDE = BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
 
-BlockDecoder::BlockDecoder(const params &p,
-                           const LdpcCoderParameters &coder_params,
-                           const bitstream::sp_IcovExtractedBitstream &extraction)
+BlockDecoder::BlockDecoder(
+    const params &p, const LdpcCoderParameters &coder_params,
+    const bitstream::sp_IcovExtractedBitstream &extraction)
     : IBlockDecoder(), m_params(p) {
   // CONSTANTS
   const Size icuSize_luma =
@@ -99,15 +101,16 @@ BlockDecoder::~BlockDecoder() {}
 
 void icov::decoder::BlockDecoder::startProcess() {}
 
-void icov::decoder::BlockDecoder::processBlock(const Block &b,
-                                               uint16_t prediction) {
+void icov::decoder::BlockDecoder::processBlock(
+    const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
 
-  BlockPrediction::predType pred = BlockPrediction::toPredType(prediction);
+  omnidirectional_layer::BlockPrediction::predType pred = omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- try decode prediction " << BlockPrediction::toString(pred)
+  std::cout << "---- try decode prediction " << omnidirectional_layer::BlockPrediction::toString(pred)
             << std::endl;
 
-  icov::helpers::assert::check(BlockPrediction::isValidPrediction(pred),
+  icov::helpers::assert::check(omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
                                "Bad prediction value");
 
   int x_block = b.parent()->col(b.u());
@@ -189,9 +192,10 @@ const PelUnitBuf BlockDecoder::decodingOutput() const {
   return m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 }
 
-void BlockDecoder::decode_icu(const Block &b, const video::IcuEncoder &icu_enc,
-                              BlockPrediction::predType pred) {
-  if (pred == BlockPrediction::NONE) {
+void BlockDecoder::decode_icu(
+    const omnidirectional_layer::Block &b, const video::IcuEncoder &icu_enc,
+    omnidirectional_layer::BlockPrediction::predType pred) {
+  if (pred == omnidirectional_layer::BlockPrediction::NONE) {
     // access block
     std::cout << "Decode ACCESS BLOCK\n";
   } else {

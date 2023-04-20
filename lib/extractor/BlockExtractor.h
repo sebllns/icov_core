@@ -51,6 +51,7 @@
 
 #include "extractor/ChannelExtractor.h"
 #include "extractor/InputMedia.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/extracted_stream.h"
 #include <memory>
@@ -60,7 +61,7 @@
 
 namespace icov {
 namespace extractor {
-class BlockExtractor : public IBlockProcessor {
+class BlockExtractor : public omnidirectional_layer::IBlockProcessor {
   // IBlockProcessor interface
 public:
   struct params {
@@ -74,7 +75,9 @@ public:
   ~BlockExtractor();
 
   void startProcess() override;
-  void processBlock(const Block &b, uint16_t prediction) override;
+  void processBlock(const omnidirectional_layer::Block &b,
+                    omnidirectional_layer::IBlockPredictionManager::prediction_t
+                        prediction) override;
   void endProcess() override;
 
 protected:

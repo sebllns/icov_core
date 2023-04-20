@@ -56,6 +56,13 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
+using namespace icov;
+using namespace icov::extractor;
+using namespace icov::omnidirectional_layer;
+using namespace icov::ldpc_codec_layer;
+using namespace icov::bitstream;
+using namespace icov::encoder;
+
 class DecodeMode {
   struct params {
     static const char *InputFile_ID;

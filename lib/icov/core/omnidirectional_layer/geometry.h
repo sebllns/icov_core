@@ -47,10 +47,15 @@
  *****************************************************************************/
 #pragma once
 
-#include "boost/geometry.hpp"
+#include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/transform.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/point_xyz.hpp>
 #include <boost/qvm/all.hpp>
+
+namespace icov {
+namespace omnidirectional_layer {
 
 namespace bg = boost::geometry;
 
@@ -95,3 +100,5 @@ inline angle_degree r2d(const angle_radian &r) {
   bg::transform(r, d);
   return d;
 }
+} // namespace omnidirectional_layer
+} // namespace icov

@@ -51,13 +51,13 @@
 #include "LdpcCoderParameters.h"
 #include "ldpc_codec_layer/LLRProvider.h"
 #include "ldpc_codec_layer/implementation/imt_164/IMT164MatrixProvider.h"
-#include "ldpc_codec_layer/interface/IDecoder.h"
+#include "ldpc_codec_layer/interface/ILDPC_Decoder.h"
 #include "ldpc_codec_layer/interface/ISyndrome.h"
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 
-using AffMatrix = aff3ct::tools::Sparse_matrix;
-
 namespace icov {
+namespace ldpc_codec_layer {
+using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 class LdpcCoder_IMT64 {
   struct encode_parameters {
@@ -85,4 +85,5 @@ public:
                      const parameters &p);
 };
 
+} // namespace ldpc_codec_layer
 } // namespace icov

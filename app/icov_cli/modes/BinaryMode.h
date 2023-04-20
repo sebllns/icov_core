@@ -45,10 +45,12 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
+
+using namespace icov;
+using namespace icov::ldpc_codec_layer;
+
 namespace po = boost::program_options;
 
 class BinaryMode {
@@ -67,11 +69,11 @@ private:
   bool check_decoding();
   void write_results();
 
-  std::unique_ptr<AffInteractiveCoder> m_coder;
-  BitVec m_src_bits;
-  BitVec m_dec_bits;
+  std::unique_ptr<icov::ldpc_codec_layer::AffInteractiveCoder> m_coder;
+  icov::BitVec m_src_bits;
+  icov::BitVec m_dec_bits;
   std::vector<double> m_pcrossover;
-  Syndrome m_stored_syndrome;
+  icov::Syndrome m_stored_syndrome;
   uint32_t m_numcodeIdx;
   uint32_t m_error_count;
   int m_nite;

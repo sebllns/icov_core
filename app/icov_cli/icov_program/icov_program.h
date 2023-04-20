@@ -3,7 +3,7 @@
 #include "common.h"
 #include "helpers.h"
 #include "icov_program_options.h"
-#include "ldpc_codec_layer/IInteractiveCoder.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "tools/DebugTools.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/log/expressions.hpp>
@@ -115,7 +115,7 @@ public:
 static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
   icov::helpers::rand::init();
 
-  icov::IInteractiveCoder::params.CheckBitplaneEncoding =
+  icov::ldpc_codec_layer::IInteractiveCoder::params.CheckBitplaneEncoding =
 #ifdef ICOV_CHECK_BITPLANE_ENCODING_ENABLED
       true;
 #else

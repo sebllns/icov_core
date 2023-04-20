@@ -6,7 +6,8 @@
 #include "helpers.h"
 #include <algorithm>
 
-using namespace icov;
+namespace icov {
+namespace ldpc_codec_layer {
 
 template <class Matrix> size_t InteractiveCoder<Matrix>::get_n() const {
   return m_psyndromeMgr->get_n();
@@ -404,3 +405,5 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
     }
   }
 }
+} // namespace ldpc_codec_layer
+} // namespace icov

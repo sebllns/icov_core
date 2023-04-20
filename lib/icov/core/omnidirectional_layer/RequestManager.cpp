@@ -1,20 +1,22 @@
 #include "RequestManager.h"
-
 #include "helpers.h"
-#include "omnidirectional_layer/BlockPrediction.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 
-const std::shared_ptr<IBlockPrediction> &
+namespace icov {
+namespace omnidirectional_layer {
+
+const std::shared_ptr<IBlockPredictionManager> &
 RequestManager::blockPrediction() const {
   return m_blockPrediction;
 }
 
 void RequestManager::setBlockPrediction(
-    const std::shared_ptr<IBlockPrediction> &newBlockPrediction) {
+    const std::shared_ptr<IBlockPredictionManager> &newBlockPrediction) {
   m_blockPrediction = newBlockPrediction;
 }
 
@@ -112,3 +114,5 @@ void RequestManager::setBlockProcessor(
     const std::shared_ptr<IBlockProcessor> &newBlockProcessor) {
   m_blockProcessor = newBlockProcessor;
 }
+} // namespace omnidirectional_layer
+} // namespace icov

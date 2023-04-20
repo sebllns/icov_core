@@ -5,6 +5,8 @@
 #include <string>
 
 namespace icov {
+namespace ldpc_codec_layer {
+
 Bitplanes BitSymbolProvider::compute_bits(const SymboleVec &src_symbols) {
   int x_min = *std::min_element(src_symbols.begin(), src_symbols.end());
   int x_max = *std::max_element(src_symbols.begin(), src_symbols.end());
@@ -374,4 +376,5 @@ int BitSymbolProvider::PzParams::getZAmplitude() const {
 
 int BitSymbolProvider::PzParams::getQ0Quantized() const { return q0_quantized; }
 
+} // namespace ldpc_codec_layer
 } // namespace icov

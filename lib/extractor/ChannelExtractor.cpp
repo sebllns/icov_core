@@ -2,7 +2,9 @@
 
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "typedef.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
@@ -16,16 +18,17 @@
 
 namespace fs = boost::filesystem;
 using namespace icov::extractor;
-using SI_SIDE = BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
 
-bitstream::byte ChannelExtractor::SyndromePadding = 0;
+icov::bitstream::byte ChannelExtractor::SyndromePadding = 0;
 
 ChannelExtractor::ChannelExtractor(
     const params &p, std::shared_ptr<InputIcov> &icovFile,
     const bitstream::sp_IcovExtractedBitstream &bitstream,
     const LdpcCoderParameters &LDPC_params)
     : m_params(p),
-      m_ldpc_coder(icov::LdpcCoderFactory::create_coder(LDPC_params)),
+      m_ldpc_coder(
+          icov::ldpc_codec_layer::LdpcCoderFactory::create_coder(LDPC_params)),
       m_icovFile(icovFile), m_bitstream(bitstream),
       m_maxSyndromeBufferLength(
           bitstream::bitToByteCount(m_ldpc_coder->get_m_max()))
@@ -39,21 +42,27 @@ ChannelExtractor::ChannelExtractor(
 ChannelExtractor::~ChannelExtractor() {}
 
 void ChannelExtractor::extract_block(
-    const Block &b, BlockPrediction::predType block_prediction) {
+    const omnidirectional_layer::Block &b,
+    omnidirectional_layer::BlockPrediction::predType block_prediction) {
 
-  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingBlock =
-      b.getIdSelf() - 1;
-  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingChannel =
-      m_params.CompID;
-  bitstream::VideoStreamDebbuger::get_mutable_instance().DebuggingPrediction =
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlock(
+      b.getIdSelf() - 1);
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannel(
+      m_params.CompID);
+  bitstream::VideoStreamDebugger::get_mutable_instance().DebuggingPrediction =
       block_prediction;
 
-  ICOV_ASSERT_MSG(block_prediction != BlockPrediction::predType::UNKNOWN,
-                  "Prediction unknown");
+  ICOV_ASSERT_MSG(
+      block_prediction !=
+          icov::omnidirectional_layer::BlockPrediction::predType::UNKNOWN,
+      "Prediction unknown");
 
-  bool is_access_block = (block_prediction == BlockPrediction::predType::NONE);
+  bool is_access_block =
+      (block_prediction ==
+       omnidirectional_layer::BlockPrediction::predType::NONE);
   bool is_inter_prediction =
-      (block_prediction == BlockPrediction::predType::INTER);
+      (block_prediction ==
+       omnidirectional_layer::BlockPrediction::predType::INTER);
   bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
   m_bitstream->push(m_bitplaneCount);
@@ -101,7 +110,7 @@ void ChannelExtractor::extract_block(
       // CHECK BITPLANE
 
       std::cout << "EXTRACT BITPLANE " << bp.ReadSyndromeBitSize << " "
-                << bitstream::VideoStreamDebbuger::get_const_instance()
+                << bitstream::VideoStreamDebugger::get_const_instance()
                        .getDebuggingSI()
                        .bitplanes[bp_i]
                        .numcode

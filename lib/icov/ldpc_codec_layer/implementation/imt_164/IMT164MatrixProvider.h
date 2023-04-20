@@ -1,5 +1,4 @@
-#ifndef IMT164MatrixProvider_H
-#define IMT164MatrixProvider_H
+#pragma once
 
 #include "common.h"
 #include "ldpc_codec_layer/aff3ct/IAff3ctMatrixProvider.h"
@@ -7,6 +6,8 @@
 #include <stack>
 
 namespace icov {
+namespace ldpc_codec_layer {
+
 class IMT164MatrixProvider : public IAff3ctMatrixProvider {
 public:
   IMT164MatrixProvider(const std::string &root, int min_level, int max_level,
@@ -56,5 +57,5 @@ private:
 
   IMT164SyndromeTools m_tools;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
-#endif // IMT164MatrixProvider_H

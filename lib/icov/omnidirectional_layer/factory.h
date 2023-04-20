@@ -58,12 +58,13 @@
 #include <memory>
 #include <valarray>
 
-//// Fallback, in case M_PI doesn't exist.
-//#ifndef M_PI
-//#define M_PI 3.14159265358979323846
-//#endif
+// Fallback, in case M_PI doesn't exist.
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace icov {
+namespace omnidirectional_layer {
 namespace factory {
 
 inline float x_y_ratio(const point2d &resolution) {
@@ -131,7 +132,7 @@ struct Navigation360 {
   };
 
   void init(params p, const viewport_geometry &vpg) {
-    Visualization = std::make_unique<icov::factory::Visualization360>(
+    Visualization = std::make_unique<factory::Visualization360>(
         p.VisualizationParams);
     Visualization->init(p.IcuSize, vpg);
     Request = std::make_unique<RequestManager>();
@@ -142,4 +143,5 @@ struct Navigation360 {
 };
 
 } // namespace factory
+} // namespace omnidirectional_layer
 } // namespace icov

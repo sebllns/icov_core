@@ -45,8 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
-#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "common_types.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
 
@@ -67,16 +66,16 @@ private:
   void fill_pcrossover();
   bool check_decoding();
   void write_results();
-  FastMatrix<icov::bit> getHighLevelMatrix();
-  FastMatrix<icov::bit> getHighLevelMatrixImt164();
-  FastMatrix<uint16_t> getMappingVector(int m);
+  icov::FastMatrix<icov::bit> getHighLevelMatrix();
+  icov::FastMatrix<icov::bit> getHighLevelMatrixImt164();
+  icov::FastMatrix<uint16_t> getMappingVector(int m);
   int getNextLevel(int current);
   int getMinLevel();
 
-  void compare_matrix(const AffMatrix &m,
+  void compare_matrix(const icov::ldpc_codec_layer::AffMatrix &m,
                       const icov::FastMatrix<icov::bit> &gt);
 
-  std::unique_ptr<AffInteractiveCoder> m_coder;
-  Syndrome m_stored_syndrome;
+  std::unique_ptr<icov::ldpc_codec_layer::AffInteractiveCoder> m_coder;
+  icov::Syndrome m_stored_syndrome;
   std::string datapath;
 };

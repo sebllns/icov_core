@@ -8,7 +8,8 @@
  */
 
 /** @file IViewportManager.h
- *  @brief IViewportManager conveying IViewportManager Units (VPU) for VCL data
+ *  @brief Interface for a viewport manager that provides information about the
+ * visibility of a block within a viewport geometry.
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -49,32 +50,43 @@
 
 #include "omnidirectional_layer/geometry.h"
 
+namespace icov {
+namespace omnidirectional_layer {
+
 class Block;
 
-/** @class IViewportManager
- *  @brief IViewportManager
- *
- *  A IViewportManager is
+/**
+ * @class IViewportManager
+ * @brief Interface for a viewport manager that provides information about the
+ * visibility of a block within a viewport geometry.
  */
-class IViewportManager
-{
+class IViewportManager {
 private:
-    viewport_geometry m_viewportGeometry;
+  viewport_geometry m_viewportGeometry; /**< The viewport geometry */
 
 public:
-    virtual ~IViewportManager() = default;
-    virtual bool isBlockVisible(const Block& b) const = 0;
-    const viewport_geometry &viewportGeometry() const;
-    viewport_geometry &viewportGeometry();
+  virtual ~IViewportManager() = default;
+
+  /**
+   * @brief Determines if a block is visible within the viewport geometry.
+   * @param b The block to check for visibility.
+   * @return True if the block is visible, false otherwise.
+   */
+  virtual bool isBlockVisible(const Block &b) const = 0;
+
+  /**
+   * @brief Gets the const reference to the viewport geometry.
+   * @return The const reference to the viewport geometry.
+   */
+  const viewport_geometry &viewportGeometry() const {
+    return m_viewportGeometry;
+  }
+
+  /**
+   * @brief Gets the reference to the viewport geometry.
+   * @return The reference to the viewport geometry.
+   */
+  viewport_geometry &viewportGeometry() { return m_viewportGeometry; }
 };
-
-inline const viewport_geometry &IViewportManager::viewportGeometry() const
-{
-    return m_viewportGeometry;
-}
-
-inline viewport_geometry &IViewportManager::viewportGeometry()
-{
-    return m_viewportGeometry;
-}
-
+} // namespace omnidirectional_layer
+} // namespace icov

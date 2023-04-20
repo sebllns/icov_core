@@ -5,7 +5,8 @@
 #include "common_types.h"
 #include "helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "omnidirectional_layer/BlockPrediction.h"
+
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "typedef.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
@@ -19,9 +20,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+namespace icov {
+namespace decoder {
+
 namespace fs = boost::filesystem;
 using namespace icov::decoder;
-using SI_SIDE = BlockPrediction::predType;
+using SI_SIDE = omnidirectional_layer::BlockPrediction::predType;
 
 ChannelDecoder::ChannelDecoder(
     const params &p, const LdpcCoderParameters &LDPC_params,
@@ -33,20 +37,22 @@ ChannelDecoder::ChannelDecoder(
       //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
       //          p.icu_size))
       //              .block(p.CompID)),
-      m_ldpc_coder(icov::LdpcCoderFactory::create_coder(LDPC_params)),
+    m_ldpc_coder(ldpc_codec_layer::LdpcCoderFactory::create_coder(LDPC_params)),
       m_blockBitplane(m_ldpc_coder->get_n(), 0),
       m_blockSI(m_ldpc_coder->get_n(), 0),
       m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),
-      m_block_prediction(BlockPrediction::predType::UNKNOWN),
+    m_block_prediction(omnidirectional_layer::BlockPrediction::predType::UNKNOWN),
       m_bitstream(extraction) {
   intraPred.init(m_params.QpParam.chromaFomat);
 }
 
 ChannelDecoder::~ChannelDecoder() {}
 
-void ChannelDecoder::decode_icu(int icu_enc,
-                                BlockPrediction::predType block_prediction) {
-  ICOV_ASSERT_MSG(block_prediction != BlockPrediction::predType::UNKNOWN,
+void ChannelDecoder::decode_icu(
+    int icu_enc,
+    omnidirectional_layer::BlockPrediction::predType block_prediction) {
+  ICOV_ASSERT_MSG(block_prediction !=
+                      omnidirectional_layer::BlockPrediction::predType::UNKNOWN,
                   "Prediction unknown;")
 
   m_icuIndex = icu_enc;
@@ -59,9 +65,9 @@ void ChannelDecoder::decode_icu(int icu_enc,
 
   std::cout << "COMP " << m_params.CompID;
 
-  if (block_prediction != BlockPrediction::predType::NONE) {
+  if (block_prediction != omnidirectional_layer::BlockPrediction::predType::NONE) {
     std::cout << "DECODE BLOCK WITH PRED "
-              << BlockPrediction::toString(block_prediction) << std::endl;
+                << omnidirectional_layer::BlockPrediction::toString(block_prediction) << std::endl;
   } else {
     std::cout << "DECODE ACCESS BLOCK\n";
   }
@@ -71,7 +77,7 @@ void ChannelDecoder::decode_icu(int icu_enc,
 
   for (int i = 0; i < bitplaneCount; ++i) {
     bitstream::byte quantizedNumcode =
-        (block_prediction == BlockPrediction::predType::NONE)
+        (block_prediction == omnidirectional_layer::BlockPrediction::predType::NONE)
             ? 1
             : m_bitstream->pop();
 
@@ -156,7 +162,8 @@ void ChannelDecoder::read_syndrome(int syndrome_size) {
 
 void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                                      const Syndrome &synd) {
-  if (m_block_prediction == BlockPrediction::predType::NONE) {
+  if (m_block_prediction ==
+      icov::omnidirectional_layer::BlockPrediction::predType::NONE) {
     ICOV_ASSERT_MSG(numcode == bitstream::enum_t::SyndromeType::SOURCE,
                     "Numcode value must be set to 1 for access block");
   }
@@ -195,11 +202,15 @@ void ChannelDecoder::end_decode_icu() {
       dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
       m_params.bit_depth, m_params.maxLog2TrDynamicRange);
 
-  m_block_prediction = BlockPrediction::predType::UNKNOWN;
+  m_block_prediction =
+      icov::omnidirectional_layer::BlockPrediction::predType::UNKNOWN;
 }
 
-Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }
+icov::Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }
 
-const AffInteractiveCoder &ChannelDecoder::ldpc_coder() const {
+const icov::ldpc_codec_layer::AffInteractiveCoder &
+ChannelDecoder::ldpc_coder() const {
   return *m_ldpc_coder;
 }
+} // namespace decoder
+} // namespace icov

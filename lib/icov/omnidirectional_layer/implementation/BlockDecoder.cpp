@@ -1,20 +1,17 @@
-/// \todo remove this after the test is done
-#pragma warning(disable : 4244)
-
 #include "BlockDecoder.h"
 #include <cmath>
 
-using namespace std;
-
+namespace icov {
+namespace omnidirectional_layer {
 BlockDecoder::BlockDecoder() {
-  cout << "new Decoder" << endl;
+  std::cout << "new Decoder" << std::endl;
   m_startTime = clock();
 }
 
-BlockDecoder::~BlockDecoder() { cout << "destroy Decoder" << endl; }
+BlockDecoder::~BlockDecoder() { std::cout << "destroy Decoder" << std::endl; }
 
 void BlockDecoder::decode() {
-  cout << "Decoder::decode" << endl;
+  std::cout << "Decoder::decode" << std::endl;
 
   int width = m_width;
   int height = m_height;
@@ -61,6 +58,9 @@ float BlockDecoder::getTime() {
   return (float)(clock() - m_startTime) / CLOCKS_PER_SEC;
 }
 
-void BlockDecoder::processBlock(const Block &b, uint16_t prediction) {
+void BlockDecoder::processBlock(
+    const Block &b, IBlockPredictionManager::prediction_t prediction) {
   std::cout << "decode block " << b.getId(Block::SELF) << std::endl;
 }
+} // namespace omnidirectional_layer
+} // namespace icov

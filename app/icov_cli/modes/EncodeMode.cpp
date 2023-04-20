@@ -15,6 +15,11 @@
 #include <memory>
 #include <utility>
 
+using namespace icov;
+using namespace icov::omnidirectional_layer;
+using namespace icov::bitstream;
+using namespace icov::encoder;
+
 const char *EncodeMode::params::inputFile_id = "encode-input-file";
 const char *EncodeMode::params::outputFile_id = "encode-output-file";
 const char *EncodeMode::params::icuSize_id = "encode-icu-size";
@@ -91,7 +96,7 @@ void EncodeMode::run() {
                   .ChFormat = CHROMA_420,
                   .ICU_Size =
                       cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-                  .BSP_Params = BitSymbolProvider::params{enable_z_quantization,
+                  .BSP_Params = icov::ldpc_codec_layer::BitSymbolProvider::params{enable_z_quantization,
                                                           q_values},
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3}},
@@ -100,7 +105,7 @@ void EncodeMode::run() {
   const float fov_x_degree = 60;
   const point2d resolution(1920, 1080);
   angle_radian fov =
-      icov::factory::fov(fov_x_degree, icov::factory::y_x_ratio(resolution));
-  viewport_geometry vpg = icov::factory::default_geometry(fov, resolution);
+      factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
+  viewport_geometry vpg = factory::default_geometry(fov, resolution);
   encoder.defaultEncode(m_parameters.viewportPadding, vpg);
 }

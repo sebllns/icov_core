@@ -1,9 +1,10 @@
-#ifndef IMatrixProvider_H
-#define IMatrixProvider_H
+#pragma once
 
-#include "common.h"
+#include "common_types.h"
+#include "tools/DebugTools.h"
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 template <class M> class IMatrixProvider {
 public:
@@ -46,5 +47,5 @@ protected:
   std::vector<M> m_matrices;
   virtual void _buildMatrix(int numcode, M &matrix) = 0;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
-#endif // IMatrixProvider_H

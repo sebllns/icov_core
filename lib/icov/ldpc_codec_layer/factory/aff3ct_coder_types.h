@@ -2,6 +2,10 @@
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 #include <memory>
 
+namespace icov {
+namespace ldpc_codec_layer {
 using AffMatrix = aff3ct::tools::Sparse_matrix;
-using AffInteractiveCoder = icov::InteractiveCoder<AffMatrix>;
-using p_InteractiveCoder = std::unique_ptr<icov::InteractiveCoder<AffMatrix>>;
+using AffInteractiveCoder = InteractiveCoder<AffMatrix>;
+using p_InteractiveCoder = std::unique_ptr<InteractiveCoder<AffMatrix>>;
+} // namespace ldpc_codec_layer
+} // namespace icov

@@ -47,8 +47,11 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
+
+namespace icov {
+namespace omnidirectional_layer {
 
 /** @class IBlockProcessor
  *  @brief IBlockProcessor
@@ -69,10 +72,15 @@ public:
   /// \param b
   /// \param prediction
   ///
-  virtual void processBlock(const Block &b, uint16_t prediction) = 0;
+  virtual void
+  processBlock(const Block &b,
+               IBlockPredictionManager::prediction_t prediction) = 0;
 
   ///
   /// \brief startProcess : executed AFTER loop on processBlock
   ///
   inline virtual void endProcess(){};
 };
+
+} // namespace omnidirectional_layer
+} // namespace icov

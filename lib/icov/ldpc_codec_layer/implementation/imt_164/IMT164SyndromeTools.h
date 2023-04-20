@@ -50,6 +50,7 @@
 #pragma once
 
 namespace icov {
+namespace ldpc_codec_layer {
 
 ///
 /// \brief The IMT164SyndromeTools class is manager for the syndrome given by
@@ -65,16 +66,13 @@ public:
   IMT164SyndromeTools(int n, int min_m, int max_m);
 
   int get_m(int numcode) const;
-
   int get_m_max() const;
-
   int get_m_min() const;
-
   int get_numcode(int m) const;
-
   int get_n() const;
 
 private:
   int m_n, m_min_m, m_max_m;
 };
+} // namespace ldpc_codec_layer
 } // namespace icov
