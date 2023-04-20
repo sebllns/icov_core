@@ -92,7 +92,7 @@ BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
       m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {}
 
 BitSymbolProvider::PzParams
-BitSymbolProvider::get_pz(const SymboleVec &src_symbols, int bitplane_count,
+BitSymbolProvider::get_pz_params(const SymboleVec &src_symbols, int bitplane_count,
                           const SIVec &side_info, const params &p) {
 
   ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
@@ -168,7 +168,7 @@ BitSymbolProvider::get_pz(const SymboleVec &src_symbols, int bitplane_count,
 
 void BitSymbolProvider::set_si(const SIVec &si, const params &p) {
   m_si_symboles = si;
-  m_pz_params = get_pz(m_src_symboles, bitplane_count(), si, p);
+  m_pz_params = get_pz_params(m_src_symboles, bitplane_count(), si, p);
 }
 
 void BitSymbolProvider::set_si(const SIVec &si, const PzParams &pz) {
@@ -186,32 +186,14 @@ void BitSymbolProvider::set_si(const SIVec &si, const PzParams &pz) {
       Bitplanes(pz.getBitplaneCount(), BitVec(m_src_symboles.size(), 0));
 }
 
-// int BitSymbolProvider::z_min() const { return m_pz_params.getZmin(); }
+// float BitSymbolProvider::pz(int zmin, int zmax) const {
+//  float p = 0;
 
-// int BitSymbolProvider::z_max() const { return m_pz_params.getZmax(); }
-
-// float BitSymbolProvider::q0() const { return m_pz_params.getQ0(); }
-
-// float BitSymbolProvider::q1() const { return m_pz_params.getQ1(); }
-
-// int BitSymbolProvider::z0() const { return m_pz_params.getZ0(); }
-
-float BitSymbolProvider::pz(int z) const {
-  return (z == m_pz_params.getZ0())
-             ? m_pz_params.getQ0()
-             : ((z < m_pz_params.getZmin() || z > m_pz_params.getZmax())
-                    ? 0.0
-                    : m_pz_params.getQ1());
-}
-
-float BitSymbolProvider::pz(int zmin, int zmax) const {
-  float p = 0;
-
-  for (int z = zmin; z <= zmax; z++) {
-    p += this->pz(z);
-  }
-  return p;
-}
+//  for (int z = zmin; z <= zmax; z++) {
+//    p += this->pz(z);
+//  }
+//  return p;
+//}
 
 int BitSymbolProvider::bitplane_count() const { return m_src_bits.size(); }
 
@@ -230,8 +212,8 @@ bool BitSymbolProvider::pqkb(bool negative, int abs_predec, int l, int b,
   for (int i = 0; i < imax; i++) {
     int z = (abs_predec + i) * (1 - 2 * negative) - yk;
 
-    p0 += this->pz(z);
-    p1 += this->pz(z + imax * (1 - 2 * negative));
+    p0 += this->pz_params().getPZ(z);
+    p1 += this->pz_params().getPZ(z + imax * (1 - 2 * negative));
   }
 
   // ICOV_TRACE <<  "\t\t\t yk=" << yk << " a=" << p0 <<  " b=" << p1
@@ -313,9 +295,9 @@ float BitSymbolProvider::pqks(int yk) const {
 
   // IMPLEMENTATION SEBASTIEN
   for (int i = 0; i < imax; i++) {
-    p0 += this->pz(i - yk);
+    p0 += this->pz_params().getPZ(i - yk);
     if (i != 0)
-      p1 += this->pz(-i - yk);
+      p1 += this->pz_params().getPZ(-i - yk);
   }
 
   p1 += p0;
@@ -360,6 +342,11 @@ float BitSymbolProvider::PzParams::getQ0() const { return q0; }
 float BitSymbolProvider::PzParams::getQ1() const {
   return (getZAmplitude() == 0) ? 0.0
                                 : ((1.0 - getQ0()) / (float)getZAmplitude());
+}
+
+float BitSymbolProvider::PzParams::getPZ(int z) const {
+  return (z == getZ0()) ? getQ0()
+                        : ((z < getZmin() || z > getZmax()) ? 0.0 : getQ1());
 }
 
 ushort BitSymbolProvider::PzParams::getBitplaneCount() const {

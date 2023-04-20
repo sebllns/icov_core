@@ -32,13 +32,14 @@ public:
 
     int getZAmplitude() const;
     float getQ1() const;
+    float getPZ(int z) const;
 
     void setBpCount(ushort newBp_count);
 
     ushort getBitplaneCount() const;
 
   private:
-    ushort zmin, zmax, z0;
+    short zmin, zmax, z0;
     ushort q0_quantized, bp_count;
     float q0;
   };
@@ -63,8 +64,9 @@ public:
   /// \brief set_si for encode mode: set SI and update Pz distribution
   /// parameters \param si \param enable_z_quantization \param q_values
   ///
-  static PzParams get_pz(const SymboleVec &src_symboles, int bitplane_count,
-                         const SIVec &si, const params &p);
+  static PzParams get_pz_params(const SymboleVec &src_symboles,
+                                int bitplane_count, const SIVec &si,
+                                const params &p);
 
   void inject_bitplane(SymboleVec &output, const BitVec &input, int bp_shift);
 
@@ -109,9 +111,9 @@ public:
   //  int z0() const;
 
   //..0..0 [q'..q' q q'..q'] 0..0..
-  float pz(int z) const;
+  // float pz(int z) const;
 
-  float pz(int zmin, int zmax) const;
+  //  float pz(int zmin, int zmax) const;
 
   // L
   int bitplane_count() const;

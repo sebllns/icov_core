@@ -43,7 +43,7 @@ public:
       : m_capacity(size), m_size(size), m_data(data) {}
 
   virtual ~FastArray() {
-    if (m_data != nullptr) {
+    if (m_capacity > 0 && m_data != nullptr) {
       delete[] m_data;
       m_data = nullptr;
     }
@@ -51,7 +51,7 @@ public:
 
   FastArray<T> &operator=(const FastArray<T> &f) {
 
-    if (m_data != nullptr) {
+    if (m_capacity > 0 && m_data != nullptr) {
       delete[] m_data;
       m_data = nullptr;
     }

@@ -318,7 +318,7 @@ void icov::encoder::FrameEncoder::encode_tu(
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
   if (bsp.pz_params().getZAmplitude() == 0) {
-    ICOV_TRACE << "SI identical... no coding...";
+    ICOV_TRACE << "SI symbole identical... no coding...";
   } else {
     encoder.encode_bitplanes(bsp, si_numcodes, si_synd);
 
