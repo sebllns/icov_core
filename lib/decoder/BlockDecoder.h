@@ -107,7 +107,7 @@ public:
 protected:
   void decode_icu(const omnidirectional_layer::Block &b,
                   const icov::video::IcuEncoder &icu_enc,
-                  omnidirectional_layer::BlockPrediction::predType pred);
+                    omnidirectional_layer::BlockPrediction::ePredType pred);
 
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;

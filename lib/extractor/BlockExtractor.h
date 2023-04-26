@@ -61,8 +61,12 @@
 
 namespace icov {
 namespace extractor {
+
+/**
+ * @brief Class for extracting block data (i.e. ICU) from input encoded ICOV
+ * file
+ */
 class BlockExtractor : public omnidirectional_layer::IBlockProcessor {
-  // IBlockProcessor interface
 public:
   struct params {
     std::vector<int> icu_sizes;
@@ -81,11 +85,19 @@ public:
   void endProcess() override;
 
 protected:
-  std::shared_ptr<InputIcov> m_icovFile;
-  bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
-  int m_channelCount;
-  std::vector<std::unique_ptr<ChannelExtractor>> m_channelExtractor;
-  params m_params;
+  std::shared_ptr<InputIcov>
+      m_icovFile; /**< Shared pointer to input ICOV file */
+
+  bitstream::sp_IcovExtractedBitstream
+      m_extractionBitstream; /**< Output extracted bitstream */
+
+  int m_channelCount; /**< Number of channels */
+
+  std::vector<std::unique_ptr<ChannelExtractor>>
+      m_channelExtractor; /**< Vector of unique pointers to ChannelExtractor
+                             objects */
+
+  params m_params; /**< BlockExtractor parameters */
 };
 } // namespace extractor
 } // namespace icov

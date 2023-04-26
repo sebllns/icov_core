@@ -52,6 +52,7 @@
 #include <boost/serialization/singleton.hpp>
 #include <cstdint>
 #include <map>
+#include <string>
 #include <vector>
 namespace icov {
 namespace bitstream {
@@ -61,7 +62,8 @@ class VideoEncodingStreamCache
   friend class boost::serialization::singleton<VideoEncodingStreamCache>;
 
 public:
-  typedef std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t, SIStream>
+  typedef std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+                   SIStream>
       ChannelBlockStreamDebugger;
   typedef std::vector<ChannelBlockStreamDebugger>
       MultiChannelBlockStreamDebugger;
@@ -86,52 +88,116 @@ class VideoStreamDebugger
 public:
   VideoStreamDebugger() = default;
 
-    omnidirectional_layer::BlockPrediction::predType DebuggingPrediction;
-
   bool frameAvailable() const {
-    return mDebuggingFrame <
+    return mDebuggingFrameID <
            VideoEncodingStreamCache::get_const_instance().getFrameCount();
   }
 
-  //  const VideoEncodingStreamCache::FrameStreamDebugger &
-  //  getDebuggingFrame() const {
-  //    icov::helpers::assert::check(frameAvailable(), "No more frame to
-  //    debug"); return VideoEncodingStreamCache::get_const_instance().getFrame(
-  //        DebuggingFrame);
-  //  }
+  bool blockAvailable() const {
+    return (frameAvailable() &&
+            mDebuggingBlockID < (int)getDebuggingFrame().size());
+  }
+
+  bool channelAvailable() const {
+    return (frameAvailable() && blockAvailable() &&
+            mDebuggingChannelID < (int)getDebuggingBlock().size());
+  }
+
+  bool predictionAvailable() const {
+    return (frameAvailable() && blockAvailable() && channelAvailable() &&
+            getDebuggingChannel().count(mDebuggingPredictionID) == 1);
+  }
+
+  const VideoEncodingStreamCache::FrameStreamDebugger &
+  getDebuggingFrame() const {
+    icov::helpers::assert::check(frameAvailable(),
+                                 "Frame is not available ID = " +
+                                     std::to_string(mDebuggingFrameID));
+    return VideoEncodingStreamCache::get_const_instance().getFrame(
+        mDebuggingFrameID);
+  }
+
+  const VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
+  getDebuggingBlock() const {
+    icov::helpers::assert::check(blockAvailable(),
+                                 "Block is not available ID = " +
+                                     std::to_string(mDebuggingBlockID));
+    return getDebuggingFrame().at(mDebuggingBlockID);
+  }
+
+  const VideoEncodingStreamCache::ChannelBlockStreamDebugger &
+  getDebuggingChannel() const {
+    icov::helpers::assert::check(blockAvailable(),
+                                 "Channel is not available ID = " +
+                                     std::to_string(mDebuggingChannelID));
+    return getDebuggingBlock().at(mDebuggingChannelID);
+  }
+
   const SIStream &getDebuggingSI() const {
-    icov::helpers::assert::check(frameAvailable(), "No more frame to debug");
-    return VideoEncodingStreamCache::get_const_instance()
-        .getFrame(mDebuggingFrame)
-        .at(mDebuggingBlock)
-        .at(mDebuggingChannel)
-        .at(DebuggingPrediction);
+    icov::helpers::assert::check(
+        predictionAvailable(),
+        "Prediction is not available ID = " +
+            omnidirectional_layer::BlockPrediction::toString(
+                mDebuggingPredictionID));
+    return getDebuggingChannel().at(mDebuggingPredictionID);
+  }
+
+  VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
+    icov::helpers::assert::check(frameAvailable(),
+                                 "Frame is not available ID = " +
+                                     std::to_string(mDebuggingFrameID));
+    return VideoEncodingStreamCache::get_mutable_instance().getFrame(
+        mDebuggingFrameID);
+  }
+
+  VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
+  getDebuggingBlock() {
+    if (!blockAvailable()) {
+      getDebuggingFrame().resize(mDebuggingBlockID + 1);
+    }
+    return getDebuggingFrame().at(mDebuggingBlockID);
+  }
+
+  VideoEncodingStreamCache::ChannelBlockStreamDebugger &getDebuggingChannel() {
+    if (!channelAvailable()) {
+      getDebuggingBlock().resize(mDebuggingChannelID + 1);
+    }
+    return getDebuggingBlock().at(mDebuggingChannelID);
   }
 
   SIStream &getDebuggingSI() {
-    icov::helpers::assert::check(frameAvailable(), "No more frame to debug");
-    return VideoEncodingStreamCache::get_mutable_instance().getFrame(
-        mDebuggingFrame)[mDebuggingBlock][mDebuggingChannel]
-                        [DebuggingPrediction];
+    return getDebuggingChannel()[mDebuggingPredictionID];
   }
 
-  int debuggingFrame() const { return mDebuggingFrame; }
-  void setDebuggingFrame(int newDebuggingFrame) {
-    mDebuggingFrame = newDebuggingFrame;
+  int debuggingFrameID() const { return mDebuggingFrameID; }
+  void setDebuggingFrameID(int newDebuggingFrame) {
+    mDebuggingFrameID = newDebuggingFrame;
   }
-  int debuggingBlock() const { return mDebuggingBlock; }
-  void setDebuggingBlock(int newDebuggingBlock) {
-    mDebuggingBlock = newDebuggingBlock;
+  int debuggingBlockID() const { return mDebuggingBlockID; }
+  void setDebuggingBlockID(int newDebuggingBlock) {
+    mDebuggingBlockID = newDebuggingBlock;
   }
-  int debuggingChannel() const { return mDebuggingChannel; }
-  void setDebuggingChannel(int newDebuggingChannel) {
-    mDebuggingChannel = newDebuggingChannel;
+  int debuggingChannelID() const { return mDebuggingChannelID; }
+  void setDebuggingChannelID(int newDebuggingChannel) {
+    mDebuggingChannelID = newDebuggingChannel;
+  }
+
+  omnidirectional_layer::BlockPrediction::ePredType
+  debuggingPredictionID() const {
+    return mDebuggingPredictionID;
+  }
+  void
+  setDebuggingPredictionID(omnidirectional_layer::BlockPrediction::ePredType
+                               newDebuggingPrediction) {
+    mDebuggingPredictionID = newDebuggingPrediction;
   }
 
 private:
-  int mDebuggingFrame;
-  int mDebuggingBlock;
-  int mDebuggingChannel;
+  int mDebuggingFrameID;
+  int mDebuggingBlockID;
+  int mDebuggingChannelID;
+  omnidirectional_layer::BlockPrediction::ePredType mDebuggingPredictionID;
 };
+
 } // namespace bitstream
 } // namespace icov

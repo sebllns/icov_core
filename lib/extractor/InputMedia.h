@@ -109,23 +109,36 @@ public:
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;
+
+  /**
+   * @brief Get the input stream for a given ID
+   * @param id The ID of the input stream
+   * @return A reference to the input stream for the given ID
+   */
   std::istream &getStream(int id);
 
-  void passPrediction(int bitplaneCount);
+  /**
+   * @brief Jump the prediction for the given number of bitplanes
+   * @param bitplaneCount The number of bitplanes to pass the prediction for
+   */
+  void jumpPrediction(int bitplaneCount);
 
 private:
-  bitstream::ContentParameterSet m_contentParameterSet;
-  boost::dynamic_bitset<> m_syndromes;
-  std::map<int, pstream> m_fileParts;
+  bitstream::ContentParameterSet
+      m_contentParameterSet; ///< The content parameter set for the input stream
 
-  int syndrome_bitshift;
-  int last_bit_shift;
-  bitstream::byte last_byte;
+  std::map<int, pstream>
+      m_fileParts; ///< The map of input file streams for each ID
 
-  size_t m_blockCount;
+  size_t m_blockCount; ///< The number of blocks in the input stream
 
-  std::vector<std::streampos> m_rates_pos;
-  std::vector<std::streampos> m_synd_pos;
+  std::vector<std::streampos>
+      m_rates_pos; ///< The vector of stream positions that indicates where SI
+                   ///< rates data start for each block in the input stream
+
+  std::vector<std::streampos>
+      m_synd_pos; ///< The vector of stream positions that indicates where
+                  ///< syndrome data start for each block in the input stream
 
   bitstream::QaryParams m_qaryParams;
 };

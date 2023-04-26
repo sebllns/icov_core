@@ -8,8 +8,7 @@ namespace icov {
 namespace ldpc_codec_layer {
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;
-using AffLDPCA =
-    Decoder_LDPCA_BP_flooding_SPA<icov::BitVal, icov::LLRVal>;
+using AffLDPCA = Decoder_LDPCA_BP_flooding_SPA<icov::BitVal, icov::LLRVal>;
 
 class Aff3ctDecoder : public ILDPC_Decoder<AffMatrix> {
 public:
@@ -20,10 +19,6 @@ public:
               Syndrome &syndrome, const AffMatrix &matrix) override;
 
   void get_llr_order(int i_numcode, std::vector<size_t> &o_idx) const override;
-
-  //  void decode_doping(BitVec &o_decoded, std::vector<size_t> &o_doping_idx,
-  //                     int n, const std::vector<LLRVal> &llr, Syndrome
-  //                     &syndrome, const AffMatrix &matrix);
 
   void init_decoder(int i, int n, int n_ite, const AffMatrix &matrix);
 

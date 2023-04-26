@@ -133,7 +133,7 @@ void icov::extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
   std::cout << std::endl;
 }
 
-void icov::extractor::InputIcov::passPrediction(int bitplaneCount) {
+void icov::extractor::InputIcov::jumpPrediction(int bitplaneCount) {
   bitstream::byte val = 0;
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
 
@@ -159,7 +159,7 @@ void icov::extractor::InputIcov::selectPrediction(
   int channelCount = bitplaneCount.size();
   for (int i = 0; i < pred_idx; ++i) {
     for (int c = 0; c < channelCount; ++c) {
-      passPrediction(bitplaneCount[c]);
+      jumpPrediction(bitplaneCount[c]);
     }
   }
 }

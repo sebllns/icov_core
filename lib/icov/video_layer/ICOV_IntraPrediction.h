@@ -52,7 +52,7 @@ namespace icov::video {
 
 class IntraPrediction {
 public:
-    using REFERENCE_SAMPLE_SIDE = omnidirectional_layer::BlockPrediction::predType;
+    using REFERENCE_SAMPLE_SIDE = omnidirectional_layer::BlockPrediction::ePredType;
 
 private:
   Pel *m_piYuvExt[MAX_NUM_COMPONENT][NUM_PRED_BUF];

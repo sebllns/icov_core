@@ -1297,7 +1297,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
 
     std::cout << "    " << progress << "%                \r" << std::flush;
     IcuEncoder &icu_enc = vec_icus[i];
-    std::map<omnidirectional_layer::BlockPrediction::predType, SideInformationUnit> &currICUintraMap =
+    std::map<omnidirectional_layer::BlockPrediction::ePredType, SideInformationUnit> &currICUintraMap =
         icu_enc.get_intraSIsMap();
 
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);

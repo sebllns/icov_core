@@ -32,7 +32,7 @@ using namespace icov::encoder;
 
 namespace fs = boost::filesystem;
 using namespace icov::encoder;
-using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 const int DemoEncoder::PredViewID =
     PIC_PREDICTION + omnidirectional_layer::BlockPrediction::MAX;
 const int DemoEncoder::RecoViewID = DemoEncoder::PredViewID + 1;
@@ -107,8 +107,8 @@ void DemoEncoder::onEncodeBlock(int x, int y) {
 
   if (y == 2)
     predid |= omnidirectional_layer::BlockPrediction::BOTTOM;
-
-  omnidirectional_layer::BlockPrediction::predType pred =
+  
+  omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(predid);
 
   std::cout << omnidirectional_layer::BlockPrediction::toString(pred)
@@ -331,8 +331,8 @@ void DemoEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
   m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
   //  vvc_pic.create(PIC_PREDICTION, extendedFrameArea);
-
-  std::vector<BlockPrediction::predType> predVec = {
+  
+  std::vector<BlockPrediction::ePredType> predVec = {
       BlockPrediction::LEFT,         BlockPrediction::RIGHT,
       BlockPrediction::TOP,          BlockPrediction::BOTTOM,
       BlockPrediction::TOP_LEFT,     // 0b00101
@@ -484,7 +484,7 @@ void icov::encoder::DemoEncoder::encode_tu(
     const omnidirectional_layer::Block &b,
     const icov::video::IcuEncoder &icu_enc,
     const icov::video::SideInformationUnit &si,
-    omnidirectional_layer::BlockPrediction::predType pred, ComponentID comp,
+    omnidirectional_layer::BlockPrediction::ePredType pred, ComponentID comp,
     int tu_index) {
   const auto &x_tu = icu_enc.get_sourceX().TUs[tu_index];
   auto x_tuCoeff = x_tu.getQuantizedTransformCoeffs(comp);
@@ -564,7 +564,7 @@ void icov::encoder::DemoEncoder::encode_tu(
 
 void icov::encoder::DemoEncoder::encode_si(
     const Block &b, const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si, BlockPrediction::predType pred,
+    const icov::video::SideInformationUnit &si, BlockPrediction::ePredType pred,
     ComponentID comp) {
   for (size_t tu_index = 0; tu_index < si.TUs.size(); tu_index++) {
     encode_tu(b, icu_enc, si, pred, comp, tu_index);
@@ -579,7 +579,7 @@ void icov::encoder::DemoEncoder::encode_si(
 void icov::encoder::DemoEncoder::encode_icu(
     const omnidirectional_layer::Block &b,
     const icov::video::IcuEncoder &icu_enc,
-    omnidirectional_layer::BlockPrediction::predType pred) {
+    omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   ICOV_INFO << "Encode ICU with prediction " << BlockPrediction::toString(pred)
             << std::endl;
@@ -595,8 +595,8 @@ void icov::encoder::DemoEncoder::encode_icu(
 void DemoEncoder::encodeBlockWithPrediction(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
-
-  omnidirectional_layer::BlockPrediction::predType pred =
+  
+  omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
   ICOV_DEBUG << "try encode prediction "

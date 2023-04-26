@@ -130,7 +130,7 @@ void IFrameEncoder<T>::encode(
 
   this->processInput(input);
   for (const auto &b : picture.icus()) {
-    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlock(
+    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
         b.getIdSelf() - 1);
     encodeBlock(b, b.isAccessBlock(), block_prediction);
   }
@@ -176,7 +176,7 @@ void IMediaEncoder<T>::encode(
 
   for (int i = 0; i < frameCount; i++) {
     ICOV_TRACE << "Encode frame " << i;
-    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrame(i);
+    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(i);
     input.setFrame(i);
     pFrameEnc->setFrame(i);
     pFrameEnc->encode(input, picture, block_prediction);

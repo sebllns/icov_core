@@ -18,7 +18,7 @@
 
 namespace fs = boost::filesystem;
 using namespace icov::extractor;
-using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 icov::bitstream::byte ChannelExtractor::SyndromePadding = 0;
 
@@ -43,26 +43,26 @@ ChannelExtractor::~ChannelExtractor() {}
 
 void ChannelExtractor::extract_block(
     const omnidirectional_layer::Block &b,
-    omnidirectional_layer::BlockPrediction::predType block_prediction) {
-
-  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlock(
-      b.getIdSelf() - 1);
-  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannel(
-      m_params.CompID);
-  bitstream::VideoStreamDebugger::get_mutable_instance().DebuggingPrediction =
-      block_prediction;
+    omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
   ICOV_ASSERT_MSG(
       block_prediction !=
-          icov::omnidirectional_layer::BlockPrediction::predType::UNKNOWN,
+          icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
       "Prediction unknown");
+
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
+      b.getIdSelf() - 1);
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
+      m_params.CompID);
+  bitstream::VideoStreamDebugger::get_mutable_instance()
+      .setDebuggingPredictionID(block_prediction);
 
   bool is_access_block =
       (block_prediction ==
-       omnidirectional_layer::BlockPrediction::predType::NONE);
+       omnidirectional_layer::BlockPrediction::ePredType::NONE);
   bool is_inter_prediction =
       (block_prediction ==
-       omnidirectional_layer::BlockPrediction::predType::INTER);
+       omnidirectional_layer::BlockPrediction::ePredType::INTER);
   bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
   m_bitstream->push(m_bitplaneCount);
@@ -96,6 +96,19 @@ void ChannelExtractor::extract_block(
     }
 
     int bp_i = 0;
+
+    if (bitstream::VideoStreamDebugger::get_const_instance()
+            .predictionAvailable()) {
+      ICOV_TRACE << "CHECK DEBUG PRED "
+                 << omnidirectional_layer::BlockPrediction::toString(
+                        block_prediction);
+      const auto &dbg_si =
+          bitstream::VideoStreamDebugger::get_const_instance().getDebuggingSI();
+      icov::helpers::assert::equal(
+          dbg_si.bitplanes.size(), m_bitplanes.size(),
+          "Bitplanes count do not match with debugger value");
+    }
+
     for (auto &bp : m_bitplanes) {
       m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
                        bp.ReadSyndromeQuantizedSize);
@@ -108,7 +121,6 @@ void ChannelExtractor::extract_block(
                               bp.ReadSyndromePadding);
 
       // CHECK BITPLANE
-
       std::cout << "EXTRACT BITPLANE " << bp.ReadSyndromeBitSize << " "
                 << bitstream::VideoStreamDebugger::get_const_instance()
                        .getDebuggingSI()
@@ -131,6 +143,7 @@ void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
   // read bitplane count
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
                    m_bitplaneCount);
+
   // output.resize(bitplaneCount);
   std::cout << " m_bitplaneCount " << (int)m_bitplaneCount << "\n";
 
@@ -177,7 +190,7 @@ void ChannelExtractor::pass_access_block() {
 }
 
 void ChannelExtractor::pass_prediction() {
-  m_icovFile->passPrediction(m_bitplaneCount);
+  m_icovFile->jumpPrediction(m_bitplaneCount);
 }
 
 void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
@@ -190,4 +203,4 @@ void ChannelExtractor::extract_bitplane_syndrome(const BitplaneExtractor &bp) {
   m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);
 }
 
-int ChannelExtractor::get_coder_size() const { return m_ldpc_coder->get_n(); }
+int ChannelExtractor::getCoderSize() const { return m_ldpc_coder->get_n(); }

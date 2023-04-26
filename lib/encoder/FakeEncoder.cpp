@@ -34,8 +34,8 @@ void FakeEncoder::encodeBlockWithPrediction(
   auto rect_block = cv::Rect(bx, by, bw, bh);
 
   cv::Scalar color;
-
-  switch (static_cast<omnidirectional_layer::BlockPrediction::predType>(
+  
+  switch (static_cast<omnidirectional_layer::BlockPrediction::ePredType>(
       prediction)) {
   case omnidirectional_layer::BlockPrediction::NONE:
     color = cv::Scalar(0, 255, 0);

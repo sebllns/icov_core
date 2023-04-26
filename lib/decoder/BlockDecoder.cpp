@@ -29,7 +29,7 @@
 
 namespace fs = boost::filesystem;
 using namespace icov::decoder;
-using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::predType;
+using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 BlockDecoder::BlockDecoder(
     const params &p, const LdpcCoderParameters &coder_params,
@@ -104,8 +104,8 @@ void icov::decoder::BlockDecoder::startProcess() {}
 void icov::decoder::BlockDecoder::processBlock(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
-
-  omnidirectional_layer::BlockPrediction::predType pred = omnidirectional_layer::BlockPrediction::toPredType(prediction);
+  
+  omnidirectional_layer::BlockPrediction::ePredType pred = omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
   std::cout << "---- try decode prediction " << omnidirectional_layer::BlockPrediction::toString(pred)
             << std::endl;
@@ -194,7 +194,7 @@ const PelUnitBuf BlockDecoder::decodingOutput() const {
 
 void BlockDecoder::decode_icu(
     const omnidirectional_layer::Block &b, const video::IcuEncoder &icu_enc,
-    omnidirectional_layer::BlockPrediction::predType pred) {
+    omnidirectional_layer::BlockPrediction::ePredType pred) {
   if (pred == omnidirectional_layer::BlockPrediction::NONE) {
     // access block
     std::cout << "Decode ACCESS BLOCK\n";

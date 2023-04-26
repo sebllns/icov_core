@@ -117,7 +117,7 @@ protected:
   std::shared_ptr<InputIcov> m_icovFile;
   bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
   factory::Navigation360 m_navigation;
-  BlockProcessor m_blockProcessor;
+  std::shared_ptr<BlockProcessor> m_blockProcessor;
 };
 } // namespace decoder
 } // namespace icov

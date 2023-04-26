@@ -29,12 +29,12 @@ public:
   ~InteractiveCoder() = default;
 
   size_t get_n() const override;
-  int get_m(const NumcodeIdx &numcodeIdx) const;
+  int get_m(const NumcodeIdx &numcodeIdx) const override;
   int get_m_min() const;
   int get_m_max() const;
 
-  Rate get_r(const NumcodeIdx &numcodeIdx) const;
-  Rate get_r(int m, int n) const;
+  Rate get_r(const NumcodeIdx &numcodeIdx) const override;
+  Rate get_r(int m, int n) const override;
 
   bool testConvergence(const BitVec &decoded, const BitVec &source) const;
 

@@ -25,7 +25,7 @@ namespace decoder {
 
 namespace fs = boost::filesystem;
 using namespace icov::decoder;
-using SI_SIDE = omnidirectional_layer::BlockPrediction::predType;
+using SI_SIDE = omnidirectional_layer::BlockPrediction::ePredType;
 
 ChannelDecoder::ChannelDecoder(
     const params &p, const LdpcCoderParameters &LDPC_params,
@@ -41,7 +41,7 @@ ChannelDecoder::ChannelDecoder(
       m_blockBitplane(m_ldpc_coder->get_n(), 0),
       m_blockSI(m_ldpc_coder->get_n(), 0),
       m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),
-    m_block_prediction(omnidirectional_layer::BlockPrediction::predType::UNKNOWN),
+    m_block_prediction(omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN),
       m_bitstream(extraction) {
   intraPred.init(m_params.QpParam.chromaFomat);
 }
@@ -50,9 +50,9 @@ ChannelDecoder::~ChannelDecoder() {}
 
 void ChannelDecoder::decode_icu(
     int icu_enc,
-    omnidirectional_layer::BlockPrediction::predType block_prediction) {
+    omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
   ICOV_ASSERT_MSG(block_prediction !=
-                      omnidirectional_layer::BlockPrediction::predType::UNKNOWN,
+                      omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
                   "Prediction unknown;")
 
   m_icuIndex = icu_enc;
@@ -64,8 +64,8 @@ void ChannelDecoder::decode_icu(
   //  const auto comp_area_value = m_blockArea.area();
 
   std::cout << "COMP " << m_params.CompID;
-
-  if (block_prediction != omnidirectional_layer::BlockPrediction::predType::NONE) {
+  
+  if (block_prediction != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     std::cout << "DECODE BLOCK WITH PRED "
                 << omnidirectional_layer::BlockPrediction::toString(block_prediction) << std::endl;
   } else {
@@ -77,7 +77,7 @@ void ChannelDecoder::decode_icu(
 
   for (int i = 0; i < bitplaneCount; ++i) {
     bitstream::byte quantizedNumcode =
-        (block_prediction == omnidirectional_layer::BlockPrediction::predType::NONE)
+        (block_prediction == omnidirectional_layer::BlockPrediction::ePredType::NONE)
             ? 1
             : m_bitstream->pop();
 
@@ -163,7 +163,7 @@ void ChannelDecoder::read_syndrome(int syndrome_size) {
 void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                                      const Syndrome &synd) {
   if (m_block_prediction ==
-      icov::omnidirectional_layer::BlockPrediction::predType::NONE) {
+      icov::omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     ICOV_ASSERT_MSG(numcode == bitstream::enum_t::SyndromeType::SOURCE,
                     "Numcode value must be set to 1 for access block");
   }
@@ -203,7 +203,7 @@ void ChannelDecoder::end_decode_icu() {
       m_params.bit_depth, m_params.maxLog2TrDynamicRange);
 
   m_block_prediction =
-      icov::omnidirectional_layer::BlockPrediction::predType::UNKNOWN;
+      icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN;
 }
 
 icov::Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }

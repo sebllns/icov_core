@@ -88,7 +88,7 @@ static const omnidirectional_layer::IBlockPredictionManager::prediction_t
         omnidirectional_layer::BlockPrediction::INTER,
 };
 
-inline int getPredictionOrder(omnidirectional_layer::BlockPrediction::predType pred) {
+inline int getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
   switch (pred) {
 
     case omnidirectional_layer::BlockPrediction::TOP_RIGHT:

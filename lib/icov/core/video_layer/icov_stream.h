@@ -76,6 +76,11 @@ typedef char int8b;
 
 #define BYTE_SIZE CHAR_BIT * sizeof(icov::bitstream::byte)
 
+namespace flag_t {
+const byte NoCodingSI = 0;
+const byte AccessBlock = 0;
+} // namespace flag_t
+
 namespace enum_t {
 
 enum SyndromeType { NO_CODING = 0, SOURCE = 1 };
@@ -181,9 +186,9 @@ public:
   typedef typename traits_type::int_type int_type;
   typedef typename traits_type::off_type off_type;
   typedef typename traits_type::pos_type pos_type;
-
   typedef std::vector<char_type>::size_type size_type;
   using Base = std::basic_streambuf<icov::bitstream::byte>;
+
   bitstreambuf() : m_buffer(), read_pos(0) {
     // Base::setp(&(*m_buffer.begin()), &(*(m_buffer.end() - 1))); // set
     // std::basic_streambuf

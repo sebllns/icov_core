@@ -46,6 +46,8 @@
  *
  *****************************************************************************/
 #pragma once
+#include "implementation/BlockOrdering.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
@@ -132,13 +134,16 @@ struct Navigation360 {
   };
 
   void init(params p, const viewport_geometry &vpg) {
-    Visualization = std::make_unique<factory::Visualization360>(
-        p.VisualizationParams);
+    Visualization =
+        std::make_unique<factory::Visualization360>(p.VisualizationParams);
     Visualization->init(p.IcuSize, vpg);
     Request = std::make_unique<RequestManager>();
     Request->setPicture(Visualization->Picture);
     Request->setViewport(Visualization->ViewportManager);
     Request->setAccessBlocks(Visualization->AccessBlockManager);
+    Request->setBlockPrediction(std::make_shared<BlockPrediction>());
+    Request->setOrdering(
+        std::make_shared<BlockOrdering>(Visualization->Picture->blockCount()));
   }
 };
 

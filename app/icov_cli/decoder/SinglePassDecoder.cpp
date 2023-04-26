@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/implementation/DummyViewportManager.h"
 #include "video_layer/extracted_stream.h"
 #include <algorithm>
 #include <iterator>
@@ -77,12 +78,14 @@ void decoder::SinglePassDecoder::initialize(
     extractor_params.icu_sizes.push_back(blockArea.block(compID).area());
   }
 
-  m_blockProcessor.ExtractionBitstream = m_extractionBitstream;
+  m_blockProcessor = std::make_shared<BlockProcessor>();
 
-  m_blockProcessor.Extractor = std::make_unique<BlockExtractor>(
+  m_blockProcessor->ExtractionBitstream = m_extractionBitstream;
+
+  m_blockProcessor->Extractor = std::make_unique<BlockExtractor>(
       m_icovFile, extractor_params, coder_params, m_extractionBitstream);
 
-  m_blockProcessor.Decoder = std::make_unique<BlockDecoder>(
+  m_blockProcessor->Decoder = std::make_unique<BlockDecoder>(
       BlockDecoder::params{
 
           .qp = cps.qp,
@@ -109,6 +112,8 @@ void decoder::SinglePassDecoder::initialize(
 
       },
       coder_params, m_extractionBitstream);
+
+  m_navigation.Request->setBlockProcessor(m_blockProcessor);
 }
 
 const InputIcov &decoder::SinglePassDecoder::icovFile() const {
@@ -121,16 +126,17 @@ decoder::SinglePassDecoder::icovNavigation() const {
 }
 
 IBlockProcessor &decoder::SinglePassDecoder::blockProcessor() {
-  return m_blockProcessor;
+  return *m_blockProcessor;
 }
 
 const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
-  return m_blockProcessor.Decoder->decodingOutput();
+  return m_blockProcessor->Decoder->decodingOutput();
 }
 
 void decoder::SinglePassDecoder::decodeFullFrame() {
-  m_blockProcessor.startProcess();
-
+  m_navigation.Request->setViewport(std::make_shared<DummyViewportManager>());
+  m_navigation.Request->update(0, 0);
+  // m_blockProcessor.startProcess();
   //  for (int icu = 0; icu < block_count; ++icu) {
   //    ICOV_DEBUG << "decode block " << icu;
 
@@ -146,5 +152,5 @@ void decoder::SinglePassDecoder::decodeFullFrame() {
   //    m_blockProcessor.processBlock(*b, block_prediction);
   //  }
 
-  m_blockProcessor.endProcess();
+  // m_blockProcessor.endProcess();
 }

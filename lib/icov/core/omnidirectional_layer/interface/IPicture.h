@@ -76,8 +76,6 @@ protected:
 
   BlockVector m_icus;
 
-  RequestManager *m_requestManager;
-
 public:
   IPicture(size_t w, size_t h, float center_angle_x, float center_angle_y,
            float fov_x, float fov_y)
@@ -171,16 +169,6 @@ public:
     bg::transform(p_spher, p_cart);
     return p_cart;
   }
-
-  RequestManager *requestManager() const {
-    assert(m_requestManager != nullptr);
-    return m_requestManager;
-  }
-  void setRequestManager(RequestManager *newRequestManager) {
-    m_requestManager = newRequestManager;
-    assert(m_requestManager != nullptr);
-  }
-  void releaseRequestManager() { m_requestManager = nullptr; }
 };
 
 } // namespace omnidirectional_layer

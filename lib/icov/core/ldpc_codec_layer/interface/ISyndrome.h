@@ -3,8 +3,8 @@
  * ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup interactive-coder
- *  @ingroup ldpc_codec_layer
+/** @addtogroup ldpc_codec_layer
+ *  @ingroup icov
  */
 
 /** @file ISyndrome.h
@@ -94,7 +94,7 @@ public:
   virtual void reset_doping() {}
 
 protected:
-  uint32_t n;
+  uint32_t n; /**< The length of the codeword. */
 };
 } // namespace ldpc_codec_layer
 } // namespace icov

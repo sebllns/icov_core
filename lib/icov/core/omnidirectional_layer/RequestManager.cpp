@@ -29,22 +29,20 @@ void RequestManager::start() {
 }
 
 void RequestManager::update(float angle_x, float angle_y) {
-  //    std::cout << "UPDATE " << angle_x << ", " << angle_y << std::endl;
+#if ICOV_ASSERTION_ENABLED
+  icov::helpers::assert::not_null(m_ordering.get(),
+                                  "Ordering manager cannot be null");
+  icov::helpers::assert::not_null(m_viewport.get(),
+                                  "Viewport manager cannot be null");
+  icov::helpers::assert::not_null(
+      m_accessBlocks.get(), "Access blocks manager manager cannot be null");
 
-  // TODO: check angle request ?
+  icov::helpers::assert::not_null(m_blockPrediction.get(),
+                                  "Predictions manager manager cannot be null");
+#endif
 
   m_ordering->reset();
   m_viewport->viewportGeometry().setPov(angle_radian(angle_x, angle_y));
-
-  //    std::cout << "resolution " <<
-  //    m_viewport->viewportGeometry().resolution.x() << " " <<
-  //    m_viewport->viewportGeometry().resolution.y() <<  std::endl;
-
-  //    std::cout << "pov " << m_viewport->viewportGeometry().pov.x() << " " <<
-  //    m_viewport->viewportGeometry().pov.y() <<  std::endl;
-
-  //        std::cout << "fov " << m_viewport->viewportGeometry().fov.x() << " "
-  //        << m_viewport->viewportGeometry().fov.y() <<  std::endl;
 
   auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
 

@@ -109,6 +109,9 @@ public:
   const std::shared_ptr<OutputIcovBase> &icovFile() const;
   void setIcovFile(const std::shared_ptr<OutputIcovBase> &newIcov_file);
 
+  void serializeBlockData(bool access_block,
+                          const omnidirectional_layer::Block &b);
+
 protected:
   void encodeBlock(const omnidirectional_layer::Block &b, bool access_block,
                    const omnidirectional_layer::IBlockPredictionManager
@@ -123,16 +126,16 @@ protected:
 private:
   void encode_icu(const omnidirectional_layer::Block &b,
                   const icov::video::IcuEncoder &icu_enc,
-                  omnidirectional_layer::BlockPrediction::predType pred);
+                  omnidirectional_layer::BlockPrediction::ePredType pred);
   void encode_si(const omnidirectional_layer::Block &b,
                  const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 omnidirectional_layer::BlockPrediction::predType pred,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
                  ComponentID comp);
   void encode_tu(const omnidirectional_layer::Block &b,
                  const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 omnidirectional_layer::BlockPrediction::predType pred,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
                  ComponentID comp, int tu_index);
 
   bool debug_enabled() const;

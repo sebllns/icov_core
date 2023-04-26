@@ -36,7 +36,7 @@ public:
       std::memcpy(m_data, f.m_data, m_size * sizeof(T));
   }
 
-  FastArray(size_t size)
+  explicit FastArray(size_t size)
       : m_capacity(size), m_size(size), m_data(new T[size]) {}
 
   FastArray(T *data, size_t size)
@@ -51,14 +51,20 @@ public:
 
   FastArray<T> &operator=(const FastArray<T> &f) {
 
-    if (m_capacity > 0 && m_data != nullptr) {
-      delete[] m_data;
+    if (m_capacity > 0) {
+      if (m_data != nullptr)
+        delete[] m_data;
       m_data = nullptr;
     }
+
     this->m_capacity = f.m_capacity;
     this->m_size = f.m_size;
-    m_data = new T[m_capacity];
-    std::memcpy(m_data, f.m_data, m_size * sizeof(T));
+
+    if (m_capacity > 0) {
+      m_data = new T[m_capacity];
+      if (m_size > 0)
+        std::memcpy(m_data, f.m_data, m_size * sizeof(T));
+    }
 
     //    std::cout << "copy " << m_capacity << " " << m_size << std::endl;
 
@@ -98,9 +104,8 @@ public:
       T *tmp = m_data;
       m_data = new T[new_size];
 
-      if (tmp != nullptr) {
-        if (m_size > 0)
-          std::memcpy(m_data, tmp, m_size * sizeof(T));
+      if (tmp != nullptr && m_capacity > 0 && m_size > 0) {
+        std::memcpy(m_data, tmp, m_size * sizeof(T));
         delete[] tmp;
       }
       m_capacity = new_size;

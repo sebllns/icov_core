@@ -64,7 +64,7 @@ namespace omnidirectional_layer {
 ///////////////////////////////////////////////////////////////////////////////
 class BlockPrediction : public IBlockPredictionManager {
 public:
-  enum predType {
+    enum ePredType {
     UNKNOWN = -1,
     NONE = 0,
     RIGHT = (1 << (Block::RIGHT - 1)),
@@ -80,7 +80,7 @@ public:
     ERROR_PRED
   };
 
-  enum borderType {
+    enum eBorderType {
     BORDER_UNKNOWN = -1,
     BORDER_NONE = 0,
     BORDER_TOP,
@@ -90,12 +90,12 @@ public:
 
   static const uint8_t SI_Count = 8;
   static const uint8_t PredictionCount = SI_Count + 2;
-  static std::string toString(BlockPrediction::predType num);
-  static predType toPredType(uint num);
-  static std::vector<BlockPrediction::predType>
-  getAvailablePredictions(borderType b = BORDER_NONE);
-  static borderType getBorder(const Block &b);
-  static bool isValidPrediction(BlockPrediction::predType p);
+  static std::string toString(BlockPrediction::ePredType num);
+  static ePredType toPredType(uint num);
+  static std::vector<BlockPrediction::ePredType>
+  getAvailablePredictions(eBorderType b = BORDER_NONE);
+  static eBorderType getBorder(const Block &b);
+  static bool isValidPrediction(BlockPrediction::ePredType p);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
@@ -117,12 +117,12 @@ BlockPrediction::getAvailablePredictions(const Block &b,
   auto v0 = BlockPrediction::getAvailablePredictions(getBorder(b));
   std::vector<IBlockPredictionManager::prediction_t> v(v0.begin(), v0.end());
   if (is_access_block)
-    v.insert(v.begin(), predType::NONE);
+      v.insert(v.begin(), ePredType::NONE);
 
   return v;
 }
 
-inline std::string BlockPrediction::toString(BlockPrediction::predType pred) {
+inline std::string BlockPrediction::toString(BlockPrediction::ePredType pred) {
   switch (pred) {
   case BlockPrediction::UNKNOWN:
     return "UNKNOWN";
@@ -156,8 +156,8 @@ inline std::string BlockPrediction::toString(BlockPrediction::predType pred) {
   }
 }
 
-inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
-  predType res = static_cast<predType>(num);
+inline BlockPrediction::ePredType BlockPrediction::toPredType(uint num) {
+  ePredType res = static_cast<ePredType>(num);
 
   switch (res) {
   case BlockPrediction::UNKNOWN:
@@ -178,9 +178,9 @@ inline BlockPrediction::predType BlockPrediction::toPredType(uint num) {
   }
 }
 
-inline std::vector<BlockPrediction::predType>
-BlockPrediction::getAvailablePredictions(borderType b) {
-  std::vector<BlockPrediction::predType> v;
+inline std::vector<BlockPrediction::ePredType>
+BlockPrediction::getAvailablePredictions(eBorderType b) {
+  std::vector<BlockPrediction::ePredType> v;
 
   switch (b) {
   case BORDER_NONE:
@@ -215,7 +215,7 @@ BlockPrediction::getAvailablePredictions(borderType b) {
 inline IBlockPredictionManager::prediction_t
 BlockPrediction::getPrediction(const Block &b,
                                const IBlockOrdering &ordering) const {
-  predType pred = NONE;
+  ePredType pred = NONE;
 
   if (ordering.isBlockProcessed(b.getId(Block::UP))) {
     if (ordering.isBlockProcessed(b.getId(Block::LEFT))) {
@@ -246,18 +246,18 @@ BlockPrediction::getPrediction(const Block &b,
   return static_cast<IBlockPredictionManager::prediction_t>(pred);
 }
 
-inline BlockPrediction::borderType BlockPrediction::getBorder(const Block &b) {
-  borderType border = borderType::BORDER_NONE;
+inline BlockPrediction::eBorderType BlockPrediction::getBorder(const Block &b) {
+  eBorderType border = eBorderType::BORDER_NONE;
   if (!b.parent()->blockExists(b.getId(Block::UP))) {
-    border = borderType::BORDER_TOP;
+    border = eBorderType::BORDER_TOP;
   } else if (!b.parent()->blockExists(b.getId(Block::DOWN))) {
-    border = borderType::BORDER_BOTTOM;
+    border = eBorderType::BORDER_BOTTOM;
   }
   return border;
 }
 
-inline bool BlockPrediction::isValidPrediction(predType p) {
-  if (p == predType::ERROR_PRED || p == predType::MAX || p == predType::UNKNOWN)
+inline bool BlockPrediction::isValidPrediction(ePredType p) {
+  if (p == ePredType::ERROR_PRED || p == ePredType::MAX || p == ePredType::UNKNOWN)
     return false;
   return true;
 }

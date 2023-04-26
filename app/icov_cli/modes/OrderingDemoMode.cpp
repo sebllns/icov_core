@@ -76,7 +76,7 @@ void BlockProcessor::processBlock(
 
     int si_offset = 0;
 
-    switch (static_cast<BlockPrediction::predType>(prediction)) {
+    switch (static_cast<BlockPrediction::ePredType>(prediction)) {
     case BlockPrediction::NONE:
       si_offset += 0;
       break;
@@ -141,7 +141,7 @@ void BlockProcessor::processBlock(
     int predThickness = 10;
     cv::Scalar line_color;
 
-    switch (static_cast<BlockPrediction::predType>(prediction)) {
+    switch (static_cast<BlockPrediction::ePredType>(prediction)) {
     case BlockPrediction::NONE:
       ICOV_ASSERT_MSG(m_blockCount == 0,
                       "Only an access block can have 0 side info");

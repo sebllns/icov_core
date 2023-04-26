@@ -20,7 +20,7 @@ icov::extractor::BlockExtractor::BlockExtractor(
     : m_icovFile(icovFile), m_extractionBitstream(extraction),
       m_channelCount(p.icu_sizes.size()), m_params(p) {
 
-  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrame(0);
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(0);
 
   bitstream::int8b compID = 0;
   for (int n : p.icu_sizes) {
@@ -43,11 +43,17 @@ void icov::extractor::BlockExtractor::processBlock(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
         prediction) {
 
-  icov::omnidirectional_layer::BlockPrediction::predType block_prediction =
+  icov::omnidirectional_layer::BlockPrediction::ePredType block_prediction =
       icov::omnidirectional_layer::BlockPrediction::toPredType(prediction);
+
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
+      b.getIdSelf() - 1);
+  bitstream::VideoStreamDebugger::get_mutable_instance()
+      .setDebuggingPredictionID(block_prediction);
+
   bool is_access_block =
       (block_prediction ==
-       icov::omnidirectional_layer::BlockPrediction::predType::NONE);
+       icov::omnidirectional_layer::BlockPrediction::ePredType::NONE);
 
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf() - 1);

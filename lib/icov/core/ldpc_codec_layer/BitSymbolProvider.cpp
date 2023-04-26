@@ -2,10 +2,106 @@
 
 #include "helpers.h"
 #include "tools/DebugTools.h"
+#include <limits>
 #include <string>
+#include <sys/types.h>
 
 namespace icov {
 namespace ldpc_codec_layer {
+
+BitSymbolProvider::PzParams::PzParams()
+    : zmin(0), zmax(0), q0_quantized(std::numeric_limits<ushort>::max()),
+      bp_count(0), q0(1) {}
+
+BitSymbolProvider::PzParams::PzParams(ushort p_bp_count, short pzmin,
+                                      short pzmax, ushort pq_quant, float pq)
+    : zmin(pzmin), zmax(pzmax), q0_quantized(pq_quant), bp_count(p_bp_count),
+      q0(pq) {}
+
+BitSymbolProvider::BitSymbolProvider(int n)
+    : m_src_symboles(n, 0),
+      m_src_bits(1 /*we need to save only the sign bitplane to decode*/,
+                 BitVec(n, 0)) {}
+
+BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
+    : m_src_symboles(src_symbols),
+      m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {}
+
+BitSymbolProvider::PzParams
+BitSymbolProvider::get_pz_params(const SymboleVec &src_symbols,
+                                 int bitplane_count, const SIVec &side_info,
+                                 const params &p) {
+
+  ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
+                  "Src and SI lengths are not equal");
+
+  PzParams res;
+
+  auto &q_values = p.q_values;
+  auto &enable_z_quantization = p.enable_z_quantization;
+
+  bool enable_q_quantization = q_values.size() > 0;
+  size_t n = src_symbols.size();
+
+  // init intrinsic SI parameters
+  int q_idx = 0;
+  float q = 0.0;
+  int z_min = std::numeric_limits<int>::max();
+  int z_max = std::numeric_limits<int>::min();
+
+  for (size_t i = 0; i < n; i++) {
+    int z = src_symbols[i] - side_info[i];
+
+    // q = N0/N
+    if (z == 0) {
+      q += 1.0 / n;
+    }
+
+    // z_min = min(Z[k], 0<=k<N)
+    if (z < z_min)
+      z_min = z;
+
+    // z_max = max(Z[k], 0<=k<N)
+    if (z > z_max)
+      z_max = z;
+  }
+
+  // check zmax = xmax - ymin
+  // check zmin = xmin - ymax
+
+  if (q == 1) {
+    res.setBpCount(bitplane_count);
+    if (DebugTools::debug_trace_enabled)
+      ICOV_TRACE << "SI == source. No coding.";
+    return res;
+  }
+
+  if (DebugTools::debug_trace_enabled)
+    ICOV_TRACE << "zmin=" << z_min << " zmax=" << z_max;
+
+  if (enable_z_quantization) {
+    int z_step = Z_STEP;
+    int z_limit = Z_LIMIT;
+    z_min =
+        icov::helpers::maths::quantize(z_min, z_step, -z_limit + 1, z_limit);
+    z_max =
+        icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit - 1);
+    if (DebugTools::debug_trace_enabled)
+      ICOV_TRACE << "After quantization zmin=" << z_min << " zmax=" << z_max;
+  }
+
+  if (DebugTools::debug_trace_enabled)
+    ICOV_TRACE << "q=" << q << std::endl;
+  if (enable_q_quantization) {
+    q_idx = icov::helpers::maths::quantize(q, q_values);
+    q = q_values[q_idx];
+    if (DebugTools::debug_trace_enabled)
+      ICOV_TRACE << "After quantization q=" << q;
+  }
+
+  res = PzParams(bitplane_count, z_min, z_max, q_idx, q);
+  return res;
+}
 
 Bitplanes BitSymbolProvider::compute_bits(const SymboleVec &src_symbols) {
   int x_min = *std::min_element(src_symbols.begin(), src_symbols.end());
@@ -80,90 +176,6 @@ void BitSymbolProvider::inject_bitplane(SymboleVec &output, const BitVec &input,
       output[i] = (output[i] << shift) + input[i];
     }
   }
-}
-
-BitSymbolProvider::BitSymbolProvider(int n)
-    : m_src_symboles(n, 0),
-      m_src_bits(1 /*we need to save only the sign bitplane to decode*/,
-                 BitVec(n, 0)) {}
-
-BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
-    : m_src_symboles(src_symbols),
-      m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {}
-
-BitSymbolProvider::PzParams
-BitSymbolProvider::get_pz_params(const SymboleVec &src_symbols, int bitplane_count,
-                          const SIVec &side_info, const params &p) {
-
-  ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
-                  "Src and SI lengths are not equal");
-
-  PzParams res;
-
-  auto &q_values = p.q_values;
-  auto &enable_z_quantization = p.enable_z_quantization;
-
-  bool enable_q_quantization = q_values.size() > 0;
-  size_t n = src_symbols.size();
-
-  // init intrinsic SI parameters
-  int q_idx = 0;
-  float q = 0.0;
-  int z_min = std::numeric_limits<int>::max();
-  int z_max = std::numeric_limits<int>::min();
-
-  for (size_t i = 0; i < n; i++) {
-    int z = src_symbols[i] - side_info[i];
-
-    // q = N0/N
-    if (z == 0) {
-      q += 1.0 / n;
-    }
-
-    // z_min = min(Z[k], 0<=k<N)
-    if (z < z_min)
-      z_min = z;
-
-    // z_max = max(Z[k], 0<=k<N)
-    if (z > z_max)
-      z_max = z;
-  }
-
-  // check zmax = xmax - ymin
-  // check zmin = xmin - ymax
-
-  if (q == 1) {
-    res = PzParams(bitplane_count, 0, 0, 0, 1);
-    if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "SI == source. No coding.";
-    return res;
-  }
-
-  if (DebugTools::debug_trace_enabled)
-    ICOV_TRACE << "zmin=" << z_min << " zmax=" << z_max;
-
-  if (enable_z_quantization) {
-    int z_step = Z_STEP;
-    int z_limit = Z_LIMIT;
-    z_min =
-        icov::helpers::maths::quantize(z_min, z_step, -z_limit + 1, z_limit);
-    z_max =
-        icov::helpers::maths::quantize(z_max, z_step, -z_limit, z_limit - 1);
-    if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "After quantization zmin=" << z_min << " zmax=" << z_max;
-  }
-
-  if (DebugTools::debug_trace_enabled)
-    ICOV_TRACE << "q=" << q << std::endl;
-  if (enable_q_quantization) {
-    q_idx = icov::helpers::maths::quantize(q, q_values);
-    q = q_values[q_idx];
-    if (DebugTools::debug_trace_enabled)
-      ICOV_TRACE << "After quantization q=" << q;
-  }
-
-  res = PzParams(bitplane_count, z_min, z_max, q_idx, q);
-  return res;
 }
 
 void BitSymbolProvider::set_si(const SIVec &si, const params &p) {

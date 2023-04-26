@@ -128,16 +128,16 @@ private:
 
   void encode_icu(const omnidirectional_layer::Block &b,
                   const icov::video::IcuEncoder &icu_enc,
-                  omnidirectional_layer::BlockPrediction::predType pred);
+                  omnidirectional_layer::BlockPrediction::ePredType pred);
   void encode_si(const omnidirectional_layer::Block &b,
                  const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 omnidirectional_layer::BlockPrediction::predType pred,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
                  ComponentID comp);
   void encode_tu(const omnidirectional_layer::Block &b,
                  const icov::video::IcuEncoder &icu_enc,
                  const icov::video::SideInformationUnit &si,
-                 omnidirectional_layer::BlockPrediction::predType pred,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
                  ComponentID comp, int tu_index);
 
 protected:

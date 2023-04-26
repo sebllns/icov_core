@@ -85,7 +85,7 @@ public:
 
   void
   decode_icu(int icu_enc,
-             omnidirectional_layer::BlockPrediction::predType block_prediction);
+             omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
   void set_si_dir_mode(int dir_mode);
 
@@ -117,7 +117,7 @@ protected:
   SIVec m_blockSI;
   Syndrome m_syndrome;
   ldpc_codec_layer::BitSymbolProvider m_bsp;
-  omnidirectional_layer::BlockPrediction::predType m_block_prediction;
+  omnidirectional_layer::BlockPrediction::ePredType m_block_prediction;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;
   // BlockVector::const_iterator m_block;

@@ -91,13 +91,25 @@ public:
 
   void reset();
 
+  /**
+   * @brief Initializes the LLR values of sign bits based on symbol values and
+   * side information.
+   * @param bsp The BitSymbolProvider that provides the predecoded values
+   * @param side_info A vector of side information values to use in LLR
+   * calculation
+   */
   void initLLR_s(const BitSymbolProvider &bsp,
                  const std::vector<SIVal> &side_info);
   void initLLR_b(int b, const BitSymbolProvider &bsp,
                  const std::vector<SIVal> &side_info,
                  const std::vector<int> &sign,
                  const std::vector<int> &abs_predec);
-
+  /**
+   * @brief Returns whether no coding flag is applied to a given source
+   * bitvector
+   * @param src The source bitvector
+   * @return true if no coding  flag is applied, false otherwise
+   */
   bool no_coding(const BitVec &src) const;
 
 protected:

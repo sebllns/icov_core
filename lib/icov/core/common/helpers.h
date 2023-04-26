@@ -292,6 +292,12 @@ void equal(T a, T b, const std::string &msg = "elements must be equal") {
 
 namespace maths {
 int pow2(int k);
+
+/**
+ * @brief Computes the binary length of a given integer value.
+ * @param val The integer value to compute the binary length for.
+ * @return The binary length of the given integer value.
+ */
 uint32_t binary_length(int val);
 float normalize(float val, float min, float max);
 float wrap(float val, float min, float max);

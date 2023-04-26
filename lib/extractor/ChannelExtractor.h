@@ -76,26 +76,46 @@ struct BitplaneExtractor {
   ushort ReadSyndromePadding;
 };
 
+/**
+ * @brief The ChannelExtractor class represents an object responsible for
+ * extracting the channel layer data from the compressed stream and decoding it.
+ */
 class ChannelExtractor {
 public:
+  /**
+   * @brief The params struct represents a structure to store the component ID
+   * associated with the channel extractor.
+   */
   struct params {
     bitstream::int8b CompID;
   };
 
+  /**
+   * @brief Construct a new Channel Extractor object.
+   * @param p The parameters used to initialize the object
+   * @param icovFile The input file object
+   * @param bitstream The extracted bitstream output
+   * @param LDPC_params The parameters of the LDPC encoder/decoder used in the
+   * channel extraction
+   */
   ChannelExtractor(const ChannelExtractor::params &p,
                    std::shared_ptr<InputIcov> &icovFile,
                    const bitstream::sp_IcovExtractedBitstream &bitstream,
                    const LdpcCoderParameters &LDPC_params);
   ~ChannelExtractor();
 
-  int get_coder_size() const;
+  /**
+   * @brief Get the coder size
+   * @return The size of the coder
+   */
+  int getCoderSize() const;
 
-  void extract_access_block(const omnidirectional_layer::Block &b,
-                            bitstream::byte *syndrome_buf);
+  // void extract_access_block(const omnidirectional_layer::Block &b,
+  //                        bitstream::byte *syndrome_buf);
 
   void extract_block(
       const omnidirectional_layer::Block &b,
-      omnidirectional_layer::BlockPrediction::predType block_prediction);
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
   void extract_syndrome_sizes(bool is_access_block);
 
@@ -108,17 +128,23 @@ public:
   static int getSyndromePadding();
 
 protected:
+  /**
+   * @brief Extract the bitplane syndrome
+   * @param bp The bitplane to extract the syndrome from
+   */
   void extract_bitplane_syndrome(const BitplaneExtractor &bp);
 
-  params m_params;
-  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> m_ldpc_coder;
-  std::shared_ptr<InputIcov> m_icovFile;
+  params m_params; ///< The parameters of the channel extractor
+
+  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder>
+      m_ldpc_coder; ///< A pointer to the LDPC coder
+
+  std::shared_ptr<InputIcov> m_icovFile; ///< The input file
+
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   std::vector<BitplaneExtractor> m_bitplanes;
   bitstream::byte m_bitplaneCount;
-  // BlockChannelDecoderParams m_extractData;
   int m_maxSyndromeBufferLength;
-  //  RawByteArray<int> m_readingBuffer;
   static bitstream::byte SyndromePadding;
 };
 } // namespace extractor

@@ -19,23 +19,19 @@ public:
   struct PzParams {
 
   public:
-    PzParams() = default;
-    PzParams(int p_bp_count, int pzmin, int pzmax, int pq_quant, float pq)
-        : zmin(pzmin), zmax(pzmax), q0_quantized(pq_quant),
-          bp_count(p_bp_count), q0(pq) {}
+    PzParams();
+    PzParams(ushort p_bp_count, short pzmin, short pzmax, ushort pq_quant,
+             float pq);
 
     int getZmin() const;
     int getZmax() const;
     int getZ0() const;
     float getQ0() const;
     int getQ0Quantized() const;
-
     int getZAmplitude() const;
     float getQ1() const;
     float getPZ(int z) const;
-
     void setBpCount(ushort newBp_count);
-
     ushort getBitplaneCount() const;
 
   private:
