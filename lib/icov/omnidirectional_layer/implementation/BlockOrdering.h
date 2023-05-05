@@ -13,7 +13,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -46,7 +46,6 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 
 #include <stack>
@@ -61,10 +60,9 @@ namespace omnidirectional_layer {
  */
 class BlockOrdering : public IBlockOrdering {
 protected:
-  ///
-  /// \brief The block_path_info struct puts in cache many useful informations
-  /// to order the blocks faster
-  ///
+  /** @brief The block_path_info struct puts in cache many useful informations
+   * to order the blocks faster
+   */
   struct block_path_info {
     bool visibility_tested;
     bool is_visible;
@@ -89,6 +87,16 @@ protected:
   std::vector<block_path_info>::iterator getPathInfoById(size_t id);
   std::vector<block_path_info>::const_iterator getPathInfoById(size_t id) const;
 
+  /**
+   * @brief Find the first available neighbor of the current block.
+   *
+   * @param current The current block being processed i.e. the block to find an
+   * available neighbor for.
+   * @param vpm The viewport manager as an instance of the IViewportManager
+   * interface.
+   * @return Block::NeighborDirection The direction of the available neighbor
+   * block, or Block::COUNT if none are available.
+   */
   Block::NeighborDirection findAvailableNeighbor(const Block &current,
                                                  const IViewportManager &vpm);
 
@@ -104,6 +112,36 @@ public:
 
   // IBlockOrdering interface
 public:
+  /**
+   * @brief Get the iterator for the next block to be processed after the
+   * current block.
+   *
+   * @details This function is called by getNextBlock(), which searches for the
+   * next block that should be processed. The function checks for the visibility
+   * of each neighbor block and updates their visibility information. It starts
+   * by getting the ID of the neighbor block based on the given direction. If
+   * the neighbor block exists and has not been processed before, it gets its
+   * path information by calling getPathInfoById(). If the visibility of the
+   * neighbor block has not been tested before, the function appends its ID to
+   * the m_elements vector and calls isBlockVisible() on vpm to update its
+   * visibility information. After that, the function checks whether the
+   * neighbor block is visible. If it is visible, the function sets the
+   * corresponding si_horizontal or si_vertical flag in the path information of
+   * the neighbor block, depending on the direction of the neighbor. If the
+   * neighbor block is not visible, no flag is set.
+   *
+   * @note Note that the isBlockProcessed() function is used to check whether a
+   * block has already been processed. If a block has been processed, its
+   * visibility information has already been updated, and it does not need to be
+   * processed again.
+   *
+   * @param current The current block being processed.
+   * @param vpm The viewport manager as an instance of the IViewportManager
+   * interface.
+   * @return BlockVector::const_iterator A constant iterator to the next block
+   * in the ordering, or an iterator to an invalid block if no such block is
+   * found (means no more block to process).
+   */
   BlockVector::const_iterator
   getNextBlock(const Block &current, const IViewportManager &vpm) override;
   void reset() override;

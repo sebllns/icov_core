@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -64,31 +64,17 @@ protected:
 public:
   virtual ~IAccessBlockManager() = default;
 
-  virtual const std::string getID() = 0;
   virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) = 0;
 
   const BlockIteratorVector &blocks() const { return m_blocks; }
 
   virtual BlockVector::const_iterator
   findAccessBlock(const IViewportManager &vpm) const {
-    //    std::cout << "find in " << m_blocks.size() << " access blocks\n" <<
-    //    std::endl;
     for (const auto &b : m_blocks) {
       if (vpm.isBlockVisible(*b))
         return b;
     }
     return m_invalidBlock;
-  }
-
-  virtual bool isAccessBlock(size_t id) const {
-    auto b = m_blocks.begin();
-
-    while (b != m_blocks.end()) {
-      if ((*b)->getId(Block::SELF) == id)
-        return true;
-      ++b;
-    }
-    return false;
   }
 };
 } // namespace omnidirectional_layer

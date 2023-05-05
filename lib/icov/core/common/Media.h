@@ -13,7 +13,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,6 +52,7 @@
 #include "helpers.h"
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <ios>
 #include <memory>
 #include <ostream>
@@ -76,7 +77,7 @@ public:
 
   explicit IMedia(const fs::path &path,
                   int media_type = (int)eMediaType::UNKNOWN)
-      : m_type(media_type), m_path(fs::complete(path)), m_width(0), m_height(0),
+      : m_type(media_type), m_path(fs::absolute(path)), m_width(0), m_height(0),
         m_frameCount(0)
 
   {

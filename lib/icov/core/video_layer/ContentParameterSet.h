@@ -13,7 +13,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -90,13 +90,15 @@ struct ContentParameterSet {
 
   bool has_metadata;
 
+  uint16_t icu_count;
+
   ContentParameterSet()
       : content_type(0), content_width(0), content_height(0), qp(42),
         content_chroma_format(0), content_framecount(0), content_framerate(0),
         content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
         sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
         is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
-        has_metadata(false) {}
+        has_metadata(false), icu_count(0) {}
 };
 
 inline bool operator==(const ContentParameterSet &a,
@@ -120,7 +122,7 @@ inline bool operator==(const ContentParameterSet &a,
          a.is_tu_count_fixed == b.is_tu_count_fixed &&
          a.fixed_tu_count == b.fixed_tu_count &&
          a.numcode_byte_count == b.numcode_byte_count &&
-         a.has_metadata == b.has_metadata;
+         a.has_metadata == b.has_metadata && a.icu_count == b.icu_count;
 }
 } // namespace bitstream
 } // namespace icov

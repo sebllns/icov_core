@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -139,8 +139,12 @@ private:
                  ComponentID comp, int tu_index);
 
   bool debug_enabled() const;
+  
+  void serializeSyndrome(bool access_block);
+  
+  void serializeParameters();
 
-protected:
+  protected:
   params m_params;
   uint m_numComp;
   icov::video::EncodingStructure m_enc_struc;

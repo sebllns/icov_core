@@ -1,12 +1,19 @@
 #include "TextOutputIcov.h"
 #include "encoder/OutputIcovBase.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
-#include <algorithm>
+
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/json/array.hpp>
+#include <boost/json/detail/object.hpp>
+#include <boost/json/object.hpp>
+#include <boost/json/src.hpp>
 #include <boost/serialization/array_wrapper.hpp>
+
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
@@ -80,7 +87,9 @@ void TextOutputIcov::writeBlockSize() {
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
-void TextOutputIcov::writeBitplaneCount(const uint &v) {}
+void TextOutputIcov::writeBitplaneCount(const uint &v) {
+  getChannelNodeJSON()["bitplane_count"] = v;
+}
 
 void TextOutputIcov::writeStoredSyndromeSize(const uint &v) {}
 
@@ -99,18 +108,44 @@ void TextOutputIcov::writeSIMode(const uint &v) {
 
 void icov::encoder::TextOutputIcov::startWriteBlock(
     const omnidirectional_layer::Block &b) {
-  getStream(bitstream::eIcovStream::ENCODE_PARAMS)
-      << std::endl
-      << "BLOCK " << b.getIdSelf() << std::endl;
+  m_blockNodeJSON.clear();
+  m_blockNodeJSON["block_id"] = b.getIdSelf();
+  m_blockNodeJSON["channels"] = boost::json::object();
+  m_blockNodeJSON["is_access_block"] = false;
 }
 
 void icov::encoder::TextOutputIcov::startWritePrediction(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {
   getStream(bitstream::eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
+  m_currentPrednodeJSON.clear();
+
+  auto pred_type = omnidirectional_layer::BlockPrediction::toPredType(pred);
+  getChannelNodeJSON()[omnidirectional_layer::BlockPrediction::toString(
+      pred_type)] = m_currentPrednodeJSON;
+
+  if (pred_type == omnidirectional_layer::BlockPrediction::ePredType::NONE) {
+    m_blockNodeJSON["is_access_block"] = true;
+  }
 }
 
 void icov::encoder::TextOutputIcov::endWritePrediction(
     omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {}
 
 void icov::encoder::TextOutputIcov::endWriteBlock(
-    const omnidirectional_layer::Block &b) {}
+    const omnidirectional_layer::Block &b) {
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << m_blockNodeJSON;
+}
+
+boost::json::object &icov::encoder::TextOutputIcov::getChannelNodeJSON() {
+
+  if (!m_blockNodeJSON["channels"]
+           .as_object()[std::to_string(channel())]
+           .is_object()) {
+    m_blockNodeJSON["channels"].as_object()[std::to_string(channel())] =
+        boost::json::object();
+  }
+
+  return m_blockNodeJSON["channels"]
+      .as_object()[std::to_string(channel())]
+      .as_object();
+}

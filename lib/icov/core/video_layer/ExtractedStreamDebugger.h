@@ -11,7 +11,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,6 +52,7 @@
 #include <boost/serialization/singleton.hpp>
 #include <cstdint>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 namespace icov {
@@ -62,9 +63,14 @@ class VideoEncodingStreamCache
   friend class boost::serialization::singleton<VideoEncodingStreamCache>;
 
 public:
-  typedef std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
-                   SIStream>
-      ChannelBlockStreamDebugger;
+  struct ChannelBlockStreamDebugger {
+    SymboleVec srcSymboles;
+    Bitplanes srcBits;
+    std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+             SIStream>
+        si_map;
+  };
+
   typedef std::vector<ChannelBlockStreamDebugger>
       MultiChannelBlockStreamDebugger;
   typedef std::vector<MultiChannelBlockStreamDebugger> FrameStreamDebugger;
@@ -86,26 +92,27 @@ class VideoStreamDebugger
   friend class boost::serialization::singleton<VideoStreamDebugger>;
 
 public:
-  VideoStreamDebugger() = default;
+  VideoStreamDebugger() { reset(); }
 
   bool frameAvailable() const {
-    return mDebuggingFrameID <
-           VideoEncodingStreamCache::get_const_instance().getFrameCount();
+    return mDebuggingFrameID >= 0 &&
+           mDebuggingFrameID <
+               VideoEncodingStreamCache::get_const_instance().getFrameCount();
   }
 
   bool blockAvailable() const {
-    return (frameAvailable() &&
+    return (frameAvailable() && mDebuggingBlockID >= 0 &&
             mDebuggingBlockID < (int)getDebuggingFrame().size());
   }
 
   bool channelAvailable() const {
-    return (frameAvailable() && blockAvailable() &&
+    return (frameAvailable() && blockAvailable() && mDebuggingChannelID >= 0 &&
             mDebuggingChannelID < (int)getDebuggingBlock().size());
   }
 
   bool predictionAvailable() const {
     return (frameAvailable() && blockAvailable() && channelAvailable() &&
-            getDebuggingChannel().count(mDebuggingPredictionID) == 1);
+            getDebuggingChannel().si_map.count(mDebuggingPredictionID) == 1);
   }
 
   const VideoEncodingStreamCache::FrameStreamDebugger &
@@ -139,7 +146,7 @@ public:
         "Prediction is not available ID = " +
             omnidirectional_layer::BlockPrediction::toString(
                 mDebuggingPredictionID));
-    return getDebuggingChannel().at(mDebuggingPredictionID);
+    return getDebuggingChannel().si_map.at(mDebuggingPredictionID);
   }
 
   VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
@@ -166,7 +173,7 @@ public:
   }
 
   SIStream &getDebuggingSI() {
-    return getDebuggingChannel()[mDebuggingPredictionID];
+    return getDebuggingChannel().si_map[mDebuggingPredictionID];
   }
 
   int debuggingFrameID() const { return mDebuggingFrameID; }
@@ -190,6 +197,65 @@ public:
   setDebuggingPredictionID(omnidirectional_layer::BlockPrediction::ePredType
                                newDebuggingPrediction) {
     mDebuggingPredictionID = newDebuggingPrediction;
+  }
+
+  const Syndrome &getBitplaneSyndrome(int bp) const {
+    return getDebuggingSI().bitplanes.at(bp).syndrome;
+  }
+
+  bool checkSyndrome(int bp, const Syndrome &s) const {
+    return getBitplaneSyndrome(bp) == s;
+  }
+
+  void assertSyndromeEqual(int bp, const Syndrome &s) const {
+    if (predictionAvailable() && !checkSyndrome(bp, s)) {
+      std::stringstream sstr = header();
+      sstr << "[" << std::to_string(bp)
+           << "] Syndrome does not match ground truth." << std::endl
+           << "Syndrome " << s.to_string(" ") << std::endl
+           << "GT " << getBitplaneSyndrome(bp).to_string(" ");
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  int getBitplaneCount() const { return getDebuggingSI().bitplanes.size(); }
+
+  bool checkBitplaneCount(int bp_count) const {
+    std::cout << "GT BP: " << getDebuggingSI().bitplanes.size() << std::endl;
+
+    return getBitplaneCount() == bp_count;
+  }
+
+  void assertBitplaneCountEqual(int bp_count) const {
+    if (predictionAvailable() && !checkBitplaneCount(bp_count)) {
+      std::stringstream sstr = header();
+      sstr << "Bitplane count does not match ground truth." << std::endl
+           << "Value = " << bp_count << std::endl
+           << "GT = " << getBitplaneCount();
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  std::stringstream header() const {
+    std::stringstream sstr;
+
+    sstr << "[" << mDebuggingFrameID << "::" << mDebuggingBlockID
+         << "::" << mDebuggingChannelID << "::"
+         << omnidirectional_layer::BlockPrediction::toString(
+                mDebuggingPredictionID)
+         << "]";
+
+    return sstr;
+  }
+
+  void reset() {
+    setDebuggingBlockID(-1);
+    setDebuggingChannelID(-1);
+    setDebuggingFrameID(-1);
+    setDebuggingPredictionID(
+        omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN);
   }
 
 private:

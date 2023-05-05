@@ -13,7 +13,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -81,38 +81,43 @@ typedef enum {
 
 static const omnidirectional_layer::IBlockPredictionManager::prediction_t
     PredictionID[PREDICTION_COUNT] = {
-        omnidirectional_layer::BlockPrediction::TOP_RIGHT,    omnidirectional_layer::BlockPrediction::TOP_LEFT,
-        omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT, omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
-        omnidirectional_layer::BlockPrediction::RIGHT,        omnidirectional_layer::BlockPrediction::LEFT,
-        omnidirectional_layer::BlockPrediction::TOP,          omnidirectional_layer::BlockPrediction::BOTTOM,
+        omnidirectional_layer::BlockPrediction::TOP_RIGHT,
+        omnidirectional_layer::BlockPrediction::TOP_LEFT,
+        omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
+        omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
+        omnidirectional_layer::BlockPrediction::RIGHT,
+        omnidirectional_layer::BlockPrediction::LEFT,
+        omnidirectional_layer::BlockPrediction::TOP,
+        omnidirectional_layer::BlockPrediction::BOTTOM,
         omnidirectional_layer::BlockPrediction::INTER,
 };
 
-inline int getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
+inline int
+getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
   switch (pred) {
 
-    case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
+  case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
     return 0;
 
-    case omnidirectional_layer::BlockPrediction::TOP_LEFT:
+  case omnidirectional_layer::BlockPrediction::TOP_LEFT:
     return 1;
 
-    case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
     return 2;
 
-    case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
     return 3;
 
-    case omnidirectional_layer::BlockPrediction::RIGHT:
+  case omnidirectional_layer::BlockPrediction::RIGHT:
     return 4;
 
-    case omnidirectional_layer::BlockPrediction::LEFT:
+  case omnidirectional_layer::BlockPrediction::LEFT:
     return 5;
 
-    case omnidirectional_layer::BlockPrediction::TOP:
+  case omnidirectional_layer::BlockPrediction::TOP:
     return 6;
 
-    case omnidirectional_layer::BlockPrediction::BOTTOM:
+  case omnidirectional_layer::BlockPrediction::BOTTOM:
     return 7;
 
   default:
@@ -183,6 +188,7 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
   ar &io.viewport_fov_x;
   ar &io.viewport_height;
   ar &io.viewport_width;
+  ar &io.icu_count;
 
   ar &io.is_sov_fixed_size;
   if (io.is_sov_fixed_size)

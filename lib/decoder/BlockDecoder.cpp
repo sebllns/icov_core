@@ -1,31 +1,19 @@
 #include "BlockDecoder.h"
-
 #include "decoder/ChannelDecoder.h"
 #include "helpers.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
-
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
+#include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
-#include "video_layer/ICOV_Transform2d.h"
-#include "video_layer/vtm_opencv_utility.h"
-#include "video_layer/vtm_utility.h"
-
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-
 #include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-
-#define WIN_ORIG "Original"
-#define WIN_RECO "Reconstruction"
-#define WIN_PRED "Predictions"
-#define WIN_DEBUG_DECODE "Decoded"
 
 namespace fs = boost::filesystem;
 using namespace icov::decoder;
@@ -104,14 +92,17 @@ void icov::decoder::BlockDecoder::startProcess() {}
 void icov::decoder::BlockDecoder::processBlock(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
-  
-  omnidirectional_layer::BlockPrediction::ePredType pred = omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- try decode prediction " << omnidirectional_layer::BlockPrediction::toString(pred)
+  omnidirectional_layer::BlockPrediction::ePredType pred =
+      omnidirectional_layer::BlockPrediction::toPredType(prediction);
+
+  std::cout << "---- try decode prediction "
+            << omnidirectional_layer::BlockPrediction::toString(pred)
             << std::endl;
 
-  icov::helpers::assert::check(omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
-                               "Bad prediction value");
+  icov::helpers::assert::check(
+      omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
+      "Bad prediction value");
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
@@ -134,6 +125,11 @@ void icov::decoder::BlockDecoder::processBlock(
 
   //  if (si_map.count(pred) > 0)
   // decode_icu(b, icu_enc, pred);
+
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
+      b.getIdSelf() - 1);
+  bitstream::VideoStreamDebugger::get_mutable_instance()
+      .setDebuggingPredictionID(pred);
 
   for (auto &dec : m_channelDecoder)
     dec->decode_icu(icuIndex, pred);

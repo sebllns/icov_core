@@ -54,7 +54,7 @@ inline void parseLdpcParams(const po::variables_map &args,
   params.type = parseType(args);
   params.database = parseDatabase(args);
   params.codeLength = parseCodeLength(args);
-  params.beliefPropagationInterations = parseBpIte(args);
+  params.beliefPropagationIterations_new = parseBpIte(args);
   params.numcodeFile = parseNumcodeFile(args);
 
   icov::helpers::assert::equal(params.type, intented_type,

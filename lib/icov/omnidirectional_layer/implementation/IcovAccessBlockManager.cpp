@@ -5,9 +5,6 @@
 
 namespace icov {
 namespace omnidirectional_layer {
-IcovAccessBlockManager::IcovAccessBlockManager(angle_radian delta)
-    : m_angle_delta(delta) {}
-
 void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
                                                IViewportManager &vpm) {
   m_invalidBlock = pic.invalidBlock();
@@ -24,21 +21,7 @@ void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
     }
   }
 
-  //    for(float angle_y = pic.minAngleY() ; angle_y <= pic.maxAngleY() ;
-  //    angle_y += m_angle_delta.y())
-  //    {
-  //        for(float angle_x = pic.minAngleX() ; angle_x < pic.maxAngleX() ;
-  //        angle_x += m_angle_delta.x())
-  //        {
-
-  //        }
-  //    }
-
   vpm.viewportGeometry().setPov(pov);
-}
-
-const std::string IcovAccessBlockManager::getID() {
-  return "aa12d096-261c-4ba4-81b1-c9b7c4ff9ffc";
 }
 } // namespace omnidirectional_layer
 } // namespace icov

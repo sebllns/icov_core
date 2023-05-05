@@ -189,10 +189,10 @@ void CheckMode::run() {
     try {
       compare_matrix(m, m_gt);
     } catch (...) {
-      std::cerr << "Error: matrix check failed for m=" << row_count
-                << std::endl;
-      std::cerr << boost::current_exception_diagnostic_information()
-                << std::endl;
+      ICOV_ERROR << "Error: matrix check failed for m=" << row_count
+                 << std::endl;
+      ICOV_ERROR << boost::current_exception_diagnostic_information()
+                 << std::endl;
     }
 
     if (j == (int)v_acc.rows()) {

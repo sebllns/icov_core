@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -107,10 +107,16 @@ public:
   void flush(int id);
   std::ostream &getStream(int id);
 
-protected:
+  int channel() const;
+  void setChannel(int newChannel);
+
+  protected:
   bitstream::ContentParameterSet m_contentParameterSet;
   std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
   std::array<uint32_t, eWriteCounter::COUNT> m_total_write_byte;
+
+private:
+  int m_channel;
 };
 
 } // namespace encoder

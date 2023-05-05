@@ -7,14 +7,13 @@
  *  @ingroup ICOV
  */
 
-/** @file helpers.hpp
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
+/** @file LdpcCoderParameters.hpp
+ *  @brief struct LdpcCoderParameters
  *  @ingroup ldpc_codec_layer
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,14 +51,23 @@
 
 namespace icov {
 struct LdpcCoderParameters {
-  std::string type;
-  std::string database;
-  int codeLength;
-  int beliefPropagationInterations;
-  std::string numcodeFile;
+  std::string type;                    ///< Type of LDPC code.
+  std::string database;                ///< Path to the database.
+  int codeLength;                      ///< Length of the code.
+  int beliefPropagationIterations_new; ///< Number of iterations for belief
+                                       ///< propagation.
+  std::string
+      numcodeFile; ///< Relative path from database to the numcodes file.
 
   LdpcCoderParameters() = default;
 
+  /**
+   * @brief Gets the numcodes vector for a given length of the code.
+   * @param n Length of the code.
+   * @param min_level Minimum level for numcodes.
+   * @param max_level Maximum level for numcodes.
+   * @return std::vector<int> Numcodes vector.
+   */
   inline std::vector<int> getNumcodes(int n, int min_level,
                                       int max_level) const {
     std::string path = icov::helpers::path::combine(
@@ -89,6 +97,11 @@ struct LdpcCoderParameters {
     return numcodes_v;
   }
 
+  /**
+   * @brief Clone the object of LdpcCoderParameters.
+   * @return std::unique_ptr<LdpcCoderParameters> The cloned object of
+   * LdpcCoderParameters.
+   */
   virtual std::unique_ptr<LdpcCoderParameters> clone() const = 0;
   virtual ~LdpcCoderParameters() = default;
 };

@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -48,6 +48,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "tools/DebugTools.h"
 #include "typedef.h"
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
@@ -124,7 +125,7 @@ inline void assertion_failed_msg(char const *expr, char const *msg,
   std::cerr << "Expression '" << expr << "' is false in function '" << function
             << "': " << (msg ? msg : "<...>") << ".\n";
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
-  std::cerr << "Backtrace:\n" << boost::stacktrace::stacktrace() << '\n';
+  ICOV_FATAL << "Backtrace:\n" << boost::stacktrace::stacktrace() << '\n';
 #endif
   std::abort();
 }

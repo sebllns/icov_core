@@ -71,19 +71,44 @@ FrameEncoder::FrameEncoder(const params &p,
 FrameEncoder::~FrameEncoder() { ICOV_TRACE << "Destroy FrameEncoder"; }
 
 /*****************************************************************************/
-void icov::encoder::FrameEncoder::serializeBlockData(
-    bool access_block, const omnidirectional_layer::Block &b) {
+void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
+  if (access_block) {
+    for (int c = 0; c < (int)m_numComp; ++c) {
+      m_icov_file->setChannel(c);
+      m_icov_file->startWritePrediction(
+          omnidirectional_layer::BlockPrediction::ePredType::NONE);
+      // store syndrome per bitplane
+      Syndrome access_block_syndrome(m_channelCoder[c].access_block[0].size());
+      for (const auto &s : m_channelCoder[c].access_block) {
+        access_block_syndrome.fillFrom(s);
+        m_icov_file->writeSyndrome(access_block_syndrome);
+      }
+      m_icov_file->endWritePrediction(
+          omnidirectional_layer::BlockPrediction::ePredType::NONE);
+    }
+  }
 
-  ICOV_DEBUG << "Serialize block " << b.getIdSelf();
+  for (int c = 0; c < (int)m_numComp; ++c) {
+    m_icov_file->setChannel(c);
+    // store syndrome per bitplane
+    for (const auto &s : m_channelCoder[c].bitplanes) {
+      //      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
+      //                << std::endl;
+      if (s.stored_synd.size() > 0) {
+        m_icov_file->writeSyndrome(s.stored_synd);
+      }
+    }
+  }
+}
 
-  // Start writing block data
-  m_icov_file->startWriteBlock(b);
+void icov::encoder::FrameEncoder::serializeParameters() {
 
   // Loop over each component
   for (int c = 0; c < (int)m_numComp; ++c) {
+    m_icov_file->setChannel(c);
     // Store syndrome per bitplane
     std::cout << "<COMP " << c << "> BP";
-    m_icov_file->writeSIRate(m_channelCoder[c].bitplanes.size());
+    m_icov_file->writeBitplaneCount(m_channelCoder[c].bitplanes.size());
 
     std::cout << " S";
 
@@ -93,11 +118,11 @@ void icov::encoder::FrameEncoder::serializeBlockData(
     std::cout << std::endl;
   }
 
-  // Store bitplanes rates per SI and per channel
   for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
        bitstream::PredictionID) {
-    m_icov_file->startWritePrediction(p);
     for (int c = 0; c < (int)m_numComp; ++c) {
+      m_icov_file->setChannel(c);
+      m_icov_file->startWritePrediction(p);
       std::cout << "<SI "
                 << omnidirectional_layer::BlockPrediction::toString(
                        omnidirectional_layer::BlockPrediction::toPredType(p))
@@ -120,37 +145,32 @@ void icov::encoder::FrameEncoder::serializeBlockData(
           std::cout << std::endl;
         }
       } else if (p != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
-        m_icov_file->writeSIMode(bitstream::flag_t::AccessBlock);
+        m_icov_file->writeSIMode(bitstream::flag_t::NoCodingSI);
       }
+      m_icov_file->endWritePrediction(p);
     }
-    m_icov_file->endWritePrediction(p);
   }
+}
+
+void icov::encoder::FrameEncoder::serializeBlockData(
+    bool access_block, const omnidirectional_layer::Block &b) {
+
+  ICOV_DEBUG << "Serialize block " << b.getIdSelf();
+
+  // Start writing block data
+  m_icov_file->startWriteBlock(b);
+
+  // Store bitplanes rates per SI and per channel
+  serializeParameters();
 
   // WRITE SYNDROMES
   // ACCESS BLOCK
-  if (access_block) {
-    for (int c = 0; c < (int)m_numComp; ++c) {
-      // store syndrome per bitplane
-      Syndrome access_block_syndrome(m_channelCoder[c].access_block[0].size());
-      for (const auto &s : m_channelCoder[c].access_block) {
-        access_block_syndrome.fillFrom(s);
-        m_icov_file->writeSyndrome(access_block_syndrome);
-      }
-    }
-  }
-
-  for (int c = 0; c < (int)m_numComp; ++c) {
-    // store syndrome per bitplane
-    for (const auto &s : m_channelCoder[c].bitplanes) {
-      //      std::cout << "COMP " << c << " SYNDROME " << s.stored_synd.size()
-      //                << std::endl;
-      if (s.stored_synd.size() > 0) {
-        m_icov_file->writeSyndrome(s.stored_synd);
-      }
-    }
-  }
+  serializeSyndrome(access_block);
 
   m_icov_file->writeBlockSize();
+
+  // End writing block data
+  m_icov_file->endWriteBlock(b);
 }
 
 void FrameEncoder::encodeBlock(
@@ -158,7 +178,9 @@ void FrameEncoder::encodeBlock(
     const icov::omnidirectional_layer::IBlockPredictionManager
         &block_prediction_mgr) {
 
-  if (b.getId(omnidirectional_layer::Block::SELF) > 2)
+  if (m_icov_file->contentParameterSet().icu_count > 0 &&
+      b.getId(omnidirectional_layer::Block::SELF) >
+          m_icov_file->contentParameterSet().icu_count)
     return;
 
   ICOV_DEBUG << "start encode block "
@@ -475,17 +497,18 @@ void icov::encoder::FrameEncoder::encode_tu(
 
       // Checks if the block is an access block and there is no saved data
       if (b.isAccessBlock() &&
-          channelDbg.count(
+          channelDbg.si_map.count(
               omnidirectional_layer::BlockPrediction::ePredType::NONE) == 0) {
 
         auto &si_dbg =
-            channelDbg[omnidirectional_layer::BlockPrediction::ePredType::NONE];
-
-        ICOV_TRACE << "BBBB";
+            channelDbg.si_map
+                [omnidirectional_layer::BlockPrediction::ePredType::NONE];
 
         si_dbg.mode = bitstream::flag_t::AccessBlock;
         si_dbg.pz = ldpc_codec_layer::BitSymbolProvider::PzParams();
         si_dbg.pz.setBpCount(m_channelCoder[comp].access_block.size());
+        ICOV_DEBUG << "ACCESS BLOCK BP COUNT "
+                   << m_channelCoder[comp].access_block.size();
         for (const auto &s : m_channelCoder[comp].access_block) {
           bitstream::BitplaneStream bpstr;
           bpstr.numcode = bitstream::enum_t::SOURCE;
@@ -493,8 +516,6 @@ void icov::encoder::FrameEncoder::encode_tu(
           si_dbg.bitplanes.push_back(bpstr);
         }
       }
-
-      ICOV_TRACE << "CCCCC";
 
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingPredictionID(pred);
@@ -506,7 +527,7 @@ void icov::encoder::FrameEncoder::encode_tu(
                .predictionAvailable(),
           "Prediction debug already exists");
 
-      auto &si_dbg = channelDbg[pred];
+      auto &si_dbg = channelDbg.si_map[pred];
 
       si_dbg.mode = m_channelCoder[comp].si[predID].dirmode;
       si_dbg.pz = m_channelCoder[comp].si[predID].stored_pz;

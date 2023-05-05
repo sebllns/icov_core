@@ -27,8 +27,8 @@ icov::encoder::IcovMediaEncoder::~IcovMediaEncoder() {
 }
 
 /*****************************************************************************/
-void icov::encoder::IcovMediaEncoder::defaultEncode(float viewportPadding,
-    const viewport_geometry &vpg) {
+void icov::encoder::IcovMediaEncoder::defaultEncode(
+    float viewportPadding, const viewport_geometry &vpg) {
 
   std::unique_ptr<icov::encoder::InputMedia> input;
 
@@ -64,7 +64,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(float viewportPadding,
       static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
       (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
-
+  m_output->contentParameterSet().icu_count = 2; // TODO : RIGHT COUNT
   m_output->writeContentParameterSet();
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
 }

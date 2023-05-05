@@ -66,8 +66,7 @@ void decoder::SinglePassDecoder::initialize(
       },
       vpg);
 
-  int block_count = 2;
-  //  block_count = icovNavigation().Visualization->Picture->blockCount();
+  int block_count = icovFile().contentParameterSet().icu_count;
   m_icovFile->readBlockPos(block_count);
 
   const int channelCount = getNumberValidComponents(chFrmt);
@@ -79,9 +78,8 @@ void decoder::SinglePassDecoder::initialize(
   }
 
   m_blockProcessor = std::make_shared<BlockProcessor>();
-
+  m_blockProcessor->blockCount = m_icovFile->contentParameterSet().icu_count;
   m_blockProcessor->ExtractionBitstream = m_extractionBitstream;
-
   m_blockProcessor->Extractor = std::make_unique<BlockExtractor>(
       m_icovFile, extractor_params, coder_params, m_extractionBitstream);
 
@@ -136,21 +134,4 @@ const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
 void decoder::SinglePassDecoder::decodeFullFrame() {
   m_navigation.Request->setViewport(std::make_shared<DummyViewportManager>());
   m_navigation.Request->update(0, 0);
-  // m_blockProcessor.startProcess();
-  //  for (int icu = 0; icu < block_count; ++icu) {
-  //    ICOV_DEBUG << "decode block " << icu;
-
-  //    bool is_access_block = (icu == 0);
-
-  //    BlockPrediction::predType block_prediction =
-  //        is_access_block ? BlockPrediction::predType::NONE
-  //                        : BlockPrediction::predType::LEFT;
-
-  //    BlockVector::const_iterator b =
-  //        m_navigation.Visualization->Picture->getById(icu + 1);
-
-  //    m_blockProcessor.processBlock(*b, block_prediction);
-  //  }
-
-  // m_blockProcessor.endProcess();
 }

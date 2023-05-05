@@ -3,18 +3,18 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup ChannelDecoder
- * ChannelDecoder package (client side).
+/** @addtogroup Decoder
+ *  Decoder package (client side).
  *  @ingroup ICOV
  */
 
 /** @file ChannelDecoder.h
- *  @brief Defines an actual ICOV ChannelDecoder.
- *  @ingroup ChannelDecoder
+ *  @brief Class representing a channel decoder for video encoding.
+ *  @ingroup Decoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -49,7 +49,6 @@
 
 #pragma once
 
-#include "Unit.h"
 #include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
@@ -66,16 +65,39 @@
 
 namespace icov {
 namespace decoder {
+
+/**
+ * @class ChannelDecoder
+ * @brief Class representing a channel decoder for video encoding.
+ *
+ * The ChannelDecoder class performs decoding operations on video bitstreams.
+ * It is responsible for decoding ICU (Intra Coding Unit) blocks, setting SI
+ * (Side Information) parameters, reading and managing syndrome information, and
+ * decoding bitplanes.
+ */
 class ChannelDecoder {
-  // IBlockProcessor interface
 public:
+  /**
+   * @struct params
+   * @brief Struct containing the parameters for the ChannelDecoder.
+   */
   struct params {
-    icov::video::QpParam QpParam;
-    ComponentID CompID;
-    int bit_depth;
-    int maxLog2TrDynamicRange;
+    icov::video::QpParam QpParam; /**< QP (Quantization Parameter) parameter. */
+    ComponentID CompID;           /**< Component ID. */
+    int bit_depth;                /**< Bit depth. */
+    int maxLog2TrDynamicRange;    /**< Maximum Log2 Transform Dynamic Range. */
   };
 
+  /**
+   * @brief Constructor for ChannelDecoder.
+   * @param p The parameters for the ChannelDecoder.
+   * @param LDPC_params The parameters for the LDPC (Low Density Parity Check)
+   * coder.
+   * @param vvc_bufs Shared pointer to the video buffer groups.
+   * @param encodingStruct Shared pointer to the encoding structure.
+   * @param extraction Shared pointer to bitstream used to read the extracted
+   * information from it.
+   */
   ChannelDecoder(
       const ChannelDecoder::params &p, const LdpcCoderParameters &LDPC_params,
       const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
@@ -83,16 +105,29 @@ public:
       const bitstream::sp_IcovExtractedBitstream &extraction);
   ~ChannelDecoder();
 
-  void
-  decode_icu(int icu_enc,
-             omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  /**
+   * @brief Decode an ICU (Interactive Coding Unit) block.
+   * @param icu_enc The ID of ICU block to be decoded.
+   * @param block_prediction The type of block prediction used.
+   */
+  void decode_icu(
+      int icu_enc,
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
+  /**
+   * @brief Set the SI (Side Information) direction mode.
+   * @param dir_mode The direction mode to be set.
+   */
   void set_si_dir_mode(int dir_mode);
 
   void set_access_block_params(int lx);
 
   void set_si_params(int zmin, int zmax, float q, int lx);
 
+  /**
+   * @brief Read the syndrome from extracted bitstream.
+   * @param syndrome_size The size of the syndrome.
+   */
   void read_syndrome(int syndrome_size);
 
   void decode_bitplane(int bp, NumcodeIdx numcode, const Syndrome &synd);
@@ -103,27 +138,27 @@ public:
 
   const ldpc_codec_layer::AffInteractiveCoder &ldpc_coder() const;
 
-protected:
+private:
   params m_params;
-  std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
-  std::shared_ptr<icov::video::EncodingStructure> m_encodingStruct;
-  // CompArea m_blockArea;
-  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder> m_ldpc_coder;
-  icov::video::Quant quant;
-  TCoeff uiAbsSum;
-  icov::video::Transform2D transform2D;
-  icov::video::IntraPrediction intraPred;
+  std::shared_ptr<icov::video::BufGroups>
+      m_vvc_bufs; ///< Shared pointer to the video buffer groups.
+  std::shared_ptr<icov::video::EncodingStructure>
+      m_encodingStruct; ///< Shared pointer to the encoding structure.
+  std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder>
+      m_ldpc_coder; ///< Pointer to the LDPC (Low Density Parity Check) coder.
+  icov::video::Quant m_quant;
+  TCoeff m_uiAbsSum;
+  icov::video::Transform2D m_transform2D;
+  icov::video::IntraPrediction m_intraPred;
   BitVec m_blockBitplane;
   SIVec m_blockSI;
   Syndrome m_syndrome;
   ldpc_codec_layer::BitSymbolProvider m_bsp;
+  ldpc_codec_layer::BitSymbolProvider::PzParams m_pzParams;
   omnidirectional_layer::BlockPrediction::ePredType m_block_prediction;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;
-  // BlockVector::const_iterator m_block;
   int m_icuIndex;
-  // icov::video::IcuEncoder *mp_icu_enc;
-  // PelBuf roiComp_predictionFrameBuff;
 };
 } // namespace decoder
 } // namespace icov

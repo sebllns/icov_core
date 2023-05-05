@@ -17,6 +17,8 @@
 #include <string>
 
 namespace po = boost::program_options;
+typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace>
+    traced;
 
 ////////////////////////////////////////////////////////////////
 class IIcovProgram {
@@ -137,7 +139,12 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
     ICOV_LOG(fatal) << boost::current_exception_diagnostic_information()
                     << std::endl;
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
-    ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
+    const boost::stacktrace::stacktrace *st = boost::get_error_info<traced>(e);
+    if (st) {
+      ICOV_LOG(fatal) << *st;
+    } else {
+      ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
+    }
 #endif
     return boost::system::errc::interrupted;
   } catch (...) {

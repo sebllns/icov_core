@@ -191,6 +191,7 @@ find_package(Boost 1.70.0
     thread
     chrono
     serialization
+    json
 #    OPTIONAL_COMPONENTS
 #    unit_test_framework
 #stacktrace_backtrace

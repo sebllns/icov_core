@@ -25,7 +25,9 @@ BitSymbolProvider::BitSymbolProvider(int n)
 
 BitSymbolProvider::BitSymbolProvider(const SymboleVec &src_symbols)
     : m_src_symboles(src_symbols),
-      m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {}
+      m_src_bits(BitSymbolProvider::compute_bits(src_symbols)) {
+  m_pz_params.setBpCount(m_src_bits.size());
+}
 
 BitSymbolProvider::PzParams
 BitSymbolProvider::get_pz_params(const SymboleVec &src_symbols,
@@ -207,7 +209,9 @@ void BitSymbolProvider::set_si(const SIVec &si, const PzParams &pz) {
 //  return p;
 //}
 
-int BitSymbolProvider::bitplane_count() const { return m_src_bits.size(); }
+int BitSymbolProvider::bitplane_count() const {
+  return pz_params().getBitplaneCount();
+}
 
 int BitSymbolProvider::code_length() const { return m_src_symboles.size(); }
 
@@ -337,7 +341,7 @@ void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
   }
 }
 
-const BitSymbolProvider::PzParams BitSymbolProvider::pz_params() const {
+const BitSymbolProvider::PzParams &BitSymbolProvider::pz_params() const {
   return m_pz_params;
 }
 

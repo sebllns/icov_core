@@ -1,11 +1,9 @@
 #pragma once
 
-#include <boost/stacktrace/stacktrace.hpp>
-#include <cstddef>
-
 #include "typedef.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -26,10 +24,6 @@ public:
   }
 
   FastArray(const FastArray &f) : m_capacity(f.m_capacity), m_size(f.m_size) {
-    //    std::cout << "new copy " << m_size << std::endl;
-    // std::cout << boost::stacktrace::stacktrace();
-    //    ICOV_ASSERT_MSG(m_capacity >= m_size,
-    //                    "Capacity is greater or equal than size");
     if (m_capacity > 0)
       m_data = new T[f.m_capacity];
     if (m_size > 0)
@@ -37,10 +31,11 @@ public:
   }
 
   explicit FastArray(size_t size)
-      : m_capacity(size), m_size(size), m_data(new T[size]) {}
+      : m_capacity(size), m_size(size),
+        m_data(size > 0 ? new T[size] : nullptr) {}
 
-  FastArray(T *data, size_t size)
-      : m_capacity(size), m_size(size), m_data(data) {}
+  //  FastArray(T *data, size_t size)
+  //      : m_capacity(size), m_size(size), m_data(data) {}
 
   virtual ~FastArray() {
     if (m_capacity > 0 && m_data != nullptr) {
@@ -133,12 +128,21 @@ public:
     return sstr.str();
   }
 
+  bool operator==(const FastArray<T> &rhs) const {
+    return (this->size() == rhs.size()) &&
+           std::equal(this->data(), this->data() + this->size(), rhs.data(),
+                      rhs.data() + rhs.size());
+  }
+
+  bool operator!=(const FastArray<T> &rhs) const { return !operator==(rhs); }
+
 protected:
   T *m_data;
   size_t m_capacity;
   size_t m_size;
 };
 
+// TODO OPERATOR ==
 template <typename T> class FastMatrix : public FastArray<T> {
 public:
   FastMatrix() : FastArray<T>(0), m_rows(0), m_cols(0) {}
@@ -149,27 +153,12 @@ public:
   }
 
   FastMatrix(const FastMatrix &f)
-      : FastArray<T>(f.m_rows * f.m_cols), m_rows(f.m_rows), m_cols(f.m_cols) {
-    //    std::cout << "new copy " << this->m_size << std::endl;
-    std::memcpy(this->m_data, f.m_data, this->m_size * sizeof(T));
-  }
+      : FastArray<T>(f), m_rows(f.m_rows), m_cols(f.m_cols) {}
 
   FastMatrix<T> &operator=(const FastMatrix<T> &f) {
     this->m_rows = f.m_rows;
     this->m_cols = f.m_cols;
-
-    if (this->m_data != nullptr) {
-      delete[] this->m_data;
-      this->m_data = nullptr;
-    }
-    this->m_capacity = f.m_capacity;
-    this->m_size = f.m_size;
-    this->m_data = new T[this->m_capacity];
-    std::memcpy(this->m_data, f.m_data, this->m_size * sizeof(T));
-
-    // std::cout << "copy " << this->m_capacity << " " << this->m_size
-    //        << std::endl;
-
+    FastArray<T>::operator=(f);
     return *this;
   }
 
@@ -215,7 +204,7 @@ public:
   void resize(size_t rows, size_t cols) {
     m_rows = rows;
     m_cols = cols;
-    this->resize(rows * cols);
+    FastArray<T>::resize(rows * cols);
   }
 
 protected:

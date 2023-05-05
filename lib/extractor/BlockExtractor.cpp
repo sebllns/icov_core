@@ -61,7 +61,7 @@ void icov::extractor::BlockExtractor::processBlock(
   // get stored syndrome size per bitplane
   std::cout << "extract_syndrome_sizes" << std::endl;
   for (auto &ch : m_channelExtractor) {
-    ch->extract_syndrome_sizes(is_access_block);
+    ch->extract_stored_syndrome_size(is_access_block);
   }
 
   if (!is_access_block) {
@@ -86,7 +86,7 @@ void icov::extractor::BlockExtractor::processBlock(
   ChannelExtractor::resetSyndromePadding();
   std::cout << "extract_block" << std::endl;
   for (auto &ch : m_channelExtractor) {
-    ch->extract_block(b, block_prediction);
+    ch->extract_block_syndrome(b, block_prediction);
   }
 
   //  if (is_access_block && ChannelExtractor::getSyndromePadding() > 0)

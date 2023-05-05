@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -54,12 +54,15 @@
 #include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-#include "typedef.h"
-#include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
+
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <boost/json/array.hpp>
+#include <boost/json/object.hpp>
+
 #include <cstdint>
 #include <fstream>
 #include <memory>
@@ -76,7 +79,6 @@ public:
   ~TextOutputIcov() = default;
 
   // OutputIcovBase interface
-public:
   void writeQaryParams(
       const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) override;
   void writeContentParameterSet() override;
@@ -95,6 +97,12 @@ public:
       omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
       override;
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
+
+private:
+  boost::json::object m_blockNodeJSON;
+  boost::json::object m_currentPrednodeJSON;
+
+  boost::json::object &getChannelNodeJSON();
 };
 
 } // namespace encoder

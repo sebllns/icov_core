@@ -13,7 +13,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -83,7 +83,7 @@ const byte AccessBlock = 0;
 
 namespace enum_t {
 
-enum SyndromeType { NO_CODING = 0, SOURCE = 1 };
+enum SyndromeType { NO_CODING = 0, SOURCE = 1, COUNT };
 
 enum ContentType {
   CONTENT_TYPE_VIDEO = 0,

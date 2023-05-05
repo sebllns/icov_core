@@ -9,8 +9,49 @@
 namespace icov {
 namespace ldpc_codec_layer {
 
+/**
+ * @brief The BitSymbolProvider class
+ *
+ * A class that provides methods for computing bits from symbols, and vice
+ * versa.
+ *
+ * BitSymbolProvider is a class that provides a way to convert between
+ * bitplanes and symbols. In the context of channel decoding, a set of bitplanes
+ * is a 2D array of binary values representing the coded bits at a specific
+ * quantization level for a set of pixels (symbols). Each bitplane is an array
+ * of bits at a specific position in the binary representation associated to the
+ * pixels in a specific quantized and transformed block unit. BitSymbolProvider
+ * makes possible the encoding and decoding of these symbols by providing
+ * methods to convert the bits to and from symbols.
+ *
+ * A BitSymbolProvider is a class that provides access to bit codewords used in
+ * LDPC (Low Density Parity Check) coding. It is specifically designed to supply
+ * bit for LDPC encoding and decoding operations. The BitSymbolProvider
+ * class encapsulates the functionality related to managing and retrieving
+ * bitplanes from symbols, which are binary values representing information to
+ * be encoded or decoded using LDPC codes. It contains methods to access the
+ * source bits or symbols, perform operations on them, and provide them to the
+ * LDPC coder for encoding or decoding purposes.
+ * A bitplane is a way to represent a binary image by dividing it into multiple
+ * planes, where each plane represents the value of a single bit. The first
+ * bitplane represents sign value ( 1 means value < 0) of the
+ * quantized-transformed pixel value. The second bitplane is the most
+ * significant bit of each pixel, while the last bitplane represents the least
+ * significant bit. Bitplanes are commonly used in image compression algorithms,
+ * such as JPEG2000, where each bitplane is compressed separately and then
+ * combined to form the final compressed image. By compressing each bitplane
+ * separately, the compression algorithm can take advantage of local
+ * correlations between neighboring pixels at different bit depths, which can
+ * improve the overall compression performance.
+ *
+ */
 class BitSymbolProvider {
 public:
+  /**
+   * @brief The params struct
+   *
+   * A structure for holding parameters for Pz distribution.
+   */
   struct params {
     bool enable_z_quantization;
     std::vector<float> q_values;
@@ -20,12 +61,55 @@ public:
 
   public:
     PzParams();
+
+    /**
+     * @brief PzParams constructor
+     *
+     * Constructs a PzParams object with the specified parameters.
+     *
+     * @param p_bp_count an unsigned short representing the bitplane count.
+     * @param pzmin a short representing the minimum value of Z distribution.
+     * @param pzmax a short representing the maximum value of Z distribution.
+     * @param pq_quant an unsigned short representing the quantization of q.
+     * @param pq a float representing q.
+     */
     PzParams(ushort p_bp_count, short pzmin, short pzmax, ushort pq_quant,
              float pq);
 
+    /**
+     * @brief getZmin
+     *
+     * Gets the minimum value of z.
+     *
+     * @return an int representing the minimum value of z.
+     */
     int getZmin() const;
+
+    /**
+     * @brief getZmax
+     *
+     * Gets the maximum value of z.
+     *
+     * @return an int representing the maximum value of z.
+     */
     int getZmax() const;
+
+    /**
+     * @brief getZ0
+     *
+     * Gets the z value associated with q0.
+     *
+     * @return an int representing the z value associated with q0.
+     */
     int getZ0() const;
+
+    /**
+     * @brief getQ0
+     *
+     * Gets the value of q0.
+     *
+     * @return a float representing the value of q0.
+     */
     float getQ0() const;
     int getQ0Quantized() const;
     int getZAmplitude() const;
@@ -126,7 +210,7 @@ public:
 
   void injectBitplane(uint i, BitVec x);
 
-  const PzParams pz_params() const;
+  const PzParams &pz_params() const;
 
 private:
   PzParams m_pz_params;

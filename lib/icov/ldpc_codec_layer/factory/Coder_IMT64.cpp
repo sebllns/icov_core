@@ -61,7 +61,7 @@ void LdpcCoder_IMT64::create(
     int k = mat_provider->getMatrixCount() - i - 1;
     if (init_matrix)
       mat_provider->buildMatrix(k);
-    dec->init_decoder(k, p.codeLength, p.beliefPropagationInterations,
+    dec->init_decoder(k, p.codeLength, p.beliefPropagationIterations_new,
                       mat_provider->getMatrix(k));
   }
 

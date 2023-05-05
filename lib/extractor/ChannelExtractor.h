@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -66,6 +66,7 @@ namespace icov {
 namespace extractor {
 
 struct BitplaneExtractor {
+  ushort Index;
   bitstream::byte StoredSyndromeQuantizedSize;
   ushort StoredSyndromeBitSize;
   ushort StoredSyndromeByteSize;
@@ -113,11 +114,11 @@ public:
   // void extract_access_block(const omnidirectional_layer::Block &b,
   //                        bitstream::byte *syndrome_buf);
 
-  void extract_block(
+  void extract_block_syndrome(
       const omnidirectional_layer::Block &b,
       omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
-  void extract_syndrome_sizes(bool is_access_block);
+  void extract_stored_syndrome_size(bool is_access_block);
 
   void pass_access_block();
   void pass_prediction();
@@ -127,12 +128,16 @@ public:
   static void resetSyndromePadding();
   static int getSyndromePadding();
 
-protected:
+private:
+  void _extractBitplaneNumcode(BitplaneExtractor &bp);
+
   /**
    * @brief Extract the bitplane syndrome
    * @param bp The bitplane to extract the syndrome from
    */
-  void extract_bitplane_syndrome(const BitplaneExtractor &bp);
+  void _extractBitplaneSyndrome(const BitplaneExtractor &bp);
+
+  void _checkSyndrome(int bp, const Syndrome &s);
 
   params m_params; ///< The parameters of the channel extractor
 

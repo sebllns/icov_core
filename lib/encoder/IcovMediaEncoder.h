@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -61,7 +61,7 @@ namespace icov {
 namespace encoder {
 class IcovMediaEncoder : public IMediaEncoder<cv::Mat> {
 public:
-  enum eOutputType { UNKNOWN = 0, BINARY = 1, TEXT, COUNT };
+  enum eOutputType { UNKNOWN = 0, BINARY = 1, TEXT = 2, COUNT };
 
   struct params {
     fs::path InputPath;
@@ -73,7 +73,8 @@ public:
   IcovMediaEncoder(const params &p, const LdpcCoderParameters &LDPC_params);
   ~IcovMediaEncoder();
 
-  void defaultEncode(float viewportPadding, const omnidirectional_layer::viewport_geometry &vpg);
+  void defaultEncode(float viewportPadding,
+                     const omnidirectional_layer::viewport_geometry &vpg);
 
   const params &parameters() const;
   const LdpcCoderParameters &ldpc_parameters() const;

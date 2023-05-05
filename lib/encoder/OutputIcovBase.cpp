@@ -42,5 +42,15 @@ void OutputIcovBase::flush(int id) {
 }
 
 std::ostream &OutputIcovBase::getStream(int id) { return *m_fileParts[id]; }
+
+int OutputIcovBase::channel() const
+{
+  return m_channel;
+}
+
+void OutputIcovBase::setChannel(int newChannel)
+{
+  m_channel = newChannel;
+}
 } // namespace encoder
 } // namespace icov

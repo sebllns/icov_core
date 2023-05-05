@@ -76,12 +76,12 @@ void DecodeMode::run() {
   ICOV_DEBUG << "Start encoding";
   encode();
 
-  ICOV_DEBUG << "start decoding ICUs";
-  decode();
+  // ICOV_DEBUG << "start decoding ICUs";
+  // decode();
 
-  check();
+  // check();
 
-  display();
+  // display();
 }
 
 void DecodeMode::encode() {
@@ -89,7 +89,7 @@ void DecodeMode::encode() {
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.input_file,
           .OutputPath = m_parameters.input_file.replace_extension(".icov"),
-          .OutputType = encoder::IcovMediaEncoder::BINARY,
+          .OutputType = encoder::IcovMediaEncoder::TEXT,
           .FrameEncoderParams =
               icov::encoder::FrameEncoder::params{
                   .QP = m_parameters.qp,
@@ -109,10 +109,19 @@ void DecodeMode::encode() {
 }
 
 void DecodeMode::decode() {
+
+  // INIT DECODER
   m_decoder = std::make_unique<decoder::SinglePassDecoder>(
       m_encoder->output_media().getPath());
   m_decoder->initialize(*m_parameters.ldpc_params);
-  // CHECK CPS + ADD BLOCK COUNT IN CPS
+
+  // CHECK CPS
+  icov::helpers::assert::equal(
+      m_encoder->output_media().contentParameterSet(),
+      m_decoder->icovFile().contentParameterSet(),
+      "ContentParameterSet not equal between Encoder & Decoder");
+
+  // DECODE FULL FRAME
   m_decoder->decodeFullFrame();
 }
 

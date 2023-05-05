@@ -14,6 +14,7 @@
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <string>
 #include <sys/types.h>
 
 namespace fs = boost::filesystem;
@@ -41,7 +42,7 @@ ChannelExtractor::ChannelExtractor(
 
 ChannelExtractor::~ChannelExtractor() {}
 
-void ChannelExtractor::extract_block(
+void ChannelExtractor::extract_block_syndrome(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
@@ -64,6 +65,9 @@ void ChannelExtractor::extract_block(
       (block_prediction ==
        omnidirectional_layer::BlockPrediction::ePredType::INTER);
   bool is_intra_prediction = !is_access_block && !is_inter_prediction;
+
+  bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
+      m_bitplanes.size());
 
   m_bitstream->push(m_bitplaneCount);
 
@@ -95,51 +99,42 @@ void ChannelExtractor::extract_block(
       m_bitstream->push(zmax);
     }
 
-    int bp_i = 0;
-
-    if (bitstream::VideoStreamDebugger::get_const_instance()
-            .predictionAvailable()) {
-      ICOV_TRACE << "CHECK DEBUG PRED "
-                 << omnidirectional_layer::BlockPrediction::toString(
-                        block_prediction);
-      const auto &dbg_si =
-          bitstream::VideoStreamDebugger::get_const_instance().getDebuggingSI();
-      icov::helpers::assert::equal(
-          dbg_si.bitplanes.size(), m_bitplanes.size(),
-          "Bitplanes count do not match with debugger value");
-    }
-
     for (auto &bp : m_bitplanes) {
-      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
-                       bp.ReadSyndromeQuantizedSize);
-
-      bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
-          bp.ReadSyndromeQuantizedSize, *m_ldpc_coder);
-
-      bitstream::getByteCount(bp.StoredSyndromeBitSize,
-                              bp.StoredSyndromeByteSize,
-                              bp.ReadSyndromePadding);
+      _extractBitplaneNumcode(bp);
 
       // CHECK BITPLANE
-      std::cout << "EXTRACT BITPLANE " << bp.ReadSyndromeBitSize << " "
+      std::cout << "EXTRACT BITPLANE NUMCODE "
+                << (int)bp.ReadSyndromeQuantizedSize << " "
                 << bitstream::VideoStreamDebugger::get_const_instance()
                        .getDebuggingSI()
-                       .bitplanes[bp_i]
+                       .bitplanes[bp.Index]
                        .numcode
                 << std::endl;
 
-      bp_i++;
+      if (bitstream::VideoStreamDebugger::get_const_instance()
+              .predictionAvailable()) {
+        const auto &dbg_si =
+            bitstream::VideoStreamDebugger::get_const_instance()
+                .getDebuggingSI();
+        icov::helpers::assert::equal(
+            dbg_si.bitplanes[bp.Index].numcode,
+            (NumcodeIdx)bp.ReadSyndromeQuantizedSize,
+            "[COMP " + std::to_string(m_params.CompID) +
+                "] Numcode value does not match with debugger value: " +
+                std::to_string((NumcodeIdx)bp.ReadSyndromeQuantizedSize) +
+                " == " + std::to_string(dbg_si.bitplanes[bp.Index].numcode));
+      }
     }
   } else if (is_inter_prediction) {
     // TODO IMPLEMENT
   }
 
   for (auto &bp : m_bitplanes) {
-    extract_bitplane_syndrome(bp);
+    _extractBitplaneSyndrome(bp);
   }
 }
 
-void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
+void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
   // read bitplane count
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
                    m_bitplaneCount);
@@ -149,8 +144,10 @@ void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
 
   m_bitplanes.resize(m_bitplaneCount);
 
+  int i = 0;
   // for each bitplane read stored syndrome size
   for (auto &bp : m_bitplanes) {
+    bp.Index = i++;
     bp.StoredSyndromeQuantizedSize = 0;
     bp.StoredSyndromeBitSize = 0;
     bp.StoredSyndromeByteSize = 0;
@@ -160,11 +157,11 @@ void ChannelExtractor::extract_syndrome_sizes(bool is_access_block) {
     bp.ReadSyndromeByteSize = 0;
     bp.ReadSyndromePadding = 0;
 
+    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
+                     bp.StoredSyndromeQuantizedSize);
+
     if (is_access_block) {
-      bp.StoredSyndromeQuantizedSize = 1;
-    } else {
-      m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
-                       bp.StoredSyndromeQuantizedSize);
+      bp.StoredSyndromeQuantizedSize = bitstream::enum_t::SyndromeType::SOURCE;
     }
 
     bp.StoredSyndromeBitSize = bitstream::inverseQuantizedSize(
@@ -197,10 +194,30 @@ void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
 
 int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
-void ChannelExtractor::extract_bitplane_syndrome(const BitplaneExtractor &bp) {
+void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
+  m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
+                   bp.ReadSyndromeQuantizedSize);
+
+  bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
+      bp.ReadSyndromeQuantizedSize, *m_ldpc_coder);
+
+  bitstream::getByteCount(bp.StoredSyndromeBitSize, bp.StoredSyndromeByteSize,
+                          bp.ReadSyndromePadding);
+}
+
+void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
   m_icovFile->readSyndrome(m_bitstream->writableData(), bp.ReadSyndromeByteSize,
                            bp.StoredSyndromeByteSize);
   m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);
 }
 
 int ChannelExtractor::getCoderSize() const { return m_ldpc_coder->get_n(); }
+
+void ChannelExtractor::_checkSyndrome(int bp, const Syndrome &s) {
+  if (bitstream::VideoStreamDebugger::get_const_instance()
+          .predictionAvailable())
+    icov::helpers::assert::check(
+        bitstream::VideoStreamDebugger::get_const_instance().checkSyndrome(bp,
+                                                                           s),
+        "Bitplane syndrome must be equal to value saved in debugger");
+}

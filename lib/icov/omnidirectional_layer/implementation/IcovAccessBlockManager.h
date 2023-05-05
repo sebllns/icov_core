@@ -12,7 +12,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -45,33 +45,19 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 
 namespace icov {
 namespace omnidirectional_layer {
 
-/** @class IcovAccessBlockManager
- *  @brief IcovAccessBlockManager
- *
- *  A IcovAccessBlockManager is the smallest unit of a EquiRectPicture or
- * IcovAccessBlockManager and is conveying the pixels to be decoded and the
- * pixels to be displayed.
- *  TODO : RENAME WITHOUT ICOV
- */
 class IcovAccessBlockManager : public IAccessBlockManager {
-protected:
-  angle_radian m_angle_delta;
 
 public:
   IcovAccessBlockManager() = default;
-  IcovAccessBlockManager(angle_radian angle_delta);
   ~IcovAccessBlockManager() = default;
 
   // IAccessBlockManager interface
   virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) override;
-
-  const std::string getID() override;
 };
 } // namespace omnidirectional_layer
 } // namespace icov

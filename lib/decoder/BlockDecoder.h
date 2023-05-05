@@ -3,18 +3,18 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup BlockDecoder
- * BlockDecoder package (client side).
+/** @addtogroup Decoder
+ *  Decoder package (client side).
  *  @ingroup ICOV
  */
 
 /** @file BlockDecoder.h
  *  @brief Defines an actual ICOV BlockDecoder.
- *  @ingroup BlockDecoder
+ *  @ingroup Decoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -107,7 +107,7 @@ public:
 protected:
   void decode_icu(const omnidirectional_layer::Block &b,
                   const icov::video::IcuEncoder &icu_enc,
-                    omnidirectional_layer::BlockPrediction::ePredType pred);
+                  omnidirectional_layer::BlockPrediction::ePredType pred);
 
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;

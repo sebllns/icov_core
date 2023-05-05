@@ -14,7 +14,7 @@
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
- *  @copyright Copyright (C) 2022 by Inria. All rights reserved.
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
  * the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -86,11 +86,14 @@ protected:
     std::unique_ptr<BlockExtractor> Extractor;
     std::unique_ptr<BlockDecoder> Decoder;
     bitstream::sp_IcovExtractedBitstream ExtractionBitstream;
+    int blockCount;
 
     void
     processBlock(const icov::omnidirectional_layer::Block &b,
                  omnidirectional_layer::IBlockPredictionManager::prediction_t
                      prediction) override {
+      if ((int)b.getIdSelf() > blockCount)
+        return;
       if (Extractor)
         Extractor->processBlock(b, prediction);
       if (Decoder)
