@@ -137,8 +137,6 @@ private:
    */
   void _extractBitplaneSyndrome(const BitplaneExtractor &bp);
 
-  void _checkSyndrome(int bp, const Syndrome &s);
-
   params m_params; ///< The parameters of the channel extractor
 
   std::unique_ptr<ldpc_codec_layer::AffInteractiveCoder>

@@ -113,7 +113,7 @@ void icov::encoder::FrameEncoder::serializeParameters() {
     std::cout << " S";
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      m_icov_file->writeSIRate(s.stored_synd_rate);
+      m_icov_file->writeStoredSyndromeSize(s.stored_synd_rate);
     }
     std::cout << std::endl;
   }
@@ -145,7 +145,7 @@ void icov::encoder::FrameEncoder::serializeParameters() {
           std::cout << std::endl;
         }
       } else if (p != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
-        m_icov_file->writeSIMode(bitstream::flag_t::NoCodingSI);
+        m_icov_file->writeSIMode(bitstream::flag_t::UnavailableSI);
       }
       m_icov_file->endWritePrediction(p);
     }

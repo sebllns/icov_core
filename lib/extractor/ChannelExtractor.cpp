@@ -116,6 +116,8 @@ void ChannelExtractor::extract_block_syndrome(
         const auto &dbg_si =
             bitstream::VideoStreamDebugger::get_const_instance()
                 .getDebuggingSI();
+
+        // CHECK BITPLANE ==> UPDATE
         icov::helpers::assert::equal(
             dbg_si.bitplanes[bp.Index].numcode,
             (NumcodeIdx)bp.ReadSyndromeQuantizedSize,
@@ -212,12 +214,3 @@ void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
 }
 
 int ChannelExtractor::getCoderSize() const { return m_ldpc_coder->get_n(); }
-
-void ChannelExtractor::_checkSyndrome(int bp, const Syndrome &s) {
-  if (bitstream::VideoStreamDebugger::get_const_instance()
-          .predictionAvailable())
-    icov::helpers::assert::check(
-        bitstream::VideoStreamDebugger::get_const_instance().checkSyndrome(bp,
-                                                                           s),
-        "Bitplane syndrome must be equal to value saved in debugger");
-}

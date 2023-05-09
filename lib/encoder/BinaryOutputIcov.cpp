@@ -157,4 +157,6 @@ void icov::encoder::BinaryOutputIcov::endWritePrediction(
 void icov::encoder::BinaryOutputIcov::endWriteBlock(
     const omnidirectional_layer::Block &b) {}
 
-void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(const uint &v) {}
+void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(const uint &v) {
+  writeSIRate(v);
+}

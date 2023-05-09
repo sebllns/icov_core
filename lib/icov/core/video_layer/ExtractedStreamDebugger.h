@@ -69,6 +69,9 @@ public:
     std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
              SIStream>
         si_map;
+
+    int bitplaneCount() const { return srcBits.size(); }
+    int n() const { return srcSymboles.size(); }
   };
 
   typedef std::vector<ChannelBlockStreamDebugger>
@@ -87,6 +90,17 @@ private:
   MultiFrameStreamDebugger m_framesDbg;
 };
 
+/**
+ * @brief VideoStreamDebugger class provides debugging utilities for the video
+ * stream. It is a singleton class. It is used to check bitstream and get the
+ * debugging frames, blocks, channels, syndrome, etc.
+ *
+ * It provides functions to access debugging information for a particular
+ * frame, block, channel and prediction type.
+ * It also provides functions to check and assert the correctness
+ * of bitplane count and bitplane syndromes with the ground truth.
+ *
+ */
 class VideoStreamDebugger
     : public boost::serialization::singleton<VideoStreamDebugger> {
   friend class boost::serialization::singleton<VideoStreamDebugger>;
@@ -94,27 +108,59 @@ class VideoStreamDebugger
 public:
   VideoStreamDebugger() { reset(); }
 
+  /**
+   * @brief Checks if the debugging frame ID is available i.e. is in the range
+   * of the frame count.
+   *
+   * @return True if the debugging frame is available; False otherwise.
+   */
   bool frameAvailable() const {
     return mDebuggingFrameID >= 0 &&
            mDebuggingFrameID <
                VideoEncodingStreamCache::get_const_instance().getFrameCount();
   }
 
+  /**
+   * @brief Checks if the debugging block ID is available i.e. in the range of
+   * the blocks in the debugging frame.
+   *
+   * @return True if the debugging block is available; False otherwise.
+   */
   bool blockAvailable() const {
     return (frameAvailable() && mDebuggingBlockID >= 0 &&
             mDebuggingBlockID < (int)getDebuggingFrame().size());
   }
 
+  /**
+   * @brief Checks if the debugging channel ID is available i.e. in the range of
+   * the channels in the debugging block.
+   *
+   * @return True if the debugging channel is available; False otherwise.
+   */
   bool channelAvailable() const {
     return (frameAvailable() && blockAvailable() && mDebuggingChannelID >= 0 &&
             mDebuggingChannelID < (int)getDebuggingBlock().size());
   }
 
+  /**
+   * @brief Checks if the debugging prediction ID is available i.e. in the SI
+   * map of the debugging channel.
+   *
+   * @return True if the debugging prediction is available; False otherwise.
+   */
   bool predictionAvailable() const {
     return (frameAvailable() && blockAvailable() && channelAvailable() &&
             getDebuggingChannel().si_map.count(mDebuggingPredictionID) == 1);
   }
 
+  /**
+   * @brief Gets the debugging frame based on the debugging frame ID.
+   *
+   * Clients can use this method to access the debugging frame and perform
+   * further analysis on it.
+   *
+   * @return const reference to the debugging frame.
+   */
   const VideoEncodingStreamCache::FrameStreamDebugger &
   getDebuggingFrame() const {
     icov::helpers::assert::check(frameAvailable(),
@@ -124,6 +170,11 @@ public:
         mDebuggingFrameID);
   }
 
+  /**
+   * @brief Gets the debugging block based on the debugging block ID.
+   *
+   * @return const reference to the debugging block.
+   */
   const VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
   getDebuggingBlock() const {
     icov::helpers::assert::check(blockAvailable(),
@@ -132,6 +183,11 @@ public:
     return getDebuggingFrame().at(mDebuggingBlockID);
   }
 
+  /**
+   * @brief Gets the debugging channel based on the debugging channel ID.
+   *
+   * @return const reference to the debugging channel.
+   */
   const VideoEncodingStreamCache::ChannelBlockStreamDebugger &
   getDebuggingChannel() const {
     icov::helpers::assert::check(blockAvailable(),
@@ -140,6 +196,11 @@ public:
     return getDebuggingBlock().at(mDebuggingChannelID);
   }
 
+  /**
+   * @brief Get the SIStream object for the current debugging prediction type.
+   * @return const SIStream& The SIStream object.
+   * @throw std::logic_error If prediction is not available.
+   */
   const SIStream &getDebuggingSI() const {
     icov::helpers::assert::check(
         predictionAvailable(),
@@ -149,6 +210,12 @@ public:
     return getDebuggingChannel().si_map.at(mDebuggingPredictionID);
   }
 
+  /**
+   * @brief Get the FrameStreamDebugger object for the current debugging frame.
+   * @return VideoEncodingStreamCache::FrameStreamDebugger& The
+   * FrameStreamDebugger object.
+   * @throw std::logic_error If frame is not available.
+   */
   VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
     icov::helpers::assert::check(frameAvailable(),
                                  "Frame is not available ID = " +
@@ -177,13 +244,16 @@ public:
   }
 
   int debuggingFrameID() const { return mDebuggingFrameID; }
+
   void setDebuggingFrameID(int newDebuggingFrame) {
     mDebuggingFrameID = newDebuggingFrame;
   }
+
   int debuggingBlockID() const { return mDebuggingBlockID; }
   void setDebuggingBlockID(int newDebuggingBlock) {
     mDebuggingBlockID = newDebuggingBlock;
   }
+
   int debuggingChannelID() const { return mDebuggingChannelID; }
   void setDebuggingChannelID(int newDebuggingChannel) {
     mDebuggingChannelID = newDebuggingChannel;
@@ -199,14 +269,53 @@ public:
     mDebuggingPredictionID = newDebuggingPrediction;
   }
 
+  /**
+   * @brief Get the Syndrome object of the given bitplane.
+   *
+   * This function returns the Syndrome object associated with the given
+   * bitplane index of the debugging channel.
+   *
+   * @param[in] bp The index of the bitplane to retrieve the Syndrome object.
+   * @return const Syndrome& The Syndrome object of the given bitplane.
+   * @throws std::out_of_range if the given bitplane index is out of range.
+   * @throws std::logic_error if the prediction is not available.
+   */
   const Syndrome &getBitplaneSyndrome(int bp) const {
     return getDebuggingSI().bitplanes.at(bp).syndrome;
   }
 
+  /**
+   * @brief Check if the Syndrome object of the given bitplane matches the
+   provided Syndrome object.
+   *
+   * This function checks if the Syndrome object of the given bitplane matches
+   * the provided Syndrome object.
+   *
+   * @param[in] bp The index of the bitplane to compare.
+   * @param[in] s The Syndrome object to compare with.
+   * @return bool True if the Syndrome objects match, false otherwise.
+   * @throws std::out_of_range if the given bitplane index is out of range.
+   * @throws std::logic_error if the prediction is not available.
+   */
   bool checkSyndrome(int bp, const Syndrome &s) const {
     return getBitplaneSyndrome(bp) == s;
   }
 
+  /**
+   * @brief Assert that the Syndrome object of the given bitplane matches the
+   * provided Syndrome object.
+   *
+   * This function asserts that the Syndrome object of the given bitplane
+   * matches the provided Syndrome object. If the Syndrome objects do not match,
+   * a logical exception is thrown with an error message containing the actual
+   * and expected Syndrome objects.
+   *
+   * @param[in] bp The index of the bitplane to compare.
+   * @param[in] s The Syndrome object to compare with.
+   * @throws std::out_of_range if the given bitplane index is out of range.
+   * @throws std::logic_error if the prediction is not available.
+   * @throws std::logic_error if the Syndrome objects do not match.
+   */
   void assertSyndromeEqual(int bp, const Syndrome &s) const {
     if (predictionAvailable() && !checkSyndrome(bp, s)) {
       std::stringstream sstr = header();
@@ -219,14 +328,46 @@ public:
     }
   }
 
+  /**
+   * @brief Get the number of bitplanes in the current debugging channel.
+   *
+   * This function returns the number of bitplanes in the current debugging
+   * channel. It is used to verify if the predicted bitplane count matches the
+   * actual bitplane count.
+   *
+   * @throws std::logic_error if the prediction is not available.
+   * @return int The number of bitplanes in the current debugging channel.
+   */
   int getBitplaneCount() const { return getDebuggingSI().bitplanes.size(); }
 
+  /**
+   * @brief Checks if the bitplane count matches the predicted count.
+   *
+   * This function checks if the number of bitplanes in the current debugging
+   * channel matches the given predicted bitplane count.
+   *
+   * @param bp_count The predicted bitplane count.
+   * @return true if the bitplane count matches the predicted count, false
+   * otherwise.
+   */
   bool checkBitplaneCount(int bp_count) const {
     std::cout << "GT BP: " << getDebuggingSI().bitplanes.size() << std::endl;
 
     return getBitplaneCount() == bp_count;
   }
 
+  /**
+   * @brief Asserts that the bitplane count matches the predicted count.
+   *
+   * This function asserts that the number of bitplanes in the current
+   * debugging channel matches the given predicted bitplane count. If the
+   * prediction is available and the counts do not match, a logical exception is
+   * thrown with a detailed error message.
+   *
+   * @param bp_count The predicted bitplane count.
+   * @throws std::logic_error if the prediction is available and the bitplane
+   * counts do not match.
+   */
   void assertBitplaneCountEqual(int bp_count) const {
     if (predictionAvailable() && !checkBitplaneCount(bp_count)) {
       std::stringstream sstr = header();
@@ -238,6 +379,15 @@ public:
     }
   }
 
+  /**
+   * @brief Creates a header string for debugging messages.
+   *
+   * This function creates a header string for debugging messages, which
+   * includes the current debugging frame ID, block ID, channel ID, and
+   * prediction ID.
+   *
+   *   @return std::stringstream A stringstream containing the header string.
+   */
   std::stringstream header() const {
     std::stringstream sstr;
 
@@ -250,6 +400,11 @@ public:
     return sstr;
   }
 
+  /**
+   * @brief Resets the debugging information.
+   * This function resets the debugging information by setting the debugging
+   * frame ID, block ID, channel ID, and prediction ID to their default values.
+   */
   void reset() {
     setDebuggingBlockID(-1);
     setDebuggingChannelID(-1);
@@ -259,10 +414,11 @@ public:
   }
 
 private:
-  int mDebuggingFrameID;
-  int mDebuggingBlockID;
-  int mDebuggingChannelID;
-  omnidirectional_layer::BlockPrediction::ePredType mDebuggingPredictionID;
+  int mDebuggingFrameID;   ///< The debugging frame ID.
+  int mDebuggingBlockID;   ///< The debugging block ID.
+  int mDebuggingChannelID; ///< The debugging channel ID.
+  omnidirectional_layer::BlockPrediction::ePredType
+      mDebuggingPredictionID; ///< The debugging prediction ID.
 };
 
 } // namespace bitstream

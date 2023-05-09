@@ -26,16 +26,15 @@ TextOutputIcov::TextOutputIcov(const boost::filesystem::path &path)
 void TextOutputIcov::writeQaryParams(
     const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) {
   if (bsp.getZAmplitude() == 0) {
-    // std::cout << "SI IDENTICAL" << std::endl;
-    getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "Q 0 ";
-    m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
+    m_currentPrednodeJSON["no_coding_flag"] = true;
   } else {
-    getStream(bitstream::eIcovStream::ENCODE_PARAMS)
-        << "Q " << bsp.getQ0() << " Zmin " << bsp.getZmin() << " Zmax "
-        << bsp.getZmax() << " ";
-
-    m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
-        QARY_PARAMS_SIZE * sizeof(bitstream::byte);
+    m_currentPrednodeJSON["no_coding_flag"] = false;
+    boost::json::object pzParamsJSON;
+    pzParamsJSON["q0"] = bsp.getQ0();
+    pzParamsJSON["zmin"] = bsp.getZmin();
+    pzParamsJSON["zmax"] = bsp.getZmax();
+    m_currentPrednodeJSON["pz_params"] = pzParamsJSON;
+    m_currentPrednodeJSON["syndrome_rate"] = boost::json::array();
   }
 }
 
@@ -55,28 +54,16 @@ void TextOutputIcov::writeSyndrome(const Syndrome &s) {
 }
 
 void TextOutputIcov::writeFrameSize() {
-  //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
-  //                                    m_total_write_byte[eWriteCounter::FRAME_RATE],
-  //                                    false);
-  //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::FRAMES_SIZE],
-  //                                     m_total_write_byte[eWriteCounter::FRAME_SYNDROME],
-  //                                     true);
   m_total_write_byte[eWriteCounter::FRAME_RATE] = 0;
   m_total_write_byte[eWriteCounter::FRAME_SYNDROME] = 0;
 }
 
 void TextOutputIcov::writeBlockSize() {
 
-  std::cout << "WRITE SIZE " << m_total_write_byte[eWriteCounter::BLOCK_RATE]
-            << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
-            << std::endl;
-
-  //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
-  //                                      m_total_write_byte[eWriteCounter::BLOCK_RATE],
-  //                                      true);
-  //  helpers::io::write_value<uint32_t>(*m_fileParts[eIcovStream::BLOCKS_SIZE],
-  //                                     m_total_write_byte[eWriteCounter::BLOCK_SYNDROME],
-  //                                     true);
+  //  std::cout << "WRITE SIZE " <<
+  //  m_total_write_byte[eWriteCounter::BLOCK_RATE]
+  //            << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
+  //            << std::endl;
 
   m_total_write_byte[eWriteCounter::FRAME_RATE] +=
       m_total_write_byte[eWriteCounter::BLOCK_RATE];
@@ -89,18 +76,27 @@ void TextOutputIcov::writeBlockSize() {
 
 void TextOutputIcov::writeBitplaneCount(const uint &v) {
   getChannelNodeJSON()["bitplane_count"] = v;
+  getChannelNodeJSON()["stored_syndrome_rate"] = boost::json::array();
 }
 
-void TextOutputIcov::writeStoredSyndromeSize(const uint &v) {}
+void TextOutputIcov::writeStoredSyndromeSize(const uint &v) {
+  getChannelNodeJSON()["stored_syndrome_rate"].as_array().push_back(v);
+}
 
 void TextOutputIcov::writeSIRate(const uint &r) {
-  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << r << " ";
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
+  m_currentPrednodeJSON["syndrome_rate"].as_array().push_back(r);
 }
 
 void TextOutputIcov::writeSIMode(const uint &v) {
-  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << "MODE " << v << " ";
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
+
+  if (v == bitstream::flag_t::NoCodingSI) {
+    m_currentPrednodeJSON["available_si_flag"] = false;
+  } else {
+    m_currentPrednodeJSON["available_si_flag"] = true;
+    m_currentPrednodeJSON["mode"] = v;
+  }
 }
 
 } // namespace encoder
@@ -110,26 +106,26 @@ void icov::encoder::TextOutputIcov::startWriteBlock(
     const omnidirectional_layer::Block &b) {
   m_blockNodeJSON.clear();
   m_blockNodeJSON["block_id"] = b.getIdSelf();
-  m_blockNodeJSON["channels"] = boost::json::object();
   m_blockNodeJSON["is_access_block"] = false;
+  m_blockNodeJSON["channels"] = boost::json::object();
 }
 
 void icov::encoder::TextOutputIcov::startWritePrediction(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {
-  getStream(bitstream::eIcovStream::ENCODE_PARAMS) << " PRED " << pred << " ";
   m_currentPrednodeJSON.clear();
-
   auto pred_type = omnidirectional_layer::BlockPrediction::toPredType(pred);
-  getChannelNodeJSON()[omnidirectional_layer::BlockPrediction::toString(
-      pred_type)] = m_currentPrednodeJSON;
-
   if (pred_type == omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     m_blockNodeJSON["is_access_block"] = true;
   }
 }
 
 void icov::encoder::TextOutputIcov::endWritePrediction(
-    omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {}
+    omnidirectional_layer::IBlockPredictionManager::prediction_t pred) {
+  auto pred_type = omnidirectional_layer::BlockPrediction::toPredType(pred);
+  getChannelNodeJSON()["predictions"]
+      .as_object()[omnidirectional_layer::BlockPrediction::toString(
+          pred_type)] = m_currentPrednodeJSON;
+}
 
 void icov::encoder::TextOutputIcov::endWriteBlock(
     const omnidirectional_layer::Block &b) {
@@ -141,8 +137,12 @@ boost::json::object &icov::encoder::TextOutputIcov::getChannelNodeJSON() {
   if (!m_blockNodeJSON["channels"]
            .as_object()[std::to_string(channel())]
            .is_object()) {
+
+    boost::json::object channelNodeJSON;
+    channelNodeJSON["predictions"] = boost::json::object();
+
     m_blockNodeJSON["channels"].as_object()[std::to_string(channel())] =
-        boost::json::object();
+        channelNodeJSON;
   }
 
   return m_blockNodeJSON["channels"]

@@ -77,6 +77,7 @@ typedef char int8b;
 #define BYTE_SIZE CHAR_BIT * sizeof(icov::bitstream::byte)
 
 namespace flag_t {
+const byte UnavailableSI = 0;
 const byte NoCodingSI = 0;
 const byte AccessBlock = 0;
 } // namespace flag_t
