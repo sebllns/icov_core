@@ -40,3 +40,5 @@ If you have questions regarding the use of this software, please contact Inria u
  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.**
 
 ## Contact
+MAUGEY,Thomas <thomas.maugey@inria.fr>
+ROUMY, Aline <aline.roumy@inria.fr>

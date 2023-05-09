@@ -109,7 +109,6 @@ void DecodeMode::encode() {
 }
 
 void DecodeMode::decode() {
-
   // INIT DECODER
   m_decoder = std::make_unique<decoder::SinglePassDecoder>(
       m_encoder->output_media().getPath());

@@ -66,13 +66,13 @@ public:
     return *this;
   }
 
-  T operator[](int i) const { return m_data[i]; }
+  const T &operator[](int i) const { return m_data[i]; }
   T &operator[](int i) { return m_data[i]; }
 
-  T at(int i) const { return m_data[i]; }
+  const T &at(int i) const { return m_data[i]; }
   T &at(int i) { return m_data[i]; }
 
-  void fill(T val) { std::fill(m_data, m_data + size(), val); }
+  void fill(const T &val) { std::fill(m_data, m_data + size(), val); }
 
   size_t size() const { return m_size; }
   size_t capacity() const { return m_capacity; }

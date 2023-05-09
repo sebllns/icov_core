@@ -495,6 +495,11 @@ void icov::encoder::FrameEncoder::encode_tu(
       auto &channelDbg = bitstream::VideoStreamDebugger::get_mutable_instance()
                              .getDebuggingChannel();
 
+      if (channelDbg.n() == 0) {
+        channelDbg.srcSymboles = bsp.si_symboles();
+        channelDbg.srcBits = bsp.src_bits();
+      }
+
       // Checks if the block is an access block and there is no saved data
       if (b.isAccessBlock() &&
           channelDbg.si_map.count(

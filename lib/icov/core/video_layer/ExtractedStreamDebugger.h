@@ -82,6 +82,7 @@ public:
   VideoEncodingStreamCache() = default;
   ~VideoEncodingStreamCache() = default;
   void setFrameCount(int count) { m_framesDbg.resize(count); }
+  void clear() { m_framesDbg.clear(); }
   int getFrameCount() const { return m_framesDbg.size(); }
   const FrameStreamDebugger &getFrame(int i) const { return m_framesDbg[i]; }
   FrameStreamDebugger &getFrame(int i) { return m_framesDbg[i]; }
@@ -338,7 +339,7 @@ public:
    * @throws std::logic_error if the prediction is not available.
    * @return int The number of bitplanes in the current debugging channel.
    */
-  int getBitplaneCount() const { return getDebuggingSI().bitplanes.size(); }
+  int getBitplaneCount() const { return getDebuggingChannel().bitplaneCount(); }
 
   /**
    * @brief Checks if the bitplane count matches the predicted count.

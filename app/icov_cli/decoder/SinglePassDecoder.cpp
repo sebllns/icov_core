@@ -20,6 +20,9 @@ icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
 void decoder::SinglePassDecoder::initialize(
     const LdpcCoderParameters &coder_params) {
+
+  VideoStreamDebugger::get_mutable_instance().reset();
+
   ICOV_DEBUG << "INIT SinglePassDecoder";
   m_icovFile->readContentParameterSet();
   const auto cps = m_icovFile->contentParameterSet();
