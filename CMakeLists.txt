@@ -1,14 +1,29 @@
+# Specify the minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 ########################################
 #            INIT PROJECT              #
 ########################################
+
+# Specify the project name and the languages it is written in
 project(icov_core LANGUAGES CXX C)
+
+# Display a message indicating that the project is being built
 message(STATUS "BUILD ICOV CORE PROJECT")
 
 ########################################
 #      GLOBAL VARIABLES FOR ICOV       #
 ########################################
+
+# Define some global variables for the ICOV project
+# - ICOV_BUILD_ENCODER: build the icov encoder library
+# - ICOV_BUILD_EXTENSIONS: build extensions code for ICOV
+# - ICOV_BUILD_APPS: build ICOV apps
+# - ICOV_WITH_CPPCHECK: enable CPPCHECK
+# - ICOV_WITH_CLANG_TIDY: enable Clang Tidy analysis
+# - ICOV_USE_ADDRESS_SANITIZER: use sanitizer
+# - ICOV_BYPASS_SETUP: in case you REALLY want to bypass the default setup. May cause severe issues.
+# - ICOV_LOG_LEVEL: minimum log level
 set(ICOV_BUILD_ENCODER ON CACHE BOOL "Build the icov encoder lib")
 set(ICOV_BUILD_EXTENSIONS ON CACHE BOOL "Build extensions code for ICOV")
 set(ICOV_BUILD_APPS ON CACHE BOOL "Build ICOV apps")
@@ -18,7 +33,13 @@ set(ICOV_USE_ADDRESS_SANITIZER ON CACHE BOOL "Use Sanitizer")
 set(ICOV_BYPASS_SETUP OFF CACHE BOOL "In case you REALLY want to bypass the default setup. May cause severe issues.")
 set(ICOV_LOG_LEVEL 2 CACHE STRING "Min Log Level")
 
-#define some flags for macros here
+# Define some flags for macros here
+# - ICOV_CORE_DEBUG_TRACE_ENABLED: enable the trace debugger
+# - ICOV_CORE_STACKTRACE_ENABLED: enable the stacktrace
+# - ICOV_CHECK_BITPLANE_ENCODING_ENABLED: enable the bitplane decoding check right after decoding (use it to debug as it impacts the performances)
+# - ICOV_CONSOLE_COLOR_ENABLED: enable color formatting of the console
+# - ICOV_USE_OMP: enable parallelization with OMP
+# - ICOV_ASSERTION_ENABLED: if set to OFF, some heavy assertions will be disabled to improve performances
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 option(ICOV_CORE_STACKTRACE_ENABLED "Enable the stacktrace" OFF)
 option(ICOV_CHECK_BITPLANE_ENCODING_ENABLED "Enable the bitplane decoding check right after decoding\
@@ -27,15 +48,17 @@ option(ICOV_CONSOLE_COLOR_ENABLED "Enable color formatting of the console" OFF)
 option(ICOV_USE_OMP "Enable parallelization with OMP" OFF)
 option(ICOV_ASSERTION_ENABLED "If set to OFF, some heavy assertions will be disabled to improve performances" ON)
 
+# Set the ICOV_BUILD_TESTS variable to ON if it is not defined and the CMAKE_BUILD_TYPE matches Debug
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(ICOV_BUILD_TESTS ON CACHE BOOL "Force ICOV tests to be built. ")
 else()
      set(ICOV_BUILD_TESTS OFF CACHE BOOL "Force ICOV tests to be built. ")
 endif()
 
+# Define whether to build shared libraries or not
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
-# use folders in IDEs for projects (e.g. lib sample app test)
+# Use folders in IDEs for projects (e.g. lib sample app test)
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -140,7 +163,9 @@ message("-----------------------------------------------------------------------
 ########################################
 #        CHECK DEPENDENCIES            #
 ########################################
+message("-------------------------------------------------------------------------")
 message(STATUS "Checking dependencies...\n") #cf https://cmake.org/cmake/help/latest/command/message.html
+message("-------------------------------------------------------------------------")
 
 #---------------------------------------------------------------------
 # Use Conan
@@ -250,43 +275,55 @@ message("-----------------------------------------------------------------------
 ########################################
 #               ICOV                   #
 ########################################
+
+# Define the ICOV core version number
 set(ICOV_CORE_VERSION_MAJOR "1")
 set(ICOV_CORE_VERSION_MINOR "0")
 set(ICOV_CORE_VERSION_PATCH "1")
 set(ICOV_CORE_VERSION "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}")
 
+# Set compile definitions based on the configuration options
 add_compile_definitions("ICOV_LOG_LEVEL=${ICOV_LOG_LEVEL}")
 
+# Enable debug trace if it is enabled in the configuration
 if(ICOV_CORE_DEBUG_TRACE_ENABLED)
     message(STATUS "[INFO] ICOV core debug trace is ENABLED")
     add_compile_definitions("ICOV_CORE_DEBUG_TRACE_ENABLED")
 endif()
 
+# Enable stack trace if it is enabled in the configuration
 if(ICOV_CORE_STACKTRACE_ENABLED)
     message(STATUS "[INFO] ICOV core stack trace is ENABLED")
     add_compile_definitions("ICOV_CORE_STACKTRACE_ENABLED" "BOOST_STACKTRACE_USE_ADDR2LINE")
+    # Check if dl libs is available, then link it
     if(CMAKE_DL_LIBS)
         message(DEBUG "Linking with ${CMAKE_DL_LIBS}")
         link_libraries(${CMAKE_DL_LIBS})
     endif()
 endif()
 
+# Enable bitplane check test if it is enabled in the configuration
 if(ICOV_CHECK_BITPLANE_ENCODING_ENABLED)
     message(STATUS "[INFO] Encoded bitplane check is ENABLED")
     add_compile_definitions("ICOV_CHECK_BITPLANE_ENCODING_ENABLED")
 endif()
 
+# Enable colored console output if it is enabled in the configuration
 if(ICOV_CONSOLE_COLOR_ENABLED)
     message(STATUS "[INFO] Colored log in console are ENABLED")
     add_compile_definitions("ICOV_CONSOLE_COLOR_ENABLED")
 endif()
 
+# Enable assertions if it is enabled in the configuration
 if(ICOV_ASSERTION_ENABLED)
     message(STATUS "[INFO] Assertions are ENABLED")
     add_compile_definitions("ICOV_ASSERTION_ENABLED")
 endif()
 
+# Write the version number to a file
 file (WRITE "version.txt" ${ICOV_CORE_VERSION})
+
+# Write the version number to a header file
 file (WRITE "${CMAKE_CURRENT_SOURCE_DIR}/lib/icov/core/common/version.h"
     "/* This file is auto-generated from Cmake. You should not modify it directly*/\n"
     "#pragma once\n"
@@ -294,30 +331,46 @@ file (WRITE "${CMAKE_CURRENT_SOURCE_DIR}/lib/icov/core/common/version.h"
     "#define ICOV_CORE_VERSION_MINOR ${ICOV_CORE_VERSION_MINOR}\n"
     "#define ICOV_CORE_VERSION_PATCH ${ICOV_CORE_VERSION_PATCH}\n"
     "#define ICOV_CORE_VERSION \"${ICOV_CORE_VERSION}\"")
+
+# Output the version number to console
 message(STATUS "[INFO] Building ICOV core version ${ICOV_CORE_VERSION}")
 
-#REQUIRED
+# Add the required directories to the include source files
 include_directories(. lib lib/icov)
-add_subdirectory(lib/icov)
 
+# Add subdirectories to build
+add_subdirectory(lib/icov)
+add_subdirectory(lib/extractor)
+add_subdirectory(lib/decoder)
+
+# Check if encoder should be built, then add its subdirectory
 if(ICOV_BUILD_ENCODER)
     add_subdirectory(lib/encoder)
 endif()
 
-add_subdirectory(lib/decoder)
-add_subdirectory(lib/extractor)
-
+# Check if extensions should be built, then add its subdirectory
 if(ICOV_BUILD_EXTENSIONS)
     add_subdirectory(lib/extensions)
 endif()
 
+########################################
+#           ADD EXECUTABLES            #
+########################################
+
+# If ICOV_BUILD_TESTS is set to true, build the unit tests and benchmarks
 if(ICOV_BUILD_TESTS)
+    message("-------------------------------------------------------------------------")
     message(STATUS "[INFO] Building ICOV core tests")
+    message("-------------------------------------------------------------------------")
     add_subdirectory(tests/unit_tests)
     add_subdirectory(tests/benchmarks)
 endif()
 
+# If ICOV_BUILD_APPS is set to true, build the executables
 if(ICOV_BUILD_APPS)
+    message("-------------------------------------------------------------------------")
+    message(STATUS "[INFO] Building ICOV core executables")
+    message("-------------------------------------------------------------------------")
     add_subdirectory(app)
 endif(ICOV_BUILD_APPS)
 
