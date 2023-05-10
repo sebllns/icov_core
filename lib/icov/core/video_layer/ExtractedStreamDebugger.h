@@ -164,9 +164,9 @@ public:
    */
   const VideoEncodingStreamCache::FrameStreamDebugger &
   getDebuggingFrame() const {
-    icov::helpers::assert::check(frameAvailable(),
-                                 "Frame is not available ID = " +
-                                     std::to_string(mDebuggingFrameID));
+    icov::helpers::assert::check(
+        frameAvailable(), header().str() + " Frame must be available: ID = " +
+                              std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_const_instance().getFrame(
         mDebuggingFrameID);
   }
@@ -178,9 +178,9 @@ public:
    */
   const VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
   getDebuggingBlock() const {
-    icov::helpers::assert::check(blockAvailable(),
-                                 "Block is not available ID = " +
-                                     std::to_string(mDebuggingBlockID));
+    icov::helpers::assert::check(
+        blockAvailable(), header().str() + " Block must be available: ID = " +
+                              std::to_string(mDebuggingBlockID));
     return getDebuggingFrame().at(mDebuggingBlockID);
   }
 
@@ -191,9 +191,9 @@ public:
    */
   const VideoEncodingStreamCache::ChannelBlockStreamDebugger &
   getDebuggingChannel() const {
-    icov::helpers::assert::check(blockAvailable(),
-                                 "Channel is not available ID = " +
-                                     std::to_string(mDebuggingChannelID));
+    icov::helpers::assert::check(
+        blockAvailable(), header().str() + " Channel must be available: ID = " +
+                              std::to_string(mDebuggingChannelID));
     return getDebuggingBlock().at(mDebuggingChannelID);
   }
 
@@ -205,7 +205,7 @@ public:
   const SIStream &getDebuggingSI() const {
     icov::helpers::assert::check(
         predictionAvailable(),
-        "Prediction is not available ID = " +
+        header().str() + " Prediction must be available: ID = " +
             omnidirectional_layer::BlockPrediction::toString(
                 mDebuggingPredictionID));
     return getDebuggingChannel().si_map.at(mDebuggingPredictionID);
@@ -218,9 +218,9 @@ public:
    * @throw std::logic_error If frame is not available.
    */
   VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
-    icov::helpers::assert::check(frameAvailable(),
-                                 "Frame is not available ID = " +
-                                     std::to_string(mDebuggingFrameID));
+    icov::helpers::assert::check(
+        frameAvailable(), header().str() + " Frame must be available: ID = " +
+                              std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_mutable_instance().getFrame(
         mDebuggingFrameID);
   }
@@ -352,8 +352,6 @@ public:
    * otherwise.
    */
   bool checkBitplaneCount(int bp_count) const {
-    std::cout << "GT BP: " << getDebuggingSI().bitplanes.size() << std::endl;
-
     return getBitplaneCount() == bp_count;
   }
 

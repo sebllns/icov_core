@@ -6,7 +6,6 @@
 #include "helpers.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
-#include "video_layer/ExtractedStreamDebugger.h"
 #include <exception>
 #include <memory>
 
@@ -30,9 +29,6 @@ icov::encoder::IcovMediaEncoder::~IcovMediaEncoder() {
 /*****************************************************************************/
 void icov::encoder::IcovMediaEncoder::defaultEncode(
     float viewportPadding, const viewport_geometry &vpg) {
-
-  bitstream::VideoEncodingStreamCache::get_mutable_instance().clear();
-  bitstream::VideoStreamDebugger::get_mutable_instance().reset();
 
   std::unique_ptr<icov::encoder::InputMedia> input;
 

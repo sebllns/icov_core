@@ -65,9 +65,6 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   m_parameters.viewport_padding =
       args[DecodeMode::params::ViewportPadding_ID].as<float>();
 
-  bitstream::VideoEncodingStreamCache::get_mutable_instance().setFrameCount(
-      100);
-
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.input_file;
 }
@@ -85,6 +82,11 @@ void DecodeMode::run() {
 }
 
 void DecodeMode::encode() {
+  bitstream::VideoEncodingStreamCache::get_mutable_instance().clear();
+  bitstream::VideoStreamDebugger::get_mutable_instance().reset();
+  bitstream::VideoEncodingStreamCache::get_mutable_instance().setFrameCount(
+      100);
+
   m_encoder = std::make_unique<encoder::IcovMediaEncoder>(
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.input_file,

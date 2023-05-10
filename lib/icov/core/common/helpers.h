@@ -50,6 +50,7 @@
 
 #include "tools/DebugTools.h"
 #include "typedef.h"
+#include <string>
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
 #endif
@@ -346,9 +347,9 @@ static void write_value(std::ostream &str, const T &val, bool flush = false) {
 
 template <typename T>
 static void read_value(std::istream &str, T *val, int size = 1) {
-  std::cout << ">>>>>>> READ POS " << str.tellg() << " SIZE " << size
-            << std::endl;
+  std::cout << ">>>>>>> READ POS " << str.tellg() << " SIZE " << size;
   str.read(reinterpret_cast<char *>(val), size * sizeof(T));
+  std::cout << " VALUE = " << std::to_string(*val) << std::endl;
 }
 
 template <typename T>

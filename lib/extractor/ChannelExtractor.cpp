@@ -46,6 +46,12 @@ void ChannelExtractor::extract_block_syndrome(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
+  std::cout << std::to_string(m_params.CompID) << ": extract_block_syndrome "
+            << std::to_string(b.getIdSelf()) << ", "
+            << omnidirectional_layer::BlockPrediction::toString(
+                   block_prediction)
+            << std::endl;
+
   ICOV_ASSERT_MSG(
       block_prediction !=
           icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
@@ -69,6 +75,7 @@ void ChannelExtractor::extract_block_syndrome(
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
       m_bitplanes.size());
 
+  std::cout << "BP ";
   m_bitstream->push(m_bitplaneCount);
 
   if (is_access_block) {
@@ -82,51 +89,7 @@ void ChannelExtractor::extract_block_syndrome(
     //        ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
 
   } else if (is_intra_prediction) {
-    bitstream::byte dirmode = 0;
-    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
-    //    std::cout << dirmode << " == "
-    //              << bitstream::VideoStreamDebbuger::get_const_instance()
-    //                     .getDebuggingFrame()
-    ICOV_ASSERT_MSG(dirmode > 0, "No direction mode for the prediction");
-    m_bitstream->push(dirmode);
-    bitstream::byte pred_hdr = 0;
-    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
-    bitstream::byte zmin = 0, zmax = 0;
-    if (pred_hdr != 0) {
-      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
-      m_bitstream->push(zmin);
-      m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
-      m_bitstream->push(zmax);
-    }
-
-    for (auto &bp : m_bitplanes) {
-      _extractBitplaneNumcode(bp);
-
-      // CHECK BITPLANE
-      std::cout << "EXTRACT BITPLANE NUMCODE "
-                << (int)bp.ReadSyndromeQuantizedSize << " "
-                << bitstream::VideoStreamDebugger::get_const_instance()
-                       .getDebuggingSI()
-                       .bitplanes[bp.Index]
-                       .numcode
-                << std::endl;
-
-      if (bitstream::VideoStreamDebugger::get_const_instance()
-              .predictionAvailable()) {
-        const auto &dbg_si =
-            bitstream::VideoStreamDebugger::get_const_instance()
-                .getDebuggingSI();
-
-        // CHECK BITPLANE ==> UPDATE
-        icov::helpers::assert::equal(
-            dbg_si.bitplanes[bp.Index].numcode,
-            (NumcodeIdx)bp.ReadSyndromeQuantizedSize,
-            "[COMP " + std::to_string(m_params.CompID) +
-                "] Numcode value does not match with debugger value: " +
-                std::to_string((NumcodeIdx)bp.ReadSyndromeQuantizedSize) +
-                " == " + std::to_string(dbg_si.bitplanes[bp.Index].numcode));
-      }
-    }
+    _extractIntraParams();
   } else if (is_inter_prediction) {
     // TODO IMPLEMENT
   }
@@ -134,14 +97,19 @@ void ChannelExtractor::extract_block_syndrome(
   for (auto &bp : m_bitplanes) {
     _extractBitplaneSyndrome(bp);
   }
+
+  std::cout << "END extract_block_syndrome " << std::endl;
 }
 
 void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
+  std::cout << std::to_string(m_params.CompID)
+            << ": extract_stored_syndrome_size "
+            << std::to_string(is_access_block) << std::endl;
+
   // read bitplane count
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
                    m_bitplaneCount);
 
-  // output.resize(bitplaneCount);
   std::cout << " m_bitplaneCount " << (int)m_bitplaneCount << "\n";
 
   m_bitplanes.resize(m_bitplaneCount);
@@ -176,9 +144,14 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
     bp.ReadSyndromeByteSize = bp.StoredSyndromeByteSize;
     // std::cout << " " << output[c][bp];
   }
+
+  std::cout << "END extract_stored_syndrome_size " << std::endl;
 }
 
 void ChannelExtractor::pass_access_block() {
+  std::cout << std::to_string(m_params.CompID) << ": pass_access_block "
+            << std::endl;
+
   ushort syndrome_size = 0, syndrome_padding = 0;
   bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount -
                               SyndromePadding,
@@ -186,6 +159,8 @@ void ChannelExtractor::pass_access_block() {
   m_icovFile->offsetSyndrome(syndrome_size);
   SyndromePadding =
       ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
+
+  std::cout << "END pass_access_block " << std::endl;
 }
 
 void ChannelExtractor::pass_prediction() {
@@ -196,7 +171,69 @@ void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
 
 int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
+void ChannelExtractor::_extractIntraParams() {
+  std::cout << std::to_string(m_params.CompID) << ": _extractIntraParams "
+            << std::endl;
+
+  bitstream::byte dirmode = 0;
+  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
+  //    std::cout << dirmode << " == "
+  //              << bitstream::VideoStreamDebbuger::get_const_instance()
+  //                     .getDebuggingFrame()
+  ICOV_ASSERT_MSG(dirmode > bitstream::flag_t::UnavailableSI,
+                  "No direction mode for the prediction");
+
+  std::cout << "DM ";
+  m_bitstream->push(dirmode);
+  bitstream::byte pred_hdr = bitstream::flag_t::NoCodingSI;
+  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
+  std::cout << "QZ ";
+  m_bitstream->push(pred_hdr);
+  bitstream::byte zmin = 0, zmax = 0;
+  if (pred_hdr != bitstream::flag_t::NoCodingSI) {
+    m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
+    std::cout << "zmin ";
+    m_bitstream->push(zmin);
+    m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
+    std::cout << "zmax ";
+    m_bitstream->push(zmax);
+
+    for (auto &bp : m_bitplanes) {
+      _extractBitplaneNumcode(bp);
+
+      // CHECK BITPLANE
+      //      std::cout << "EXTRACT BITPLANE NUMCODE "
+      //                << (int)bp.ReadSyndromeQuantizedSize << " "
+      //                << bitstream::VideoStreamDebugger::get_const_instance()
+      //                       .getDebuggingSI()
+      //                       .bitplanes[bp.Index]
+      //                       .numcode
+      //                << std::endl;
+
+      if (bitstream::VideoStreamDebugger::get_const_instance()
+              .predictionAvailable()) {
+        const auto &dbg_si =
+            bitstream::VideoStreamDebugger::get_const_instance()
+                .getDebuggingSI();
+
+        // CHECK BITPLANE ==> UPDATE
+        icov::helpers::assert::equal(
+            dbg_si.bitplanes[bp.Index].numcode,
+            (NumcodeIdx)bp.ReadSyndromeQuantizedSize,
+            "[COMP " + std::to_string(m_params.CompID) +
+                "] Numcode value does not match with debugger value: " +
+                std::to_string((NumcodeIdx)bp.ReadSyndromeQuantizedSize) +
+                " == " + std::to_string(dbg_si.bitplanes[bp.Index].numcode));
+      }
+    }
+  }
+  std::cout << "END _extractIntraParams" << std::endl;
+}
+
 void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
+  std::cout << std::to_string(m_params.CompID) << ": _extractBitplaneNumcode"
+            << std::endl;
+
   m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
                    bp.ReadSyndromeQuantizedSize);
 
@@ -205,12 +242,20 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
 
   bitstream::getByteCount(bp.StoredSyndromeBitSize, bp.StoredSyndromeByteSize,
                           bp.ReadSyndromePadding);
+
+  std::cout << "END _extractBitplaneNumcode" << std::endl;
 }
 
 void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
+
+  std::cout << std::to_string(m_params.CompID) << ": _extractBitplaneSyndrome"
+            << std::endl;
+
   m_icovFile->readSyndrome(m_bitstream->writableData(), bp.ReadSyndromeByteSize,
                            bp.StoredSyndromeByteSize);
   m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);
+
+  std::cout << "END _extractBitplaneSyndrome" << std::endl;
 }
 
 int ChannelExtractor::getCoderSize() const { return m_ldpc_coder->get_n(); }

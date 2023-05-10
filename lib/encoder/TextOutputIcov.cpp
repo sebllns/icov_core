@@ -91,7 +91,7 @@ void TextOutputIcov::writeSIRate(const uint &r) {
 void TextOutputIcov::writeSIMode(const uint &v) {
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
 
-  if (v == bitstream::flag_t::NoCodingSI) {
+  if (v == bitstream::flag_t::UnavailableSI) {
     m_currentPrednodeJSON["available_si_flag"] = false;
   } else {
     m_currentPrednodeJSON["available_si_flag"] = true;

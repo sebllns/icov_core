@@ -129,6 +129,7 @@ public:
   static int getSyndromePadding();
 
 private:
+  void _extractIntraParams();
   void _extractBitplaneNumcode(BitplaneExtractor &bp);
 
   /**
