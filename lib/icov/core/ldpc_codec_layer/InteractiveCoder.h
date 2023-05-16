@@ -49,7 +49,7 @@ public:
   void encode_symboles(std::vector<NumcodeIdxVec> &rates,
                        std::vector<SyndromesVec> &syndromes,
                        const std::vector<SIVec> &si,
-                       const BitSymbolProvider::params &p,
+                       const QaryDistribution::quantization_params &p,
                        const SymboleVec &src);
 
   void encode_bitplanes(const BitSymbolProvider &bsp, NumcodeIdxVec &rate,

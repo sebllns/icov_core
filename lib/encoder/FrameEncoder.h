@@ -77,7 +77,7 @@ public:
     int QP = 42;
     ChromaFormat ChFormat = ChromaFormat::CHROMA_420;
     cv::Size ICU_Size = cv::Size(32, 32);
-    ldpc_codec_layer::BitSymbolProvider::params BSP_Params;
+    ldpc_codec_layer::QaryDistribution::quantization_params BSP_Params;
     bool CheckDecoding = true;
     float MaxRateNoCoding = 3;
     // int maxCountSINoCoding;
@@ -139,12 +139,12 @@ private:
                  ComponentID comp, int tu_index);
 
   bool debug_enabled() const;
-  
+
   void serializeSyndrome(bool access_block);
-  
+
   void serializeParameters();
 
-  protected:
+protected:
   params m_params;
   uint m_numComp;
   icov::video::EncodingStructure m_enc_struc;
@@ -179,7 +179,7 @@ private:
   } BitplaneCoder;
 
   typedef struct {
-    ldpc_codec_layer::BitSymbolProvider::PzParams stored_pz;
+    ldpc_codec_layer::QaryDistribution stored_pz;
     // mode
     uint dirmode;
   } SiCoder;

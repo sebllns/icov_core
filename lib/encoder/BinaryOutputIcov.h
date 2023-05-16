@@ -80,7 +80,7 @@ private:
   // OutputIcovBase interface
 public:
   void writeQaryParams(
-      const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) override;
+        const ldpc_codec_layer::QaryDistribution &bsp) override;
   void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;

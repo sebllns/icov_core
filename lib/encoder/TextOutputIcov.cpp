@@ -24,7 +24,7 @@ TextOutputIcov::TextOutputIcov(const boost::filesystem::path &path)
     : OutputIcovBase(path, 0) {}
 
 void TextOutputIcov::writeQaryParams(
-    const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) {
+    const ldpc_codec_layer::QaryDistribution &bsp) {
   if (bsp.getZAmplitude() == 0) {
     m_currentPrednodeJSON["no_coding_flag"] = true;
   } else {

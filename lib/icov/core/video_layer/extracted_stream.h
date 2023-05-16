@@ -99,7 +99,7 @@ struct BitplaneStream {
 };
 
 struct SIStream {
-  ldpc_codec_layer::BitSymbolProvider::PzParams pz;
+  ldpc_codec_layer::QaryDistribution pz;
   byte mode;
 
   std::vector<BitplaneStream> bitplanes;

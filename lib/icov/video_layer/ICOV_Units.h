@@ -92,15 +92,17 @@ public:
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
 
-  ldpc_codec_layer::BitSymbolProvider
-  getBitSymbolProvider(const ComponentID id, const TransformUnit &si_tu,
-                       const ldpc_codec_layer::BitSymbolProvider::params &bsp_params) const {
+  ldpc_codec_layer::BitSymbolProvider getBitSymbolProvider(
+      const ComponentID id, const TransformUnit &si_tu,
+      const ldpc_codec_layer::QaryDistribution::quantization_params &bsp_params)
+      const {
     auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
     size_t tu_size = x_tuCoeff.area();
 
     ICOV_TRACE << tu_size;
 
-    ldpc_codec_layer::BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+    ldpc_codec_layer::BitSymbolProvider bsp(
+        SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
 
     auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(id);
 
@@ -109,7 +111,8 @@ public:
         "Transform units from Source and its SI must be the same size: " +
             std::to_string(tu_size));
 
-    bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), bsp_params);
+    bsp.set_si_and_compute_pz_params(
+        SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), bsp_params);
 
     return bsp;
   }

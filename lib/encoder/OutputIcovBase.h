@@ -95,7 +95,7 @@ public:
   virtual void endWriteBlock(const omnidirectional_layer::Block &b) = 0;
 
   virtual void
-  writeQaryParams(const ldpc_codec_layer::BitSymbolProvider::PzParams &bsp) = 0;
+  writeQaryParams(const ldpc_codec_layer::QaryDistribution &bsp) = 0;
   virtual void writeContentParameterSet() = 0;
   virtual void writeSyndrome(const Syndrome &s) = 0;
   virtual void writeFrameSize() = 0;
@@ -110,7 +110,7 @@ public:
   int channel() const;
   void setChannel(int newChannel);
 
-  protected:
+protected:
   bitstream::ContentParameterSet m_contentParameterSet;
   std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
   std::array<uint32_t, eWriteCounter::COUNT> m_total_write_byte;

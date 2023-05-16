@@ -48,7 +48,8 @@ EncodeDemoMode::EncodeDemoMode(const po::variables_map &args) {
     bool enable_z_quantization = true;
     std::vector<float> q_values = {0.125,   0.375,   0.5625,  0.6875,
                                    0.78125, 0.84375, 0.90625, 0.96875};
-    BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
+    QaryDistribution::quantization_params bsp_params = {enable_z_quantization,
+                                                        q_values};
     icov::encoder::DemoEncoder::params enc_params = {
         42,
         CHROMA_420,

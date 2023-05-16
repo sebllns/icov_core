@@ -74,11 +74,11 @@ void DecodeMode::run() {
   encode();
 
   // ICOV_DEBUG << "start decoding ICUs";
-  decode();
+  //  decode();
 
-  check();
+  //  check();
 
-  display();
+  //  display();
 }
 
 void DecodeMode::encode() {
@@ -91,7 +91,7 @@ void DecodeMode::encode() {
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.input_file,
           .OutputPath = m_parameters.input_file.replace_extension(".icov"),
-          .OutputType = encoder::IcovMediaEncoder::BINARY,
+          .OutputType = encoder::IcovMediaEncoder::TEXT,
           .FrameEncoderParams =
               icov::encoder::FrameEncoder::params{
                   .QP = m_parameters.qp,

@@ -131,7 +131,7 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
                      bp.StoredSyndromeQuantizedSize);
 
     if (is_access_block) {
-      bp.StoredSyndromeQuantizedSize = bitstream::enum_t::SyndromeType::SOURCE;
+        bp.StoredSyndromeQuantizedSize = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
     }
 
     bp.StoredSyndromeBitSize = bitstream::inverseQuantizedSize(

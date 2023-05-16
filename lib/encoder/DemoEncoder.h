@@ -76,7 +76,7 @@ public:
     ChromaFormat chFormat;
     cv::Size icuSize_luma;
     cv::Size tuSize_luma;
-    ldpc_codec_layer::BitSymbolProvider::params bsp_params;
+    ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
     bool enable_block_encoding;
     bool write_intra_pred_image;
     bool check_decoding;

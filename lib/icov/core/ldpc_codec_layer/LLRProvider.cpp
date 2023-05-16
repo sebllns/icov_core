@@ -11,9 +11,7 @@
 namespace icov {
 namespace ldpc_codec_layer {
 
-LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) {
-  reset();
-}
+LLRProvider::LLRProvider(int n) : m_llr(n, 0), m_floor_type(0) { reset(); }
 
 LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
     : m_llr(llr), m_floor_type(0) {
@@ -21,26 +19,27 @@ LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
 }
 
 void LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
-                                  const std::vector<SIVal> &side_info) {
+                            const std::vector<SIVal> &side_info) {
   reset();
 
   for (size_t i = 0; i < side_info.size(); i++) {
-    LLRVal p = static_cast<LLRVal>(bsp.pqks(side_info[i]));
+    LLRVal p = static_cast<LLRVal>(bsp.distribution().pqks(side_info[i]));
     p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
   }
 }
 
 void LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
-                                  const std::vector<SIVal> &side_info,
-                                  const std::vector<int> &sign,
-                                  const std::vector<int> &abs_predec) {
+                            const std::vector<SIVal> &side_info,
+                            const std::vector<int> &sign,
+                            const std::vector<int> &abs_predec) {
   reset();
 
   int l = bsp.bitplane_count() - 1;
   LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
   for (size_t i = 0; i < side_info.size(); i++) {
-    bsp.pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0, p1, p);
+    bsp.distribution().pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0,
+                            p1, p);
     p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
     m_llr[i] = std::log(p / (1.0 - p));
   }
@@ -78,7 +77,7 @@ void LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
 }
 
 void LLRProvider::initLLR(const std::vector<SIVal> &side_info,
-                                const BitVec &src_bits) {
+                          const BitVec &src_bits) {
   icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
                                "Length "
                                "of arrays are not equal");
@@ -102,8 +101,7 @@ void LLRProvider::initLLR(const std::vector<SIVal> &side_info,
   }
 }
 
-void LLRProvider::initLLRUniform(float pcrossover,
-                                       const BitVec &src_bits) {
+void LLRProvider::initLLRUniform(float pcrossover, const BitVec &src_bits) {
   icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
                                "Length "
                                "of arrays are not equal");
@@ -164,9 +162,7 @@ void LLRProvider::apply_doping(int index, BitVal x) {
             : std::numeric_limits<LLRVal>::max();
 }
 
-int LLRProvider::doping_order(int index) const {
-  return m_doping_order[index];
-}
+int LLRProvider::doping_order(int index) const { return m_doping_order[index]; }
 
 uint32_t LLRProvider::index_min() const {
   uint32_t idx = 0;

@@ -75,7 +75,7 @@ class DecodeMode {
     int qp;
     float viewport_padding;
     std::unique_ptr<LdpcCoderParameters> ldpc_params;
-    BitSymbolProvider::params bsp_params;
+    QaryDistribution::quantization_params bsp_params;
   };
 
 public:

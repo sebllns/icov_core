@@ -82,9 +82,23 @@ const byte NoCodingSI = 0;
 const byte AccessBlock = 0;
 } // namespace flag_t
 
+namespace offset_t {
+const byte AvailableSI = 1;
+}
+
 namespace enum_t {
 
-enum SyndromeType { NO_CODING = 0, SOURCE = 1, COUNT };
+enum SyndromeType {
+  SyndromeType_NO_CODING = 0,
+  SyndromeType_SOURCE = 1,
+  SyndromeType_COUNT
+};
+enum QaryParamsIndex {
+  QaryParamsIndex_Q = 0,
+  QaryParamsIndex_Z_MIN = 1,
+  QaryParamsIndex_Z_MAX = 2,
+  QaryParamsIndex_COUNT
+};
 
 enum ContentType {
   CONTENT_TYPE_VIDEO = 0,
@@ -229,9 +243,9 @@ private:
 inline ushort
 inverseQuantizedSize(icov::bitstream::byte input,
                      const ldpc_codec_layer::IInteractiveCoder &coder) {
-  return (input == enum_t::SyndromeType::NO_CODING)
+  return (input == enum_t::SyndromeType::SyndromeType_NO_CODING)
              ? (0)
-             : ((input == enum_t::SyndromeType::SOURCE)
+             : ((input == enum_t::SyndromeType::SyndromeType_SOURCE)
                     ? (static_cast<ushort>(coder.get_n()))
                     : (static_cast<ushort>(coder.get_m(input - 2))));
 }
@@ -251,17 +265,13 @@ using rate_t =
     uint32_t;
 #endif
 
-// ERRORS : NEED 1 BYTE FOR ZMIN AND 1 BYTE FOR ZMAX
-// WHY ZMIN AND ZMAX ARE 0 ??
 typedef icov::bitstream::byte QaryParams[QARY_PARAMS_SIZE];
 
 inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
                            int &z_max) {
-  // lx = input[0] >> 4;
-  q_idx = input[0] - 1; // & 15;
-
-  z_min = input[1] * Z_STEP - Z_LIMIT;
-  z_max = input[2] * Z_STEP - Z_LIMIT;
+  q_idx = input[enum_t::QaryParamsIndex_Q] - offset_t::AvailableSI;
+  z_min = input[enum_t::QaryParamsIndex_Z_MIN];
+  z_max = input[enum_t::QaryParamsIndex_Z_MAX];
 
   std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
             << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
@@ -270,12 +280,9 @@ inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
 
 inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
                             int z_max) {
-
-  // output[0] = lx << 4;
-  output[0] = q_idx + 1;
-
-  output[1] = ((z_min + Z_LIMIT) / Z_STEP);
-  output[2] = ((z_max + Z_LIMIT) / Z_STEP);
+  output[enum_t::QaryParamsIndex_Q] = q_idx + offset_t::AvailableSI;
+  output[enum_t::QaryParamsIndex_Z_MIN] = z_min;
+  output[enum_t::QaryParamsIndex_Z_MAX] = z_max;
 
   std::cout << "Q " << (uint)output[0] << " " << (uint)output[1] << " "
             << (uint)output[2] << std::endl;

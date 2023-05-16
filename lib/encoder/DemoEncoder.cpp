@@ -107,7 +107,7 @@ void DemoEncoder::onEncodeBlock(int x, int y) {
 
   if (y == 2)
     predid |= omnidirectional_layer::BlockPrediction::BOTTOM;
-  
+
   omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(predid);
 
@@ -331,7 +331,7 @@ void DemoEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
   m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
   //  vvc_pic.create(PIC_PREDICTION, extendedFrameArea);
-  
+
   std::vector<BlockPrediction::ePredType> predVec = {
       BlockPrediction::LEFT,         BlockPrediction::RIGHT,
       BlockPrediction::TOP,          BlockPrediction::BOTTOM,
@@ -503,17 +503,18 @@ void icov::encoder::DemoEncoder::encode_tu(
                   "Coder not found for the given size: " +
                       std::to_string(tu_size));
 
-  BitSymbolProvider bsp(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
-  bsp.set_si(SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size),
-             m_params.bsp_params);
+  BitSymbolProvider bsp_enc(SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+  bsp_enc.set_si_and_compute_pz_params(
+      SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), m_params.bsp_params);
 
   icov::NumcodeIdxVec si_numcodes;
   icov::SyndromesVec si_synd;
 
-  m_coders.at(tu_size)->encode_bitplanes(bsp, si_numcodes, si_synd);
+  m_coders.at(tu_size)->encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
   BitSymbolProvider bsp_dec(tu_size);
-  bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
+  bsp_dec.set_si_and_qaryDistribution(bsp_enc.si_symboles(),
+                                      bsp_enc.distribution());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
     std::cout << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
@@ -534,7 +535,7 @@ void icov::encoder::DemoEncoder::encode_tu(
         ICOV_DEBUG << "Check bitplane " << i;
         m_coders.at(tu_size)->decode_bitplane(decoded, i, bsp_dec,
                                               si_numcodes[i], si_synd[i]);
-        icov::helpers::assert::check(decoded == bsp.src_bits()[i],
+        icov::helpers::assert::check(decoded == bsp_enc.src_bits()[i],
                                      "Decoding BP check failed " +
                                          std::to_string(i));
       } catch (const std::exception &e) {
@@ -548,12 +549,13 @@ void icov::encoder::DemoEncoder::encode_tu(
     try {
       ICOV_DEBUG << "Decode channel " << comp;
 
-      bsp_dec.set_si(bsp.si_symboles(), bsp.pz_params());
+      bsp_dec.set_si_and_qaryDistribution(bsp_enc.si_symboles(),
+                                          bsp_enc.distribution());
       m_coders.at(tu_size)->decode_symboles(bsp_dec, si_numcodes, si_synd);
 
-      icov::helpers::assert::check(bsp_dec.src_symboles() == bsp.src_symboles(),
-                                   "Decoding symbole failed for channel " +
-                                       std::to_string(comp));
+      icov::helpers::assert::check(
+          bsp_dec.src_symboles() == bsp_enc.src_symboles(),
+          "Decoding symbole failed for channel " + std::to_string(comp));
 
       ICOV_INFO << "Channel was successfully decoded";
     } catch (const std::exception &e) {
@@ -595,7 +597,7 @@ void icov::encoder::DemoEncoder::encode_icu(
 void DemoEncoder::encodeBlockWithPrediction(
     const omnidirectional_layer::Block &b,
     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) {
-  
+
   omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(prediction);
 

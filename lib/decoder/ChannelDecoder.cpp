@@ -84,15 +84,14 @@ void ChannelDecoder::decode_icu(
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
       bitplaneCount);
 
-  m_pzParams = ldpc_codec_layer::BitSymbolProvider::PzParams();
-  m_pzParams.setBpCount(bitplaneCount);
-  m_bsp.set_si(m_blockSI, m_pzParams);
+  m_bsp.distribution().setBitplane_count(bitplaneCount);
+  m_bsp.set_si(m_blockSI);
 
   for (int i = 0; i < bitplaneCount; ++i) {
     bitstream::byte quantizedNumcode =
         (block_prediction ==
          omnidirectional_layer::BlockPrediction::ePredType::NONE)
-            ? bitstream::enum_t::SyndromeType::SOURCE
+            ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
             : m_bitstream->pop();
 
     int syndrome_size =
@@ -184,7 +183,8 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                                      const Syndrome &synd) {
   if (m_block_prediction ==
       icov::omnidirectional_layer::BlockPrediction::ePredType::NONE) {
-    ICOV_ASSERT_MSG(numcode == bitstream::enum_t::SyndromeType::SOURCE,
+    ICOV_ASSERT_MSG(numcode ==
+                        bitstream::enum_t::SyndromeType::SyndromeType_SOURCE,
                     "Numcode value must be set to 1 for access block");
   }
 

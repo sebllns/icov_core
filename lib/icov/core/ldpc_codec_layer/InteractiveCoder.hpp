@@ -147,12 +147,15 @@ void InteractiveCoder<Matrix>::decode_symboles(
   ICOV_ASSERT_MSG(numcodes.size() == stored_synd.size(),
                   "Rates vector and Syndrome vector must be same length");
 
+  io_bsp.reset_src();
   int lx = stored_synd.size();
 
-  ICOV_ASSERT_MSG(lx == io_bsp.bitplane_count(),
-                  "Bitplanes count does not match");
+  ICOV_ASSERT_MSG(lx == io_bsp.bitplane_count(), "Bitplanes count must match");
 
   size_t n = get_n();
+
+  ICOV_ASSERT_MSG(n == io_bsp.code_length(), "Code size must match");
+
   if (m_decoded_bits.size() != n)
     m_decoded_bits.resize(n);
 
@@ -234,7 +237,7 @@ template <class Matrix>
 void InteractiveCoder<Matrix>::encode_symboles(
     std::vector<NumcodeIdxVec> &numcodesIdx,
     std::vector<SyndromesVec> &syndromes, const std::vector<SIVec> &si,
-    const BitSymbolProvider::params &p, const SymboleVec &src) {
+    const QaryDistribution::quantization_params &p, const SymboleVec &src) {
 
   // init outputs
   if (numcodesIdx.size() != si.size()) {
@@ -245,7 +248,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
     syndromes.resize(si.size(), SyndromesVec());
   }
 
-  std::vector<BitSymbolProvider::PzParams> sipz(si.size());
+  std::vector<QaryDistribution> sipz(si.size());
 
   // symboles to bitplanes
 
@@ -253,8 +256,8 @@ void InteractiveCoder<Matrix>::encode_symboles(
   for (size_t i = 0; i < si.size(); i++) {
     ICOV_INFO << "SI=" << i + 1 << "/" << si.size();
     BitSymbolProvider bsp(src);
-    bsp.set_si(si[i], p);
-    sipz[i] = bsp.pz_params();
+    bsp.set_si_and_compute_pz_params(si[i], p);
+    sipz[i] = bsp.distribution();
     this->encode_bitplanes(bsp, numcodesIdx[i], syndromes[i]);
   }
 
@@ -281,7 +284,7 @@ void InteractiveCoder<Matrix>::encode_symboles(
   // Now decode EACH SI with ITS RATE and THE WORST SYNDROME
   for (int k = 0; k < (int)numcodesIdx.size(); ++k) {
     BitSymbolProvider bsp_dec(get_n());
-    bsp_dec.set_si(si[k], sipz[k]);
+    bsp_dec.set_si_and_qaryDistribution(si[k], sipz[k]);
     // NumcodeIdx rate_k = numcodesIdx[k][i];
     //    ICOV_INFO << "SI has rate " << rate_k;
     //    ICOV_DEBUG << "Resize syndrome " << get_m(rate_k);

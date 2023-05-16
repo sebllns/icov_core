@@ -154,7 +154,6 @@ private:
   SIVec m_blockSI;
   Syndrome m_syndrome;
   ldpc_codec_layer::BitSymbolProvider m_bsp;
-  ldpc_codec_layer::BitSymbolProvider::PzParams m_pzParams;
   omnidirectional_layer::BlockPrediction::ePredType m_block_prediction;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;

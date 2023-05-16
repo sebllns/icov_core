@@ -226,7 +226,8 @@ void SymboleMode::process_input_file(const std::string &file) {
 
   std::vector<NumcodeIdxVec> numcodes;
   std::vector<SyndromesVec> syndromes;
-  BitSymbolProvider::params bsp_params = {enable_z_quantization, q_values};
+  QaryDistribution::quantization_params bsp_params = {enable_z_quantization,
+                                                      q_values};
 
   m_coder->encode_symboles(numcodes, syndromes, side_infos, bsp_params,
                            tsi.get_source());

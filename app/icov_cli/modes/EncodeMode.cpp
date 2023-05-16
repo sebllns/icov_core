@@ -96,16 +96,16 @@ void EncodeMode::run() {
                   .ChFormat = CHROMA_420,
                   .ICU_Size =
                       cv::Size(m_parameters.icuSize, m_parameters.icuSize),
-                  .BSP_Params = icov::ldpc_codec_layer::BitSymbolProvider::params{enable_z_quantization,
-                                                          q_values},
+                  .BSP_Params =
+                      icov::ldpc_codec_layer::QaryDistribution::
+                          quantization_params{enable_z_quantization, q_values},
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
 
   const float fov_x_degree = 60;
   const point2d resolution(1920, 1080);
-  angle_radian fov =
-      factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
+  angle_radian fov = factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
   viewport_geometry vpg = factory::default_geometry(fov, resolution);
   encoder.defaultEncode(m_parameters.viewportPadding, vpg);
 }

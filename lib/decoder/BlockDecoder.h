@@ -77,8 +77,8 @@ public:
     // TODO: unplug openCV from DECODER
     cv::Size sourceSize;
     cv::Size icuSize_luma;
-
-    ldpc_codec_layer::BitSymbolProvider::params bsp_params;
+    
+    ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
 
     //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
