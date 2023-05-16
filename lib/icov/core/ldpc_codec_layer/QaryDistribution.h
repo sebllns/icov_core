@@ -125,8 +125,6 @@ public:
   int getZmin() const {
     if (enable_z_quantization())
       return m_zmin * Z_STEP - Z_LIMIT;
-
-    std::cout << ">>>>> ZMIN = " << m_zmin;
     return m_zmin;
   }
 
@@ -140,8 +138,6 @@ public:
   int getZmax() const {
     if (enable_z_quantization())
       return m_zmax * Z_STEP - Z_LIMIT;
-
-    std::cout << ">>>>> ZMAX = " << m_zmax;
     return m_zmax;
   }
 
@@ -164,8 +160,8 @@ public:
    * @return a float representing the value of q0.
    */
   float getQ0() const {
-    //    if (getZAmplitude() == 0)
-    //      return 1.0; // std::numeric_limits<float>::epsilon()
+    if (getZAmplitude() == 0)
+      return 1.0; // std::numeric_limits<float>::epsilon()
     if (enable_q_quantization())
       return q_values().at(m_q0);
     return m_q0;
@@ -389,21 +385,21 @@ public:
     return p0 / p1;
   }
 
-  LLRVal llr_qk(float pqk) {
+  LLRVal llr_qk(float pqk) const {
     LLRVal p = static_cast<LLRVal>(pqk);
     p = std::clamp(p, std::numeric_limits<LLRVal>::epsilon(),
                    (LLRVal)(1.0 - std::numeric_limits<LLRVal>::epsilon()));
     return std::log(p / (1.0 - p));
   }
 
-  void si_to_llr_sign_bit(const SIVec &input, LLRVec &output) {
+  void si_to_llr_sign_bit(const SIVec &input, LLRVec &output) const {
     std::transform(
         input.cbegin(), input.cend(), output.begin(),
         [this](icov::SIVal yk) -> icov::LLRVal { return llr_qk(pqks(yk)); });
   }
 
   void si_to_llr_value_bit(ushort b, const SIVec &input, const BitVec &sign,
-                           const SymboleVec &abs_predec, LLRVec &output) {
+                           const SymboleVec &abs_predec, LLRVec &output) const {
     auto r = boost::combine(input, sign, abs_predec);
     std::transform(
         r.begin(), r.end(), output.begin(), [this, b](auto z) -> icov::LLRVal {

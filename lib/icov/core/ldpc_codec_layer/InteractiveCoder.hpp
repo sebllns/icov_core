@@ -225,11 +225,11 @@ void InteractiveCoder<Matrix>::init_LLR_bitplane(const BitSymbolProvider &bsp,
   // init the LLR values
   if (bitplane_idx == 0) {
     // get LLR for first bitplane level i.e. sign
-    m_pllrProvider->initLLR_s(bsp, bsp.si_symboles());
+    m_pllrProvider->initLLR_s(bsp.distribution(), bsp.si_symboles());
   } else {
     // get LLR for bitplane after the sign
-    m_pllrProvider->initLLR_b(bitplane_idx - 1, bsp, bsp.si_symboles(), signs,
-                              predec);
+    m_pllrProvider->initLLR_b(bitplane_idx - 1, bsp.distribution(),
+                              bsp.si_symboles(), signs, predec);
   }
 }
 

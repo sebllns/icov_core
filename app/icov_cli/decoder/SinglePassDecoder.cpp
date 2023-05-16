@@ -24,7 +24,9 @@ void decoder::SinglePassDecoder::initialize(
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
-  ICOV_DEBUG << "INIT SinglePassDecoder";
+  ICOV_DEBUG << "Init SinglePassDecoder";
+
+  ICOV_DEBUG << "Load ContentParameterSet";
   m_icovFile->readContentParameterSet();
   const auto cps = m_icovFile->contentParameterSet();
 
@@ -45,6 +47,7 @@ void decoder::SinglePassDecoder::initialize(
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
 
+  ICOV_DEBUG << "Init 360 navigation";
   const point2d resolution(cps.viewport_width, cps.viewport_height);
   const angle_radian fov(cps.viewport_fov_x, cps.viewport_fov_y);
 
@@ -70,6 +73,8 @@ void decoder::SinglePassDecoder::initialize(
       },
       vpg);
 
+  ICOV_DEBUG << "Init extractor";
+
   int block_count = icovFile().contentParameterSet().icu_count;
   m_icovFile->readBlockPos(block_count);
 
@@ -86,6 +91,8 @@ void decoder::SinglePassDecoder::initialize(
   m_blockProcessor->ExtractionBitstream = m_extractionBitstream;
   m_blockProcessor->Extractor = std::make_unique<BlockExtractor>(
       m_icovFile, extractor_params, coder_params, m_extractionBitstream);
+
+  ICOV_DEBUG << "Init decoder";
 
   m_blockProcessor->Decoder = std::make_unique<BlockDecoder>(
       BlockDecoder::params{

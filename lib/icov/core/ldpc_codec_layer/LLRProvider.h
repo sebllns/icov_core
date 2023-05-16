@@ -48,7 +48,8 @@
 
 #pragma once
 
-#include "BitSymbolProvider.h"
+#include "common_types.h"
+#include "ldpc_codec_layer/QaryDistribution.h"
 
 namespace icov {
 namespace ldpc_codec_layer {
@@ -64,8 +65,6 @@ public:
   static LLRVal limit_max();
   static LLRVal epsilon();
 
-  // inline LLRVal &operator[](int i) { return m_llr[i]; }
-  // inline LLRVal operator[](int i) const { return m_llr[i]; }
   inline const std::vector<LLRVal> &llr() const {
     return m_doping_ready ? m_llr_doping : m_llr;
   }
@@ -98,9 +97,9 @@ public:
    * @param side_info A vector of side information values to use in LLR
    * calculation
    */
-  void initLLR_s(const BitSymbolProvider &bsp,
+  void initLLR_s(const QaryDistribution &dist,
                  const std::vector<SIVal> &side_info);
-  void initLLR_b(int b, const BitSymbolProvider &bsp,
+  void initLLR_b(int b, const QaryDistribution &dist,
                  const std::vector<SIVal> &side_info,
                  const std::vector<int> &sign,
                  const std::vector<int> &abs_predec);

@@ -7,6 +7,7 @@
 #include <random>
 
 #include "helpers.h"
+#include "ldpc_codec_layer/QaryDistribution.h"
 
 namespace icov {
 namespace ldpc_codec_layer {
@@ -18,31 +19,18 @@ LLRProvider::LLRProvider(const std::vector<LLRVal> &llr)
   reset();
 }
 
-void LLRProvider::initLLR_s(const BitSymbolProvider &bsp,
+void LLRProvider::initLLR_s(const QaryDistribution &dist,
                             const std::vector<SIVal> &side_info) {
   reset();
-
-  for (size_t i = 0; i < side_info.size(); i++) {
-    LLRVal p = static_cast<LLRVal>(bsp.distribution().pqks(side_info[i]));
-    p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
-    m_llr[i] = std::log(p / (1.0 - p));
-  }
+  dist.si_to_llr_sign_bit(side_info, m_llr);
 }
 
-void LLRProvider::initLLR_b(int b, const BitSymbolProvider &bsp,
+void LLRProvider::initLLR_b(int b, const QaryDistribution &dist,
                             const std::vector<SIVal> &side_info,
                             const std::vector<int> &sign,
                             const std::vector<int> &abs_predec) {
   reset();
-
-  int l = bsp.bitplane_count() - 1;
-  LLRVal p = 0.0, p0 = 0.0, p1 = 0.0;
-  for (size_t i = 0; i < side_info.size(); i++) {
-    bsp.distribution().pqkb(sign[i] > 0, abs_predec[i], l, b, side_info[i], p0,
-                            p1, p);
-    p = std::clamp(p, epsilon(), (LLRVal)(1.0 - epsilon()));
-    m_llr[i] = std::log(p / (1.0 - p));
-  }
+  dist.si_to_llr_value_bit(b, side_info, sign, abs_predec, m_llr);
 }
 
 bool LLRProvider::no_coding(const BitVec &src) const {

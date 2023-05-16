@@ -74,11 +74,11 @@ void DecodeMode::run() {
   encode();
 
   // ICOV_DEBUG << "start decoding ICUs";
-  //  decode();
+  decode();
 
-  //  check();
+  check();
 
-  //  display();
+  display();
 }
 
 void DecodeMode::encode() {
