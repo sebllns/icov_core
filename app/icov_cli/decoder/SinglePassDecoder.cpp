@@ -2,7 +2,7 @@
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
-#include "helpers.h"
+
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/implementation/DummyViewportManager.h"
@@ -43,7 +43,7 @@ void decoder::SinglePassDecoder::initialize(
 
   UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
 
-  icov::helpers::assert::check(
+  icov::assert::check(
       cps.is_block_fixed_size,
       "Only fixed size blocks is available in this version");
 

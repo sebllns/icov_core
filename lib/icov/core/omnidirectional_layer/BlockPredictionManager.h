@@ -48,7 +48,7 @@
 #pragma once
 
 #include "Block.h"
-#include "helpers.h"
+
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
@@ -240,7 +240,7 @@ BlockPrediction::getPrediction(const Block &b,
   }
 
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::check(pred != NONE, "Prediction cannot be empty");
+  icov::assert::check(pred != NONE, "Prediction cannot be empty");
 #endif
 
   return static_cast<IBlockPredictionManager::prediction_t>(pred);

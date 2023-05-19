@@ -2,7 +2,7 @@
 
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "tools/DebugTools.h"
+
 #include <chrono>
 
 void BinaryMode::AddProgramOptions(
@@ -117,9 +117,9 @@ void BinaryMode::write_results() {
     time[i] /= m_nite;
   }
 
-  DebugTools::write_vector("pcrossover", m_pcrossover, '\n');
-  DebugTools::write_vector("rate", rate, '\n');
-  DebugTools::write_vector("numerrors", numerrors, '\n');
-  DebugTools::write_vector("encode_time", time, '\n');
-  DebugTools::write_vector("decode_time", decoding_time, '\n');
+  icov::debug::write_vector("pcrossover", m_pcrossover, '\n');
+  icov::debug::write_vector("rate", rate, '\n');
+  icov::debug::write_vector("numerrors", numerrors, '\n');
+  icov::debug::write_vector("encode_time", time, '\n');
+  icov::debug::write_vector("decode_time", decoding_time, '\n');
 }

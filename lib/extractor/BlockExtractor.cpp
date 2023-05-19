@@ -46,6 +46,8 @@ void icov::extractor::BlockExtractor::processBlock(
   icov::omnidirectional_layer::BlockPrediction::ePredType block_prediction =
       icov::omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
+  bitstream::VideoStreamDebugger::get_mutable_instance().reset();
+
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
       b.getIdSelf() - 1);
   bitstream::VideoStreamDebugger::get_mutable_instance()

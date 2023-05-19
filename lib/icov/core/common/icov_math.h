@@ -48,38 +48,86 @@
 
 #pragma once
 
-#include <assert.h>
-#include <cassert>
+#include <algorithm>
 #include <cmath>
-#include <cstddef>
-#include <cstring>
-#include <limits.h>
-#include <sstream>
-#include <utility>
+#include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <vector>
+
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // for C++
+#endif
 
 #define RAD2DEG (180.0 * M_1_PI)
 #define DEG2RAD (M_PI / 180.0)
 
 namespace icov {
+namespace maths {
 
+int pow2(int k);
 
-// ====================================================================================================================
-// Enumeration
-// ====================================================================================================================
-namespace enum_t {
+/**
+ * @brief Computes the binary length of a given integer value.
+ * @param val The integer value to compute the binary length for.
+ * @return The binary length of the given integer value.
+ */
+int pow2(int k) { return 1 << k; }
 
-enum LogType {
-  LOG_TYPE_SILLY,
-  LOG_TYPE_VERBOSE = 0,
-  LOG_TYPE_DEBUG = 1,
-  LOG_TYPE_INFO,
-  LOG_TYPE_WARNING,
-  LOG_TYPE_ERROR,
-  LOG_TYPE_EXCEPTION,
-  LOG_TYPE_MAX,
-};
+uint32_t binary_length(int val) {
+  return std::floor(std::log2f(std::abs(val))) + 1;
+}
 
+float normalize(float val, float min, float max) {
+  return (val - min) / (max - min);
+}
 
-} // namespace enum_t
+float wrap(float val, float min, float max) {
+  while (val < min) {
+    val += (max - min);
+  }
+
+  while (val > max) {
+    val -= (max - min);
+  }
+
+  return val;
+
+  // return val - (min - max) * floor(val / (max - min));
+}
+
+int quantize(int value, int step, int min, int max) {
+  return value == 0
+             ? 0
+             : std::clamp((int)((std::abs(value) / value) * step *
+                                std::ceil((1.0 * std::abs(value)) / step)),
+                          min, max);
+}
+
+int quantize(float value, const std::vector<float> &v) {
+  int idx = std::upper_bound(v.begin(), v.end(), value) - v.begin();
+  idx = std::clamp(idx, 0, (int)v.size() - 1);
+  int idx_prev = std::clamp(idx - 1, 0, (int)v.size() - 1);
+
+  if (std::abs(value - v[idx_prev]) < std::abs(value - v[idx])) {
+    idx = idx_prev;
+  }
+  return idx;
+}
+
+namespace rand {
+
+void init() { srand((unsigned)time(0)); }
+
+int range(int min_included, int max_included) {
+  return min_included +
+         (std::rand() % static_cast<int>(max_included - min_included + 1));
+}
+
+float normalized() {
+  return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+}
+
+} // namespace rand
+} // namespace maths
 } // namespace icov

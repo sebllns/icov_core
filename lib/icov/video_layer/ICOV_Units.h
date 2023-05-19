@@ -44,13 +44,12 @@
  *
  *****************************************************************************/
 #pragma once
-#include <memory>
-
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
-#include "tools/DebugTools.h"
+
+#include <memory>
 #include <vector>
 
 namespace icov::video {

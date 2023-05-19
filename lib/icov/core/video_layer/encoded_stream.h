@@ -46,7 +46,7 @@
  *
  *****************************************************************************/
 #pragma once
-#include "helpers.h"
+
 
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"

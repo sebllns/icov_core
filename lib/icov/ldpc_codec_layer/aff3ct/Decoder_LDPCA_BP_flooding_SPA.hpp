@@ -5,7 +5,7 @@
 #include "Module/Decoder/LDPC/BP/Decoder_LDPC_BP.hpp"
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 #include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
-#include "common_types.h"
+#include "FastArray.h"
 #include <cstdint>
 #include <fstream>
 #include <vector>

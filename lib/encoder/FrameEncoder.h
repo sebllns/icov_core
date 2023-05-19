@@ -52,7 +52,7 @@
 #include "Media.h"
 #include "OutputIcovBase.h"
 #include "PredictionsEncoder.h"
-#include "common_types.h"
+#include "FastArray.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 

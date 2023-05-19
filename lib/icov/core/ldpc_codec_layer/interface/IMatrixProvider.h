@@ -48,8 +48,8 @@
 
 #pragma once
 
-#include "common_types.h"
-#include "tools/DebugTools.h"
+#include "FastArray.h"
+#include "icov_log.h"
 
 namespace icov {
 namespace ldpc_codec_layer {

@@ -1,7 +1,7 @@
 #include "DecodeMode.h"
 #include "decoder/SinglePassDecoder.h"
 #include "encoder/IcovMediaEncoder.h"
-#include "helpers.h"
+
 #include "icov_program/icov_program_options.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
@@ -9,7 +9,7 @@
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"
 #include "opencv2/highgui.hpp"
-#include "tools/DebugTools.h"
+
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/vtm_opencv_utility.h"
 
@@ -55,7 +55,7 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
 
   m_parameters.bsp_params.enable_z_quantization = true;
 
-  icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(),
+  icov::io::read_vector(ICOV_Q_VALUES_FILE(args).string(),
                                  m_parameters.bsp_params.q_values);
 
   m_parameters.icu_size = args[DecodeMode::params::IcuSize_ID].as<int>();
@@ -91,7 +91,7 @@ void DecodeMode::encode() {
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.input_file,
           .OutputPath = m_parameters.input_file.replace_extension(".icov"),
-          .OutputType = encoder::IcovMediaEncoder::TEXT,
+          .OutputType = encoder::IcovMediaEncoder::BINARY,
           .FrameEncoderParams =
               icov::encoder::FrameEncoder::params{
                   .QP = m_parameters.qp,
@@ -117,7 +117,7 @@ void DecodeMode::decode() {
   m_decoder->initialize(*m_parameters.ldpc_params);
 
   // CHECK CPS
-  icov::helpers::assert::equal(
+  icov::assert::equal(
       m_encoder->output_media().contentParameterSet(),
       m_decoder->icovFile().contentParameterSet(),
       "ContentParameterSet not equal between Encoder & Decoder");

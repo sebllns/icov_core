@@ -6,20 +6,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/log/trivial.hpp>
-#define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
-
-#define ICOV_TRACE ICOV_LOG(trace)
-#define ICOV_DEBUG ICOV_LOG(debug)
-#define ICOV_INFO ICOV_LOG(info)
-#define ICOV_WARNING ICOV_LOG(warning)
-#define ICOV_ERROR ICOV_LOG(error)
-#define ICOV_FATAL ICOV_LOG(fatal)
-
-#ifndef ICOV_LOG_LEVEL
-#define ICOV_LOG_LEVEL 2
-#endif
-
 namespace icov {
 namespace debug {
 
@@ -40,9 +26,6 @@ static const bool is_release_build = !is_debug_build;
 
 // see boost doc to config log file
 // https://www.boost.org/doc/libs/1_65_1/libs/log/doc/html/log/tutorial/sinks.html
-void initLog();
-
-void write_str(const std::string &filename, const std::string &str);
 
 template <typename T>
 static void write_vector(const std::string &filename,
@@ -152,7 +135,11 @@ static std::string array_tostring(const T *arr, int n,
 //    }
 //  }
 
+inline void write_str(const std::string &filename, const std::string &str) {
+  std::ofstream file(filename);
+  file << str;
+  file.close();
+}
+
 } // namespace debug
 } // namespace icov
-
-namespace DebugTools = icov::debug;

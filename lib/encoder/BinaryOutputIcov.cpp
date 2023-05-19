@@ -1,5 +1,5 @@
 #include "BinaryOutputIcov.h"
-#include "helpers.h"
+
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
@@ -19,13 +19,13 @@ void BinaryOutputIcov::writeQaryParams(
   if (bsp.getZAmplitude() == 0) {
     // std::cout << "SI IDENTICAL" << std::endl;
     std::cout << "Q 0" << std::endl;
-    icov::helpers::io::write_value<bitstream::byte>(
+    icov::io::write_value<bitstream::byte>(
         getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, true);
     m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
   } else {
     icov::bitstream::writeQaryParams(m_qaryParams, bsp.getRawQ0(),
                                      bsp.getRawZmin(), bsp.getRawZmax());
-    icov::helpers::io::write_array(
+    icov::io::write_array(
         getStream(bitstream::eIcovStream::ENCODE_PARAMS), m_qaryParams,
         QARY_PARAMS_SIZE, true);
     m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
@@ -69,15 +69,15 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
   //  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
   //  m_fileParts[eIcovStream::SYNDROME]->flush();
 
-  helpers::io::write_array(*m_fileParts[bitstream::eIcovStream::SYNDROME], darr,
+  icov::io::write_array(*m_fileParts[bitstream::eIcovStream::SYNDROME], darr,
                            byte_size, true);
 }
 
 void BinaryOutputIcov::writeFrameSize() {
-  helpers::io::write_value<uint32_t>(
+  icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::FRAMES_SIZE],
       m_total_write_byte[eWriteCounter::FRAME_RATE], false);
-  helpers::io::write_value<uint32_t>(
+  icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::FRAMES_SIZE],
       m_total_write_byte[eWriteCounter::FRAME_SYNDROME], true);
 
@@ -91,10 +91,10 @@ void BinaryOutputIcov::writeBlockSize() {
             << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
             << std::endl;
 
-  helpers::io::write_value<uint32_t>(
+  icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::BLOCKS_SIZE],
       m_total_write_byte[eWriteCounter::BLOCK_RATE], true);
-  helpers::io::write_value<uint32_t>(
+  icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::BLOCKS_SIZE],
       m_total_write_byte[eWriteCounter::BLOCK_SYNDROME], true);
 
@@ -121,13 +121,13 @@ void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeSIRate(v); }
 
 void BinaryOutputIcov::writeSIRate(const uint &r) {
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::check(
+  icov::assert::check(
       r < std::numeric_limits<rate_t>::max(),
       "Value " + std::to_string(r) + " overflows the max possible value " +
           std::to_string(std::numeric_limits<rate_t>::max()));
 #endif
 
-  helpers::io::write_value<rate_t>(
+  icov::io::write_value<rate_t>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
       static_cast<rate_t>(r), true);
 
@@ -136,7 +136,7 @@ void BinaryOutputIcov::writeSIRate(const uint &r) {
 }
 
 void BinaryOutputIcov::writeSIMode(const uint &v) {
-  helpers::io::write_value<bitstream::byte>(
+  icov::io::write_value<bitstream::byte>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
       static_cast<rate_t>(v), true);
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);

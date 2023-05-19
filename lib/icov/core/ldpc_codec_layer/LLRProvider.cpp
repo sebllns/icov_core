@@ -1,13 +1,13 @@
 #include "LLRProvider.h"
 
+#include "common.h"
+#include "ldpc_codec_layer/QaryDistribution.h"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits>
 #include <random>
-
-#include "helpers.h"
-#include "ldpc_codec_layer/QaryDistribution.h"
 
 namespace icov {
 namespace ldpc_codec_layer {
@@ -46,9 +46,9 @@ bool LLRProvider::no_coding(const BitVec &src) const {
 }
 
 void LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
-  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
-                               "Length "
-                               "of arrays are not equal");
+  icov::assert::equal(m_llr.size(), src_bits.size(),
+                      "Length "
+                      "of arrays are not equal");
 
   reset();
 
@@ -66,9 +66,9 @@ void LLRProvider::initLLR(float pcrossover, const BitVec &src_bits) {
 
 void LLRProvider::initLLR(const std::vector<SIVal> &side_info,
                           const BitVec &src_bits) {
-  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
-                               "Length "
-                               "of arrays are not equal");
+  icov::assert::equal(m_llr.size(), src_bits.size(),
+                      "Length "
+                      "of arrays are not equal");
 
   reset();
 
@@ -90,9 +90,9 @@ void LLRProvider::initLLR(const std::vector<SIVal> &side_info,
 }
 
 void LLRProvider::initLLRUniform(float pcrossover, const BitVec &src_bits) {
-  icov::helpers::assert::equal(m_llr.size(), src_bits.size(),
-                               "Length "
-                               "of arrays are not equal");
+  icov::assert::equal(m_llr.size(), src_bits.size(),
+                      "Length "
+                      "of arrays are not equal");
 
   reset();
 
@@ -111,7 +111,7 @@ void LLRProvider::initLLRUniform(float pcrossover, const BitVec &src_bits) {
   for (int k = 0; k < (int)src_bits.size(); k++) {
     m_llr[k] = (int)(m_llr[k] + src_bits[k]) % 2;
     double pCond = (1 - pcrossover) * (1 - m_llr[k]) + pcrossover * m_llr[k];
-    m_llr[k] = log(pCond / (1 - pCond));
+    m_llr[k] = std::log(pCond / (1 - pCond));
   }
 
   m_floor_type = !m_floor_type;
@@ -131,18 +131,17 @@ void LLRProvider::init_doping() {
     m_llr_doping = m_llr;
     // icov::sort_indexes_abs(m_llr, m_doping_order);
     m_doping_ready = true;
-    //    icov::helpers::io::write_vector(std::cout, m_llr, ' ');
+    //    icov::io::write_vector(std::cout, m_llr, ' ');
     //    std::cout << std::endl << std::endl;
-    //    icov::helpers::io::write_vector(std::cout, m_doping_order, ' ');
+    //    icov::io::write_vector(std::cout, m_doping_order, ' ');
   }
 }
 
 void LLRProvider::apply_doping(int index, BitVal x) {
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::check(m_doping_ready,
-                               "Cannot use doping if not initialized");
-  icov::helpers::assert::check(index >= 0 && index < (int)m_doping_order.size(),
-                               "Index is out of bounds");
+  icov::assert::check(m_doping_ready, "Cannot use doping if not initialized");
+  icov::assert::check(index >= 0 && index < (int)m_doping_order.size(),
+                      "Index is out of bounds");
 #endif
 
   m_llr_doping[m_doping_order[index]] =

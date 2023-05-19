@@ -2,8 +2,8 @@
 
 #include "InteractiveCoder.h"
 
-#include "common_types.h"
-#include "helpers.h"
+#include "FastArray.h"
+
 #include <algorithm>
 
 namespace icov {
@@ -186,7 +186,7 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
   } else if (numcode == 1) {
     ICOV_TRACE << "DECODE: SOURCE";
 #if ICOV_ASSERTION_ENABLED
-    icov::helpers::assert::equal(stored_synd.size(), get_n(),
+    icov::assert::equal(stored_synd.size(), get_n(),
                                  "Size does not match");
 #endif
 
@@ -199,7 +199,7 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
     ICOV_TRACE << "DECODE: NO CODING";
 
 #if ICOV_ASSERTION_ENABLED
-    icov::helpers::assert::equal(output.size(), m_pllrProvider->llr().size(),
+    icov::assert::equal(output.size(), m_pllrProvider->llr().size(),
                                  "Size does not match");
 #endif
 
@@ -373,7 +373,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
     int numerrors =
         m_coder->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
 
-    icov::helpers::assert::check(numerrors == 0,
+    icov::assert::check(numerrors == 0,
                                  "No convergence for bitplane " +
                                      std::to_string(bitplane_idx));
 
@@ -381,7 +381,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
       BitVec decoded;
       decode(decoded, numcodeIdx, stored_synd);
-      icov::helpers::assert::check(decoded == src_bits[bitplane_idx],
+      icov::assert::check(decoded == src_bits[bitplane_idx],
                                    "INTERNAL Decoding BP check failed " +
                                        std::to_string(bitplane_idx));
     }
@@ -399,7 +399,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       if (bitplane_idx == (lx - 1)) {
         predec[k] *= (1 - 2 * sign_bits[k]);
 #ifdef ICOV_ASSERTION_ENABLED
-        icov::helpers::assert::check(predec[k] == src_symbols[k],
+        icov::assert::check(predec[k] == src_symbols[k],
                                      "Expected " +
                                          std::to_string(src_symbols[k]) +
                                          " got " + std::to_string(predec[k]));

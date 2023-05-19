@@ -4,7 +4,7 @@
 #include "bsp_test_sequences/TestSequenceResult.h"
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "tools/DebugTools.h"
+
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -87,13 +87,13 @@ void SymboleMode::AddProgramOptions(
 SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
     : m_coder(icov::options::create_coder(args)) {
 
-  icov::helpers::assert::check(args.count(dataset_dir_id),
+  icov::assert::check(args.count(dataset_dir_id),
                                dataset_dir_id + " is missing");
 
-  icov::helpers::assert::check(args.count(result_dir_id),
+  icov::assert::check(args.count(result_dir_id),
                                result_dir_id + " is missing");
 
-  icov::helpers::assert::check(args.count(reference_dir_id),
+  icov::assert::check(args.count(reference_dir_id),
                                reference_dir_id + " is missing");
 
   m_dataset_dir =
@@ -107,13 +107,13 @@ SymboleMode::SymboleMode(const boost::program_options::variables_map &args)
   enable_z_quantization = args[enable_z_quantization_id].as<bool>();
 
   if (enable_q_quantization) {
-    icov::helpers::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
+    icov::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), q_values);
   }
 
-  helpers::path::assert_directory_exists(m_dataset_dir.string());
-  helpers::path::assert_directory_exists(m_references_dir.string());
-  helpers::path::try_create_directories(m_result_dir.string());
-  helpers::path::assert_directory_exists(m_result_dir.string());
+  icov::path::assert_directory_exists(m_dataset_dir.string());
+  icov::path::assert_directory_exists(m_references_dir.string());
+  icov::path::try_create_directories(m_result_dir.string());
+  icov::path::assert_directory_exists(m_result_dir.string());
 }
 
 void SymboleMode::run() {
@@ -121,7 +121,7 @@ void SymboleMode::run() {
   measure_file = std::ofstream(measure_path.string());
   measure_file << "file\tsi\tabs diff\trelative diff\n";
 
-  icov::helpers::assert::check(measure_file.is_open(),
+  icov::assert::check(measure_file.is_open(),
                                "cannot open measure file for " +
                                    measure_path.string());
 
@@ -138,7 +138,7 @@ void SymboleMode::write_results(const std::string &sequence_name,
   std::ofstream result_file(
       (fs::path(m_result_dir) / (sequence_name + ".txt")).string());
 
-  icov::helpers::assert::check(result_file.is_open(),
+  icov::assert::check(result_file.is_open(),
                                "cannot open result file for " + sequence_name);
 
   result_file << "# ICOV rate" << std::endl;
@@ -189,7 +189,7 @@ void SymboleMode::write_results(const std::string &sequence_name,
 void SymboleMode::process_input_list(const std::string &file) {
   std::ifstream seq_list(file);
 
-  icov::helpers::assert::check(seq_list.is_open(), "cannot open file " + file);
+  icov::assert::check(seq_list.is_open(), "cannot open file " + file);
 
   std::string sequence_name;
   while (std::getline(seq_list, sequence_name)) {
@@ -263,7 +263,7 @@ void SymboleMode::process_input_file(const std::string &file) {
         //            sk_val = syndromes[k][i][sk];
         //            sk_first = false;
         //          } else {
-        //            icov::helpers::assert::equal(sk_val, syndromes[k][i][sk],
+        //            icov::assert::equal(sk_val, syndromes[k][i][sk],
         //                                         "Incremental syndrome check
         //                                         failed");
         //          }

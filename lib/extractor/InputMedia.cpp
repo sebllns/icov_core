@@ -1,7 +1,7 @@
 #include "InputMedia.h"
 #include "Media.h"
-#include "common_types.h"
-#include "helpers.h"
+#include "FastArray.h"
+
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -26,7 +26,7 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
 
   //  bitstream::byte val = 0;
   //  getStream(eIcovStream::RATES).seekg(11, std::ios_base::beg);
-  //    icov::helpers::io::read_value(getStream(eIcovStream::RATES), &val);
+  //    icov::io::read_value(getStream(eIcovStream::RATES), &val);
 
   //  getStream(eIcovStream::RATES)
   //      .read(reinterpret_cast<char *>(&val), sizeof(val));
@@ -61,7 +61,7 @@ void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
                                               uint64_t read_size,
                                               uint64_t stored_size) {
   auto &str = getStream(icov::bitstream::eIcovStream::SYNDROME);
-  icov::helpers::io::read_value(str, output, read_size);
+  icov::io::read_value(str, output, read_size);
   str.seekg(stored_size - read_size, std::ios_base::cur);
 }
 
@@ -77,9 +77,9 @@ void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
     uint32_t rate_size = 0;
     uint32_t synd_size = 0;
 
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::BLOCKS_SIZE), &rate_size);
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::BLOCKS_SIZE), &synd_size);
 
     rate_pos += rate_size;
@@ -138,11 +138,11 @@ void icov::extractor::InputIcov::jumpPrediction(int bitplaneCount) {
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
 
   // read prediction mode + 1
-  icov::helpers::io::read_value(str, &val);
+  icov::io::read_value(str, &val);
 
   if (val > 0) {
     // read q_idx + 1
-    icov::helpers::io::read_value(str, &val);
+    icov::io::read_value(str, &val);
     // std::cout << static_cast<int>(val) << std::endl;
     if (val > 0) {
       // std::cout << "seek " << (val + 2) << std::endl;
@@ -167,7 +167,7 @@ void icov::extractor::InputIcov::selectPrediction(
 int icov::extractor::InputIcov::readByteIntParam() {
   bitstream::byte val = 0;
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
-  icov::helpers::io::read_value(str, &val);
+  icov::io::read_value(str, &val);
   std::cout << "(int) = " << (int)val << std::endl;
   return static_cast<int>(val);
 }
@@ -179,9 +179,9 @@ void icov::extractor::InputIcov::readQaryParams(bitstream::byte header,
   m_qaryParams[0] = header;
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
   // z_min
-  icov::helpers::io::read_value(str, &m_qaryParams[1]);
+  icov::io::read_value(str, &m_qaryParams[1]);
   // z_max
-  icov::helpers::io::read_value(str, &m_qaryParams[2]);
+  icov::io::read_value(str, &m_qaryParams[2]);
   icov::bitstream::readQaryParams(m_qaryParams, q_idx, z_min, z_max);
 
   ICOV_ASSERT_MSG(z_min < z_max, "z_min >= z_max is not possible");
@@ -193,7 +193,7 @@ void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
     // encoding length
     bitstream::byte val = 0;
     auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
-    icov::helpers::io::read_value(str, &val);
+    icov::io::read_value(str, &val);
     v[i] = static_cast<NumcodeIdx>(val);
   }
 }
@@ -210,9 +210,9 @@ void icov::extractor::InputIcov::setFrame(int frame) {
   uint32_t frameSyndromeSize = 0;
 
   while (frame > m_frameID) {
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
 
     m_rates_pos[0] += frameRateSize;
@@ -226,9 +226,9 @@ void icov::extractor::InputIcov::setFrame(int frame) {
     getStream(bitstream::eIcovStream::FRAMES_SIZE)
         .seekg(-2 * (int)sizeof(frameRateSize), std::ios_base::cur);
 
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
-    icov::helpers::io::read_value(
+    icov::io::read_value(
         getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
 
     m_rates_pos[0] -= frameRateSize;

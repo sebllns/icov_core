@@ -1,8 +1,6 @@
 #include "IMT164Syndrome.h"
 
-#include "helpers.h"
 #include "implementation/imt_164/IMT164SyndromeTools.h"
-#include "tools/DebugTools.h"
 
 namespace icov {
 namespace ldpc_codec_layer {
@@ -10,8 +8,8 @@ namespace ldpc_codec_layer {
 IMT164SyndromeManager::IMT164SyndromeManager(
     const IMT164SyndromeTools &tools,
     const std::shared_ptr<const IMT164MatrixProvider> &matrix_pvdr)
-    : ISyndromeManager(tools.get_n()), m_tools(tools),
-      m_matrixPvdr(matrix_pvdr), accumulated_syndrome(nullptr) {
+    : ISyndromeManager(tools.get_n()), m_matrixPvdr(matrix_pvdr),
+      m_tools(tools), accumulated_syndrome(nullptr) {
 
   this->reset_doping();
 
@@ -70,7 +68,7 @@ void IMT164SyndromeManager::compute_doping_order(LLRProvider &llr_provider,
 }
 
 void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
-  // DebugTools::write_vector("./src.txt", source_x, ' ');
+  // icov::debug::write_vector("./src.txt", source_x, ' ');
   ICOV_TRACE << __func__;
   reset_doping();
 
@@ -91,7 +89,7 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
 
     // std::stringstream sstr;
     // sstr << h[k].transpose();
-    // DebugTools::write_str("./h_"+std::to_string(m), sstr.str());
+    // icov::debug::write_str("./h_"+std::to_string(m), sstr.str());
 
     for (int i = 0; i < count; i++) {
       int col =
@@ -114,10 +112,10 @@ void IMT164SyndromeManager::init_accumulation(const BitVec &source_x) {
     offset += count;
   }
 
-  // DebugTools::write_str("./acc.txt",
-  // DebugTools::array_tostring(accumulated_syndrome, offset, "acc"));
+  // icov::debug::write_str("./acc.txt",
+  // icov::debug::array_tostring(accumulated_syndrome, offset, "acc"));
 
-  icov::helpers::assert::equal(offset, get_m_max(), "offset != n/2");
+  icov::assert::equal(offset, get_m_max(), "offset != n/2");
 
   // init cache for doping
   doping_synd = Syndrome(get_m_max());

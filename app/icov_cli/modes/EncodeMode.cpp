@@ -3,7 +3,7 @@
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/factory.h"
-#include "tools/DebugTools.h"
+
 #include <algorithm>
 #include <boost/format.hpp>
 #include <boost/serialization/array_wrapper.hpp>
@@ -84,7 +84,7 @@ void EncodeMode::run() {
   ICOV_DEBUG << "Start encoding";
   bool enable_z_quantization = true;
   std::vector<float> q_values;
-  icov::helpers::io::read_vector(m_parameters.q_valuesPath.string(), q_values);
+  icov::io::read_vector(m_parameters.q_valuesPath.string(), q_values);
   encoder::IcovMediaEncoder encoder(
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.inputFile,

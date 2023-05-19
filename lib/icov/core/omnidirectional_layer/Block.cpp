@@ -1,5 +1,6 @@
 #include "Block.h"
-#include "helpers.h"
+
+#include "icov_assert.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include <sys/types.h>
 
@@ -9,9 +10,8 @@ namespace omnidirectional_layer {
 Block::Block(Block::id_t id, IPicture *parent, float pu, float pv, float pw,
              float ph)
     : m_parent(parent), m_u(pu), m_v(pv), m_w(pw), m_h(ph) {
-  icov::helpers::assert::check(parent != nullptr,
-                               "Parent of block is not null");
-  icov::helpers::assert::check(id > 0, "ID of block is > 0");
+  icov::assert::check(parent != nullptr, "Parent of block is not null");
+  icov::assert::check(id > 0, "ID of block is > 0");
 
   m_isAccessBlock = false;
   std::fill(uid, uid + NeighborDirection::COUNT, 0);

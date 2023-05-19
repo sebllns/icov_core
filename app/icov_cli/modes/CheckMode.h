@@ -45,7 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common_types.h"
+#include "FastArray.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
 

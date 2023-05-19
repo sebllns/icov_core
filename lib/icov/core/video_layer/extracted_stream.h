@@ -46,7 +46,7 @@
  *
  *****************************************************************************/
 #pragma once
-#include "helpers.h"
+
 #include "icov_stream.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
@@ -141,11 +141,28 @@ struct IcovExtractedBitstream {
     m_Buffer[pos] = val;
   }
 
+  icov::bitstream::byte get() {
+    icov::assert::check(m_ActualSize > 0, "Buffer is not empty");
+    return m_Buffer[m_ReadPosition];
+  }
+
   icov::bitstream::byte pop() {
-    icov::helpers::assert::check(m_ActualSize > 0, "Buffer is not empty");
-    auto pos = m_ReadPosition;
+    byte val = get();
     shiftReadPosition(1);
-    return m_Buffer[pos];
+    return val;
+  }
+
+  void get(std::vector<icov::bitstream::byte> &output) {
+    icov::assert::check(m_ActualSize >= output.size(),
+                                 "Buffer overflows");
+    std::copy(m_Buffer.cbegin() + m_ReadPosition,
+              m_Buffer.cbegin() + m_ReadPosition + output.size(),
+              output.begin());
+  }
+
+  void pop(std::vector<icov::bitstream::byte> &output) {
+    get(output);
+    shiftReadPosition(output.size());
   }
 
   void shiftWritePosition(size_t offset) {
@@ -157,6 +174,10 @@ struct IcovExtractedBitstream {
     m_ActualSize = std::clamp(m_ActualSize, (size_t)0, m_Buffer.size());
   }
 
+  /**
+   * @brief Shifts the read position by a given offset.
+   * @param offset The offset by which to shift the read position.
+   */
   void shiftReadPosition(size_t offset) {
     m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
     ICOV_WARNING_MSG(m_ActualSize >= offset,
@@ -164,19 +185,60 @@ struct IcovExtractedBitstream {
     m_ActualSize = m_ActualSize > offset ? m_ActualSize - offset : 0;
   }
 
+  /**
+   * @brief Retrieves the current write position in the bitstream.
+   * @return The write position.
+   */
   size_t getWritePosition() const;
+
+  /**
+   * @brief Retrieves the current read position in the bitstream.
+   * @return The read position.
+   */
   size_t getReadPosition() const;
+
+  /**
+   * @brief Retrieves the actual size of the bitstream.
+   * @return The actual size.
+   */
   size_t getActualSize() const;
+
+  /**
+   * @brief Retrieves the full size of the buffer.
+   * @return The size of the buffer.
+   */
+  size_t getBufferSize() const;
+
+  /**
+   * @brief Retrieves a pointer to the writable data in the bitstream.
+   * @return A pointer to the writable data.
+   */
   icov::bitstream::byte *writableData();
+
+  /**
+   * @brief Retrieves a pointer to the readable data in the bitstream.
+   * @return A pointer to the readable data.
+   */
   const icov::bitstream::byte *readableData() const;
+
+  /**
+   * @brief Checks if the bitstream is empty.
+   * @return True if the bitstream is empty, false otherwise.
+   */
   bool empty() const { return m_ActualSize > 0; }
+
+  /**
+   * @brief Retrieves the number of remaining elements in the bitstream.
+   * @return The number of remaining elements.
+   */
   int remains() const { return (m_WritePosition - m_ReadPosition); }
 
 protected:
-  size_t m_WritePosition;
-  size_t m_ReadPosition;
-  size_t m_ActualSize;
-  std::array<icov::bitstream::byte, BITSTREAM_SIZE> m_Buffer;
+  size_t m_WritePosition; /**< The write position in the bitstream. */
+  size_t m_ReadPosition;  /**< The read position in the bitstream. */
+  size_t m_ActualSize;    /**< The actual size of the bitstream. */
+  std::array<icov::bitstream::byte, BITSTREAM_SIZE>
+      m_Buffer; /**< The buffer to store the bitstream data. */
 };
 
 // using IcovExtractedBitstream = std::vector<icov::bitstream::byte>;
@@ -192,6 +254,10 @@ inline size_t IcovExtractedBitstream::getReadPosition() const {
 
 inline size_t IcovExtractedBitstream::getActualSize() const {
   return m_ActualSize;
+}
+
+inline size_t IcovExtractedBitstream::getBufferSize() const {
+  return m_Buffer.size();
 }
 
 inline byte *IcovExtractedBitstream::writableData() {

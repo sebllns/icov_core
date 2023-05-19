@@ -1,6 +1,6 @@
 #include "BlockDecoder.h"
 #include "decoder/ChannelDecoder.h"
-#include "helpers.h"
+
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
@@ -100,7 +100,7 @@ void icov::decoder::BlockDecoder::processBlock(
             << omnidirectional_layer::BlockPrediction::toString(pred)
             << std::endl;
 
-  icov::helpers::assert::check(
+  icov::assert::check(
       omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
       "Bad prediction value");
 
@@ -125,6 +125,8 @@ void icov::decoder::BlockDecoder::processBlock(
 
   //  if (si_map.count(pred) > 0)
   // decode_icu(b, icu_enc, pred);
+
+  bitstream::VideoStreamDebugger::get_mutable_instance().reset();
 
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
       b.getIdSelf() - 1);

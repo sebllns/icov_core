@@ -1,5 +1,5 @@
 #include "RequestManager.h"
-#include "helpers.h"
+#include "common.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -21,24 +21,22 @@ void RequestManager::setBlockPrediction(
 }
 
 void RequestManager::start() {
-  icov::helpers::assert::not_null(m_blockProcessor.get(),
-                                  "Block processor is not allocated");
-  icov::helpers::assert::not_null(m_accessBlocks.get(),
-                                  "Access block manager is not allocated");
+  icov::assert::not_null(m_blockProcessor.get(),
+                         "Block processor is not allocated");
+  icov::assert::not_null(m_accessBlocks.get(),
+                         "Access block manager is not allocated");
   m_accessBlocks->buildAccessBlocks(*m_picture, *m_viewport);
 }
 
 void RequestManager::update(float angle_x, float angle_y) {
 #if ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::not_null(m_ordering.get(),
-                                  "Ordering manager cannot be null");
-  icov::helpers::assert::not_null(m_viewport.get(),
-                                  "Viewport manager cannot be null");
-  icov::helpers::assert::not_null(
-      m_accessBlocks.get(), "Access blocks manager manager cannot be null");
+  icov::assert::not_null(m_ordering.get(), "Ordering manager cannot be null");
+  icov::assert::not_null(m_viewport.get(), "Viewport manager cannot be null");
+  icov::assert::not_null(m_accessBlocks.get(),
+                         "Access blocks manager manager cannot be null");
 
-  icov::helpers::assert::not_null(m_blockPrediction.get(),
-                                  "Predictions manager manager cannot be null");
+  icov::assert::not_null(m_blockPrediction.get(),
+                         "Predictions manager manager cannot be null");
 #endif
 
   m_ordering->reset();
@@ -49,8 +47,8 @@ void RequestManager::update(float angle_x, float angle_y) {
   bool is_access_block = true;
 
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::check(m_picture->isValidBlock(current_block),
-                               "No access block was found in the viewport");
+  icov::assert::check(m_picture->isValidBlock(current_block),
+                      "No access block was found in the viewport");
 #endif
 
   if (m_blockProcessor)

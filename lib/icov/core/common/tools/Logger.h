@@ -48,7 +48,9 @@
 
 #pragma once
 
-#include "common.h"
+#include <cassert>
+#include <cstring>
+#include <fstream>
 #include <sstream>
 #include <stdio.h>
 
@@ -60,6 +62,25 @@
 using namespace std;
 
 namespace icov {
+
+// ====================================================================================================================
+// Enumeration
+// ====================================================================================================================
+namespace enum_t {
+
+enum LogType {
+  LOG_TYPE_SILLY,
+  LOG_TYPE_VERBOSE = 0,
+  LOG_TYPE_DEBUG = 1,
+  LOG_TYPE_INFO,
+  LOG_TYPE_WARNING,
+  LOG_TYPE_ERROR,
+  LOG_TYPE_EXCEPTION,
+  LOG_TYPE_MAX,
+};
+
+} // namespace enum_t
+
 extern "C" {
 // Create a callback delegate
 typedef void (*LogCallBack)(const char *message, int length);
@@ -78,11 +99,10 @@ public:
          bool addTimestamp_ = false,
          enum_t::LogType logLevelFilter_ = enum_t::LogType::LOG_TYPE_INFO,
          bool showLogConsole_ = true)
-      : m_out(out), m_sink(), m_newline(true), m_callback(nullptr),
-        showLogLevel(showLogLevel_), showTimestamp(addTimestamp_),
-        showLogConsole(showLogConsole_),
-        logLevel(enum_t::LogType::LOG_TYPE_INFO),
-        logLevelFilter(logLevelFilter_) {
+      : logLevel(enum_t::LogType::LOG_TYPE_INFO),
+        logLevelFilter(logLevelFilter_), showTimestamp(addTimestamp_),
+        showLogLevel(showLogLevel_), showLogConsole(showLogConsole_),
+        m_out(out), m_sink(), m_newline(true), m_callback(nullptr) {
     setp(0, 0);
     m_sink = m_out.rdbuf(this);
     m_pstream = new std::ostream(m_sink);
@@ -209,6 +229,6 @@ private:
   std::stringstream m_stringstream;
   std::ostream *m_pstream;
   LogCallBack m_callback;
-  ofstream m_logfile;
+  std::ofstream m_logfile;
 };
 } // namespace icov

@@ -48,8 +48,8 @@
 
 #pragma once
 
-#include "common_types.h"
-#include "helpers.h"
+#include "FastArray.h"
+
 
 #include <boost/range/combine.hpp>
 
@@ -67,6 +67,13 @@ namespace ldpc_codec_layer {
 class QaryDistribution {
 
 public:
+  enum QaryParamsIndex {
+    QaryParamsIndex_Q = 0,
+    QaryParamsIndex_Z_MIN = 1,
+    QaryParamsIndex_Z_MAX = 2,
+    QaryParamsIndex_COUNT
+  };
+
   /**
    * @brief The params struct
    *
@@ -87,6 +94,19 @@ public:
         m_q0(1), m_quantization_params{true,
                                        {0.125, 0.375, 0.5625, 0.6875, 0.78125,
                                         0.84375, 0.90625, 0.96875}} {}
+
+  float getRawParam(QaryParamsIndex idx) const {
+    switch (idx) {
+    case QaryParamsIndex_Q:
+      return getRawQ0();
+    case QaryParamsIndex_Z_MIN:
+      return getRawZmin();
+    case QaryParamsIndex_Z_MAX:
+      return getRawZmax();
+    default:
+      return 0.0;
+    }
+  }
 
   /**
    * @brief getZmin
@@ -183,8 +203,8 @@ public:
 
   void setQ0(float newQ0) {
     if (enable_q_quantization()) {
-      m_q0 = icov::helpers::maths::quantize(newQ0, q_values());
-      if (DebugTools::debug_trace_enabled)
+      m_q0 = icov::maths::quantize(newQ0, q_values());
+      if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "After quantization q=" << m_q0;
     } else {
       m_q0 = newQ0;
@@ -195,12 +215,12 @@ public:
     if (enable_z_quantization()) {
       int z_step = Z_STEP;
       int z_limit = Z_LIMIT;
-      m_zmin = icov::helpers::maths::quantize(newZmin, z_step, -z_limit + 1,
+      m_zmin = icov::maths::quantize(newZmin, z_step, -z_limit + 1,
                                               z_limit);
 
       m_zmin = ((m_zmin + Z_LIMIT) / Z_STEP);
 
-      if (DebugTools::debug_trace_enabled)
+      if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "After quantization zmin=" << m_zmin;
     } else {
       m_zmin = newZmin;
@@ -211,12 +231,12 @@ public:
     if (enable_z_quantization()) {
       int z_step = Z_STEP;
       int z_limit = Z_LIMIT;
-      m_zmax = icov::helpers::maths::quantize(newZmax, z_step, -z_limit,
+      m_zmax = icov::maths::quantize(newZmax, z_step, -z_limit,
                                               z_limit - 1);
 
       m_zmax = ((m_zmax + Z_LIMIT) / Z_STEP);
 
-      if (DebugTools::debug_trace_enabled)
+      if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "After quantization zmax=" << m_zmax;
     } else {
       m_zmax = newZmax;
@@ -288,7 +308,7 @@ public:
     // check zmax = xmax - ymin
     // check zmin = xmin - ymax
 
-    if (DebugTools::debug_trace_enabled) {
+    if (icov::debug::debug_trace_enabled) {
       ICOV_TRACE << "bp=" << bitplane_count << " q=" << q << " zmin=" << z_min
                  << " z_max=" << z_max;
     }
@@ -330,7 +350,7 @@ public:
 
     float pb = p1 + p0;
 
-    if (DebugTools::debug_trace_enabled) {
+    if (icov::debug::debug_trace_enabled) {
       if (pb == 0) {
 
         ICOV_TRACE << "\t\t\t WARNING: pb = (a + b) = 0";

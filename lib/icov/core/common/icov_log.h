@@ -1,6 +1,6 @@
-#include "DebugTools.h"
+#pragma once
 
-#include "helpers.h"
+#include "icov_console.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/format.hpp>
@@ -13,10 +13,31 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/support/date_time.hpp>
+#include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/shared_ptr.hpp>
+
+#ifdef BOOST_LOG_DYN_LINK
+#define BOOST_LOG_DYN_LINK 1
+#endif
+
+#define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
+
+#define ICOV_TRACE ICOV_LOG(trace)
+#define ICOV_DEBUG ICOV_LOG(debug)
+#define ICOV_INFO ICOV_LOG(info)
+#define ICOV_WARNING ICOV_LOG(warning)
+#define ICOV_ERROR ICOV_LOG(error)
+#define ICOV_FATAL ICOV_LOG(fatal)
+
+#ifndef ICOV_LOG_LEVEL
+#define ICOV_LOG_LEVEL 2
+#endif
+
+namespace icov {
+namespace log {
 
 namespace logging = boost::log;
 namespace keywords = boost::log::keywords;
@@ -58,7 +79,7 @@ void colored_formatter(boost::log::record_view const &rec,
        << CONSOLE_FORMAT(CONSOLE_DEFAULT);
 }
 
-void icov::debug::initLog() {
+void initLog() {
 
   // TODO ADD COLORS
 
@@ -119,9 +140,5 @@ void icov::debug::initLog() {
   ICOV_INFO << "Log intialized";
 }
 
-void icov::debug::write_str(const std::string &filename,
-                            const std::string &str) {
-  std::ofstream file(filename);
-  file << str;
-  file.close();
-}
+} // namespace log
+} // namespace icov

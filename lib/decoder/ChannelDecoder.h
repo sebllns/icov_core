@@ -49,7 +49,7 @@
 
 #pragma once
 
-#include "common_types.h"
+#include "FastArray.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
@@ -158,6 +158,9 @@ private:
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   bitstream::QaryParams m_qaryParams;
   int m_icuIndex;
+  void _extract_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
+  void _extract_bitplane(int i, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  void _extractIntraPredParams();
 };
 } // namespace decoder
 } // namespace icov

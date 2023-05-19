@@ -48,7 +48,7 @@
 
 #pragma once
 
-#include "common_types.h"
+#include "FastArray.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 
 namespace icov {

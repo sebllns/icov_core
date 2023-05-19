@@ -54,9 +54,7 @@
 using AffMatrix = aff3ct::tools::Sparse_matrix;
 
 namespace icov {
-namespace helpers {
 namespace io {
 void writeAlist(const std::string &filename, const AffMatrix &data);
 }
-} // namespace helpers
 } // namespace icov

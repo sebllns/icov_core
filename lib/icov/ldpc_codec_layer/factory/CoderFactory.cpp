@@ -28,13 +28,13 @@ LdpcCoderFactory::create_coder(const LdpcCoderParameters &args) {
     throw std::invalid_argument("Unknown coder type: " + coder_type);
   }
 
-  icov::helpers::assert::not_null(llrProvider.get(),
+  icov::assert::not_null(llrProvider.get(),
                                   "LLRProvider was not instantiated");
-  icov::helpers::assert::not_null(ldpca_dec.get(),
+  icov::assert::not_null(ldpca_dec.get(),
                                   "Decoder was not instantiated");
-  icov::helpers::assert::not_null(mp.get(),
+  icov::assert::not_null(mp.get(),
                                   "MatrixProvider was not instantiated");
-  icov::helpers::assert::not_null(syndromeMgr.get(),
+  icov::assert::not_null(syndromeMgr.get(),
                                   "SyndromeManager was not instantiated");
 
   return std::make_unique<InteractiveCoder<AffMatrix>>(

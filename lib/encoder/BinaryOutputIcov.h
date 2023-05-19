@@ -49,12 +49,11 @@
 
 #pragma once
 
+#include "FastArray.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
-#include "common_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
-#include "typedef.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
@@ -79,8 +78,7 @@ private:
 
   // OutputIcovBase interface
 public:
-  void writeQaryParams(
-        const ldpc_codec_layer::QaryDistribution &bsp) override;
+  void writeQaryParams(const ldpc_codec_layer::QaryDistribution &bsp) override;
   void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;

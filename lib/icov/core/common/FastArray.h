@@ -1,6 +1,7 @@
 #pragma once
 
-#include "typedef.h"
+#include "common.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -274,5 +275,15 @@ std::vector<size_t> sort_indexes_abs(const std::vector<T> &v,
 template <typename Iterator> struct value_type {
   typedef decltype(*(Iterator())) result;
 };
+
+template <typename T> FastMatrix<T> transpose(const FastMatrix<T> &m) {
+  FastMatrix<T> t(m.cols(), m.rows());
+  for (int i = 0; i < t.rows(); i++) {
+    for (int j = 0; j < t.cols(); j++) {
+      t.at(i, j) = m.at(j, i);
+    }
+  }
+  return t;
+}
 
 } // namespace icov

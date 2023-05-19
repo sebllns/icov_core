@@ -1,13 +1,13 @@
 #include "DemoEncoder.h"
 
 #include "enc_helpers.h"
-#include "helpers.h"
+
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-#include "tools/DebugTools.h"
+
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 
@@ -174,8 +174,8 @@ void DemoEncoder::onSelectBlock(int x, int y) {
     std::string innersep = sepstr.str();
     std::string endsep = std::string(innersep.length(), '-');
 
-    if (DebugTools::is_release_build)
-      icov::helpers::io::cls();
+    if (icov::debug::is_release_build)
+      icov::console::cls();
 
     // table header
     // 2 spaces are required for alignment
@@ -535,9 +535,8 @@ void icov::encoder::DemoEncoder::encode_tu(
         ICOV_DEBUG << "Check bitplane " << i;
         m_coders.at(tu_size)->decode_bitplane(decoded, i, bsp_dec,
                                               si_numcodes[i], si_synd[i]);
-        icov::helpers::assert::check(decoded == bsp_enc.src_bits()[i],
-                                     "Decoding BP check failed " +
-                                         std::to_string(i));
+        icov::assert::check(decoded == bsp_enc.src_bits()[i],
+                            "Decoding BP check failed " + std::to_string(i));
       } catch (const std::exception &e) {
         ICOV_ERROR << e.what();
         break;
@@ -553,9 +552,9 @@ void icov::encoder::DemoEncoder::encode_tu(
                                           bsp_enc.distribution());
       m_coders.at(tu_size)->decode_symboles(bsp_dec, si_numcodes, si_synd);
 
-      icov::helpers::assert::check(
-          bsp_dec.src_symboles() == bsp_enc.src_symboles(),
-          "Decoding symbole failed for channel " + std::to_string(comp));
+      icov::assert::check(bsp_dec.src_symboles() == bsp_enc.src_symboles(),
+                          "Decoding symbole failed for channel " +
+                              std::to_string(comp));
 
       ICOV_INFO << "Channel was successfully decoded";
     } catch (const std::exception &e) {
@@ -587,7 +586,7 @@ void icov::encoder::DemoEncoder::encode_icu(
             << std::endl;
 
   auto si = icu_enc.get_sideInformation(pred);
-  icov::helpers::assert::not_null(si);
+  icov::assert::not_null(si);
   for (uint c = 0; c < m_numComp; c++) {
     encode_si(b, icu_enc, *si, pred, static_cast<ComponentID>(c));
   }

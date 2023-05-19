@@ -3,7 +3,7 @@
 #include "encoder/FrameEncoder.h"
 #include "encoder/InputMedia.h"
 #include "encoder/TextOutputIcov.h"
-#include "helpers.h"
+
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
 #include <exception>
@@ -46,7 +46,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
       });
 
-  icov::helpers::assert::equal(m_params.FrameEncoderParams.ICU_Size.width,
+  icov::assert::equal(m_params.FrameEncoderParams.ICU_Size.width,
                                m_params.FrameEncoderParams.ICU_Size.height,
                                "Assert square ICU");
 
@@ -98,7 +98,7 @@ icov::encoder::IcovMediaEncoder::createOutputFile() const {
     ICOV_THROW_INVALID_ARGUMENT("Unknown encoder type");
   }
 
-  icov::helpers::assert::not_null(ptr.get());
+  icov::assert::not_null(ptr.get());
 
   return ptr;
 }

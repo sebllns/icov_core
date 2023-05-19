@@ -45,10 +45,13 @@
  *****************************************************************************/
 #pragma once
 
-#include "helpers.h"
+#include "FastArray.h"
+
+#include "ldpc_codec_layer/QaryDistribution.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/extracted_stream.h"
+#include "video_layer/icov_stream.h"
 #include <boost/serialization/singleton.hpp>
 #include <cstdint>
 #include <map>
@@ -66,6 +69,7 @@ public:
   struct ChannelBlockStreamDebugger {
     SymboleVec srcSymboles;
     Bitplanes srcBits;
+    NumcodeIdxVec storedSyndromeSize;
     std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
              SIStream>
         si_map;
@@ -164,7 +168,7 @@ public:
    */
   const VideoEncodingStreamCache::FrameStreamDebugger &
   getDebuggingFrame() const {
-    icov::helpers::assert::check(
+    icov::assert::check(
         frameAvailable(), header().str() + " Frame must be available: ID = " +
                               std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_const_instance().getFrame(
@@ -178,7 +182,7 @@ public:
    */
   const VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
   getDebuggingBlock() const {
-    icov::helpers::assert::check(
+    icov::assert::check(
         blockAvailable(), header().str() + " Block must be available: ID = " +
                               std::to_string(mDebuggingBlockID));
     return getDebuggingFrame().at(mDebuggingBlockID);
@@ -191,7 +195,7 @@ public:
    */
   const VideoEncodingStreamCache::ChannelBlockStreamDebugger &
   getDebuggingChannel() const {
-    icov::helpers::assert::check(
+    icov::assert::check(
         blockAvailable(), header().str() + " Channel must be available: ID = " +
                               std::to_string(mDebuggingChannelID));
     return getDebuggingBlock().at(mDebuggingChannelID);
@@ -203,7 +207,7 @@ public:
    * @throw std::logic_error If prediction is not available.
    */
   const SIStream &getDebuggingSI() const {
-    icov::helpers::assert::check(
+    icov::assert::check(
         predictionAvailable(),
         header().str() + " Prediction must be available: ID = " +
             omnidirectional_layer::BlockPrediction::toString(
@@ -218,7 +222,7 @@ public:
    * @throw std::logic_error If frame is not available.
    */
   VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
-    icov::helpers::assert::check(
+    icov::assert::check(
         frameAvailable(), header().str() + " Frame must be available: ID = " +
                               std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_mutable_instance().getFrame(
@@ -320,13 +324,37 @@ public:
   void assertSyndromeEqual(int bp, const Syndrome &s) const {
     if (predictionAvailable() && !checkSyndrome(bp, s)) {
       std::stringstream sstr = header();
-      sstr << "[" << std::to_string(bp)
-           << "] Syndrome does not match ground truth." << std::endl
+      sstr << "Bitplane = " << std::to_string(bp) << std::endl
+           << "Syndrome does not match ground truth." << std::endl
            << "Syndrome " << s.to_string(" ") << std::endl
            << "GT " << getBitplaneSyndrome(bp).to_string(" ");
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
+  }
+
+  NumcodeIdx getStoredNumcodeIdx(int bp) const {
+    return getDebuggingChannel().storedSyndromeSize.at(bp);
+  }
+
+  bool checkStoredNumcodeIdx(int bp, NumcodeIdx val) const {
+    return getStoredNumcodeIdx(bp) == val;
+  }
+
+  void assertStoredNumcodeIdxEqual(int bp, NumcodeIdx val) const {
+    if (channelAvailable() && !checkStoredNumcodeIdx(bp, val)) {
+      std::stringstream sstr = header();
+      sstr << "Stored syndrom size does not match ground truth." << std::endl
+           << "Bitplane = " << bp << std::endl
+           << "Value = " << val << std::endl
+           << "GT = " << getStoredNumcodeIdx(bp);
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  NumcodeIdx getNumcodeIdx(int bp) const {
+    return getDebuggingSI().bitplanes.at(bp).numcode;
   }
 
   /**
@@ -368,11 +396,87 @@ public:
    * counts do not match.
    */
   void assertBitplaneCountEqual(int bp_count) const {
-    if (predictionAvailable() && !checkBitplaneCount(bp_count)) {
+    if (channelAvailable() && !checkBitplaneCount(bp_count)) {
       std::stringstream sstr = header();
       sstr << "Bitplane count does not match ground truth." << std::endl
            << "Value = " << bp_count << std::endl
            << "GT = " << getBitplaneCount();
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  int getDirMode() const {
+    return getPredDirModeByteValue(true, getDebuggingSI().mode);
+  }
+
+  bool checkDirMode(int value) const { return getDirMode() == value; }
+
+  void assertDirModeEqual(int value) const {
+    if (predictionAvailable() && !checkDirMode(value)) {
+      std::stringstream sstr = header();
+      sstr << "Dirmode does not match ground truth." << std::endl
+           << "Value = " << value << std::endl
+           << "GT = " << getDirMode();
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  NumcodeIdx getNumcode(int bp) const {
+    return getDebuggingSI().bitplanes.at(bp).numcode;
+  }
+
+  bool checkNumcode(int bp, NumcodeIdx value) const {
+    return getNumcode(bp) == value;
+  }
+
+  void assertNumcodeEqual(int bp, NumcodeIdx value) const {
+    if (predictionAvailable() && !checkNumcode(bp, value)) {
+      std::stringstream sstr = header();
+      sstr << "Bitplane = " << bp << std::endl
+           << "Numcode does not match ground truth." << std::endl
+           << "Value = " << value << std::endl
+           << "GT = " << getNumcode(bp);
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  float
+  getQaryParam(ldpc_codec_layer::QaryDistribution::QaryParamsIndex idx) const {
+    return getDebuggingSI().pz.getRawParam(idx);
+  }
+
+  bool checkQaryParam(ldpc_codec_layer::QaryDistribution::QaryParamsIndex idx,
+                      float value) const {
+    return getQaryParam(idx) == value;
+  }
+
+  void
+  assertQaryParamEqual(ldpc_codec_layer::QaryDistribution::QaryParamsIndex idx,
+                       float value) const {
+    if (predictionAvailable() && !checkQaryParam(idx, value)) {
+      std::stringstream sstr = header();
+      sstr << "QaryParam does not match ground truth." << std::endl
+           << "Index = " << idx << std::endl
+           << "Value = " << value << std::endl
+           << "GT = " << getQaryParam(idx);
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
+  bool codingSIFlag() const { return !getDebuggingSI().bitplanes.empty(); }
+
+  bool checkcodingSIFlag(bool value) const { return codingSIFlag() == value; }
+
+  void assertcodingSIEqual(bool value) const {
+    if (predictionAvailable() && !checkcodingSIFlag(value)) {
+      std::stringstream sstr = header();
+      sstr << "Coding SI flag does not match ground truth." << std::endl
+           << "Value = " << value << std::endl
+           << "GT = " << codingSIFlag();
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
@@ -389,13 +493,14 @@ public:
    */
   std::stringstream header() const {
     std::stringstream sstr;
-
-    sstr << "[" << mDebuggingFrameID << "::" << mDebuggingBlockID
-         << "::" << mDebuggingChannelID << "::"
+    sstr << std::endl
+         << "Frame = " << mDebuggingFrameID << std::endl
+         << "Block = " << mDebuggingBlockID << std::endl
+         << "Channel = " << mDebuggingChannelID << std::endl
+         << "Prediction = "
          << omnidirectional_layer::BlockPrediction::toString(
                 mDebuggingPredictionID)
-         << "]";
-
+         << std::endl;
     return sstr;
   }
 

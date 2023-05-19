@@ -111,7 +111,7 @@ protected:
       if (Decoder)
         Decoder->endProcess();
 
-      icov::helpers::assert::equal(ExtractionBitstream->remains(), 0,
+      icov::assert::equal(ExtractionBitstream->remains(), 0,
                                    "Buffer was not read in totality");
     }
   };

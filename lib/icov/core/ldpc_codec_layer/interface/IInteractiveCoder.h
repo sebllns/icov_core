@@ -48,7 +48,7 @@
 
 #pragma once
 
-#include "common_types.h"
+#include "FastArray.h"
 #include <cstddef>
 
 namespace icov {

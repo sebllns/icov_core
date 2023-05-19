@@ -1,6 +1,6 @@
 #pragma once
 
-#include "helpers.h"
+
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/factory/Coder_IMT64.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
@@ -57,7 +57,7 @@ inline void parseLdpcParams(const po::variables_map &args,
   params.beliefPropagationIterations_new = parseBpIte(args);
   params.numcodeFile = parseNumcodeFile(args);
 
-  icov::helpers::assert::equal(params.type, intented_type,
+  icov::assert::equal(params.type, intented_type,
                                "Given type was \'" + params.type +
                                    "\' but intended type was \'" +
                                    intented_type + "\'");
@@ -74,7 +74,7 @@ parseLdpcParams(const boost::program_options::variables_map &args) {
     throw std::invalid_argument("Unknown coder type: " + coder_type);
   }
 
-  icov::helpers::assert::not_null(params.get());
+  icov::assert::not_null(params.get());
   parseLdpcParams(args, coder_type, *params);
   return params;
 }

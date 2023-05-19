@@ -1,6 +1,6 @@
 #include "Coder_IMT64.h"
 #include "implementation/imt_164/IMT164Syndrome.h"
-#include "tools/DebugTools.h"
+
 #include <memory>
 
 namespace icov {

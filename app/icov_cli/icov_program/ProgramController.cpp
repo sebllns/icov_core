@@ -1,7 +1,7 @@
 #include "ProgramController.h"
 #include <iostream>
 
-#include "helpers.h"
+
 #include "icov_program//icov_program.h"
 #include "modes/BinaryMode.h"
 #include "modes/CheckMode.h"

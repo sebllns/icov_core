@@ -49,7 +49,7 @@
 #pragma once
 
 #include "common.h"
-#include "helpers.h"
+
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -122,7 +122,7 @@ public:
 
   IInputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
       : IMedia(path, media_type), m_frameID(0) {
-    icov::helpers::path::assert_file_exists(path.string());
+    icov::path::assert_file_exists(path.string());
   }
 
   virtual void setFrame(int frame) { m_frameID = frame; }
@@ -151,8 +151,8 @@ public:
                         int media_type = (int)eMediaType::UNKNOWN)
       : IMedia(path, media_type),
         m_outputStream(std::make_unique<std::ofstream>(path)) {
-    icov::helpers::assert::not_null(m_outputStream.get());
-    icov::helpers::path::assert_file_exists(path.string());
+    icov::assert::not_null(m_outputStream.get());
+    icov::path::assert_file_exists(path.string());
   }
 
   virtual ~IOutputMedia() = default;

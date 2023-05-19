@@ -48,7 +48,7 @@
 
 #pragma once
 
-#include "common_types.h"
+#include "FastArray.h"
 
 namespace icov {
 namespace ldpc_codec_layer {

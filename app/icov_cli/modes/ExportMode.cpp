@@ -2,7 +2,7 @@
 #include "icov_program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/io/Alist.h"
-#include "tools/DebugTools.h"
+
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -46,14 +46,14 @@ void ExportMode::run() {
 }
 
 void ExportMode::export_matrices() {
-  fs::path alist_dir = icov::helpers::path::get_data_folder(datapath, n, true);
+  fs::path alist_dir = icov::path::get_data_folder(datapath, n, true);
   alist_dir /= "alist";
-  icov::helpers::path::try_create_directories(alist_dir.string());
+  icov::path::try_create_directories(alist_dir.string());
 
   for (int i = 0; i < m_coder->matrixProvider()->getMatrixCount(); i++) {
     auto m = m_coder->matrixProvider()->getMatrix(i);
     std::string name = "H_" + std::to_string(m.get_n_cols()) + ".alist";
-    icov::helpers::io::writeAlist((alist_dir / name).string(), m);
+    icov::io::writeAlist((alist_dir / name).string(), m);
   }
 }
 
@@ -101,8 +101,8 @@ void ExportMode::export_numcode() {
   }
 
   numcodes.push_back((int)(doping_rate * n)); // index for the start of doping
-  fs::path path = icov::helpers::path::get_data_folder(datapath, n, true);
+  fs::path path = icov::path::get_data_folder(datapath, n, true);
   path /= numcodes_file;
   std::cout << "Writing numcodes in " << path << std::endl;
-  icov::helpers::io::write_vector(path.string(), numcodes, '\n');
+  icov::io::write_vector(path.string(), numcodes, '\n');
 }

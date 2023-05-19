@@ -1,7 +1,7 @@
 #include "PredictionsEncoder.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-#include "tools/DebugTools.h"
+
 #include <vector>
 
 icov::encoder::PredictionsEncoder::PredictionsEncoder(

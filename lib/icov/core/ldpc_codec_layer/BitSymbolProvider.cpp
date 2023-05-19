@@ -1,7 +1,7 @@
 #include "BitSymbolProvider.h"
 
-#include "common_types.h"
-#include "helpers.h"
+#include "FastArray.h"
+
 #include <algorithm>
 #include <limits>
 #include <string>
@@ -29,9 +29,7 @@ Bitplanes BitSymbolProvider::compute_bits(const SymboleVec &src_symbols) {
   // get length for binary representation of X
   //    lx =  std::floor(std::log2f(std::max(std::abs(x_min), std::abs(x_max))))
   //    + 2;
-  int lx = helpers::maths::binary_length(
-               std::max(std::abs(x_min), std::abs(x_max))) +
-           1;
+  int lx = maths::binary_length(std::max(std::abs(x_min), std::abs(x_max))) + 1;
 
   // init bit planes of X
   auto src_bits = Bitplanes(lx, BitVec(n, 0));

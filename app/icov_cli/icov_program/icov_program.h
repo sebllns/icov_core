@@ -1,10 +1,10 @@
 #pragma once
 
 #include "common.h"
-#include "helpers.h"
+
 #include "icov_program_options.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
-#include "tools/DebugTools.h"
+
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -115,7 +115,7 @@ public:
 
 ////////////////////////////////////////////////////////////////
 static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
-  icov::helpers::rand::init();
+  icov::rand::init();
 
   icov::ldpc_codec_layer::IInteractiveCoder::params.CheckBitplaneEncoding =
 #ifdef ICOV_CHECK_BITPLANE_ENCODING_ENABLED
@@ -126,7 +126,7 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
 
   try {
     boost::log::add_common_attributes();
-    DebugTools::initLog();
+    icov::debug::initLog();
     pg.processCommandLine(argc, argv);
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         pg.logLevel());

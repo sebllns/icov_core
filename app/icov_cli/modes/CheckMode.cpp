@@ -40,13 +40,13 @@ icov::FastMatrix<icov::bit> CheckMode::getHighLevelMatrixImt164() {
   int n = sm->get_n();
   int nrows = sm->get_m(mp->getNumcode(mp->getMatrixCount() - 1));
 
-  fs::path path = icov::helpers::path::get_data_folder(datapath, n, true);
+  fs::path path = icov::path::get_data_folder(datapath, n, true);
   path /= "H.pcm";
 
   std::cout << "Reading file " << path << std::endl;
   PcmData::read_matrix(path.string(), h);
 
-  icov::helpers::assert::equal((int)h.cols(), n,
+  icov::assert::equal((int)h.cols(), n,
                                "Bad column count: " + std::to_string(h.cols()) +
                                    " != " + std::to_string(n));
 
@@ -68,7 +68,7 @@ icov::FastMatrix<uint16_t> CheckMode::getMappingVector(int m) {
   int n = m_coder->syndromeMgr()->get_n();
   int nrows = m;
 
-  fs::path path = icov::helpers::path::get_data_folder(datapath, n, true);
+  fs::path path = icov::path::get_data_folder(datapath, n, true);
   path /= "C1" + std::to_string(n / m) + ".pcm";
 
   std::cout << "Reading file " << path << std::endl;

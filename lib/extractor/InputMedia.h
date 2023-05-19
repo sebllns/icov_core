@@ -50,7 +50,7 @@
 #pragma once
 
 #include "Media.h"
-#include "common_types.h"
+#include "FastArray.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
@@ -94,11 +94,11 @@ public:
   void selectPrediction(ushort pred_idx, const std::vector<int> &bitplaneCount);
 
   template <typename T> void read(int id, int size, T *output) {
-    icov::helpers::io::read_value(getStream(id), output, size);
+    icov::io::read_value(getStream(id), output, size);
   }
 
   template <typename T> void read(int id, T &output) {
-    icov::helpers::io::read_value(getStream(id), &output, 1);
+    icov::io::read_value(getStream(id), &output, 1);
   }
 
   int readByteIntParam();

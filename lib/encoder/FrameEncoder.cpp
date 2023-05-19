@@ -1,21 +1,21 @@
 #include "FrameEncoder.h"
 
-#include "common_types.h"
+#include "FastArray.h"
 #include "enc_helpers.h"
 #include "encoder/interface/IEncoder.h"
-#include "helpers.h"
+
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-#include "tools/DebugTools.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
+#include <algorithm>
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
@@ -378,9 +378,8 @@ void icov::encoder::FrameEncoder::encode_tu(
           ICOV_TRACE << "Check bitplane " << i;
           encoder.decode_bitplane(decoded, i, bsp_dec, si_numcodes[i],
                                   si_synd[i]);
-          icov::helpers::assert::check(decoded == bsp_enc.src_bits()[i],
-                                       "Decoding BP check failed " +
-                                           std::to_string(i));
+          icov::assert::check(decoded == bsp_enc.src_bits()[i],
+                              "Decoding BP check failed " + std::to_string(i));
         } catch (const std::exception &e) {
           ICOV_ERROR << e.what();
           break;
@@ -392,9 +391,9 @@ void icov::encoder::FrameEncoder::encode_tu(
                                             bsp_enc.distribution());
         encoder.decode_symboles(bsp_dec, si_numcodes, si_synd);
 
-        icov::helpers::assert::check(
-            bsp_dec.src_symboles() == bsp_enc.src_symboles(),
-            "Decoding symbole failed for channel " + std::to_string(comp));
+        icov::assert::check(bsp_dec.src_symboles() == bsp_enc.src_symboles(),
+                            "Decoding symbole failed for channel " +
+                                std::to_string(comp));
       } catch (const std::exception &e) {
         ICOV_ERROR << e.what();
       }
@@ -441,7 +440,7 @@ void icov::encoder::FrameEncoder::encode_tu(
         bitstream::flag_t::NoCodingSI) {
 
 #ifdef ICOV_ASSERTION_ENABLED
-      icov::helpers::assert::check(
+      icov::assert::check(
           m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
               si_synd.size() == si_numcodes.size(),
           "Bitplane count does not match between SI of same block");
@@ -451,7 +450,7 @@ void icov::encoder::FrameEncoder::encode_tu(
         {
           std::cout << omnidirectional_layer::BlockPrediction::toString(pred)
                     << " COMP " << comp << " BP " << i << std::endl;
-          // icov::helpers::io::write_vector(std::cout, si_synd, ' ');
+          // icov::io::write_vector(std::cout, si_synd, ' ');
           std::cout << si_synd[i].to_string(" ") << std::endl;
         }
 
@@ -482,7 +481,8 @@ void icov::encoder::FrameEncoder::encode_tu(
                 bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
             std::cout << "SOURCE !" << std::endl;
           } else if (si_synd[i].size() >
-                     m_channelCoder[comp].bitplanes[i].stored_synd.size()) {
+                     m_channelCoder[comp].bitplanes[i].stored_synd.size())
+          /*STORED SYNDROME IF LONGER*/ {
             m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
             m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
           }
@@ -504,6 +504,19 @@ void icov::encoder::FrameEncoder::encode_tu(
         channelDbg.srcSymboles = bsp_enc.si_symboles();
         channelDbg.srcBits = bsp_enc.src_bits();
       }
+
+      std ::cout << "GT SYND " << comp << " = ";
+
+      channelDbg.storedSyndromeSize.resize(
+          m_channelCoder[comp].bitplanes.size());
+      std::transform(m_channelCoder[comp].bitplanes.cbegin(),
+                     m_channelCoder[comp].bitplanes.cend(),
+                     channelDbg.storedSyndromeSize.begin(), [](const auto &x) {
+                       std ::cout << " " << x.stored_synd_rate;
+                       return x.stored_synd_rate;
+                     });
+
+      std ::cout << std::endl;
 
       // Checks if the block is an access block and there is no saved data
       if (b.isAccessBlock() &&
@@ -532,10 +545,9 @@ void icov::encoder::FrameEncoder::encode_tu(
 
       // checks if there is no existing debug for this prediction and throws an
       // error if there is
-      icov::helpers::assert::check(
-          !bitstream::VideoStreamDebugger::get_const_instance()
-               .predictionAvailable(),
-          "Prediction debug already exists");
+      icov::assert::check(!bitstream::VideoStreamDebugger::get_const_instance()
+                               .predictionAvailable(),
+                          "Prediction debug already exists");
 
       auto &si_dbg = channelDbg.si_map[pred];
 
@@ -610,7 +622,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     //      auto &predDbg = chDbg[pred];
     //      predDbg.mode = m_channelCoder[comp].si[predID].dirmode;
     //      predDbg.pz = m_channelCoder[comp].si[predID].stored_pz;
-    //      icov::helpers::assert::equal(
+    //      icov::assert::equal(
     //          si_synd.size(), si_numcodes.size(),
     //          "Numcode vector and syndrome vector have same length");
     //      predDbg.bitplanes.resize(bitplaneCount);
@@ -645,7 +657,7 @@ void icov::encoder::FrameEncoder::encode_si(
     const icov::video::SideInformationUnit &si,
     omnidirectional_layer::BlockPrediction::ePredType pred, ComponentID comp) {
 
-  icov::helpers::assert::equal(
+  icov::assert::equal(
       (int)si.TUs.size(), 1,
       "This version of ICOV can only manage one transform unit per block");
 
@@ -660,7 +672,7 @@ void icov::encoder::FrameEncoder::encode_icu(
     omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   auto si = icu_enc.get_sideInformation(pred);
-  icov::helpers::assert::not_null(si);
+  icov::assert::not_null(si);
   encode_si(b, icu_enc, *si, pred, static_cast<ComponentID>(block_comp));
 }
 

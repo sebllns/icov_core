@@ -1,5 +1,6 @@
 #include "BlockOrdering.h"
-#include "helpers.h"
+
+#include "common.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 

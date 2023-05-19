@@ -46,8 +46,10 @@
  *
  *****************************************************************************/
 #pragma once
-#include "common_types.h"
+#include "FastArray.h"
+
 #include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -84,7 +86,8 @@ const byte AccessBlock = 0;
 
 namespace offset_t {
 const byte AvailableSI = 1;
-}
+const byte CodingSI = 1;
+} // namespace offset_t
 
 namespace enum_t {
 
@@ -92,76 +95,6 @@ enum SyndromeType {
   SyndromeType_NO_CODING = 0,
   SyndromeType_SOURCE = 1,
   SyndromeType_COUNT
-};
-enum QaryParamsIndex {
-  QaryParamsIndex_Q = 0,
-  QaryParamsIndex_Z_MIN = 1,
-  QaryParamsIndex_Z_MAX = 2,
-  QaryParamsIndex_COUNT
-};
-
-enum ContentType {
-  CONTENT_TYPE_VIDEO = 0,
-  CONTENT_TYPE_MESH = 1,
-  NUM_CONTENT_TYPE,
-};
-
-/// chroma formats (according to how the monochrome or the color planes are
-/// intended to be coded)
-enum ChromaFormat {
-  CHROMA_400 = 0,
-  CHROMA_420 = 1,
-  CHROMA_422 = 2,
-  CHROMA_444 = 3,
-  NUM_CHROMA_FORMAT = 4
-};
-
-enum ChannelType {
-  CHANNEL_TYPE_LUMA = 0,
-  CHANNEL_TYPE_CHROMA = 1,
-  MAX_NUM_CHANNEL_TYPE = 2
-};
-
-#define CH_L CHANNEL_TYPE_LUMA
-#define CH_C CHANNEL_TYPE_CHROMA
-
-enum ComponentID {
-  COMPONENT_Y = 0,
-  COMPONENT_Cb = 1,
-  COMPONENT_Cr = 2,
-  MAX_NUM_COMPONENT = 3,
-  JOINT_CbCr = MAX_NUM_COMPONENT,
-  MAX_NUM_TBLOCKS = MAX_NUM_COMPONENT
-};
-
-#define MAP_CHROMA(c) (ComponentID(c))
-
-enum ModeType {
-  MODE_TYPE_ALL = 0,
-  MODE_TYPE_INTER = 1,
-  MODE_TYPE_INTRA = 2,
-};
-
-/// supported prediction type
-enum PredMode {
-  MODE_INTER = 0, ///< inter-prediction mode
-  MODE_INTRA = 1, ///< intra-prediction mode
-  NUMBER_OF_PREDICTION_MODES = 3,
-};
-
-/// motion vector predictor direction used in AMVP
-enum MvpDir {
-  MD_LEFT = 0,    ///< MVP of left block
-  MD_ABOVE,       ///< MVP of above block
-  MD_ABOVE_RIGHT, ///< MVP of above right block
-  MD_BELOW_LEFT,  ///< MVP of below left block
-  MD_ABOVE_LEFT   ///< MVP of above left block
-};
-
-enum TransformDirection {
-  TRANSFORM_FORWARD = 0,
-  TRANSFORM_INVERSE = 1,
-  TRANSFORM_NUMBER_OF_DIRECTIONS = 2
 };
 
 enum NalUnitType {
@@ -184,6 +117,34 @@ inline size_t bitToByteCount(size_t bit_count) {
 
 inline size_t byteToBitCount(size_t byte_count) {
   return BYTE_SIZE * byte_count;
+}
+
+inline bool getCodingFlag(byte x) { return x != flag_t::NoCodingSI; }
+
+inline ushort getQaryQParam(byte x) { return x - offset_t::CodingSI; }
+
+inline byte getQaryQParamByteValue(bool coding_flag, ushort x) {
+  if (!coding_flag)
+    return flag_t::NoCodingSI;
+  return x + offset_t::CodingSI;
+}
+
+inline bool isPredictionAvailable(byte x) { return x != flag_t::UnavailableSI; }
+
+inline void assertPredictionAvailable(byte x) {
+  ICOV_ASSERT_MSG(bitstream::isPredictionAvailable(x),
+                  "No direction mode for the prediction");
+}
+
+inline ushort getPredDirMode(byte x) {
+  ICOV_ASSERT_MSG(isPredictionAvailable(x), "Prediction must be available");
+  return x - offset_t::AvailableSI;
+}
+
+inline byte getPredDirModeByteValue(bool available, ushort x) {
+  if (!available)
+    return flag_t::UnavailableSI;
+  return x + offset_t::AvailableSI;
 }
 
 // typedef std::basic_streambuf<icov::bitstream::byte> bitstreambuf;
@@ -267,22 +228,25 @@ using rate_t =
 
 typedef icov::bitstream::byte QaryParams[QARY_PARAMS_SIZE];
 
-inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
-                           int &z_max) {
-  q_idx = input[enum_t::QaryParamsIndex_Q] - offset_t::AvailableSI;
-  z_min = input[enum_t::QaryParamsIndex_Z_MIN];
-  z_max = input[enum_t::QaryParamsIndex_Z_MAX];
+// inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
+//                           int &z_max) {
+//  q_idx = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q] -
+//          offset_t::CodingSI;
+//  z_min = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN];
+//  z_max = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX];
 
-  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
-            << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
-            << std::endl;
-}
+//  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
+//            << (int)input[2] << " -> " << q_idx << " " << z_min << " " <<
+//            z_max
+//            << std::endl;
+//}
 
 inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
                             int z_max) {
-  output[enum_t::QaryParamsIndex_Q] = q_idx + offset_t::AvailableSI;
-  output[enum_t::QaryParamsIndex_Z_MIN] = z_min;
-  output[enum_t::QaryParamsIndex_Z_MAX] = z_max;
+  output[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q] =
+      q_idx + offset_t::CodingSI;
+  output[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN] = z_min;
+  output[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX] = z_max;
 
   std::cout << "Q " << (uint)output[0] << " " << (uint)output[1] << " "
             << (uint)output[2] << std::endl;

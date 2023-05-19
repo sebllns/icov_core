@@ -1,7 +1,8 @@
 #include "ChannelDecoder.h"
+#include "FastArray.h"
 #include "Unit.h"
-#include "common_types.h"
-#include "helpers.h"
+
+#include "icov_console.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -47,6 +48,66 @@ ChannelDecoder::ChannelDecoder(
 
 ChannelDecoder::~ChannelDecoder() {}
 
+void icov::decoder::ChannelDecoder::_extract_bitplane(
+    int i, omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
+  bitstream::byte quantizedNumcode =
+      (block_prediction ==
+       omnidirectional_layer::BlockPrediction::ePredType::NONE)
+          ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
+          : m_bitstream->pop();
+
+  int syndrome_size =
+      bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
+  read_syndrome(syndrome_size);
+
+  decode_bitplane(i, static_cast<icov::NumcodeIdx>(quantizedNumcode),
+                  m_syndrome);
+}
+
+void icov::decoder::ChannelDecoder::_extract_bitplanes(
+    omnidirectional_layer::BlockPrediction::ePredType block_prediction,
+    int bitplaneCount) {
+  for (int i = 0; i < bitplaneCount; ++i) {
+    _extract_bitplane(i, block_prediction);
+  }
+}
+
+void icov::decoder::ChannelDecoder::_extractIntraPredParams() {
+  bitstream::byte dirmode = m_bitstream->pop();
+
+  bitstream::assertPredictionAvailable(dirmode);
+
+  bitstream::VideoStreamDebugger::get_const_instance().assertDirModeEqual(
+      dirmode);
+
+  dirmode = bitstream::getPredDirMode(dirmode);
+
+  bitstream::byte pred_hdr = m_bitstream->pop();
+
+  bool codingFlag = bitstream::getCodingFlag(pred_hdr);
+
+  bitstream::VideoStreamDebugger::get_const_instance().checkcodingSIFlag(
+      codingFlag);
+
+  bitstream::byte zmin = 0, zmax = 0;
+
+  if (codingFlag) {
+
+    bitstream::byte q0 = bitstream::getQaryQParam(pred_hdr);
+    bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
+        ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
+
+    zmin = m_bitstream->pop();
+    bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
+        ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
+
+    zmax = m_bitstream->pop();
+    bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
+        ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
+    m_bitstream->push(zmax);
+  }
+}
+
 void ChannelDecoder::decode_icu(
     int icu_enc,
     omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
@@ -54,6 +115,14 @@ void ChannelDecoder::decode_icu(
       block_prediction !=
           omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
       "Prediction unknown")
+
+  bool is_access_block =
+      (block_prediction ==
+       omnidirectional_layer::BlockPrediction::ePredType::NONE);
+  bool is_inter_prediction =
+      (block_prediction ==
+       omnidirectional_layer::BlockPrediction::ePredType::INTER);
+  bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
       m_params.CompID);
@@ -68,8 +137,7 @@ void ChannelDecoder::decode_icu(
 
   std::cout << "COMP " << m_params.CompID << " ";
 
-  if (block_prediction !=
-      omnidirectional_layer::BlockPrediction::ePredType::NONE) {
+  if (!is_access_block) {
     std::cout << "DECODE BLOCK WITH PRED "
               << omnidirectional_layer::BlockPrediction::toString(
                      block_prediction)
@@ -85,22 +153,14 @@ void ChannelDecoder::decode_icu(
       bitplaneCount);
 
   m_bsp.distribution().setBitplane_count(bitplaneCount);
+  m_bsp.reset_src();
   m_bsp.set_si(m_blockSI);
 
-  for (int i = 0; i < bitplaneCount; ++i) {
-    bitstream::byte quantizedNumcode =
-        (block_prediction ==
-         omnidirectional_layer::BlockPrediction::ePredType::NONE)
-            ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
-            : m_bitstream->pop();
+  ICOV_DEBUG << CONSOLE_TODO << "TODO: IF AB ELSE...";
 
-    int syndrome_size =
-        bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
-    read_syndrome(syndrome_size);
+  _extractIntraPredParams();
 
-    decode_bitplane(i, static_cast<icov::NumcodeIdx>(quantizedNumcode),
-                    m_syndrome);
-  }
+  _extract_bitplanes(block_prediction, bitplaneCount);
 
   end_decode_icu();
 }
@@ -160,6 +220,7 @@ void ChannelDecoder::set_si_params(int zmin, int zmax, float q, int lx) {
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
   } else {
     m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
+    m_bsp.set_si(m_blockSI);
     // m_bsp.set_si(m_blockSI, zmin, zmax, q, lx);
   }
 }
@@ -202,7 +263,7 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
     icov::video::TransformUnit &dec_tu = mp_icu_enc.sourceX_TU(0);
     std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
-    icov::helpers::io::write_vector(std::cout, m_bsp.src_symboles(), ' ');
+    icov::io::write_vector(std::cout, m_bsp.src_symboles(), ' ');
     std::cout << std::endl;
   }
 }

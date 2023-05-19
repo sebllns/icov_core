@@ -51,7 +51,7 @@
 
 #include "Media.h"
 #include "OutputIcovBase.h"
-#include "common_types.h"
+#include "FastArray.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"

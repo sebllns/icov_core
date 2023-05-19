@@ -47,7 +47,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "helpers.h"
+#include "common.h"
 
 namespace icov {
 struct LdpcCoderParameters {
@@ -70,21 +70,21 @@ struct LdpcCoderParameters {
    */
   inline std::vector<int> getNumcodes(int n, int min_level,
                                       int max_level) const {
-    std::string path = icov::helpers::path::combine(
-        icov::helpers::path::get_data_folder(database, n, false), numcodeFile);
+    std::string path = icov::path::combine(
+        icov::path::get_data_folder(database, n, false), numcodeFile);
     std::vector<int> numcodes_v;
 
     int min_n = std::ceil(n / max_level);
     int max_n = std::floor(n / min_level);
 
-    if (icov::helpers::path::file_exists(path)) {
-      icov::helpers::io::read_vector(path, numcodes_v);
-      icov::helpers::assert::check(numcodes_v.front() >= min_n,
-                                   "First numcode must be greater than " +
-                                       std::to_string(min_n));
-      icov::helpers::assert::check(numcodes_v.back() <= max_n,
-                                   "Doping numcode must be less than " +
-                                       std::to_string(max_n));
+    if (icov::path::file_exists(path)) {
+      icov::io::read_vector(path, numcodes_v);
+      icov::assert::check(numcodes_v.front() >= min_n,
+                          "First numcode must be greater than " +
+                              std::to_string(min_n));
+      icov::assert::check(numcodes_v.back() <= max_n,
+                          "Doping numcode must be less than " +
+                              std::to_string(max_n));
     } else {
       ICOV_WARNING << "Numcodes file not found at " << path;
       ICOV_WARNING << "Creating default numcodes vector.";

@@ -48,7 +48,7 @@
  *****************************************************************************/
 #include "PcmData.h"
 
-#include "helpers.h"
+
 
 #include <fstream>
 #include <sstream>
@@ -90,7 +90,7 @@ void PcmData::read_matrix(const std::string &filepath, AffMatrix &h) {
 void PcmData::read_matrix(const std::string &filepath,
                           icov::FastMatrix<bool> &h) {
 
-  icov::helpers::path::assert_file_exists(filepath);
+  icov::path::assert_file_exists(filepath);
 
   std::ifstream file(filepath);
 
@@ -128,14 +128,14 @@ void PcmData::read_matrix(const std::string &filepath,
 void PcmData::read_mapping_vector(const std::string &filepath,
                                   icov::FastMatrix<uint16_t> &m) {
 
-  icov::helpers::path::assert_file_exists(filepath);
+  icov::path::assert_file_exists(filepath);
 
   std::ifstream file(filepath);
 
   ICOV_DEBUG << "Read vector at " << filepath;
 
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::helpers::assert::check(
+  icov::assert::check(
       file.is_open(),
       "'filename' couldn't be opened ('filename' = " + filepath + ").");
 #endif

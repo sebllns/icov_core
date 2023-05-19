@@ -49,22 +49,23 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#if _MSC_VER
-#ifndef _HAS_STD_BYTE
-#define _HAS_STD_BYTE 0
-#define _USE_MATH_DEFINES
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-//#include <Windows.h>
-#endif
+#include "icov_sys.h"
 
-#include "common_types.h"
-#include "typedef.h"
+#include "icov_assert.h"
+#include "icov_console.h"
+#include "icov_debug.h"
+#include "icov_exception.h"
+#include "icov_io.h"
+#include "icov_log.h"
+#include "icov_math.h"
+#include "icov_omp.h"
+#include "icov_path.h"
+#include "icov_stacktrace.h"
+#include "icov_stl_tools.h"
 #include "version.h"
 
-#include "tools/DebugTools.h"
+#include "FastArray.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <ctype.h>
@@ -74,7 +75,9 @@
 #include <limits>
 #include <locale.h>
 #include <locale>
+#include <math.h>
 #include <memory>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 
