@@ -136,13 +136,15 @@ struct IcovExtractedBitstream {
   void push(const icov::bitstream::byte &val) {
     auto pos = m_WritePosition;
     shiftWritePosition(1);
-    std::cout << "PUSH " << (int)val << " AT " << pos << " NEW SIZE "
-              << m_ActualSize << std::endl;
+    ICOV_TRACE << "EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
+               << m_ActualSize;
     m_Buffer[pos] = val;
   }
 
   icov::bitstream::byte get() {
     icov::assert::check(m_ActualSize > 0, "Buffer is not empty");
+    ICOV_TRACE << "EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
+               << m_ReadPosition;
     return m_Buffer[m_ReadPosition];
   }
 
@@ -153,8 +155,7 @@ struct IcovExtractedBitstream {
   }
 
   void get(std::vector<icov::bitstream::byte> &output) {
-    icov::assert::check(m_ActualSize >= output.size(),
-                                 "Buffer overflows");
+    icov::assert::check(m_ActualSize >= output.size(), "Buffer overflows");
     std::copy(m_Buffer.cbegin() + m_ReadPosition,
               m_Buffer.cbegin() + m_ReadPosition + output.size(),
               output.begin());
@@ -241,7 +242,6 @@ protected:
       m_Buffer; /**< The buffer to store the bitstream data. */
 };
 
-// using IcovExtractedBitstream = std::vector<icov::bitstream::byte>;
 using sp_IcovExtractedBitstream = std::shared_ptr<IcovExtractedBitstream>;
 
 inline size_t IcovExtractedBitstream::getWritePosition() const {

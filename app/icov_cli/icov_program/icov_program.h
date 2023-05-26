@@ -115,7 +115,7 @@ public:
 
 ////////////////////////////////////////////////////////////////
 static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
-  icov::rand::init();
+  icov::maths::rand::init();
 
   icov::ldpc_codec_layer::IInteractiveCoder::params.CheckBitplaneEncoding =
 #ifdef ICOV_CHECK_BITPLANE_ENCODING_ENABLED
@@ -126,7 +126,7 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
 
   try {
     boost::log::add_common_attributes();
-    icov::debug::initLog();
+    icov::logging::initLog();
     pg.processCommandLine(argc, argv);
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         pg.logLevel());

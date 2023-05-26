@@ -1,10 +1,11 @@
+#include "icov_math.h"
+
 #define BOOST_TEST_DYN_LINK 1
 #define BOOST_AUTO_TEST_MAIN
 #define BOOST_TEST_MODULE Icov core test
 #include <boost/test/unit_test.hpp>
 //#include <boost/test/included/unit_test.hpp>
 
-#include "helpers.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 
 BOOST_AUTO_TEST_SUITE(binary_tests)
@@ -12,12 +13,12 @@ BOOST_AUTO_TEST_SUITE(binary_tests)
 BOOST_AUTO_TEST_CASE(bit_operations) {
 
   for (int i = 0; i < 16; i++) {
-    int val = icov::helpers::maths::pow2(i);
+    int val = icov::maths::pow2(i);
 
     BOOST_REQUIRE_MESSAGE(val == std::pow(2, i),
                           std::to_string(val) + " == 2^" + std::to_string(i));
 
-    int length = (int)icov::helpers::maths::binary_length(val);
+    int length = (int)icov::maths::binary_length(val);
     int expected_length = i + 1;
     BOOST_REQUIRE_MESSAGE(length == expected_length,
                           std::to_string(length) +
@@ -75,10 +76,10 @@ BOOST_AUTO_TEST_CASE(vector) {
   std::vector<icov::SymboleVal> values(8192);
   std::iota(values.begin(), values.end(), 0);
 
-  icov::helpers::io::write_vector("./vector_test", values, '\n');
+  icov::io::write_vector("./vector_test", values, '\n');
 
   std::vector<icov::SymboleVal> values_parsed;
-  icov::helpers::io::read_vector("./vector_test", values_parsed);
+  icov::io::read_vector("./vector_test", values_parsed);
   BOOST_REQUIRE(values == values_parsed);
 }
 

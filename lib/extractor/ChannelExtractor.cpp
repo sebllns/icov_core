@@ -203,13 +203,14 @@ void ChannelExtractor::_extractIntraParams() {
   std::cout << "QZ ";
 
   m_bitstream->push(pred_hdr);
-  bitstream::byte zmin = 0, zmax = 0;
 
   bool codingFlag = bitstream::getCodingFlag(pred_hdr);
-  bitstream::VideoStreamDebugger::get_const_instance().checkcodingSIFlag(
+  bitstream::VideoStreamDebugger::get_const_instance().assertcodingSIEqual(
       codingFlag);
 
   if (codingFlag) {
+    bitstream::byte zmin = 0, zmax = 0;
+
     bitstream::byte q0 = bitstream::getQaryQParam(pred_hdr);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
@@ -226,8 +227,6 @@ void ChannelExtractor::_extractIntraParams() {
 
     for (auto &bp : m_bitplanes) {
       _extractBitplaneNumcode(bp);
-      bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
-          bp.Index, (NumcodeIdx)bp.ReadSyndromeQuantizedSize);
     }
   }
   std::cout << "END _extractIntraParams" << std::endl;
@@ -242,6 +241,8 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
 
   bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
       bp.Index, (NumcodeIdx)bp.ReadSyndromeQuantizedSize);
+
+  m_bitstream->push(bp.ReadSyndromeQuantizedSize);
 
   bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
       bp.ReadSyndromeQuantizedSize, *m_ldpc_coder);

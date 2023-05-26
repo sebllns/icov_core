@@ -62,6 +62,8 @@
 #include <map>
 #include <memory>
 #include <opencv2/opencv.hpp>
+#include <queue>
+#include <vector>
 
 namespace icov {
 namespace decoder {
@@ -115,16 +117,6 @@ public:
       omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
   /**
-   * @brief Set the SI (Side Information) direction mode.
-   * @param dir_mode The direction mode to be set.
-   */
-  void set_si_dir_mode(int dir_mode);
-
-  void set_access_block_params(int lx);
-
-  void set_si_params(int zmin, int zmax, float q, int lx);
-
-  /**
    * @brief Read the syndrome from extracted bitstream.
    * @param syndrome_size The size of the syndrome.
    */
@@ -156,11 +148,31 @@ private:
   ldpc_codec_layer::BitSymbolProvider m_bsp;
   omnidirectional_layer::BlockPrediction::ePredType m_block_prediction;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
-  bitstream::QaryParams m_qaryParams;
+  // bitstream::QaryParams m_qaryParams;
   int m_icuIndex;
-  void _extract_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
-  void _extract_bitplane(int i, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
-  void _extractIntraPredParams();
+  std::queue<bitstream::byte> m_numcodes;
+  SymboleVec m_blockSymbols;
+
+  void _decode_bitplanes(
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction,
+      int bitplaneCount);
+  void _decode_bitplane(
+      int i,
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  void _extract_qary_params(bool &coding_flag);
+  void _extract_numcodes(
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction,
+      int bitplaneCount);
+  void _extract_numcode(
+      int bp,
+      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  void _set_si(bool coding_flag);
+
+  /**
+   * @brief Set the SI (Side Information) direction mode.
+   * @param dir_mode The direction mode to be set.
+   */
+  void _extract_si_dir_mode();
 };
 } // namespace decoder
 } // namespace icov

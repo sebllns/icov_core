@@ -72,17 +72,17 @@ int pow2(int k);
  * @param val The integer value to compute the binary length for.
  * @return The binary length of the given integer value.
  */
-int pow2(int k) { return 1 << k; }
+inline int pow2(int k) { return 1 << k; }
 
-uint32_t binary_length(int val) {
+inline uint32_t binary_length(int val) {
   return std::floor(std::log2f(std::abs(val))) + 1;
 }
 
-float normalize(float val, float min, float max) {
+inline float normalize(float val, float min, float max) {
   return (val - min) / (max - min);
 }
 
-float wrap(float val, float min, float max) {
+inline float wrap(float val, float min, float max) {
   while (val < min) {
     val += (max - min);
   }
@@ -96,7 +96,7 @@ float wrap(float val, float min, float max) {
   // return val - (min - max) * floor(val / (max - min));
 }
 
-int quantize(int value, int step, int min, int max) {
+inline int quantize(int value, int step, int min, int max) {
   return value == 0
              ? 0
              : std::clamp((int)((std::abs(value) / value) * step *
@@ -104,7 +104,7 @@ int quantize(int value, int step, int min, int max) {
                           min, max);
 }
 
-int quantize(float value, const std::vector<float> &v) {
+inline int quantize(float value, const std::vector<float> &v) {
   int idx = std::upper_bound(v.begin(), v.end(), value) - v.begin();
   idx = std::clamp(idx, 0, (int)v.size() - 1);
   int idx_prev = std::clamp(idx - 1, 0, (int)v.size() - 1);
@@ -117,14 +117,14 @@ int quantize(float value, const std::vector<float> &v) {
 
 namespace rand {
 
-void init() { srand((unsigned)time(0)); }
+inline void init() { srand((unsigned)time(0)); }
 
-int range(int min_included, int max_included) {
+inline int range(int min_included, int max_included) {
   return min_included +
          (std::rand() % static_cast<int>(max_included - min_included + 1));
 }
 
-float normalized() {
+inline float normalized() {
   return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 }
 

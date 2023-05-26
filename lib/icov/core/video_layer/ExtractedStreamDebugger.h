@@ -47,6 +47,8 @@
 
 #include "FastArray.h"
 
+#include "icov_io.h"
+#include "icov_stacktrace.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -168,9 +170,10 @@ public:
    */
   const VideoEncodingStreamCache::FrameStreamDebugger &
   getDebuggingFrame() const {
-    icov::assert::check(
-        frameAvailable(), header().str() + " Frame must be available: ID = " +
-                              std::to_string(mDebuggingFrameID));
+    icov::assert::check(frameAvailable(),
+                        ICOV_INDICATOR_MSG(" ") + header().str() +
+                            " Frame must be available: ID = " +
+                            std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_const_instance().getFrame(
         mDebuggingFrameID);
   }
@@ -182,9 +185,10 @@ public:
    */
   const VideoEncodingStreamCache::MultiChannelBlockStreamDebugger &
   getDebuggingBlock() const {
-    icov::assert::check(
-        blockAvailable(), header().str() + " Block must be available: ID = " +
-                              std::to_string(mDebuggingBlockID));
+    icov::assert::check(blockAvailable(),
+                        ICOV_INDICATOR_MSG(" ") + header().str() +
+                            " Block must be available: ID = " +
+                            std::to_string(mDebuggingBlockID));
     return getDebuggingFrame().at(mDebuggingBlockID);
   }
 
@@ -195,9 +199,10 @@ public:
    */
   const VideoEncodingStreamCache::ChannelBlockStreamDebugger &
   getDebuggingChannel() const {
-    icov::assert::check(
-        blockAvailable(), header().str() + " Channel must be available: ID = " +
-                              std::to_string(mDebuggingChannelID));
+    icov::assert::check(blockAvailable(),
+                        ICOV_INDICATOR_MSG(" ") + header().str() +
+                            " Channel must be available: ID = " +
+                            std::to_string(mDebuggingChannelID));
     return getDebuggingBlock().at(mDebuggingChannelID);
   }
 
@@ -207,11 +212,11 @@ public:
    * @throw std::logic_error If prediction is not available.
    */
   const SIStream &getDebuggingSI() const {
-    icov::assert::check(
-        predictionAvailable(),
-        header().str() + " Prediction must be available: ID = " +
-            omnidirectional_layer::BlockPrediction::toString(
-                mDebuggingPredictionID));
+    icov::assert::check(predictionAvailable(),
+                        ICOV_INDICATOR_MSG(" ") + header().str() +
+                            " Prediction must be available: ID = " +
+                            omnidirectional_layer::BlockPrediction::toString(
+                                mDebuggingPredictionID));
     return getDebuggingChannel().si_map.at(mDebuggingPredictionID);
   }
 
@@ -222,9 +227,10 @@ public:
    * @throw std::logic_error If frame is not available.
    */
   VideoEncodingStreamCache::FrameStreamDebugger &getDebuggingFrame() {
-    icov::assert::check(
-        frameAvailable(), header().str() + " Frame must be available: ID = " +
-                              std::to_string(mDebuggingFrameID));
+    icov::assert::check(frameAvailable(),
+                        ICOV_INDICATOR_MSG(" ") + header().str() +
+                            " Frame must be available: ID = " +
+                            std::to_string(mDebuggingFrameID));
     return VideoEncodingStreamCache::get_mutable_instance().getFrame(
         mDebuggingFrameID);
   }
@@ -331,6 +337,60 @@ public:
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
+  }
+
+  const BitVec &getBitplane(int bp) const {
+    std::cout << __func__ << std::endl;
+    return getDebuggingChannel().srcBits.at(bp);
+  }
+
+  bool checkBitplane(int bp, const BitVec &s) const {
+    return getBitplane(bp) == s;
+  }
+
+  void assertBitplaneEqual(int bp, const BitVec &s) const {
+    std::cout << __func__ << std::endl;
+
+    if (predictionAvailable() && !checkBitplane(bp, s)) {
+      std::stringstream sstr = header();
+      sstr << "Bitplane = " << std::to_string(bp) << std::endl
+           << "Bitplane does not match ground truth." << std::endl
+           << "Value ";
+
+      icov::io::write_vector(sstr, s, ' ');
+      sstr << std::endl << "GT ";
+      icov::io::write_vector(sstr, getBitplane(bp), ' ');
+      sstr << std::endl;
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+
+    std::cout << "END " << __func__ << std::endl;
+  }
+
+  const SymboleVec &getSymboles() const {
+    std::cout << __func__ << std::endl;
+    return getDebuggingChannel().srcSymboles;
+  }
+
+  bool checkSymboles(const SymboleVec &s) const { return getSymboles() == s; }
+
+  void assertSymbolesEqual(const SymboleVec &s) const {
+    std::cout << __func__ << std::endl;
+
+    if (predictionAvailable() && !checkSymboles(s)) {
+      std::stringstream sstr = header();
+      sstr << "Symboles does not match ground truth." << std::endl << "Value ";
+
+      icov::io::write_vector(sstr, s, ' ');
+      sstr << std::endl << "GT ";
+      icov::io::write_vector(sstr, getSymboles(), ' ');
+      sstr << std::endl;
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+
+    std::cout << "END " << __func__ << std::endl;
   }
 
   NumcodeIdx getStoredNumcodeIdx(int bp) const {
@@ -512,7 +572,7 @@ public:
   void reset() {
     setDebuggingBlockID(-1);
     setDebuggingChannelID(-1);
-    setDebuggingFrameID(-1);
+    setDebuggingFrameID(0 /*-1*/);
     setDebuggingPredictionID(
         omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN);
   }

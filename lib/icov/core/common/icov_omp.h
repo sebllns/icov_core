@@ -7,7 +7,7 @@ static const bool omp_enable = true;
 static const bool omp_enable = false;
 #endif
 
-int get_max_threads() {
+inline int get_max_threads() {
 #ifdef USE_OMP
   return omp_get_max_threads();
 #else
@@ -15,7 +15,7 @@ int get_max_threads() {
 #endif
 }
 
-int get_thread_num() {
+inline int get_thread_num() {
 #ifdef USE_OMP
   return omp_get_thread_num();
 #else

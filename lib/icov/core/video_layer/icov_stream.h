@@ -228,18 +228,17 @@ using rate_t =
 
 typedef icov::bitstream::byte QaryParams[QARY_PARAMS_SIZE];
 
-// inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
-//                           int &z_max) {
-//  q_idx = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q] -
-//          offset_t::CodingSI;
-//  z_min = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN];
-//  z_max = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX];
+inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
+                           int &z_max) {
+  q_idx = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q] -
+          offset_t::CodingSI;
+  z_min = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN];
+  z_max = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX];
 
-//  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
-//            << (int)input[2] << " -> " << q_idx << " " << z_min << " " <<
-//            z_max
-//            << std::endl;
-//}
+  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
+            << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
+            << std::endl;
+}
 
 inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
                             int z_max) {

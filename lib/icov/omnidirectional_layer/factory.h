@@ -54,7 +54,7 @@
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "omnidirectional_layer/interface/IPicture.h"
-#include "typedef.h"
+
 #include <boost/geometry/algorithms/transform.hpp>
 #include <math.h>
 #include <memory>

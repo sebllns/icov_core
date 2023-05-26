@@ -31,20 +31,20 @@
 #define ICOV_WARNING ICOV_LOG(warning)
 #define ICOV_ERROR ICOV_LOG(error)
 #define ICOV_FATAL ICOV_LOG(fatal)
+#define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO
 
 #ifndef ICOV_LOG_LEVEL
 #define ICOV_LOG_LEVEL 2
 #endif
 
 namespace icov {
-namespace log {
+namespace logging {
 
-namespace logging = boost::log;
 namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
 
-void colored_formatter(boost::log::record_view const &rec,
-                       boost::log::formatting_ostream &strm) {
+inline void colored_formatter(boost::log::record_view const &rec,
+                              boost::log::formatting_ostream &strm) {
   static auto date_time_formatter =
       expr::stream << expr::format_date_time<boost::posix_time::ptime>(
           "TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
@@ -79,7 +79,7 @@ void colored_formatter(boost::log::record_view const &rec,
        << CONSOLE_FORMAT(CONSOLE_DEFAULT);
 }
 
-void initLog() {
+inline void initLog() {
 
   // TODO ADD COLORS
 
@@ -134,11 +134,11 @@ void initLog() {
   fsSink->set_formatter(logFmt);
   fsSink->locked_backend()->auto_flush(true);
 
-  logging::core::get()->set_filter(logging::trivial::severity >=
-                                   ICOV_LOG_LEVEL);
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >=
+                                      ICOV_LOG_LEVEL);
 
   ICOV_INFO << "Log intialized";
 }
 
-} // namespace log
+} // namespace logging
 } // namespace icov
