@@ -130,6 +130,8 @@ public:
 
   const ldpc_codec_layer::AffInteractiveCoder &ldpc_coder() const;
 
+  const params &get_params() const;
+
 private:
   params m_params;
   std::shared_ptr<icov::video::BufGroups>

@@ -149,6 +149,7 @@ private:
   std::vector<BitplaneExtractor> m_bitplanes;
   bitstream::byte m_bitplaneCount;
   int m_maxSyndromeBufferLength;
+  bool m_codingFlag;
   static bitstream::byte SyndromePadding;
 };
 } // namespace extractor

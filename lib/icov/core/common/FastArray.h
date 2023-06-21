@@ -1,7 +1,5 @@
 #pragma once
 
-#include "common.h"
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -212,30 +210,6 @@ protected:
   size_t m_rows;
   size_t m_cols;
 };
-
-typedef bool bit;
-typedef float LLRVal;
-typedef int SymboleVal;
-typedef int BitVal;
-typedef int SIVal;
-typedef bit SyndVal;
-typedef uint16_t index_t;
-
-// FastArray is faster
-using Syndrome = FastArray<bit>;
-using BitVec = std::vector<BitVal>;
-using SymboleVec = std::vector<SymboleVal>;
-using LLRVec = std::vector<LLRVal>;
-using SIVec = std::vector<SIVal>;
-using Bitplanes = std::vector<BitVec>;
-using Rate = float;
-using NumcodeIdx = uint32_t;
-
-// Bitplane
-using SyndromesVec = std::vector<Syndrome>;
-using NumcodeIdxVec = std::vector<NumcodeIdx>;
-
-using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
 
 template <typename T>
 std::vector<size_t> sort_indexes(const std::vector<T> &v,

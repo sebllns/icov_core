@@ -101,6 +101,7 @@ struct BitplaneStream {
 struct SIStream {
   ldpc_codec_layer::QaryDistribution pz;
   byte mode;
+  SIVec values;
 
   std::vector<BitplaneStream> bitplanes;
   int inverseModeQuant() { return mode - 1; }
@@ -136,14 +137,14 @@ struct IcovExtractedBitstream {
   void push(const icov::bitstream::byte &val) {
     auto pos = m_WritePosition;
     shiftWritePosition(1);
-    ICOV_TRACE << "EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
+    ICOV_TRACE << ">>> EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
                << m_ActualSize;
     m_Buffer[pos] = val;
   }
 
   icov::bitstream::byte get() {
     icov::assert::check(m_ActualSize > 0, "Buffer is not empty");
-    ICOV_TRACE << "EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
+    ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
                << m_ReadPosition;
     return m_Buffer[m_ReadPosition];
   }
@@ -167,6 +168,7 @@ struct IcovExtractedBitstream {
   }
 
   void shiftWritePosition(size_t offset) {
+    ICOV_TRACE << __func__ << " " << offset;
     m_WritePosition = (m_WritePosition + offset) % m_Buffer.size();
     m_ActualSize += offset;
     // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
@@ -180,6 +182,7 @@ struct IcovExtractedBitstream {
    * @param offset The offset by which to shift the read position.
    */
   void shiftReadPosition(size_t offset) {
+    ICOV_TRACE << __func__ << " " << offset;
     m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
     ICOV_WARNING_MSG(m_ActualSize >= offset,
                      "Buffer negative overflow is forbidden");
@@ -261,6 +264,7 @@ inline size_t IcovExtractedBitstream::getBufferSize() const {
 }
 
 inline byte *IcovExtractedBitstream::writableData() {
+  ICOV_TRACE << __func__;
   return m_Buffer.data() + getWritePosition();
 }
 

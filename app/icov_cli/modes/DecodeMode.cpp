@@ -56,7 +56,7 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   m_parameters.bsp_params.enable_z_quantization = true;
 
   icov::io::read_vector(ICOV_Q_VALUES_FILE(args).string(),
-                                 m_parameters.bsp_params.q_values);
+                        m_parameters.bsp_params.q_values);
 
   m_parameters.icu_size = args[DecodeMode::params::IcuSize_ID].as<int>();
 

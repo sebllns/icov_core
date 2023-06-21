@@ -133,8 +133,11 @@ void icov::decoder::BlockDecoder::processBlock(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(pred);
 
-  for (auto &dec : m_channelDecoder)
+  for (auto &dec : m_channelDecoder) {
+    ICOV_TRACE << "DECODE COMP " << dec->get_params().CompID;
     dec->decode_icu(icuIndex, pred);
+    ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
+  }
 
   //  // decoding test
   //  icov::SymboleVec decodedVec = bsp.src_symboles();

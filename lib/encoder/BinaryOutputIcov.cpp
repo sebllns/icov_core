@@ -16,7 +16,7 @@ BinaryOutputIcov::BinaryOutputIcov(const boost::filesystem::path &path)
 
 void BinaryOutputIcov::writeQaryParams(
     const ldpc_codec_layer::QaryDistribution &bsp) {
-  if (bsp.getZAmplitude() == 0) {
+  if (!bsp.codingflag()) {
     // std::cout << "SI IDENTICAL" << std::endl;
     std::cout << "Q 0" << std::endl;
     icov::io::write_value<bitstream::byte>(
@@ -25,9 +25,8 @@ void BinaryOutputIcov::writeQaryParams(
   } else {
     icov::bitstream::writeQaryParams(m_qaryParams, bsp.getRawQ0(),
                                      bsp.getRawZmin(), bsp.getRawZmax());
-    icov::io::write_array(
-        getStream(bitstream::eIcovStream::ENCODE_PARAMS), m_qaryParams,
-        QARY_PARAMS_SIZE, true);
+    icov::io::write_array(getStream(bitstream::eIcovStream::ENCODE_PARAMS),
+                          m_qaryParams, QARY_PARAMS_SIZE, true);
     m_total_write_byte[eWriteCounter::BLOCK_RATE] +=
         QARY_PARAMS_SIZE * sizeof(bitstream::byte);
   }
@@ -70,7 +69,7 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
   //  m_fileParts[eIcovStream::SYNDROME]->flush();
 
   icov::io::write_array(*m_fileParts[bitstream::eIcovStream::SYNDROME], darr,
-                           byte_size, true);
+                        byte_size, true);
 }
 
 void BinaryOutputIcov::writeFrameSize() {
@@ -121,10 +120,10 @@ void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeSIRate(v); }
 
 void BinaryOutputIcov::writeSIRate(const uint &r) {
 #ifdef ICOV_ASSERTION_ENABLED
-  icov::assert::check(
-      r < std::numeric_limits<rate_t>::max(),
-      "Value " + std::to_string(r) + " overflows the max possible value " +
-          std::to_string(std::numeric_limits<rate_t>::max()));
+  icov::assert::check(r < std::numeric_limits<rate_t>::max(),
+                      "Value " + std::to_string(r) +
+                          " overflows the max possible value " +
+                          std::to_string(std::numeric_limits<rate_t>::max()));
 #endif
 
   icov::io::write_value<rate_t>(

@@ -4,6 +4,8 @@
 #include "enc_helpers.h"
 #include "encoder/interface/IEncoder.h"
 
+#include "icov_debug.h"
+#include "icov_io.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 
@@ -24,6 +26,7 @@
 #include <memory>
 #include <omp.h>
 #include <opencv2/plot.hpp>
+#include <sstream>
 #include <vector>
 
 namespace icov {
@@ -131,8 +134,7 @@ void icov::encoder::FrameEncoder::serializeParameters() {
         std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
         m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
-        if (m_channelCoder[c].si[p].stored_pz.getZAmplitude() >
-            bitstream::flag_t::NoCodingSI) {
+        if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
           std::cout << "R ";
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
@@ -351,8 +353,14 @@ void icov::encoder::FrameEncoder::encode_tu(
 
   auto &encoder = m_pred_encoder.get_coder(predID, tu_size);
 
-  if (bsp_enc.distribution().getZAmplitude() == bitstream::flag_t::NoCodingSI) {
+  if (!bsp_enc.distribution().codingflag()) {
     ICOV_TRACE << "SI symbole identical... no coding...";
+    std::stringstream sstr;
+    sstr << "\nsrc = ";
+    io::write_vector(sstr, bsp_enc.src_symboles(), ' ');
+    sstr << "\n si = ";
+    io::write_vector(sstr, bsp_enc.si_symboles(), ' ');
+    ICOV_TRACE << sstr.str().c_str();
   } else {
     encoder.encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
@@ -436,8 +444,7 @@ void icov::encoder::FrameEncoder::encode_tu(
       }
     }
 
-    if (bsp_enc.distribution().getZAmplitude() >
-        bitstream::flag_t::NoCodingSI) {
+    if (bsp_enc.distribution().codingflag()) {
 
 #ifdef ICOV_ASSERTION_ENABLED
       icov::assert::check(
@@ -501,7 +508,7 @@ void icov::encoder::FrameEncoder::encode_tu(
                              .getDebuggingChannel();
 
       if (channelDbg.n() == 0) {
-        channelDbg.srcSymboles = bsp_enc.si_symboles();
+        channelDbg.srcSymboles = bsp_enc.src_symboles();
         channelDbg.srcBits = bsp_enc.src_bits();
       }
 
@@ -551,10 +558,11 @@ void icov::encoder::FrameEncoder::encode_tu(
 
       auto &si_dbg = channelDbg.si_map[pred];
 
+      si_dbg.values = bsp_enc.si_symboles();
       si_dbg.mode = m_channelCoder[comp].si[predID].dirmode;
       si_dbg.pz = m_channelCoder[comp].si[predID].stored_pz;
 
-      if (si_dbg.pz.getZAmplitude() > 0) {
+      if (si_dbg.pz.codingflag()) {
         // adds each bitplane for the given prediction to the debugging
         // bitplanes vector
         for (int i = 0; i < bitplaneCount; ++i) {

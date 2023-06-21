@@ -6,6 +6,7 @@
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 #include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
 #include "FastArray.h"
+#include "common.h"
 #include <cstdint>
 #include <fstream>
 #include <vector>

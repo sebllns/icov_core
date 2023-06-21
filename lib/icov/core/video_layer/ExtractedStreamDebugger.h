@@ -47,6 +47,7 @@
 
 #include "FastArray.h"
 
+#include "common.h"
 #include "icov_io.h"
 #include "icov_stacktrace.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
@@ -332,8 +333,8 @@ public:
       std::stringstream sstr = header();
       sstr << "Bitplane = " << std::to_string(bp) << std::endl
            << "Syndrome does not match ground truth." << std::endl
-           << "Syndrome " << s.to_string(" ") << std::endl
-           << "GT " << getBitplaneSyndrome(bp).to_string(" ");
+           << "Syndrome = " << s.to_string(" ") << std::endl
+           << "GT       = " << getBitplaneSyndrome(bp).to_string(" ");
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
@@ -380,10 +381,10 @@ public:
 
     if (predictionAvailable() && !checkSymboles(s)) {
       std::stringstream sstr = header();
-      sstr << "Symboles does not match ground truth." << std::endl << "Value ";
-
+      sstr << "Symboles does not match ground truth." << std::endl;
+      sstr << "Value = ";
       icov::io::write_vector(sstr, s, ' ');
-      sstr << std::endl << "GT ";
+      sstr << std::endl << "GT   = ";
       icov::io::write_vector(sstr, getSymboles(), ' ');
       sstr << std::endl;
       const auto str = sstr.str();
@@ -407,7 +408,7 @@ public:
       sstr << "Stored syndrom size does not match ground truth." << std::endl
            << "Bitplane = " << bp << std::endl
            << "Value = " << val << std::endl
-           << "GT = " << getStoredNumcodeIdx(bp);
+           << "GT    = " << getStoredNumcodeIdx(bp);
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
@@ -503,6 +504,24 @@ public:
     }
   }
 
+  SIVec getSiVec() const { return getDebuggingSI().values; }
+
+  bool checkSiVec(SIVec value) const { return getSiVec() == value; }
+
+  void assertSiVec(SIVec value) const {
+    if (predictionAvailable() && !checkSiVec(value)) {
+      std::stringstream sstr = header();
+      sstr << "Side info values does not match ground truth." << std::endl
+           << "Values ";
+      icov::io::write_vector(sstr, value, ' ');
+      sstr << std::endl << "GT ";
+      icov::io::write_vector(sstr, getSymboles(), ' ');
+      sstr << std::endl;
+      const auto str = sstr.str();
+      ICOV_THROW_LOGICAL_EXCEPTION(str);
+    }
+  }
+
   float
   getQaryParam(ldpc_codec_layer::QaryDistribution::QaryParamsIndex idx) const {
     return getDebuggingSI().pz.getRawParam(idx);
@@ -536,7 +555,7 @@ public:
       std::stringstream sstr = header();
       sstr << "Coding SI flag does not match ground truth." << std::endl
            << "Value = " << value << std::endl
-           << "GT = " << codingSIFlag();
+           << "GT    = " << codingSIFlag();
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }

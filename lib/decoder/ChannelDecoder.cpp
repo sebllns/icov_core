@@ -238,6 +238,10 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
 
     m_bsp.distribution().setExtractedParams(m_bsp.bitplane_count(), q0, zmin,
                                             zmax);
+
+    ICOV_TRACE << "Q0 = " << m_bsp.distribution().getQ0();
+    ICOV_TRACE << "ZMIN = " << m_bsp.distribution().getZmin();
+    ICOV_TRACE << "ZMAX = " << m_bsp.distribution().getZmax();
   }
 }
 
@@ -249,14 +253,18 @@ void ChannelDecoder::_set_si(bool coding_flag) {
   const auto &si_tu = si.TUs[0];
   auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(m_params.CompID);
 
-  // SI is perfect => clone it
+  // SI is perfect => clone it into dec_tu
   if (!coding_flag) {
+    ICOV_TRACE << "SI is PERFECT --> CLONE";
     icov::video::TransformUnit &dec_tu = icu_enc.sourceX_TU(0);
     std::copy(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
-  } else {
+  } else { /* else assign it in bitsymbolprovider */
+    ICOV_TRACE << "SI -> BSP";
     m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
     m_bsp.set_si(m_blockSI);
+    bitstream::VideoStreamDebugger::get_const_instance().assertSiVec(
+        m_bsp.si_symboles());
   }
 }
 
@@ -283,16 +291,15 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                     "Numcode value must be set to 1 for access block");
   }
 
-  std::cout << "BP ID " << bp + 1 << " / " << m_bsp.bitplane_count()
-            << std::endl;
+  ICOV_TRACE << "BP ID " << bp + 1 << " / " << m_bsp.bitplane_count();
 
   bitstream::VideoStreamDebugger::get_const_instance().assertSyndromeEqual(
       bp, synd);
 
   m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
 
-  std::cout << "assertBitplaneEqual"
-            << " " << bp << std::endl;
+  ICOV_TRACE << "assertBitplaneEqual"
+             << " " << bp;
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneEqual(
       bp, m_bsp.src_bits().at(bp));
 
@@ -344,6 +351,10 @@ icov::Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }
 const icov::ldpc_codec_layer::AffInteractiveCoder &
 ChannelDecoder::ldpc_coder() const {
   return *m_ldpc_coder;
+}
+
+const ChannelDecoder::params &ChannelDecoder::get_params() const {
+  return m_params;
 }
 } // namespace decoder
 } // namespace icov

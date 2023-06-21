@@ -90,6 +90,7 @@ protected:
 
   std::unique_ptr<Syndrome> m_decodage_syndrome;
   BitVec m_decoded_bits;
+  SymboleVec m_predec;
 };
 } // namespace ldpc_codec_layer
 } // namespace icov

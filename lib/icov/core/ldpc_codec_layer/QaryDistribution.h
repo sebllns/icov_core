@@ -49,7 +49,7 @@
 #pragma once
 
 #include "FastArray.h"
-
+#include "common.h"
 
 #include <boost/range/combine.hpp>
 
@@ -90,7 +90,7 @@ public:
   };
 
   QaryDistribution()
-      : m_bitplane_count(0), m_zmin(0), m_zmax(0),
+      : m_codingflag(false), m_bitplane_count(0), m_zmin(0), m_zmax(0),
         m_q0(1), m_quantization_params{true,
                                        {0.125, 0.375, 0.5625, 0.6875, 0.78125,
                                         0.84375, 0.90625, 0.96875}} {}
@@ -215,8 +215,7 @@ public:
     if (enable_z_quantization()) {
       int z_step = Z_STEP;
       int z_limit = Z_LIMIT;
-      m_zmin = icov::maths::quantize(newZmin, z_step, -z_limit + 1,
-                                              z_limit);
+      m_zmin = icov::maths::quantize(newZmin, z_step, -z_limit + 1, z_limit);
 
       m_zmin = ((m_zmin + Z_LIMIT) / Z_STEP);
 
@@ -231,8 +230,7 @@ public:
     if (enable_z_quantization()) {
       int z_step = Z_STEP;
       int z_limit = Z_LIMIT;
-      m_zmax = icov::maths::quantize(newZmax, z_step, -z_limit,
-                                              z_limit - 1);
+      m_zmax = icov::maths::quantize(newZmax, z_step, -z_limit, z_limit - 1);
 
       m_zmax = ((m_zmax + Z_LIMIT) / Z_STEP);
 
@@ -278,6 +276,8 @@ public:
   void compute_pz_params(const SymboleVec &src_symbols, int bitplane_count,
                          const SIVec &side_info) {
 
+    m_codingflag = false;
+
     ICOV_ASSERT_MSG(src_symbols.size() == side_info.size(),
                     "Src and SI lengths are not equal");
 
@@ -294,6 +294,8 @@ public:
       // q = N0/N
       if (z == 0) {
         q += 1.0 / n;
+      } else {
+        m_codingflag = true;
       }
 
       // z_min = min(Z[k], 0<=k<N)
@@ -438,11 +440,15 @@ public:
   }
   quantization_params &quantizationParams() { return m_quantization_params; }
 
+  bool codingflag() const { return m_codingflag; }
+
 private:
+  bool m_codingflag;
   ushort m_bitplane_count;
   short m_zmin, m_zmax;
   float m_q0;
   quantization_params m_quantization_params;
 };
+
 } // namespace ldpc_codec_layer
 } // namespace icov

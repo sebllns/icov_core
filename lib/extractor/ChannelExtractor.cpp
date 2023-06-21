@@ -2,6 +2,7 @@
 
 #include "FastArray.h"
 
+#include "icov_log.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/Block.h"
@@ -76,6 +77,8 @@ void ChannelExtractor::extract_block_syndrome(
   std::cout << "BP ";
   m_bitstream->push(m_bitplaneCount);
 
+  m_codingFlag = true;
+
   if (is_access_block) {
     ushort syndrome_size = 0, syndrome_padding = 0;
     //    bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount -
@@ -86,14 +89,17 @@ void ChannelExtractor::extract_block_syndrome(
     //    syndrome_size); SyndromePadding =
     //        ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
 
+    m_codingFlag = true;
   } else if (is_intra_prediction) {
     _extractIntraParams();
   } else if (is_inter_prediction) {
     // TODO IMPLEMENT
   }
 
-  for (auto &bp : m_bitplanes) {
-    _extractBitplaneSyndrome(bp);
+  if (m_codingFlag) {
+    for (auto &bp : m_bitplanes) {
+      _extractBitplaneSyndrome(bp);
+    }
   }
 
   std::cout << "END extract_block_syndrome " << std::endl;
@@ -196,19 +202,18 @@ void ChannelExtractor::_extractIntraParams() {
   bitstream::VideoStreamDebugger::get_const_instance().assertDirModeEqual(
       dirmode);
 
-  std::cout << "DM ";
+  ICOV_TRACE << "EXTRACTOR DM ";
   m_bitstream->push(dirmode);
   bitstream::byte pred_hdr = bitstream::flag_t::NoCodingSI;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
-  std::cout << "QZ ";
-
+  ICOV_TRACE << "EXTRACTOR QZ ";
   m_bitstream->push(pred_hdr);
 
-  bool codingFlag = bitstream::getCodingFlag(pred_hdr);
+  m_codingFlag = bitstream::getCodingFlag(pred_hdr);
   bitstream::VideoStreamDebugger::get_const_instance().assertcodingSIEqual(
-      codingFlag);
+      m_codingFlag);
 
-  if (codingFlag) {
+  if (m_codingFlag) {
     bitstream::byte zmin = 0, zmax = 0;
 
     bitstream::byte q0 = bitstream::getQaryQParam(pred_hdr);
@@ -218,11 +223,15 @@ void ChannelExtractor::_extractIntraParams() {
     m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
+
+    ICOV_TRACE << "EXTRACTOR ZMIN ";
     m_bitstream->push(zmin);
 
     m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
+
+    ICOV_TRACE << "EXTRACTOR ZMAX ";
     m_bitstream->push(zmax);
 
     for (auto &bp : m_bitplanes) {
@@ -242,22 +251,27 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
   bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
       bp.Index, (NumcodeIdx)bp.ReadSyndromeQuantizedSize);
 
+  ICOV_TRACE << "EXTRACTOR NUMCODE BP " << bp.Index << " ";
   m_bitstream->push(bp.ReadSyndromeQuantizedSize);
 
   bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
       bp.ReadSyndromeQuantizedSize, *m_ldpc_coder);
 
-  bitstream::getByteCount(bp.StoredSyndromeBitSize, bp.StoredSyndromeByteSize,
+  bitstream::getByteCount(bp.ReadSyndromeBitSize, bp.ReadSyndromeByteSize,
                           bp.ReadSyndromePadding);
+
+  ICOV_TRACE << "STORED " << (int)bp.StoredSyndromeQuantizedSize << " -> "
+             << bp.StoredSyndromeByteSize;
+  ICOV_TRACE << "READ " << (int)bp.ReadSyndromeQuantizedSize << " -> "
+             << bp.ReadSyndromeByteSize;
 
   std::cout << "END _extractBitplaneNumcode" << std::endl;
 }
 
 void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
 
-  std::cout << std::to_string(m_params.CompID) << ": _extractBitplaneSyndrome"
-            << std::endl;
-
+  ICOV_TRACE << std::to_string(m_params.CompID) << ": _extractBitplaneSyndrome";
+  ICOV_TRACE << bp.ReadSyndromeByteSize << "/" << bp.StoredSyndromeByteSize;
   m_icovFile->readSyndrome(m_bitstream->writableData(), bp.ReadSyndromeByteSize,
                            bp.StoredSyndromeByteSize);
   m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);

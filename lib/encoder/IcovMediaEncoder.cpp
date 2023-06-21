@@ -4,6 +4,7 @@
 #include "encoder/InputMedia.h"
 #include "encoder/TextOutputIcov.h"
 
+#include "icov_log.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
 #include <exception>
@@ -47,8 +48,8 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       });
 
   icov::assert::equal(m_params.FrameEncoderParams.ICU_Size.width,
-                               m_params.FrameEncoderParams.ICU_Size.height,
-                               "Assert square ICU");
+                      m_params.FrameEncoderParams.ICU_Size.height,
+                      "Assert square ICU");
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 
@@ -89,9 +90,11 @@ icov::encoder::IcovMediaEncoder::createOutputFile() const {
   std::unique_ptr<encoder::OutputIcovBase> ptr;
   switch (m_params.OutputType) {
   case BINARY:
+    ICOV_INFO << "Icov output format is binary";
     ptr = std::make_unique<encoder::BinaryOutputIcov>(m_params.OutputPath);
     break;
   case TEXT:
+    ICOV_INFO << "Icov output format is text";
     ptr = std::make_unique<encoder::TextOutputIcov>(m_params.OutputPath);
     break;
   default:
