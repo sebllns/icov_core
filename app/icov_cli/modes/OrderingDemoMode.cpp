@@ -109,7 +109,7 @@ void BlockProcessor::processBlock(
     }
 
     m_encoded_image.seekg(sizeof(header) +
-                          ((b.getId(Block::SELF) - 1) * 8 + si_offset) * bw *
+                          ((b.getIdSelf() - 1) * 8 + si_offset) * bw *
                               bh * blockRegion.elemSize());
     m_encoded_image.read((char *)blockRegion.data,
                          bw * bh * blockRegion.elemSize());

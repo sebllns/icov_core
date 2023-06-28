@@ -1,16 +1,13 @@
 /****************************************************************************/
-/** @addtogroup ICOV
- *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup decoder
- * Decoder package (client side).
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
  *  @ingroup ICOV
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @file renderer.h
  *  @brief An abstract ICOV renderer for decoder side.
- *  @ingroup decoder
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023

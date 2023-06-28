@@ -7,8 +7,8 @@
 
 /** @file BlockOrdering.h
  *  @brief BlockOrdering Performs the loop on blocks starting from a viewport
- *request, until all blocks in the viewport are processed in the order defined
- *by the order heuristic
+ * request, until all blocks in the viewport are processed in the order defined
+ * by the order heuristic
  *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -116,7 +116,7 @@ public:
    * @brief Get the iterator for the next block to be processed after the
    * current block.
    *
-   * @details This function is called by getNextBlock(), which searches for the
+   * @details Function getNextBlock, which searches for the
    * next block that should be processed. The function checks for the visibility
    * of each neighbor block and updates their visibility information. It starts
    * by getting the ID of the neighbor block based on the given direction. If

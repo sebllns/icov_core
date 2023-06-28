@@ -517,7 +517,7 @@ void icov::encoder::DemoEncoder::encode_tu(
                                       bsp_enc.distribution());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
-    std::cout << b.getId(Block::SELF) << "\t" << b.parent()->row(b.v()) << "\t"
+    std::cout << b.getIdSelf() << "\t" << b.parent()->row(b.v()) << "\t"
               << b.parent()->col(b.u()) << "\t"
               << BlockPrediction::toString(pred) << "\t" << tu_index << "\t"
               << (int)comp << "\t" << i << "\t"

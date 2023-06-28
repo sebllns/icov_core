@@ -131,7 +131,7 @@ void IFrameDecoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
 
   this->processInput(output, input);
   for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getId(Block::SELF)),
+    encodeBlock(output, b, access_blocks.isAccessBlock(b.getIdSelf()),
                 block_prediction);
   }
 }

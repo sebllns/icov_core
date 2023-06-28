@@ -1,16 +1,13 @@
 /****************************************************************************/
-/** @addtogroup ICOV
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup extractor
- * Extractor package (server side).
- *  @ingroup ICOV
- */
-
-/** @file interface/extractor.h
- *  @brief An abstract ICOV extractor definition.
- *  @ingroup extractor
+/** @file IAccessBlockManager.h
+ *  @brief IAccessBlockManager is an interface for managing access blocks.
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -56,18 +53,54 @@
 
 namespace icov {
 namespace omnidirectional_layer {
+
+/**
+ * @brief IAccessBlockManager is an interface for managing access blocks.
+ *
+ * The access block is defined as the smallest unit of the video that can be
+ * accessed and decoded independently of the others.
+ */
 class IAccessBlockManager {
 protected:
-  BlockIteratorVector m_blocks;
-  BlockVector::const_iterator m_invalidBlock;
+  BlockIteratorVector m_blocks; /**< Vector of access block iterators. */
+  BlockVector::const_iterator
+      m_invalidBlock; /**< Iterator pointing to an invalid block. */
 
 public:
+  /**
+   * @brief Virtual destructor for IAccessBlockManager.
+   */
   virtual ~IAccessBlockManager() = default;
 
+  /**
+   * @brief Builds the access blocks based on the given picture and viewport
+   * manager.
+   *
+   * This method is responsible for constructing the access blocks using the
+   * provided picture and viewport manager.
+   *
+   * @param pic The picture to build the access blocks from.
+   * @param vpm The viewport manager to use for building the access blocks.
+   */
   virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) = 0;
 
+  /**
+   * @brief Returns the vector of access block iterators.
+   *
+   * @return The vector of access block iterators.
+   */
   const BlockIteratorVector &blocks() const { return m_blocks; }
 
+  /**
+   * @brief Finds the access block using the given viewport manager.
+   *
+   * This method searches for the first visible access block using the provided
+   * viewport manager.
+   *
+   * @param vpm The viewport manager used to determine block visibility.
+   * @return An iterator pointing to the found access block, or m_invalidBlock
+   * if no visible block is found.
+   */
   virtual BlockVector::const_iterator
   findAccessBlock(const IViewportManager &vpm) const {
     for (const auto &b : m_blocks) {

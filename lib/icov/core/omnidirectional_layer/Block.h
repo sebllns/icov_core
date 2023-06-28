@@ -87,6 +87,22 @@ public:
     COUNT      /**< The total number of directions */
   };
 
+  static std::string neighborDirectionStr(const NeighborDirection &dir) {
+    switch (dir) {
+    case SELF:
+      return "SELF";
+    case RIGHT:
+      return "RIGHT";
+    case LEFT:
+      return "LEFT";
+    case UP:
+      return "UP";
+    case DOWN:
+      return "DOWN";
+    }
+    return "UNKNOWN";
+  }
+
 protected:
   IPicture *m_parent; /**< The parent picture object */
   float m_u; /**< The normalized horizontal coordinate of the top-left corner of

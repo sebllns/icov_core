@@ -1,15 +1,13 @@
 /****************************************************************************/
-/** @addtogroup ICOV
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
+ *  @ingroup ICOV
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
- *  @ingroup ICOV
- */
-
 /** @file IBlockOrdering.h
- *  @brief IBlockOrdering conveying IBlockOrdering Units (VPU) for VCL data
- *  @ingroup common
+ *  @brief An interface for block ordering
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -53,10 +51,10 @@
 namespace icov {
 namespace omnidirectional_layer {
 
-/** @class IBlockOrdering
- *  @brief IBlockOrdering
- *
- *  A IBlockOrdering
+/**
+ * @class IBlockOrdering
+ * @brief An interface for block ordering
+ * This interface provides methods for ordering blocks in a certain way
  */
 class IBlockOrdering {
 public:

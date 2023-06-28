@@ -60,7 +60,7 @@ float BlockDecoder::getTime() {
 
 void BlockDecoder::processBlock(
     const Block &b, IBlockPredictionManager::prediction_t prediction) {
-  std::cout << "decode block " << b.getId(Block::SELF) << std::endl;
+  std::cout << "decode block " << b.getIdSelf() << std::endl;
 }
 } // namespace omnidirectional_layer
 } // namespace icov

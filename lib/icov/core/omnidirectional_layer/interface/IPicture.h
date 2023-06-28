@@ -1,15 +1,13 @@
 /****************************************************************************/
-/** @addtogroup ICOV
- *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup common
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
  *  @ingroup ICOV
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @file IPicture.h
  *  @brief IPicture conveying IPicture Units (VPU) for VCL data
- *  @ingroup common
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -114,6 +112,13 @@ public:
   void setAccessBlockFlag(Block::id_t id) {
     getById(id)->setIsAccessBlock(true);
   }
+  /** @addtogroup ICOV
+   *  ICOV, open source Interactive Coder for Omnidirectional Videos.
+   */
+
+  /** @addtogroup common
+   *  @ingroup ICOV
+   */
 
   BlockVector::const_iterator invalidBlock() const { return m_icus.end(); }
 

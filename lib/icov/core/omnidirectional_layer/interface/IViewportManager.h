@@ -1,16 +1,14 @@
 /****************************************************************************/
-/** @addtogroup ICOV
- *  ICOV, open source Interactive Coder for Omnidirectional Videos.
- */
-
-/** @addtogroup common
+/** @addtogroup Omnidirectional
+ *  Omnidirectional is the adaptation of the coder into 360 context.
  *  @ingroup ICOV
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
 /** @file IViewportManager.h
  *  @brief Interface for a viewport manager that provides information about the
  * visibility of a block within a viewport geometry.
- *  @ingroup common
+ *  @ingroup Omnidirectional
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023

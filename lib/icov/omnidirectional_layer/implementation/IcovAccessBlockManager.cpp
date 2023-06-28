@@ -17,7 +17,7 @@ void IcovAccessBlockManager::buildAccessBlocks(IPicture &pic,
 
     if (!pic.isValidBlock(findAccessBlock(vpm))) {
       m_blocks.push_back(it);
-      pic.setAccessBlockFlag(it->getId(Block::SELF));
+      pic.setAccessBlockFlag(it->getIdSelf());
     }
   }
 
