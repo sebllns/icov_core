@@ -97,6 +97,5 @@ bool lazy_compare_vector(const std::vector<T> &v1, const std::vector<T> &v2) {
 
   return equal;
 }
-
 } // namespace stl_tools
 } // namespace icov

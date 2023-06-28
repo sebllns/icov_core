@@ -49,6 +49,7 @@
 
 #include "Block.h"
 
+#include "icov_exception.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
@@ -64,7 +65,7 @@ namespace omnidirectional_layer {
 ///////////////////////////////////////////////////////////////////////////////
 class BlockPrediction : public IBlockPredictionManager {
 public:
-    enum ePredType {
+  enum ePredType {
     UNKNOWN = -1,
     NONE = 0,
     RIGHT = (1 << (Block::RIGHT - 1)),
@@ -80,7 +81,7 @@ public:
     ERROR_PRED
   };
 
-    enum eBorderType {
+  enum eBorderType {
     BORDER_UNKNOWN = -1,
     BORDER_NONE = 0,
     BORDER_TOP,
@@ -106,18 +107,16 @@ public:
   getPrediction(const Block &b, const IBlockOrdering &ordering) const override;
 
   std::vector<IBlockPredictionManager::prediction_t>
-  getAvailablePredictions(const Block &b,
-                          bool is_access_block = false) const override;
+  getAvailablePredictions(const Block &b) const override;
 };
 
 inline std::vector<IBlockPredictionManager::prediction_t>
-BlockPrediction::getAvailablePredictions(const Block &b,
-                                         bool is_access_block) const {
+BlockPrediction::getAvailablePredictions(const Block &b) const {
 
   auto v0 = BlockPrediction::getAvailablePredictions(getBorder(b));
   std::vector<IBlockPredictionManager::prediction_t> v(v0.begin(), v0.end());
-  if (is_access_block)
-      v.insert(v.begin(), ePredType::NONE);
+  if (b.isAccessBlock())
+    v.insert(v.begin(), ePredType::NONE);
 
   return v;
 }
@@ -257,7 +256,8 @@ inline BlockPrediction::eBorderType BlockPrediction::getBorder(const Block &b) {
 }
 
 inline bool BlockPrediction::isValidPrediction(ePredType p) {
-  if (p == ePredType::ERROR_PRED || p == ePredType::MAX || p == ePredType::UNKNOWN)
+  if (p == ePredType::ERROR_PRED || p == ePredType::MAX ||
+      p == ePredType::UNKNOWN)
     return false;
   return true;
 }

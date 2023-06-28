@@ -55,6 +55,8 @@
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "video_layer/ExtractedStreamDebugger.h"
+#include <algorithm>
+#include <vector>
 
 namespace icov {
 namespace encoder {
@@ -62,25 +64,225 @@ namespace encoder {
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// @class IEncoder
-/// @todo COMMENT !
+/// @brief Interface for encoding media data.
 ///
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T> class IEncoder {
 public:
   virtual ~IEncoder() = default;
+
+  /**
+   * @brief Encodes the input 360 media data.
+   *
+   * @param input The input 360 media data to encode.
+   * @param picture The 360 picture to encode the media data into.
+   * @param block_prediction The block prediction manager for encoding blocks.
+   */
   virtual void encode(IInputMedia<T> &input,
                       const omnidirectional_layer::IPicture &picture,
                       const omnidirectional_layer::IBlockPredictionManager
                           &block_prediction) = 0;
 
 protected:
+  /**
+   * @brief Processes the input media data.
+   *
+   * @param input The input media data to process.
+   */
   virtual void processInput(const IInputMedia<T> &input) = 0;
+};
+
+class IBitplaneEncoder {
+public:
+  struct StoredRate {
+    NumcodeIdx c; // rate quantized
+    Rate r;       // actual rate value
+    uint m;       // code length
+
+    StoredRate(const ldpc_codec_layer::IInteractiveCoder &enc, NumcodeIdx num) {
+
+    }
+  };
+
+  virtual ~IBitplaneEncoder() = default;
+
+  icov::Syndrome stored_synd;
+
+  StoredRate stored_synd_rate;
+  icov::Rate noSourceThreshold;
+  icov::Rate minRate;
+  bool sourceFlag;
+
+  // one numcode per SI and per bitplane
+  std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+           StoredRate>
+      stored_numcodes;
+};
+
+class IPredictionEncoder {
+public:
+  virtual ~IPredictionEncoder() = default;
+
+  /**
+   * @brief Encodes a block of data with a specific prediction.
+   *
+   * @param b The block to encode.
+   * @param prediction The prediction type for encoding the block.
+   */
+  virtual void encodeBlockWithPrediction(
+      const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t
+          prediction) = 0;
+};
+
+class IChannelEncoder {
+public:
+  IChannelEncoder(unsigned char comp_id,
+                  const omnidirectional_layer::Block &parent,
+                  const omnidirectional_layer::IBlockPredictionManager
+                      &block_prediction_mgr)
+      : m_comp_id(comp_id), m_block(parent),
+        m_available_pred(
+            block_prediction_mgr.getAvailablePredictions(m_block)) {}
+
+  virtual ~IChannelEncoder() = default;
+
+  /**
+   * @brief Encodes a block of data.
+   *
+   * @param b The block to encode.
+   * @param block_prediction The block prediction manager for encoding
+   * blocks.
+   */
+  virtual void encodeBlock() {
+#pragma omp parallel for
+    for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
+         m_available_pred) {
+      // encodeBlockWithPrediction(m_block, p);
+    }
+  }
+
+private:
+  const unsigned char m_comp_id;
+  const omnidirectional_layer::Block &m_block;
+  const std::vector<
+      omnidirectional_layer::IBlockPredictionManager::prediction_t>
+      m_available_pred;
+};
+
+class IBlockEncoder {
+public:
+  virtual ~IBlockEncoder() = default;
+
+  IBlockEncoder(unsigned char numcomp) : m_numcomp(numcomp) {}
+
+  /**
+   * @brief Encodes a block of data.
+   *
+   * @param b The block to encode.
+   * @param block_prediction The block prediction manager for encoding blocks.
+   */
+  virtual void encodeBlock(const omnidirectional_layer::Block &b,
+                           const omnidirectional_layer::IBlockPredictionManager
+                               &block_prediction_mgr) {
+
+    for (unsigned char c = 0; c < m_numcomp; ++c) {
+      auto ch_enc = createChannelEncoder(c, b, block_prediction_mgr);
+      ch_enc->encodeBlock();
+    }
+  }
+
+protected:
+  /**
+   * @brief Creates a Channel encoder for encoding individual block.
+   *
+   * @return A unique pointer to the Channel encoder.
+   */
+  virtual std::unique_ptr<IChannelEncoder>
+  createChannelEncoder(unsigned char comp_id,
+                       const omnidirectional_layer::Block &parent,
+                       const omnidirectional_layer::IBlockPredictionManager
+                           &block_prediction_mgr) const = 0;
+
+  unsigned char m_numcomp;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// @class IFrameEncoder
-/// @todo COMMENT !
+/// @brief Interface for encoding individual frames of media data.
+///
+///////////////////////////////////////////////////////////////////////////////
+// template <typename T> class IFrameEncoder : public IEncoder<T> {
+// protected:
+//  int m_frame; ///< The current frame being encoded.
+
+// public:
+//  virtual ~IFrameEncoder() = default;
+//  IFrameEncoder() = default;
+
+//  /**
+//   * @brief Encodes the input 360 media data for a specific frame.
+//   *
+//   * @param input The input 360 media data to encode.
+//   * @param picture The 360 picture to encode the media data into.
+//   * @param block_prediction The block prediction manager for encoding blocks.
+//   */
+//  virtual void encode(
+//      IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+//      const omnidirectional_layer::IBlockPredictionManager &block_prediction);
+
+//  /**
+//   * @brief Returns the current frame being encoded.
+//   *
+//   * @return The current frame being encoded.
+//   */
+//  int frame() const { return m_frame; }
+
+//  /**
+//   * @brief Sets the current frame to be encoded.
+//   *
+//   * @param newFrame The frame number to set.
+//   */
+//  void setFrame(int newFrame) { m_frame = newFrame; }
+
+// protected:
+//  /**
+//   * @brief Creates a block encoder for encoding individual block.
+//   *
+//   * @return A unique pointer to the block encoder.
+//   */
+//  virtual std::unique_ptr<IFrameEncoder<T>> createBlockEncoder() const = 0;
+
+// private:
+//  IFrameEncoder(const IFrameEncoder &) = default;
+//};
+
+// template <typename T>
+// void IFrameEncoder<T>::encode(
+//    IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
+//    const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
+
+//#ifdef ICOV_ASSERTION_ENABLED
+//  ICOV_ASSERT_MSG(input.getPixelCount() > 0, "Cannot encode empty frame");
+//  ICOV_ASSERT_MSG(input.getHeight() == picture.height() &&
+//                      input.getWidth() == picture.width(),
+//                  "Picture is not the right size");
+//#endif
+
+//  this->processInput(input);
+//  auto pBlockEnc = createBlockEncoder();
+//  for (const auto &b : picture.icus()) {
+//    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
+//        b.getIdSelf() - 1);
+//    pBlockEnc->encodeBlock(b, block_prediction);
+//  }
+//}
+
+///////////////////////////////////////////////////////////////////////////////
+///
+/// @class IFrameEncoder
+/// @todo UPDATE THE CLASS
 ///
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T> class IFrameEncoder : public IEncoder<T> {
@@ -109,7 +311,7 @@ protected:
   getAvailablePredictions(
       const omnidirectional_layer::Block &b, bool access_block,
       const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
-    return block_prediction.getAvailablePredictions(b, access_block);
+    return block_prediction.getAvailablePredictions(b);
   }
 
 private:
@@ -152,17 +354,29 @@ void IFrameEncoder<T>::encodeBlock(
 ///////////////////////////////////////////////////////////////////////////////
 ///
 /// @class IMediaEncoder
-/// @todo COMMENT !
+/// @brief Interface for encoding media data consisting of multiple frames.
 ///
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T> class IMediaEncoder : public IEncoder<T> {
 
 public:
+  /**
+   * @brief Encodes the input 360 media data consisting of multiple frames.
+   *
+   * @param input The input 360 media data to encode.
+   * @param picture The 360 picture to encode the media data into.
+   * @param block_prediction The block prediction manager for encoding blocks.
+   */
   virtual void encode(
       IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
       const omnidirectional_layer::IBlockPredictionManager &block_prediction);
 
 protected:
+  /**
+   * @brief Creates a frame encoder for encoding individual frames.
+   *
+   * @return A unique pointer to the frame encoder.
+   */
   virtual std::unique_ptr<IFrameEncoder<T>> createFrameEncoder() const = 0;
 };
 
@@ -176,11 +390,13 @@ void IMediaEncoder<T>::encode(
 
   for (int i = 0; i < frameCount; i++) {
     ICOV_TRACE << "Encode frame " << i;
-    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(i);
+    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(
+        i);
     input.setFrame(i);
     pFrameEnc->setFrame(i);
     pFrameEnc->encode(input, picture, block_prediction);
   }
 }
+
 } // namespace encoder
 } // namespace icov

@@ -4,6 +4,7 @@
 
 #include "FastArray.h"
 #include "common.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 
 #include <algorithm>
 

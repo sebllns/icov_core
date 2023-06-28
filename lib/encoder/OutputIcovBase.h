@@ -49,8 +49,9 @@
 
 #pragma once
 
-#include "Media.h"
 #include "FastArray.h"
+#include "Media.h"
+#include "common.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -101,8 +102,10 @@ public:
   virtual void writeFrameSize() = 0;
   virtual void writeBlockSize() = 0;
   virtual void writeBitplaneCount(const uint &v) = 0;
-  virtual void writeStoredSyndromeSize(const uint &v) = 0;
-  virtual void writeSIRate(const uint &v) = 0;
+  virtual void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
+                                       const uint &m) = 0;
+  virtual void writeSIRate(const NumcodeIdx &v, const Rate &r,
+                           const uint &m) = 0;
   virtual void writeSIMode(const uint &v) = 0;
   void flush(int id);
   std::ostream &getStream(int id);

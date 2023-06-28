@@ -84,7 +84,7 @@ public:
   void writeFrameSize() override;
   void writeBlockSize() override;
   void writeBitplaneCount(const uint &v) override;
-  void writeSIRate(const uint &v) override;
+  void writeSIRate(const NumcodeIdx &v, const Rate &r, const uint &n) override;
   void writeSIMode(const uint &v) override;
   void startWriteBlock(const omnidirectional_layer::Block &b) override;
   void startWritePrediction(
@@ -94,7 +94,8 @@ public:
       omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
       override;
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
-  void writeStoredSyndromeSize(const uint &v) override;
+  void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
+                               const uint &m) override;
 };
 
 } // namespace encoder

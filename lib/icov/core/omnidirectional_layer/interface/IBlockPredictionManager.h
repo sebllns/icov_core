@@ -68,8 +68,7 @@ public:
   virtual IBlockPredictionManager::prediction_t
   getPrediction(const Block &b, const IBlockOrdering &ordering) const = 0;
   virtual std::vector<IBlockPredictionManager::prediction_t>
-  getAvailablePredictions(const Block &b,
-                          bool is_access_block = false) const = 0;
+  getAvailablePredictions(const Block &b) const = 0;
 };
 
 } // namespace omnidirectional_layer

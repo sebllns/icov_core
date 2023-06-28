@@ -53,6 +53,7 @@
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
+#include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
 #include <boost/serialization/singleton.hpp>
@@ -333,8 +334,8 @@ public:
       std::stringstream sstr = header();
       sstr << "Bitplane = " << std::to_string(bp) << std::endl
            << "Syndrome does not match ground truth." << std::endl
-           << "Syndrome = " << s.to_string(" ") << std::endl
-           << "GT       = " << getBitplaneSyndrome(bp).to_string(" ");
+           << "Syndrome = (0x)" << writeSyndrome(s) << std::endl
+           << "GT       = (0x)" << writeSyndrome(getBitplaneSyndrome(bp));
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }

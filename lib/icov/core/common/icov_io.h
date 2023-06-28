@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <ostream>
 #include <vector>
@@ -72,6 +73,22 @@ void read_vector(const std::string &filename, std::vector<T> &data) {
     data[i] = val;
   }
   file.close();
+}
+
+template <typename TInputIter>
+std::string make_hex_string(TInputIter first, TInputIter last,
+                            bool use_uppercase = true,
+                            bool insert_spaces = false) {
+  std::ostringstream ss;
+  ss << std::hex << std::setfill('0');
+  if (use_uppercase)
+    ss << std::uppercase;
+  while (first != last) {
+    ss << std::setw(2) << static_cast<int>(*first++);
+    if (insert_spaces && first != last)
+      ss << " ";
+  }
+  return ss.str();
 }
 
 } // namespace io

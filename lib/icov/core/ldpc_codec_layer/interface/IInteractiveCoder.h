@@ -49,19 +49,45 @@
 #pragma once
 
 #include "common.h"
+#include "icov_assert.h"
+#include <algorithm>
 #include <cstddef>
+#include <sys/types.h>
 
 namespace icov {
 namespace ldpc_codec_layer {
 
 class IInteractiveCoder {
 public:
+  enum SyndromeType {
+    SyndromeType_NO_CODING = 0,
+    SyndromeType_SOURCE = 1,
+    SyndromeType_NORMAL = 2,
+    SyndromeType_COUNT
+  };
+
   static struct t_params { bool CheckBitplaneEncoding; } params;
   virtual ~IInteractiveCoder() = default;
   virtual size_t get_n() const = 0;
   virtual int get_m(const NumcodeIdx &numcodeIdx) const = 0;
   virtual Rate get_r(const NumcodeIdx &numcodeIdx) const = 0;
   virtual Rate get_r(int m, int n) const = 0;
+
+  static SyndromeType getSyndromeType(uint syndromeNumcode) {
+    return static_cast<SyndromeType>(
+        std::max(syndromeNumcode, (uint)SyndromeType_NORMAL));
+  }
+
+  static NumcodeIdx getNumcodeIdx(uint syndromeNumcode) {
+    ICOV_ASSERT_MSG(getSyndromeType(syndromeNumcode) == SyndromeType_NORMAL,
+                    "Bad syndrome type");
+    return static_cast<NumcodeIdx>(syndromeNumcode -
+                                   getSyndromeNumcodeOffset());
+  }
+
+  static unsigned char getSyndromeNumcodeOffset() {
+    return (uint)SyndromeType_NORMAL;
+  }
 };
 } // namespace ldpc_codec_layer
 } // namespace icov

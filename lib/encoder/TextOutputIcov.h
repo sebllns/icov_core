@@ -49,9 +49,9 @@
 
 #pragma once
 
+#include "FastArray.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
-#include "FastArray.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -65,6 +65,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -79,15 +80,15 @@ public:
   ~TextOutputIcov() = default;
 
   // OutputIcovBase interface
-  void writeQaryParams(
-      const ldpc_codec_layer::QaryDistribution &bsp) override;
+  void writeQaryParams(const ldpc_codec_layer::QaryDistribution &bsp) override;
   void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;
   void writeBlockSize() override;
   void writeBitplaneCount(const uint &v) override;
-  void writeStoredSyndromeSize(const uint &v) override;
-  void writeSIRate(const uint &v) override;
+  void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
+                               const uint &m) override;
+  void writeSIRate(const NumcodeIdx &n, const Rate &r, const uint &m) override;
   void writeSIMode(const uint &v) override;
   void startWriteBlock(const omnidirectional_layer::Block &b) override;
   void startWritePrediction(
@@ -99,10 +100,39 @@ public:
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
 
 private:
-  boost::json::object m_blockNodeJSON;
-  boost::json::object m_currentPrednodeJSON;
+  struct _blockNode {
+    boost::json::object nodeJSON;
+    std::function<boost::json::object()> initChannelNode;
 
-  boost::json::object &getChannelNodeJSON();
+    void init(const omnidirectional_layer::Block &b) {
+      nodeJSON.clear();
+      nodeJSON["block_id"] = b.getIdSelf();
+      nodeJSON["is_access_block"] = false;
+      nodeJSON["channels"] = boost::json::object();
+    }
+
+    boost::json::object &getChannelNodeJSON(int ch) {
+
+      // create this channel if not exist
+      if (!nodeJSON["channels"].as_object()[std::to_string(ch)].is_object()) {
+
+        nodeJSON["channels"].as_object()[std::to_string(ch)] =
+            initChannelNode();
+      }
+
+      // return the channel
+      return nodeJSON["channels"].as_object()[std::to_string(ch)].as_object();
+    }
+  };
+
+  _blockNode m_blockNodeJSON;
+  boost::json::object m_currentPrednodeJSON;
+  _blockNode m_syndromeNodeJSON;
+
+  //  boost::json::object &getChannelNodeJSON();
+
+  //  void _initNode(boost::json::object &m_blockNodeJSON,
+  //                 const omnidirectional_layer::Block &b);
 };
 
 } // namespace encoder

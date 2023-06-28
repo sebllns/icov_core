@@ -52,10 +52,11 @@
 #include "Media.h"
 #include "OutputIcovBase.h"
 #include "PredictionsEncoder.h"
-#include "FastArray.h"
+#include "common.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -144,6 +145,27 @@ private:
 
   void serializeParameters();
 
+  void checkDecoding(ldpc_codec_layer::AffInteractiveCoder &encoder,
+                     const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                     const icov::NumcodeIdxVec &si_numcodes,
+                     const icov::SyndromesVec &si_synd, ComponentID comp);
+
+  void saveDataToEncode(bool access_block, uint mode,
+                        ldpc_codec_layer::AffInteractiveCoder &encoder,
+                        const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                        const icov::NumcodeIdxVec &si_numcodes,
+                        const icov::SyndromesVec &si_synd,
+                        omnidirectional_layer::BlockPrediction::ePredType pred,
+                        ComponentID comp);
+  void
+  saveDataToDebug(omnidirectional_layer::Block b,
+                  ldpc_codec_layer::AffInteractiveCoder &encoder,
+                  const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                  const icov::NumcodeIdxVec &si_numcodes,
+                  const icov::SyndromesVec &si_synd,
+                  icov::omnidirectional_layer::BlockPrediction::ePredType pred,
+                  ComponentID comp);
+
 protected:
   params m_params;
   uint m_numComp;
@@ -161,6 +183,17 @@ protected:
   cv::Ptr<cv::plot::Plot2d> plot;
   cv::Mat xData, yData, display;
 
+  struct StoredRate {
+    NumcodeIdx c; // rate quantized
+    Rate r;       // actual rate value
+    uint m;       // code length
+
+    //    StoredRate(const ldpc_codec_layer::IInteractiveCoder &enc, NumcodeIdx
+    //    num) {
+
+    //    }
+  };
+
   // bitplane coding
   typedef struct {
 
@@ -173,7 +206,7 @@ protected:
 
     // one numcode per SI and per bitplane
     std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
-             NumcodeIdx>
+             StoredRate>
         stored_numcodes;
 
   } BitplaneCoder;
@@ -186,6 +219,7 @@ protected:
 
   // channel coding
   typedef struct {
+    int n;
     std::vector<BitplaneCoder> bitplanes;
     std::vector<BitVec> access_block;
     std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,

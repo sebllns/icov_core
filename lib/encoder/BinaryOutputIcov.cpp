@@ -106,7 +106,9 @@ void BinaryOutputIcov::writeBlockSize() {
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
 }
 
-void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeSIRate(v); }
+void BinaryOutputIcov::writeBitplaneCount(const uint &v) {
+  writeSIRate(v, 0, 0);
+}
 
 // void BinaryOutputIcov::writeSIRates(const NumcodeIdxVec &v) {
 //  rates_count += v.size() * sizeof(rate_t);
@@ -118,7 +120,8 @@ void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeSIRate(v); }
 //  std::cout << std::endl;
 //}
 
-void BinaryOutputIcov::writeSIRate(const uint &r) {
+void BinaryOutputIcov::writeSIRate(const NumcodeIdx &v, const Rate &r,
+                                   const uint &n) {
 #ifdef ICOV_ASSERTION_ENABLED
   icov::assert::check(r < std::numeric_limits<rate_t>::max(),
                       "Value " + std::to_string(r) +
@@ -128,9 +131,9 @@ void BinaryOutputIcov::writeSIRate(const uint &r) {
 
   icov::io::write_value<rate_t>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
-      static_cast<rate_t>(r), true);
+      static_cast<rate_t>(v), true);
 
-  std::cout << " " << r;
+  std::cout << " " << v;
   m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
 }
 
@@ -156,6 +159,7 @@ void icov::encoder::BinaryOutputIcov::endWritePrediction(
 void icov::encoder::BinaryOutputIcov::endWriteBlock(
     const omnidirectional_layer::Block &b) {}
 
-void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(const uint &v) {
-  writeSIRate(v);
+void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(
+    const NumcodeIdx &v, const Rate &r, const uint &m) {
+  writeSIRate(v, 0, 0);
 }

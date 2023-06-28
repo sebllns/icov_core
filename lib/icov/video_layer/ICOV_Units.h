@@ -90,8 +90,8 @@ public:
   getInverseQuantizedTransformCoeffs(const ComponentID id) const {
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
-
-  ldpc_codec_layer::BitSymbolProvider getBitSymbolProvider(
+  
+  ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
       const ComponentID id, const TransformUnit &si_tu,
       const ldpc_codec_layer::QaryDistribution::quantization_params &bsp_params)
       const {

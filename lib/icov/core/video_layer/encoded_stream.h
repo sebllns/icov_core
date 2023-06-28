@@ -47,7 +47,6 @@
  *****************************************************************************/
 #pragma once
 
-
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/ContentParameterSet.h"
@@ -140,7 +139,9 @@ int read_bits(T &output, const icov::bitstream::byte *input, int offset = 0) {
 
 template <typename T>
 int write_bits(const T &input, icov::bitstream::byte *output, int offset = 0) {
-  // data = (bitstream::byte *)calloc(s.size(), sizeof(bitstream::byte));
+  uint b = offset / BYTE_SIZE;
+  uint e = b + input.size() / BYTE_SIZE;
+  std::fill(output + b, output + e, 0);
   int bit_shift = 0;
   for (size_t i = 0; i < input.size(); ++i) {
     size_t bit_idx = i + offset;
@@ -153,6 +154,20 @@ int write_bits(const T &input, icov::bitstream::byte *output, int offset = 0) {
   return (BYTE_SIZE - bit_shift) %
          BYTE_SIZE; // then if != 0, continue from this, then calculate new
                     // size bytesize(bit_size + bit_shift)
+}
+
+inline std::string writeSyndrome(const Syndrome &s) {
+  const int byte_size = bitstream::bitToByteCount(s.size());
+
+  icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
+  bitstream::write_bits(s, bytes);
+
+  std::string res =
+      icov::io::make_hex_string(bytes, bytes + byte_size, true, true);
+
+  delete[] bytes;
+
+  return res;
 }
 
 } // namespace bitstream

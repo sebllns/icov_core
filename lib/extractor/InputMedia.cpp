@@ -1,6 +1,6 @@
 #include "InputMedia.h"
-#include "Media.h"
 #include "FastArray.h"
+#include "Media.h"
 
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
@@ -61,8 +61,13 @@ void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
                                               uint64_t read_size,
                                               uint64_t stored_size) {
   auto &str = getStream(icov::bitstream::eIcovStream::SYNDROME);
-  icov::io::read_value(str, output, read_size);
-  str.seekg(stored_size - read_size, std::ios_base::cur);
+  if (read_size > 0) {
+    icov::io::read_value(str, output, read_size);
+  }
+
+  if (stored_size > read_size) {
+    str.seekg(stored_size - read_size, std::ios_base::cur);
+  }
 }
 
 void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
@@ -77,10 +82,10 @@ void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
     uint32_t rate_size = 0;
     uint32_t synd_size = 0;
 
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::BLOCKS_SIZE), &rate_size);
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::BLOCKS_SIZE), &synd_size);
+    icov::io::read_value(getStream(bitstream::eIcovStream::BLOCKS_SIZE),
+                         &rate_size);
+    icov::io::read_value(getStream(bitstream::eIcovStream::BLOCKS_SIZE),
+                         &synd_size);
 
     rate_pos += rate_size;
     synd_pos += synd_size;
@@ -210,10 +215,10 @@ void icov::extractor::InputIcov::setFrame(int frame) {
   uint32_t frameSyndromeSize = 0;
 
   while (frame > m_frameID) {
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
+    icov::io::read_value(getStream(bitstream::eIcovStream::FRAMES_SIZE),
+                         &frameRateSize);
+    icov::io::read_value(getStream(bitstream::eIcovStream::FRAMES_SIZE),
+                         &frameSyndromeSize);
 
     m_rates_pos[0] += frameRateSize;
     m_synd_pos[0] += frameSyndromeSize;
@@ -226,10 +231,10 @@ void icov::extractor::InputIcov::setFrame(int frame) {
     getStream(bitstream::eIcovStream::FRAMES_SIZE)
         .seekg(-2 * (int)sizeof(frameRateSize), std::ios_base::cur);
 
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameRateSize);
-    icov::io::read_value(
-        getStream(bitstream::eIcovStream::FRAMES_SIZE), &frameSyndromeSize);
+    icov::io::read_value(getStream(bitstream::eIcovStream::FRAMES_SIZE),
+                         &frameRateSize);
+    icov::io::read_value(getStream(bitstream::eIcovStream::FRAMES_SIZE),
+                         &frameSyndromeSize);
 
     m_rates_pos[0] -= frameRateSize;
     m_synd_pos[0] -= frameSyndromeSize;
