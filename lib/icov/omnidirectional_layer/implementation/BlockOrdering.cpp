@@ -15,13 +15,13 @@ BlockOrdering::BlockOrdering(size_t blocks_count)
 
 std::vector<BlockOrdering::block_path_info>::iterator
 BlockOrdering::getPathInfoById(size_t id) {
-  ICOV_ASSERT_MSG(blockExists(id), "ID value is " + std::string(id));
+  ICOV_ASSERT_MSG(blockExists(id), "ID value is " + std::to_string(id));
   return m_path_info.begin() + id - 1;
 }
 
 std::vector<BlockOrdering::block_path_info>::const_iterator
 BlockOrdering::getPathInfoById(size_t id) const {
-  ICOV_ASSERT_MSG(blockExists(id), "ID value is " + std::string(id));
+  ICOV_ASSERT_MSG(blockExists(id), "ID value is " + std::to_string(id));
   return m_path_info.begin() + id - 1;
 }
 

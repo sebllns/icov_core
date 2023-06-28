@@ -99,8 +99,11 @@ public:
       return "UP";
     case DOWN:
       return "DOWN";
+    case COUNT:
+      return "COUNT";
+      break;
     }
-    return "UNKNOWN";
+    return "UNHANDLED";
   }
 
 protected:
