@@ -47,6 +47,7 @@
 #pragma once
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
+#include <limits>
 
 namespace icov {
 namespace omnidirectional_layer {
@@ -57,8 +58,11 @@ namespace omnidirectional_layer {
  */
 class DummyViewportManager : public IViewportManager {
 protected:
+  Block::id_t m_maxID;
+
 public:
-  DummyViewportManager() = default;
+  DummyViewportManager() : m_maxID(std::numeric_limits<Block::id_t>::max()){};
+  explicit DummyViewportManager(Block::id_t maxID) : m_maxID(maxID){};
   ~DummyViewportManager() = default;
 
   /**
@@ -67,7 +71,9 @@ public:
    * \param b The block to check
    * \return Always returns true
    */
-  virtual bool isBlockVisible(const Block &) const override { return true; }
+  virtual bool isBlockVisible(const Block &b) const override {
+    return b.getIdSelf() < m_maxID;
+  }
 };
 
 } // namespace omnidirectional_layer

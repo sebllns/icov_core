@@ -1,6 +1,7 @@
 #include "BlockOrdering.h"
 
 #include "icov_assert.h"
+#include "icov_exception.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
 #include <string>
@@ -36,7 +37,8 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
     auto nn = static_cast<Block::NeighborDirection>(n);
     auto n_id = current.getId(nn);
 
-    if (pic->blockExists(n_id) && !isBlockProcessed(n_id)) {
+    if (pic->blockExists(n_id) && !isBlockProcessed(n_id) &&
+        !pic->getById(n_id)->hidden()) {
       //            auto n_block = pic->getById(n_id);
       auto path_info = getPathInfoById(n_id);
 
@@ -51,26 +53,40 @@ BlockOrdering::findAvailableNeighbor(const Block &current,
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
           ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                     << Block::neighborDirectionStr(nn) << ": AVAILABLE!";
+                     << Block::neighborDirectionStr(nn) << " (" << nn << ")"
+                     << ":  AVAILABLE (best choice) to decode";
 #endif
 
           return nn;
         }
 
-        if (result == Block::COUNT)
+        if (result == Block::COUNT) {
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+          ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
+                     << Block::neighborDirectionStr(nn) << " (" << nn << ")"
+                     << ": AVAILABLE (default choice) to decode";
+#endif
           result = nn;
+        }
       } else {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
         ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                   << Block::neighborDirectionStr(nn) << ": NOT visible...!";
+                   << Block::neighborDirectionStr(nn) << " (" << nn << ")"
+                   << ": NOT visible...";
 #endif
       }
     } else {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
       ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                 << Block::neighborDirectionStr(nn) << ": NOT available...!";
+                 << Block::neighborDirectionStr(nn) << " (" << nn << ")"
+                 << (pic->blockExists(n_id)
+                         ? (isBlockProcessed(n_id) ? ": Already decoded..."
+                                                   : "ERROR !")
+                         : (pic->getById(n_id)->hidden()
+                                ? ": Hidden..."
+                                : ": Out of bounds..."));
 #endif
     }
   }

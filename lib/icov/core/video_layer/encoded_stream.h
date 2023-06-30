@@ -203,7 +203,6 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
   ar &io.viewport_fov_x;
   ar &io.viewport_height;
   ar &io.viewport_width;
-  ar &io.icu_count;
 
   ar &io.is_sov_fixed_size;
   if (io.is_sov_fixed_size)
@@ -218,6 +217,7 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
     ar &io.fixed_tu_count;
 
   ar &io.has_metadata;
+  ar &io.encoded_blocks;
 }
 
 template <typename Ar, typename Block, typename Alloc>

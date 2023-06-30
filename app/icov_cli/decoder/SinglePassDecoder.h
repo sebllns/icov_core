@@ -92,12 +92,31 @@ protected:
     processBlock(const icov::omnidirectional_layer::Block &b,
                  omnidirectional_layer::IBlockPredictionManager::prediction_t
                      prediction) override {
+
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+      ICOV_TRACE << "PROCESS BLOCK " << b.getIdSelf();
+#endif
+
       if ((int)b.getIdSelf() > blockCount)
         return;
-      if (Extractor)
+
+      if (Extractor) {
+
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+        ICOV_TRACE << "EXTRACT BLOCK " << b.getIdSelf();
+#endif
+
         Extractor->processBlock(b, prediction);
-      if (Decoder)
+      }
+
+      if (Decoder) {
+
+#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+        ICOV_TRACE << "DECODE BLOCK " << b.getIdSelf();
+#endif
+
         Decoder->processBlock(b, prediction);
+      }
     }
     void startProcess() override {
       if (Extractor)
@@ -112,7 +131,7 @@ protected:
         Decoder->endProcess();
 
       icov::assert::equal(ExtractionBitstream->remains(), 0,
-                                   "Buffer was not read in totality");
+                          "Buffer was not read in totality");
     }
   };
 

@@ -43,9 +43,8 @@ void decoder::SinglePassDecoder::initialize(
 
   UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
 
-  icov::assert::check(
-      cps.is_block_fixed_size,
-      "Only fixed size blocks is available in this version");
+  icov::assert::check(cps.is_block_fixed_size,
+                      "Only fixed size blocks is available in this version");
 
   ICOV_DEBUG << "Init 360 navigation";
   const point2d resolution(cps.viewport_width, cps.viewport_height);
@@ -143,6 +142,7 @@ const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
 }
 
 void decoder::SinglePassDecoder::decodeFullFrame() {
-  m_navigation.Request->setViewport(std::make_shared<DummyViewportManager>());
+  m_navigation.Request->setViewport(
+      std::make_shared<DummyViewportManager>(TODO));
   m_navigation.Request->update(0, 0);
 }

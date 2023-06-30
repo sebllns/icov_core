@@ -65,7 +65,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
       (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
-  m_output->contentParameterSet().icu_count = 21; // TODO : RIGHT COUNT
+  m_output->contentParameterSet().icu_count = 40; // TODO : RIGHT COUNT
   m_output->writeContentParameterSet();
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
 }

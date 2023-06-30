@@ -10,7 +10,7 @@ namespace omnidirectional_layer {
 
 Block::Block(Block::id_t id, IPicture *parent, float pu, float pv, float pw,
              float ph)
-    : m_parent(parent), m_u(pu), m_v(pv), m_w(pw), m_h(ph) {
+    : m_parent(parent), m_u(pu), m_v(pv), m_w(pw), m_h(ph), m_hidden(false) {
   icov::assert::not_null(parent,
                          ICOV_INDICATOR_MSG("Parent of block is not null"));
   icov::assert::check(id > 0, ICOV_INDICATOR_MSG("ID of block is > 0"));
@@ -50,6 +50,10 @@ const IPicture *Block::parent() const {
   assert(m_parent != nullptr);
   return m_parent;
 }
+
+bool Block::hidden() const { return m_hidden; }
+
+void Block::setHidden(bool newHidden) { m_hidden = newHidden; }
 
 void Block::setId(NeighborDirection index, Block::id_t id) {
   assert(index >= NeighborDirection::SELF && index < NeighborDirection::COUNT);

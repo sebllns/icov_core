@@ -116,6 +116,9 @@ protected:
   float m_h; /**< The normalized height of the block */
   bool m_isAccessBlock; /**< Indicates whether the block is an access block or
                            not */
+
+  bool m_hidden; /**< Flag set to true to indicate this block is hidden */
+
   Block::id_t uid[NeighborDirection::COUNT]; /**< IDs of neighboring blocks in
                                                 different directions */
 
@@ -239,6 +242,8 @@ public:
    * @param newIsAccessBlock The new value to set for the access block flag.
    */
   void setIsAccessBlock(bool newIsAccessBlock);
+  bool hidden() const;
+  void setHidden(bool newHidden);
 };
 
 /**
