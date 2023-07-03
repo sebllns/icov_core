@@ -331,10 +331,13 @@ void IFrameEncoder<T>::encode(
 #endif
 
   this->processInput(input);
+
   for (const auto &b : picture.icus()) {
-    bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
-        b.getIdSelf() - 1);
-    encodeBlock(b, b.isAccessBlock(), block_prediction);
+    if (!b.hidden()) {
+      bitstream::VideoStreamDebugger::get_mutable_instance()
+          .setDebuggingBlockID(b.getIdSelf() - 1);
+      encodeBlock(b, b.isAccessBlock(), block_prediction);
+    }
   }
 }
 
