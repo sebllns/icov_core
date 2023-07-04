@@ -502,14 +502,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
             bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
-            bitstream::inverseQuantizedSize(
-                m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c,
-                encoder);
+            encoder.get_n();
 
-        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r =
-            encoder.get_r(
-                m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m,
-                encoder.get_n());
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
       }
     }
   }
