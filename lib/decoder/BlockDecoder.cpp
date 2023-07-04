@@ -1,6 +1,7 @@
 #include "BlockDecoder.h"
 #include "decoder/ChannelDecoder.h"
 
+#include "icov_log.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
@@ -96,9 +97,8 @@ void icov::decoder::BlockDecoder::processBlock(
   omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  std::cout << "---- try decode prediction "
-            << omnidirectional_layer::BlockPrediction::toString(pred)
-            << std::endl;
+  ICOV_DEBUG << "START DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+             << omnidirectional_layer::BlockPrediction::toString(pred);
 
   icov::assert::check(
       omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
@@ -134,55 +134,13 @@ void icov::decoder::BlockDecoder::processBlock(
       .setDebuggingPredictionID(pred);
 
   for (auto &dec : m_channelDecoder) {
-    ICOV_TRACE << "DECODE COMP " << dec->get_params().CompID;
+    ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
     dec->decode_icu(icuIndex, pred);
     ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
   }
 
-  //  // decoding test
-  //  icov::SymboleVec decodedVec = bsp.src_symboles();
-  //  int x_block = b.parent()->col(b.u());
-  //  int y_block = b.parent()->row(b.v());
-
-  //  Position pos(static_cast<float>(x_block) /
-  //                   static_cast<float>(m_params.icuSize_luma.width),
-  //               static_cast<float>(y_block) /
-  //                   static_cast<float>(m_params.icuSize_luma.height));
-
-  //  uint icuIndex = m_dec_struc.get_icuIndex(pos);
-  //  auto &icu_dec = m_dec_struc.getICU(icuIndex);
-  //  auto &tu_dec = icu_dec.sourceX_TU(tu_index);
-  //  auto x_tuCoeff_dec = tu_dec.getQuantizedTransformCoeffs(comp);
-  //  icov::video::Quant quant;
-  //  icov::video::Transform2D transform2D;
-
-  //  ChannelType channelType = toChannelType(comp);
-  //  int bit_depth = m_params.internalBitDepth[channelType];
-
-  //  icov::video::QpParam cQP(m_params.qp, channelType, m_params.chFormat,
-  //                           bit_depth, 0, 0);
-
-  //  // iQ
-  //  quant.dequant(tu_dec.getInverseQuantizedTransformCoeffs(comp),
-  //                tu_dec.getQuantizedTransformCoeffs(comp), cQP, bit_depth,
-  //                m_params.maxLog2TrDynamicRange);
-
-  //  // iDCT
-  //  transform2D.invTransformNxN(quantizedImage, tu_dec.block(comp),
-  //                              tu_dec.getInverseQuantizedTransformCoeffs(comp),
-  //                              bit_depth, m_params.maxLog2TrDynamicRange);
-
-  //  // m_enc_struc
-  //  // .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-  //  //                       m_params.chFormat, sourceWidth, sourceHeight,
-  //  //                       margin_x_360luma, icuSize_luma.width,
-  //  //                       icuSize_luma.height, tuSize_luma.width,
-  //  //                       tuSize_luma.height);
-
-  //  // TransformUnit decoded_tu();
-
-  //  // m_coders.at(tu_size)->decode_bitplanes(decoded, si_numcodes, si_synd);
-  //  // std::cout << (decoded == bsp.src_symboles()) << std::endl;
+  ICOV_DEBUG << "END DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+             << omnidirectional_layer::BlockPrediction::toString(pred);
 }
 
 void icov::decoder::BlockDecoder::endProcess() {}

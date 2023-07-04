@@ -46,6 +46,10 @@ void icov::extractor::BlockExtractor::processBlock(
   icov::omnidirectional_layer::BlockPrediction::ePredType block_prediction =
       icov::omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
+  ICOV_DEBUG << "START EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+             << omnidirectional_layer::BlockPrediction::toString(
+                    block_prediction);
+
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
       b.getIdSelf() - 1);
   bitstream::VideoStreamDebugger::get_mutable_instance()
@@ -67,7 +71,7 @@ void icov::extractor::BlockExtractor::processBlock(
   if (!is_access_block) {
     // pass access block syndrome  per bitplane
     if (b.isAccessBlock()) {
-      std::cout << "PASS ACCESS BLOCK" << std::endl;
+      ICOV_TRACE << "PASS ACCESS BLOCK";
       ChannelExtractor::resetSyndromePadding();
       for (auto &ch : m_channelExtractor) {
         ch->pass_access_block();
@@ -75,7 +79,7 @@ void icov::extractor::BlockExtractor::processBlock(
     }
 
     // select prediction
-    std::cout << "SELECT PREDICTION" << std::endl;
+    ICOV_TRACE << "SELECT PREDICTION";
     int pred_idx = bitstream::getPredictionOrder(block_prediction);
     for (int i = 0; i < pred_idx; ++i) {
       for (auto &ch : m_channelExtractor)
@@ -84,9 +88,11 @@ void icov::extractor::BlockExtractor::processBlock(
   }
 
   ChannelExtractor::resetSyndromePadding();
-  std::cout << "extract_block" << std::endl;
+  int c = 0;
   for (auto &ch : m_channelExtractor) {
+    ICOV_TRACE << "START EXTRACT CHANNEL " << c;
     ch->extract_block_syndrome(b, block_prediction);
+    ICOV_TRACE << "END EXTRACT CHANNEL " << c;
   }
 
   //  if (is_access_block && ChannelExtractor::getSyndromePadding() > 0)
@@ -96,6 +102,10 @@ void icov::extractor::BlockExtractor::processBlock(
   //                                     ChannelExtractor::getSyndromePadding());
   // m_icovFile
   // BlockPrediction::predType::NONE
+
+  ICOV_DEBUG << "END EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+             << omnidirectional_layer::BlockPrediction::toString(
+                    block_prediction);
 }
 
 void icov::extractor::BlockExtractor::endProcess() {}

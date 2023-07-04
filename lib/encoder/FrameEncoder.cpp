@@ -5,6 +5,7 @@
 #include "encoder/interface/IEncoder.h"
 
 #include "icov_io.h"
+#include "icov_log.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
@@ -192,6 +193,9 @@ void FrameEncoder::encodeBlock(
     const icov::omnidirectional_layer::IBlockPredictionManager
         &block_prediction_mgr) {
 
+  //  if (b.getId(omnidirectional_layer::Block::SELF) < 20)
+  //    return;
+
   if (m_icov_file->contentParameterSet().icu_count > 0 &&
       b.getId(omnidirectional_layer::Block::SELF) >
           m_icov_file->contentParameterSet().icu_count)
@@ -348,8 +352,6 @@ void icov::encoder::FrameEncoder::checkDecoding(
                                       bsp_enc.distribution());
 
   for (size_t i = 0; i < si_numcodes.size(); i++) {
-
-    ICOV_TRACE << "Check decoding bitplane " << i << std::endl;
     BitVec decoded;
     try {
       ICOV_TRACE << "Check bitplane " << i;
@@ -401,16 +403,19 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
   m_channelCoder[comp].n = encoder.get_n();
   // icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp];
 
-  // first SI stored (no bitplanes stored for comp)
+  // first SI stored (no bitplanes stored for comp yet)
   if (m_channelCoder[comp].bitplanes.size() == 0) {
+
     if (access_block)
       m_channelCoder[comp].access_block = bsp_enc.src_bits();
+
     m_channelCoder[comp].bitplanes = std::vector<BitplaneCoder>(
         bitplaneCount, BitplaneCoder{.minRate = 0,
                                      .stored_synd_rate = 0,
                                      .stored_synd = icov::Syndrome(),
                                      .noSourceThreshold = 0.0,
                                      .sourceFlag = false});
+
     for (size_t i = 0; i < si_synd.size(); ++i) {
       m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
       m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
@@ -430,13 +435,15 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 #endif
 
     for (int i = 0; i < bitplaneCount; ++i) {
-      {
-        std::cout << omnidirectional_layer::BlockPrediction::toString(pred)
-                  << " COMP " << comp << " BP " << i << std::endl;
-        // icov::io::write_vector(std::cout, si_synd, ' ');
-        std::cout << si_synd[i].to_string(" ") << std::endl;
-      }
+      //      {
+      //        std::cout <<
+      //        omnidirectional_layer::BlockPrediction::toString(pred)
+      //                  << " COMP " << comp << " BP " << i << std::endl;
+      //        // icov::io::write_vector(std::cout, si_synd, ' ');
+      //        std::cout << si_synd[i].to_string(" ") << std::endl;
+      //      }
 
+      // save min rate
       if (si_numcodes[i] >
               bitstream::enum_t::SyndromeType::SyndromeType_SOURCE &&
           si_numcodes[i] < m_channelCoder[comp].bitplanes[i].minRate)
@@ -466,6 +473,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
                 encoder.get_n());
 
         ICOV_TRACE
+            << "RATE FOR BP " << i << "PREDICTION " << pred_id << ": "
             << m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r
             << ", "
             << m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m
@@ -479,13 +487,24 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
               bsp_enc.src_bits()[i]);
           m_channelCoder[comp].bitplanes[i].stored_synd_rate =
               bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
-          std::cout << "SOURCE !" << std::endl;
+          ICOV_TRACE << "STORE SOURCE"; /*STORED SOURCE*/
+
         } else if (si_synd[i].size() >
                    m_channelCoder[comp].bitplanes[i].stored_synd.size())
         /*STORED SYNDROME IF LONGER*/ {
           m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
           m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
         }
+      } else {
+        // adding this else since some case is not managed : case where rate > 1
+        // for all SI and we store the source
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
+            bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
+            encoder.get_n();
+
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
       }
     }
   }
@@ -572,7 +591,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     // adds each bitplane for the given prediction to the debugging
     // bitplanes vector
     for (int i = 0; i < bitplaneCount; ++i) {
-      ICOV_TRACE << "save in debug " << i;
+      ICOV_TRACE << "save in debug " << i << " for prediction " << pred_id;
 
       bitstream::BitplaneStream bpstr;
       bpstr.numcode =
@@ -620,7 +639,7 @@ void icov::encoder::FrameEncoder::encode_tu(
   ldpc_codec_layer::BitSymbolProvider bsp_enc =
       tu.instantiateBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
-  if (!bsp_enc.distribution().codingflag()) {
+  if (!bsp_enc.distribution().codingflag()) { /* CODING FLAG IS FALSE */
     ICOV_TRACE << "SI symbole identical... no coding...";
     std::stringstream sstr;
     sstr << "\nsrc = ";
@@ -628,7 +647,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     sstr << "\n si = ";
     io::write_vector(sstr, bsp_enc.si_symboles(), ' ');
     ICOV_TRACE << sstr.str().c_str();
-  } else {
+  } else { /* CODING FLAG IS TRUE */
     encoder.encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
     // CHECK DECODING
