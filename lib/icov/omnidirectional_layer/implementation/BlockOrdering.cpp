@@ -1,6 +1,7 @@
 #include "BlockOrdering.h"
 
 #include "icov_assert.h"
+#include "icov_debug.h"
 #include "icov_exception.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
@@ -26,69 +27,95 @@ BlockOrdering::getPathInfoById(size_t id) const {
   return m_path_info.begin() + id - 1;
 }
 
+// This function finds an available neighbor for a given block based on certain
+// conditions.
 Block::NeighborDirection
 BlockOrdering::findAvailableNeighbor(const Block &current,
                                      const IViewportManager &vpm) {
   auto pic = current.parent();
 
+  // Initialize the result to an invalid value.
   Block::NeighborDirection result = Block::COUNT;
 
+  // Iterate through all possible neighbor directions of the current block.
   for (uint16_t n = Block::RIGHT; n != Block::COUNT; n++) {
     auto nn = static_cast<Block::NeighborDirection>(n);
     auto n_id = current.getId(nn);
 
-    if (pic->blockExists(n_id) && !isBlockProcessed(n_id) &&
-        !pic->getById(n_id)->hidden()) {
-      //            auto n_block = pic->getById(n_id);
-      auto path_info = getPathInfoById(n_id);
+    // Check if the neighboring block exists, is not processed, and is not
+    // hidden.
+    if (pic->blockExists(n_id)) {
+      if (!isBlockProcessed(n_id)) {
+        if (!pic->getById(n_id)->hidden()) {
 
-      ICOV_ASSERT_MSG(path_info->visibility_tested,
-                      "No visibility info avalaible");
+          // Check if visibility information is available for the neighboring
+          // block.
+          auto path_info = getPathInfoById(n_id);
+          ICOV_ASSERT_MSG(path_info->visibility_tested,
+                          "No visibility info avalaible");
 
-      if (path_info->is_visible) {
-        ICOV_ASSERT_MSG(path_info->si_horizontal || path_info->si_vertical,
-                        "No side info avalaible");
+          if (path_info->is_visible) {
 
-        if (path_info->si_horizontal && path_info->si_vertical) {
+            // Check if both horizontal and vertical side information is
+            // available.
+            ICOV_ASSERT_MSG(path_info->si_horizontal || path_info->si_vertical,
+                            "No side info avalaible");
 
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+            if (path_info->si_horizontal && path_info->si_vertical) {
+              // This is the best choice for decoding, so return the neighbor
+              // direction.
+              if (debug::debug_trace_enabled) {
+                ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
+                           << Block::neighborDirectionStr(nn) << " ("
+                           << current.getId(nn) << ")"
+                           << ":  AVAILABLE (best choice) to decode";
+              }
+              return nn;
+            }
+
+            // Set the default choice as the first visible node
+            if (result == Block::COUNT) {
+              if (debug::debug_trace_enabled) {
+                ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
+                           << Block::neighborDirectionStr(nn) << " ("
+                           << current.getId(nn) << ")"
+                           << ": AVAILABLE (default choice) to decode";
+              }
+              result = nn;
+            }
+
+          } else if (debug::debug_trace_enabled) {
+            // The block is not visible.
+            ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
+                       << Block::neighborDirectionStr(nn) << " ("
+                       << current.getId(nn) << ")"
+                       << ": NOT visible...";
+          }
+        } else if (debug::debug_trace_enabled) {
+          // The neighboring block is hidden
           ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                     << Block::neighborDirectionStr(nn) << " (" << nn << ")"
-                     << ":  AVAILABLE (best choice) to decode";
-#endif
-
-          return nn;
+                     << Block::neighborDirectionStr(nn) << " ("
+                     << current.getId(nn) << "): Hidden";
         }
-
-        if (result == Block::COUNT) {
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-          ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                     << Block::neighborDirectionStr(nn) << " (" << nn << ")"
-                     << ": AVAILABLE (default choice) to decode";
-#endif
-          result = nn;
-        }
-      } else {
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+      } else if (debug::debug_trace_enabled) {
+        // The neighboring block is already processed
         ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                   << Block::neighborDirectionStr(nn) << " (" << nn << ")"
-                   << ": NOT visible...";
-#endif
+                   << Block::neighborDirectionStr(nn) << " ("
+                   << current.getId(nn) << "): Already processed";
       }
-    } else {
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
+    } else if (debug::debug_trace_enabled) {
+      // The neighboring block does not exist
       ICOV_TRACE << "Block " << current.getIdSelf() << ", neighbor "
-                 << Block::neighborDirectionStr(nn) << " (" << nn << ")"
-                 << (pic->blockExists(n_id)
-                         ? (isBlockProcessed(n_id) ? ": Already decoded..."
-                                                   : "ERROR !")
-                         : (pic->getById(n_id)->hidden()
-                                ? ": Hidden..."
-                                : ": Out of bounds..."));
-#endif
+                 << Block::neighborDirectionStr(nn) << " (" << current.getId(nn)
+                 << ")";
     }
+  }
+
+  if (debug::debug_trace_enabled) {
+    ICOV_TRACE << "Block " << current.getIdSelf()
+               << ", next block to process is "
+               << Block::neighborDirectionStr(result) << " ("
+               << current.getId(result) << ")";
   }
 
   return result;

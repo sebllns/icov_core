@@ -142,7 +142,7 @@ const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
 }
 
 void decoder::SinglePassDecoder::decodeFullFrame() {
-  m_navigation.Request->setViewport(
-      std::make_shared<DummyViewportManager>(TODO));
+  m_navigation.Request->setViewport(std::make_shared<DummyViewportManager>(
+      m_icovFile->contentParameterSet().icu_count)); // TODO
   m_navigation.Request->update(0, 0);
 }

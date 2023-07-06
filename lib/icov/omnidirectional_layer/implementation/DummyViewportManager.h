@@ -72,7 +72,7 @@ public:
    * \return Always returns true
    */
   virtual bool isBlockVisible(const Block &b) const override {
-    return b.getIdSelf() < m_maxID;
+    return b.getIdSelf() <= m_maxID;
   }
 };
 

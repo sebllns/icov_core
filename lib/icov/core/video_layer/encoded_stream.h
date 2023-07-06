@@ -217,6 +217,7 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
     ar &io.fixed_tu_count;
 
   ar &io.has_metadata;
+  ar &io.icu_count;
   ar &io.encoded_blocks;
 }
 
