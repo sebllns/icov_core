@@ -14,6 +14,12 @@ using namespace icov;
 using namespace icov::encoder;
 using namespace icov::omnidirectional_layer;
 
+// ICU_MAX_COUNT: max block ID to encode (useful for debug), 0 is special value
+// meaning ALL BLOCKS
+#ifndef ICU_MAX_COUNT
+#define ICU_MAX_COUNT 0
+#endif
+
 /*****************************************************************************/
 icov::encoder::IcovMediaEncoder::IcovMediaEncoder(
     const params &p, const LdpcCoderParameters &LDPC_params)
@@ -65,7 +71,14 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
       (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
-  m_output->contentParameterSet().icu_count = 21; // TODO : RIGHT COUNT
+  m_output->contentParameterSet().icu_count = ICU_MAX_COUNT;
+
+  if (ICU_MAX_COUNT == 0) {
+    ICOV_INFO << "All blocks will be encoded";
+  } else {
+    ICOV_INFO << "Max ICU ID to encode = " << ICU_MAX_COUNT;
+  }
+
   m_output->writeContentParameterSet();
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
 }

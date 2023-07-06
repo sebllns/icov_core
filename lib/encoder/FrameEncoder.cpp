@@ -453,6 +453,13 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
           bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 0.0f;
+        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m = 0;
+
+        ICOV_TRACE << "RATE FOR BP " << i << " PREDICTION "
+                   << omnidirectional_layer::BlockPrediction::toString(pred)
+                   << ": 0 (NO CODING)";
+
       } else if (!m_channelCoder[comp].bitplanes[i].sourceFlag) {
 
         m_channelCoder[comp].bitplanes[i].noSourceThreshold += encoder.get_r(
@@ -473,7 +480,8 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
                 encoder.get_n());
 
         ICOV_TRACE
-            << "RATE FOR BP " << i << "PREDICTION " << pred_id << ": "
+            << "RATE FOR BP " << i << " PREDICTION "
+            << omnidirectional_layer::BlockPrediction::toString(pred) << ": "
             << m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r
             << ", "
             << m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m
@@ -505,6 +513,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
             encoder.get_n();
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
+
+        ICOV_TRACE << "RATE FOR BP " << i << " PREDICTION "
+                   << omnidirectional_layer::BlockPrediction::toString(pred)
+                   << ": SOURCE (NO CODING)";
       }
     }
   }
