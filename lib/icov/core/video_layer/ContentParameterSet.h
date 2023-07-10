@@ -49,7 +49,7 @@
 
 #include "omnidirectional_layer/Block.h"
 #include "video_layer/icov_stream.h"
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 #include <cstdint>
 
 namespace icov {
@@ -93,7 +93,9 @@ struct ContentParameterSet {
   bool has_metadata;
 
   uint16_t icu_count;
-  std::vector<omnidirectional_layer::Block::id_t> encoded_blocks;
+  std::map<omnidirectional_layer::Block::id_t,
+           omnidirectional_layer::Block::id_t>
+      encoded_blocks;
 
   ContentParameterSet()
       : content_type(0), content_width(0), content_height(0), qp(42),
@@ -101,7 +103,7 @@ struct ContentParameterSet {
         content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
         sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
         is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
-        has_metadata(false), icu_count(0), encoded_blocks(0) {}
+        has_metadata(false), icu_count(0) {}
 };
 
 inline bool operator==(const ContentParameterSet &a,

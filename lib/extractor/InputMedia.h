@@ -49,8 +49,9 @@
 
 #pragma once
 
-#include "Media.h"
 #include "FastArray.h"
+#include "Media.h"
+#include "omnidirectional_layer/Block.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
@@ -86,8 +87,8 @@ public:
   void readSyndrome(bitstream::byte *output, uint64_t read_size,
                     uint64_t stored_size);
   void readFrameSize();
-  void readBlockPos(size_t block_count);
-  void selectBlock(size_t id);
+  void readBlockPos();
+  void selectBlock(const omnidirectional_layer::Block::id_t &id);
   void readSyndromesSizes(std::vector<int> &bitplaneCount,
                           std::vector<NumcodeIdxVec> &output);
   void readSyndromesSizes(NumcodeIdxVec &output);
@@ -109,6 +110,9 @@ public:
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
   void setFrame(int frame) override;
+
+  omnidirectional_layer::Block::id_t
+  getBlockIndexInStream(const omnidirectional_layer::Block::id_t &id) const;
 
   /**
    * @brief Get the input stream for a given ID

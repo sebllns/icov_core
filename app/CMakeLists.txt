@@ -1,12 +1,84 @@
 message(STATUS "[INFO] Building ICOV core apps")
 
-set(ICOV_BUILD_CLI ON CACHE BOOL "Build ICOV CLI app")
-set(ICOV_BUILD_OPENCV_DEMO OFF CACHE BOOL "Build demo using OpenCV")
+set(ICOV_BUILD_CLI
+    ON
+    CACHE BOOL "Build ICOV CLI app")
+set(ICOV_BUILD_GUI_DEMO
+    OFF
+    CACHE BOOL "Build demo using Qt")
 
-if(ICOV_BUILD_CLI)
-    add_subdirectory(icov_cli)
+if(ICOV_WITH_CLANG_TIDY)
+  set(CMAKE_CXX_CLANG_TIDY
+      "clang-tidy;-checks=-*,clang-analyzer-*,boost-*,performance-*,cppcoreguidelines-owning-memory,portability-*"
+  )
 endif()
 
-#if(ICOV_BUILD_OPENCV_DEMO)
-#    add_subdirectory(opencv_interactive_viewport)
-#endif()
+# set(VAL_FIND_DEBUG_MODE ${CMAKE_FIND_DEBUG_MODE}) set(CMAKE_FIND_DEBUG_MODE
+# TRUE)
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(glm REQUIRED)
+# find_package(glfw3 3.3 REQUIRED)
+
+include(ExternalProject)
+
+message("GIT_EXECUTABLE='${GIT_EXECUTABLE}'")
+
+set(glfw3_PREFIX "${CMAKE_BINARY_DIR}/third-party/glfw3")
+set(glfw3_INSTALL_DIR "${glfw3_PREFIX}")
+set(glfw3_CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=${glfw3_INSTALL_DIR} -DGLFW_BUILD_EXAMPLES=OFF
+    -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF)
+
+message("glfw3_PREFIX='${glfw3_PREFIX}'")
+message("glfw3_INSTALL_DIR='${glfw3_INSTALL_DIR}'")
+message("glfw3_CMAKE_ARGS='${glfw3_CMAKE_ARGS}'")
+ExternalProject_Add(
+  glfw3_project
+  PREFIX ${glfw3_PREFIX}
+  GIT_REPOSITORY https://github.com/glfw/glfw.git
+  INSTALL_DIR ${glfw3_INSTALL_DIR}
+  CMAKE_ARGS ${glfw3_CMAKE_ARGS})
+
+# find_package(glfw3 3.3 REQUIRED)
+
+message("glfw3='${glfw3_INSTALL_DIR}'")
+
+set(glad_PREFIX "${CMAKE_BINARY_DIR}/third-party/glad")
+set(glad_INSTALL_DIR "${glad_PREFIX}")
+set(glad_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${glad_INSTALL_DIR}
+                    -DGLAD_INSTALL=ON)
+
+message("glad_PREFIX='${glad_PREFIX}'")
+message("glad_INSTALL_DIR='${glad_INSTALL_DIR}'")
+message("glad_CMAKE_ARGS='${glad_CMAKE_ARGS}'")
+ExternalProject_Add(
+  glad_project
+  PREFIX ${glad_PREFIX}
+  GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+  INSTALL_DIR ${glad_INSTALL_DIR}
+  CMAKE_ARGS ${glad_CMAKE_ARGS})
+
+# find_package(GLFW REQUIRED) set(CMAKE_FIND_DEBUG_MODE FALSE)
+# set(CMAKE_FIND_DEBUG_MODE ${VAL_FIND_DEBUG_MODE})
+
+message(STATUS "OPENGL_INCLUDE_DIR := ${OPENGL_INCLUDE_DIR}")
+# message(STATUS "OPENGL_LIBRARIES:= ${OPENGL_LIBRARIES}")
+message(STATUS "GLUT_INCLUDE_DIR := ${GLUT_INCLUDE_DIR}")
+message(STATUS "OpenCV = ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "glm = ${GLM_INCLUDE_DIRS}")
+message(STATUS "glad = ${glad_LIBRARY}")
+
+if(UNIX)
+  add_compile_options("-Wno-write-strings")
+  # lib dl
+endif()
+
+if(ICOV_BUILD_CLI)
+  add_subdirectory(icov_cli)
+endif()
+
+if(ICOV_BUILD_GUI_DEMO)
+  add_subdirectory(icov_demo_gui)
+endif()

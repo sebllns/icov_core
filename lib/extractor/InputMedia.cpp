@@ -2,6 +2,7 @@
 #include "FastArray.h"
 #include "Media.h"
 
+#include "icov_assert.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -10,6 +11,7 @@
 #include <cstdint>
 #include <fstream>
 #include <ios>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <string>
@@ -70,10 +72,10 @@ void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
   }
 }
 
-void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
-  m_blockCount = block_count;
-  m_rates_pos.resize(block_count + 1, 0);
-  m_synd_pos.resize(block_count + 1, 0);
+void icov::extractor::InputIcov::readBlockPos() {
+  m_blockCount = m_contentParameterSet.icu_count;
+  m_rates_pos.resize(m_blockCount + 1, 0);
+  m_synd_pos.resize(m_blockCount + 1, 0);
 
   std::streampos rate_pos = 0;
   std::streampos synd_pos = 0;
@@ -93,20 +95,23 @@ void icov::extractor::InputIcov::readBlockPos(size_t block_count) {
     m_rates_pos[i] = rate_pos;
     m_synd_pos[i] = synd_pos;
 
-    std::cout << "BLOCK " << i << ": " << rate_pos << ", " << synd_pos
-              << std::endl;
+    std::cout
+        << "BLOCK "
+        << std::next(m_contentParameterSet.encoded_blocks.cbegin(), i)->first
+        << ": " << rate_pos << ", " << synd_pos << std::endl;
   }
 }
 
-void icov::extractor::InputIcov::selectBlock(size_t id) {
+void icov::extractor::InputIcov::selectBlock(
+    const omnidirectional_layer::Block::id_t &id) {
   std::cout << "select block " << id << std::endl;
+  auto id_pos = getBlockIndexInStream(id);
   getStream(bitstream::eIcovStream::ENCODE_PARAMS).clear();
-  // auto id = id.getIdSelf() - 1;
   getStream(bitstream::eIcovStream::ENCODE_PARAMS)
-      .seekg(m_rates_pos[id], std::ios_base::beg);
+      .seekg(m_rates_pos[id_pos], std::ios_base::beg);
   getStream(bitstream::eIcovStream::SYNDROME).clear();
   getStream(bitstream::eIcovStream::SYNDROME)
-      .seekg(m_synd_pos[id], std::ios_base::beg);
+      .seekg(m_synd_pos[id_pos], std::ios_base::beg);
 }
 
 void icov::extractor::InputIcov::readSyndromesSizes(
@@ -253,6 +258,16 @@ void icov::extractor::InputIcov::setFrame(int frame) {
       .seekg(m_rates_pos[0], std::ios_base::beg);
   getStream(bitstream::eIcovStream::SYNDROME)
       .seekg(m_synd_pos[0], std::ios_base::beg);
+}
+
+icov::omnidirectional_layer::Block::id_t
+icov::extractor::InputIcov::getBlockIndexInStream(
+    const omnidirectional_layer::Block::id_t &id) const {
+#if ICOV_ASSERTION_ENABLED
+  ICOV_ASSERT_MSG(m_contentParameterSet.encoded_blocks.count(id),
+                  "Block not encoded: " + std::to_string(id));
+#endif
+  return m_contentParameterSet.encoded_blocks.at(id);
 }
 
 std::istream &icov::extractor::InputIcov::getStream(int id) {
