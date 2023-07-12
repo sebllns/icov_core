@@ -201,7 +201,6 @@ protected:
     icov::Syndrome stored_synd;
     NumcodeIdx stored_synd_rate;
     icov::Rate noSourceThreshold;
-    icov::Rate minRate;
     bool sourceFlag;
 
     // one numcode per SI and per bitplane

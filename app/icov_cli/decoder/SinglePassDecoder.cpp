@@ -74,8 +74,7 @@ void decoder::SinglePassDecoder::initialize(
 
   ICOV_DEBUG << "Init extractor";
 
-  int block_count = icovFile().contentParameterSet().icu_count;
-  m_icovFile->readBlockPos(block_count);
+  m_icovFile->readBlockPos();
 
   const int channelCount = getNumberValidComponents(chFrmt);
   BlockExtractor::params extractor_params;

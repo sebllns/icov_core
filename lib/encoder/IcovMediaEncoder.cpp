@@ -16,9 +16,9 @@ using namespace icov::omnidirectional_layer;
 
 // ICU_MAX_COUNT: max block ID to encode (useful for debug), 0 is special value
 // meaning ALL BLOCKS
-#ifndef ICU_MAX_COUNT
-#define ICU_MAX_COUNT 0
-#endif
+//#ifndef ICU_MAX_COUNT
+//#define ICU_MAX_COUNT 0
+//#endif
 
 /*****************************************************************************/
 icov::encoder::IcovMediaEncoder::IcovMediaEncoder(
@@ -59,6 +59,21 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 
+  size_t block_count = 0;
+  for (auto &b : icov_visualization.Picture->icus()) {
+    if (m_params.AllBlocks ||
+        (b.getIdSelf() >= m_params.StartBlock &&
+         b.getIdSelf() < (m_params.StartBlock + m_params.BlockCount))) {
+      icov_visualization.Picture->getById(b.getIdSelf())->setHidden(false);
+      m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] =
+          block_count;
+      ++block_count;
+      ICOV_DEBUG << b.getIdSelf();
+    } else {
+      icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
+    }
+  }
+
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
   m_output->contentParameterSet().content_height =
@@ -71,16 +86,18 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
       (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
-  m_output->contentParameterSet().icu_count = ICU_MAX_COUNT;
 
-  if (ICU_MAX_COUNT == 0) {
+  if (m_params.AllBlocks) {
     ICOV_INFO << "All blocks will be encoded";
+    m_output->contentParameterSet().icu_count =
+        icov_visualization.Picture->blockCount();
   } else {
-    ICOV_INFO << "Max ICU ID to encode = " << ICU_MAX_COUNT;
+    ICOV_INFO << "ICU count to encode = " << m_params.BlockCount;
+    m_output->contentParameterSet().icu_count = m_params.BlockCount;
   }
 
-  m_output->writeContentParameterSet();
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
+  m_output->writeContentParameterSet();
 }
 
 /*****************************************************************************/

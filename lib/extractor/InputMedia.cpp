@@ -263,6 +263,9 @@ void icov::extractor::InputIcov::setFrame(int frame) {
 icov::omnidirectional_layer::Block::id_t
 icov::extractor::InputIcov::getBlockIndexInStream(
     const omnidirectional_layer::Block::id_t &id) const {
+  if (m_contentParameterSet.icu_count == 0)
+    return id;
+
 #if ICOV_ASSERTION_ENABLED
   ICOV_ASSERT_MSG(m_contentParameterSet.encoded_blocks.count(id),
                   "Block not encoded: " + std::to_string(id));

@@ -73,6 +73,8 @@ void DecodeMode::run() {
   ICOV_DEBUG << "Start encoding";
   encode();
 
+  return;
+
   // ICOV_DEBUG << "start decoding ICUs";
   decode();
 
@@ -91,7 +93,7 @@ void DecodeMode::encode() {
       encoder::IcovMediaEncoder::params{
           .InputPath = m_parameters.input_file,
           .OutputPath = m_parameters.input_file.replace_extension(".icov"),
-          .OutputType = encoder::IcovMediaEncoder::BINARY,
+          .OutputType = encoder::IcovMediaEncoder::TEXT,
           .FrameEncoderParams =
               icov::encoder::FrameEncoder::params{
                   .QP = m_parameters.qp,
@@ -100,7 +102,10 @@ void DecodeMode::encode() {
                       cv::Size(m_parameters.icu_size, m_parameters.icu_size),
                   .BSP_Params = m_parameters.bsp_params,
                   .CheckDecoding = true,
-                  .MaxRateNoCoding = 3}},
+                  .MaxRateNoCoding = 3},
+          .AllBlocks = false,
+          .StartBlock = 111,
+          .BlockCount = 1},
       *m_parameters.ldpc_params);
 
   const float fov_x_degree = 60;

@@ -52,6 +52,7 @@
 #include "encoder/FrameEncoder.h"
 #include "encoder/OutputIcovBase.h"
 #include "encoder/interface/IEncoder.h"
+#include "omnidirectional_layer/Block.h"
 
 #include <boost/filesystem/path.hpp>
 #include <map>
@@ -68,6 +69,9 @@ public:
     fs::path OutputPath;
     eOutputType OutputType = eOutputType::UNKNOWN;
     FrameEncoder::params FrameEncoderParams;
+    bool AllBlocks;
+    omnidirectional_layer::Block::id_t StartBlock;
+    size_t BlockCount;
   };
 
   IcovMediaEncoder(const params &p, const LdpcCoderParameters &LDPC_params);

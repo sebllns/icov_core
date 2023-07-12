@@ -4,9 +4,11 @@
 
 #include "FastArray.h"
 #include "common.h"
+#include "icov_log.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 
 #include <algorithm>
+#include <exception>
 
 namespace icov {
 namespace ldpc_codec_layer {
@@ -345,8 +347,10 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
 
   auto m_coder = this;
   auto syndromeMgr = m_coder->syndromeMgr();
-  auto src_symbols = bsp.src_symboles();
-  auto src_bits = bsp.src_bits();
+  const auto &src_symbols = bsp.src_symboles();
+  const auto &src_bits = bsp.src_bits();
+  const auto &bitplane_bits = src_bits.at(bitplane_idx);
+
   const auto &sign_bits = src_bits[0];
 
   int n = syndromeMgr->get_n();
@@ -354,7 +358,7 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   int shift = (lx - bitplane_idx - 1);
 
   //    syndrome accumulation
-  syndromeMgr->init_accumulation(src_bits[bitplane_idx]);
+  syndromeMgr->init_accumulation(bitplane_bits);
 
   init_LLR_bitplane(bsp, bitplane_idx, sign_bits, predec);
 
@@ -363,22 +367,37 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   const NumcodeIdx coding_offset = coding_flag + 1;
 
   // TO CODE OR NOT TO CODE ???
-  numcodeIdx =
-      std::equal(m_pllrProvider->llr().begin(), m_pllrProvider->llr().end(),
-                 src_bits[bitplane_idx].begin(),
-                 [](LLRVal llr, BitVal srcBit) {
-                   return (llr > 0 && srcBit == bit_t::zero) ||
-                          (llr < 0 && srcBit == bit_t::one);
-                 })
-          ? no_coding_flag
-          : coding_flag;
+  numcodeIdx = std::equal(m_pllrProvider->llr().begin(),
+                          m_pllrProvider->llr().end(), bitplane_bits.begin(),
+                          [](LLRVal llr, BitVal srcBit) {
+                            return (llr > 0 && srcBit == bit_t::zero) ||
+                                   (llr < 0 && srcBit == bit_t::one);
+                          })
+                   ? no_coding_flag
+                   : coding_flag;
 
   if (numcodeIdx == coding_flag) {
-    int numerrors =
-        this->encode(numcodeIdx, stored_synd, src_bits[bitplane_idx]);
-
-    icov::assert::check(numerrors == 0, "No convergence for bitplane " +
-                                            std::to_string(bitplane_idx));
+    try {
+      int numerrors = this->encode(numcodeIdx, stored_synd, bitplane_bits);
+      icov::assert::check(numerrors == 0, "No convergence for bitplane " +
+                                              std::to_string(bitplane_idx));
+    } catch (const std::exception &e) {
+      numcodeIdx = 1;
+      stored_synd.fillFrom(bitplane_bits);
+      ICOV_WARNING << "Bitplane " << bitplane_idx;
+      ICOV_WARNING << "Encoding bitplane as source as we catched exception in "
+                      "bitplane encoding: "
+                   << e.what();
+      ICOV_ERROR << boost::current_exception_diagnostic_information();
+    } catch (...) {
+      numcodeIdx = 1;
+      stored_synd.fillFrom(bitplane_bits);
+      ICOV_WARNING << "Bitplane " << bitplane_idx;
+      ICOV_WARNING
+          << "Encoding bitplane as source as we catched unknown exception in "
+             "bitplane encoding";
+      ICOV_ERROR << boost::current_exception_diagnostic_information();
+    }
 
     if (params.CheckBitplaneEncoding) {
       ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
