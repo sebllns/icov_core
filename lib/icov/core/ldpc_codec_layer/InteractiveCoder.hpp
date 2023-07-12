@@ -381,6 +381,17 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       int numerrors = this->encode(numcodeIdx, stored_synd, bitplane_bits);
       icov::assert::check(numerrors == 0, "No convergence for bitplane " +
                                               std::to_string(bitplane_idx));
+
+      if (params.CheckBitplaneEncoding) {
+        ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
+        BitVec decoded;
+        decode(decoded, numcodeIdx, stored_synd);
+        icov::assert::check(decoded == src_bits[bitplane_idx],
+                            "INTERNAL Decoding BP check failed " +
+                                std::to_string(bitplane_idx));
+      }
+
+      numcodeIdx += coding_offset;
     } catch (const std::exception &e) {
       numcodeIdx = 1;
       stored_synd.fillFrom(bitplane_bits);
@@ -399,16 +410,6 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     }
 
-    if (params.CheckBitplaneEncoding) {
-      ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
-      BitVec decoded;
-      decode(decoded, numcodeIdx, stored_synd);
-      icov::assert::check(decoded == src_bits[bitplane_idx],
-                          "INTERNAL Decoding BP check failed " +
-                              std::to_string(bitplane_idx));
-    }
-
-    numcodeIdx += coding_offset;
   } else {
     stored_synd.resize(0);
     ICOV_TRACE << "ENCODE: NO CODING";
