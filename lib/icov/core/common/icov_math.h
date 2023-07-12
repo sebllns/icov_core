@@ -62,6 +62,11 @@
 #define RAD2DEG (180.0 * M_1_PI)
 #define DEG2RAD (M_PI / 180.0)
 
+// Fallback, in case M_PI doesn't exist.
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace icov {
 namespace maths {
 

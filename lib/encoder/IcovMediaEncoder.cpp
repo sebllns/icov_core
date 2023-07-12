@@ -59,7 +59,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 
+  // select blocks to encode
   size_t block_count = 0;
+  bool found_access_block = false;
   for (auto &b : icov_visualization.Picture->icus()) {
     if (m_params.AllBlocks ||
         (b.getIdSelf() >= m_params.StartBlock &&
@@ -68,11 +70,18 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] =
           block_count;
       ++block_count;
-      ICOV_DEBUG << b.getIdSelf();
+      if (b.isAccessBlock())
+        found_access_block = true;
     } else {
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
     }
   }
+
+  if (!found_access_block)
+    icov_visualization.Picture
+        ->getById(
+            m_output->contentParameterSet().encoded_blocks.cbegin()->first)
+        ->setIsAccessBlock(true);
 
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());

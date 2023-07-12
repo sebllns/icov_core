@@ -72,6 +72,27 @@ void decoder::SinglePassDecoder::initialize(
       },
       vpg);
 
+  // select blocks to decode
+  bool found_access_block = false;
+  for (auto &b : m_navigation.Visualization->Picture->icus()) {
+
+    bool visible = (m_icovFile->contentParameterSet().encoded_blocks.empty()) ||
+                   (m_icovFile->contentParameterSet().encoded_blocks.count(
+                        b.getIdSelf()) > 0);
+
+    m_navigation.Visualization->Picture->getById(b.getIdSelf())
+        ->setHidden(!visible);
+
+    if (visible && b.isAccessBlock())
+      found_access_block = true;
+  }
+
+  if (!found_access_block)
+    m_navigation.Visualization->Picture
+        ->getById(
+            m_icovFile->contentParameterSet().encoded_blocks.cbegin()->first)
+        ->setIsAccessBlock(true);
+
   ICOV_DEBUG << "Init extractor";
 
   m_icovFile->readBlockPos();

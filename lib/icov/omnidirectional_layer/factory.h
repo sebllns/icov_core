@@ -46,6 +46,7 @@
  *
  *****************************************************************************/
 #pragma once
+#include "icov_math.h"
 #include "implementation/BlockOrdering.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/RequestManager.h"
@@ -59,11 +60,6 @@
 #include <math.h>
 #include <memory>
 #include <valarray>
-
-// Fallback, in case M_PI doesn't exist.
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 namespace icov {
 namespace omnidirectional_layer {
