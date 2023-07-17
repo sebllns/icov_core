@@ -49,6 +49,7 @@
 #include "omnidirectional_layer/geometry.h"
 #include <boost/geometry/algorithms/transform.hpp>
 #include <cstddef>
+#include <vector>
 
 namespace icov {
 namespace omnidirectional_layer {
@@ -109,9 +110,18 @@ public:
     return it != invalidBlock();
   }
 
-  void setAccessBlockFlag(Block::id_t id) {
-    getById(id)->setIsAccessBlock(true);
+  void setAccessBlockFlag(Block::id_t id, bool value) {
+    getById(id)->setIsAccessBlock(value);
   }
+
+  void setVisibleBlocks(const std::vector<Block::id_t> &ids) {
+    for (auto &b : m_icus)
+      b.setHidden(true);
+
+    for (const auto &i : ids)
+      getById(i)->setHidden(false);
+  }
+
   /** @addtogroup ICOV
    *  ICOV, open source Interactive Coder for Omnidirectional Videos.
    */

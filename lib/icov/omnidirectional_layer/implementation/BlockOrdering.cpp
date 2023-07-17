@@ -147,7 +147,8 @@ BlockOrdering::getNextBlock(const Block &current, const IViewportManager &vpm) {
 
       if (!nb_path_info->visibility_tested) {
         m_elements.push_back(nb_id);
-        nb_path_info->is_visible = vpm.isBlockVisible(*(pic->getById(nb_id)));
+        const auto b = pic->getById(nb_id);
+        nb_path_info->is_visible = !b->hidden() && vpm.isBlockVisible(*b);
         nb_path_info->visibility_tested = true;
       }
 

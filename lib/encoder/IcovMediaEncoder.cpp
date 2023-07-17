@@ -1,5 +1,6 @@
 #include "IcovMediaEncoder.h"
 #include "encoder/BinaryOutputIcov.h"
+#include "encoder/FakeFrameEncoder.h"
 #include "encoder/FrameEncoder.h"
 #include "encoder/InputMedia.h"
 #include "encoder/TextOutputIcov.h"
@@ -49,7 +50,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
           .Height = static_cast<uint>(input->getHeight()),
 
-          .ViewportPadding = viewportPadding
+          .ViewportPadding = viewportPadding,
+
+          .DummyViewport = m_params.DummyViewport
 
       });
 
@@ -58,6 +61,8 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
                       "Assert square ICU");
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
+
+  std::vector<Block::id_t> visibles;
 
   // select blocks to encode
   size_t block_count = 0;
@@ -73,15 +78,13 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       if (b.isAccessBlock())
         found_access_block = true;
     } else {
+      std::cout << b.getIdSelf() << std::endl;
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
     }
   }
 
-  if (!found_access_block)
-    icov_visualization.Picture
-        ->getById(
-            m_output->contentParameterSet().encoded_blocks.cbegin()->first)
-        ->setIsAccessBlock(true);
+  icov_visualization.AccessBlockManager->buildAccessBlocks(
+      *icov_visualization.Picture, *icov_visualization.ViewportManager);
 
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
@@ -116,6 +119,8 @@ void icov::encoder::IcovMediaEncoder::processInput(
 /*****************************************************************************/
 std::unique_ptr<icov::encoder::IFrameEncoder<cv::Mat>>
 icov::encoder::IcovMediaEncoder::createFrameEncoder() const {
+
+  // auto ptr = std::make_unique<FakeFrameEncoder>();
 
   auto ptr = std::make_unique<FrameEncoder>(m_params.FrameEncoderParams,
                                             *m_LDPC_params);

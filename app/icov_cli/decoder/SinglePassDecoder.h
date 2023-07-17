@@ -53,6 +53,7 @@
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include <memory>
@@ -68,12 +69,14 @@ namespace icov {
 namespace decoder {
 class SinglePassDecoder {
 public:
-  struct params {};
+  struct params {
+    bool DummyViewport;
+  };
 
   SinglePassDecoder(const fs::path &path);
   ~SinglePassDecoder();
 
-  void initialize(const LdpcCoderParameters &coder_params);
+  void initialize(const params &p, const LdpcCoderParameters &coder_params);
 
   const InputIcov &icovFile() const;
   const factory::Navigation360 &icovNavigation() const;
@@ -94,16 +97,20 @@ protected:
                      prediction) override {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-      ICOV_TRACE << "PROCESS BLOCK " << b.getIdSelf();
+      ICOV_TRACE << "PROCESS BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+                 << BlockPrediction::toString(
+                        BlockPrediction::toPredType(prediction));
 #endif
 
-      if ((int)b.getIdSelf() > blockCount)
-        return;
+      //      if ((int)b.getIdSelf() > blockCount)
+      //        return;
 
       if (Extractor) {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        ICOV_TRACE << "EXTRACT BLOCK " << b.getIdSelf();
+        ICOV_TRACE << "EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+                   << BlockPrediction::toString(
+                          BlockPrediction::toPredType(prediction));
 #endif
 
         Extractor->processBlock(b, prediction);
@@ -112,7 +119,9 @@ protected:
       if (Decoder) {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        ICOV_TRACE << "DECODE BLOCK " << b.getIdSelf();
+        ICOV_TRACE << "DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+                   << BlockPrediction::toString(
+                          BlockPrediction::toPredType(prediction));
 #endif
 
         Decoder->processBlock(b, prediction);

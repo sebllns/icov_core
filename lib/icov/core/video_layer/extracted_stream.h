@@ -96,6 +96,7 @@ template <typename T> struct RawByteArray : boost::noncopyable {
 struct BitplaneStream {
   NumcodeIdx numcode;
   Syndrome syndrome;
+  BitplaneStream() : numcode(0), syndrome(0) {}
 };
 
 struct SIStream {

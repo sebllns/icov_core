@@ -104,7 +104,7 @@ public:
   virtual BlockVector::const_iterator
   findAccessBlock(const IViewportManager &vpm) const {
     for (const auto &b : m_blocks) {
-      if (vpm.isBlockVisible(*b))
+      if (!b->hidden() && vpm.isBlockVisible(*b))
         return b;
     }
     return m_invalidBlock;

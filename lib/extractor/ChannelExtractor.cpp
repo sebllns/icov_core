@@ -74,7 +74,6 @@ void ChannelExtractor::extract_block_syndrome(
        omnidirectional_layer::BlockPrediction::ePredType::INTER);
   bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
-  std::cout << "BP ";
   m_bitstream->push(m_bitplaneCount);
 
   m_codingFlag = true;
@@ -191,8 +190,8 @@ void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
 int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
 void ChannelExtractor::_extractIntraParams() {
-  std::cout << std::to_string(m_params.CompID) << ": _extractIntraParams "
-            << std::endl;
+  std::cout << "CH " << std::to_string(m_params.CompID)
+            << ": _extractIntraParams " << std::endl;
 
   bitstream::byte dirmode = 0;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
@@ -243,8 +242,8 @@ void ChannelExtractor::_extractIntraParams() {
 }
 
 void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
-  std::cout << std::to_string(m_params.CompID) << ": _extractBitplaneNumcode"
-            << std::endl;
+  std::cout << "CH " << std::to_string(m_params.CompID)
+            << ": _extractBitplaneNumcode" << std::endl;
 
   if (m_codingFlag) {
     m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
@@ -275,7 +274,8 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
 
 void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
 
-  ICOV_TRACE << std::to_string(m_params.CompID) << ": _extractBitplaneSyndrome";
+  ICOV_TRACE << "CH " << std::to_string(m_params.CompID)
+             << ": _extractBitplaneSyndrome";
   ICOV_TRACE << bp.ReadSyndromeByteSize << "/" << bp.StoredSyndromeByteSize
              << " bytes to read";
 

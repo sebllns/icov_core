@@ -4,6 +4,7 @@
 #include "enc_helpers.h"
 #include "encoder/interface/IEncoder.h"
 
+#include "icov_debug.h"
 #include "icov_exception.h"
 #include "icov_io.h"
 #include "icov_log.h"
@@ -146,6 +147,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
 
               if (m_channelCoder[c].bitplanes[bp].sourceFlag) {
+
+                if (icov::debug::debug_trace_enabled) {
+                  ICOV_WARNING << "SOURCE IS STORED FOR CHANNEL " << c
+                               << " BITPLANE " << bp;
+                }
+
                 m_icov_file->writeSIRate(
                     bitstream::enum_t::SyndromeType::SyndromeType_SOURCE, 1.0,
                     m_channelCoder[c].n);
@@ -499,8 +506,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
             << ", "
             << m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c;
 
-        if (m_channelCoder[comp].bitplanes[i].noSourceThreshold >
-            m_params.MaxRateNoCoding) {
+        if (/*disable this case*/ /* false  && */
+                m_channelCoder[comp].bitplanes[i].noSourceThreshold >
+                m_params.MaxRateNoCoding &&
+            !m_channelCoder[comp].bitplanes[i].sourceFlag) {
           m_channelCoder[comp].bitplanes[i].sourceFlag = true;
           m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
               bsp_enc.src_bits()[i]);
@@ -515,7 +524,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 
           m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
 
-          ICOV_TRACE << "STORE SOURCE"; /*STORED SOURCE*/
+          ICOV_WARNING
+              << "Too many predictions have a very long syndrome, so we take "
+                 "decision to store the source instead for bitplane "
+              << i << " at channel " << comp; /*STORED SOURCE*/
 
         } else if (si_synd[i].size() >
                    m_channelCoder[comp].bitplanes[i].stored_synd.size())
@@ -548,7 +560,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
           pred);
 
-  ICOV_TRACE << "save in debug";
+  ICOV_TRACE << "save data info in debug memory";
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
       b.getIdSelf() - 1);
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
@@ -594,7 +606,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
       bpstr.syndrome.fillFrom(s);
       si_dbg.bitplanes.push_back(bpstr);
     }
-  }
+  } // end access block
 
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(pred);
@@ -614,24 +626,51 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
   if (si_dbg.pz.codingflag()) {
     // adds each bitplane for the given prediction to the debugging
     // bitplanes vector
+    si_dbg.bitplanes.resize(bitplaneCount);
     for (int i = 0; i < bitplaneCount; ++i) {
-      ICOV_TRACE << "save in debug " << i << " for prediction " << pred_id;
-
+      // set numcode (quantized rate)
       bitstream::BitplaneStream bpstr;
-      bpstr.numcode =
-          m_channelCoder[comp].bitplanes[i].stored_numcodes.at(pred_id).c;
 
-      if (bpstr.numcode ==
-          bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
-        bpstr.syndrome = Syndrome();
-      } else if (bpstr.numcode ==
-                 bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+      // if source coding set it to all SI
+      if (m_channelCoder[comp].bitplanes[i].sourceFlag) {
+        bpstr.numcode = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
         bpstr.syndrome = m_channelCoder[comp].bitplanes[i].stored_synd;
+
+        for (auto &s : channelDbg.si_map) {
+          s.second.bitplanes.resize(bitplaneCount);
+          if (s.second.bitplanes[i].numcode !=
+              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+            s.second.bitplanes[i] = bpstr;
+          }
+        }
       } else {
-        bpstr.syndrome = si_synd[i];
+        bpstr.numcode =
+            m_channelCoder[comp].bitplanes[i].stored_numcodes.at(pred_id).c;
+
+        // set syndrome
+        if (bpstr.numcode ==
+            bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
+          bpstr.syndrome = Syndrome();
+        } else if (bpstr.numcode ==
+                   bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+          ICOV_THROW_LOGICAL_EXCEPTION(
+              "The case where bitplane is source coding as it "
+              "should have been treated before");
+        } else {
+          bpstr.syndrome = si_synd[i];
+        }
+
+        // assign bitplane stream in debug si
+        si_dbg.bitplanes[i] = bpstr;
       }
-      si_dbg.bitplanes.push_back(bpstr);
+
+      ICOV_TRACE << "Save in debug bp " << i << " for prediction "
+                 << icov::omnidirectional_layer::BlockPrediction::toString(pred)
+                 << " for channel " << comp << " numcode " << bpstr.numcode;
     }
+  } else {
+    // no bitplane
+    si_dbg.bitplanes.resize(0);
   }
 }
 
@@ -672,6 +711,8 @@ void icov::encoder::FrameEncoder::encode_tu(
     io::write_vector(sstr, bsp_enc.si_symboles(), ' ');
     ICOV_TRACE << sstr.str().c_str();
   } else { /* CODING FLAG IS TRUE */
+
+    ///@todo TODO: ADD INFO FOR SOURCE BITPLANE (NO CODING)
     encoder.encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
     // CHECK DECODING

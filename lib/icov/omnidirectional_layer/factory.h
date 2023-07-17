@@ -48,6 +48,8 @@
 #pragma once
 #include "icov_math.h"
 #include "implementation/BlockOrdering.h"
+#include "implementation/DummyViewportManager.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/geometry.h"
@@ -55,11 +57,13 @@
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "omnidirectional_layer/interface/IViewportManager.h"
 
 #include <boost/geometry/algorithms/transform.hpp>
 #include <math.h>
 #include <memory>
 #include <valarray>
+#include <vector>
 
 namespace icov {
 namespace omnidirectional_layer {
@@ -96,7 +100,7 @@ inline viewport_geometry default_geometry(const angle_radian &fov,
 
 struct Visualization360 {
   std::shared_ptr<EquiRectPicture> Picture;
-  std::shared_ptr<ViewportManagerCenterPadded> ViewportManager;
+  std::shared_ptr<IViewportManager> ViewportManager;
   std::shared_ptr<IcovAccessBlockManager> AccessBlockManager;
 
   ///
@@ -104,17 +108,27 @@ struct Visualization360 {
   ///
   struct params {
     uint Width, Height;
+    bool DummyViewport;
     float ViewportPadding;
   };
 
-  explicit Visualization360(params p)
+  explicit Visualization360(const params &p)
       : Picture(std::make_shared<EquiRectPicture>(p.Width, p.Height)),
         ViewportManager(
-            std::make_shared<ViewportManagerCenterPadded>(p.ViewportPadding)),
+            p.DummyViewport
+                ? std::shared_ptr<IViewportManager>(new DummyViewportManager())
+                : std::shared_ptr<IViewportManager>(
+                      new ViewportManagerCenterPadded(p.ViewportPadding))),
         AccessBlockManager(std::make_shared<IcovAccessBlockManager>()) {}
 
-  void init(ushort icu_width, const viewport_geometry &vpg) {
+  void init(ushort icu_width, const viewport_geometry &vpg,
+            const std::vector<Block::id_t> &visibleBlocks =
+                std::vector<Block::id_t>()) {
     Picture->buildConstantSizeBlocks(icu_width, icu_width);
+
+    if (!visibleBlocks.empty())
+      Picture->setVisibleBlocks(visibleBlocks);
+
     ViewportManager->viewportGeometry() = vpg;
     AccessBlockManager->buildAccessBlocks(*Picture, *ViewportManager);
   }
@@ -127,12 +141,13 @@ struct Navigation360 {
   struct params {
     Visualization360::params VisualizationParams;
     ushort IcuSize;
+    std::vector<Block::id_t> VisibleBlocks;
   };
 
-  void init(params p, const viewport_geometry &vpg) {
+  void init(const params &p, const viewport_geometry &vpg) {
     Visualization =
         std::make_unique<factory::Visualization360>(p.VisualizationParams);
-    Visualization->init(p.IcuSize, vpg);
+    Visualization->init(p.IcuSize, vpg, p.VisibleBlocks);
     Request = std::make_unique<RequestManager>();
     Request->setPicture(Visualization->Picture);
     Request->setViewport(Visualization->ViewportManager);

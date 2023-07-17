@@ -60,7 +60,7 @@ void icov::extractor::BlockExtractor::processBlock(
        icov::omnidirectional_layer::BlockPrediction::ePredType::NONE);
 
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
-  m_icovFile->selectBlock(b.getIdSelf() - 1);
+  m_icovFile->selectBlock(b.getIdSelf());
 
   // get stored syndrome size per bitplane
   std::cout << "extract_syndrome_sizes" << std::endl;

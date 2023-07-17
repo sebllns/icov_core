@@ -3,6 +3,7 @@
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
 
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/geometry.h"
 #include "omnidirectional_layer/implementation/DummyViewportManager.h"
@@ -11,6 +12,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <vector>
 
 icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
     : m_icovFile(std::make_shared<InputIcov>(path)),
@@ -20,7 +22,7 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
 void decoder::SinglePassDecoder::initialize(
-    const LdpcCoderParameters &coder_params) {
+    const params &p, const LdpcCoderParameters &coder_params) {
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
@@ -52,6 +54,12 @@ void decoder::SinglePassDecoder::initialize(
 
   viewport_geometry vpg = factory::default_geometry(fov, resolution);
 
+  std::vector<Block::id_t> visibles;
+  std::transform(m_icovFile->contentParameterSet().encoded_blocks.cbegin(),
+                 m_icovFile->contentParameterSet().encoded_blocks.cend(),
+                 std::back_inserter(visibles),
+                 [](const auto &pair) { return pair.first; });
+
   m_navigation.init(
       {
 
@@ -63,35 +71,43 @@ void decoder::SinglePassDecoder::initialize(
                   .Height = icovFile().contentParameterSet().content_height,
 
                   .ViewportPadding =
-                      icovFile().contentParameterSet().viewport_padding
+                      icovFile().contentParameterSet().viewport_padding,
+
+                  .DummyViewport = p.DummyViewport
 
               },
 
-          .IcuSize = icovFile().contentParameterSet().block_fixed_size
+          .IcuSize = icovFile().contentParameterSet().block_fixed_size,
+
+          .VisibleBlocks = visibles
 
       },
       vpg);
 
+  //  icov_visualization.AccessBlockManager->buildAccessBlocks(
+  //      *icov_visualization.Picture, *icov_visualization.ViewportManager);
+
   // select blocks to decode
-  bool found_access_block = false;
-  for (auto &b : m_navigation.Visualization->Picture->icus()) {
+  //  bool found_access_block = false;
+  //  for (auto &b : m_navigation.Visualization->Picture->icus()) {
 
-    bool visible = (m_icovFile->contentParameterSet().encoded_blocks.empty()) ||
-                   (m_icovFile->contentParameterSet().encoded_blocks.count(
-                        b.getIdSelf()) > 0);
+  //    bool visible =
+  //    (m_icovFile->contentParameterSet().encoded_blocks.empty()) ||
+  //                   (m_icovFile->contentParameterSet().encoded_blocks.count(
+  //                        b.getIdSelf()) > 0);
 
-    m_navigation.Visualization->Picture->getById(b.getIdSelf())
-        ->setHidden(!visible);
+  //    m_navigation.Visualization->Picture->getById(b.getIdSelf())
+  //        ->setHidden(!visible);
 
-    if (visible && b.isAccessBlock())
-      found_access_block = true;
-  }
+  //    if (visible && b.isAccessBlock())
+  //      found_access_block = true;
+  //  }
 
-  if (!found_access_block)
-    m_navigation.Visualization->Picture
-        ->getById(
-            m_icovFile->contentParameterSet().encoded_blocks.cbegin()->first)
-        ->setIsAccessBlock(true);
+  //  if (!found_access_block)
+  //    m_navigation.Visualization->Picture
+  //        ->getById(
+  //            m_icovFile->contentParameterSet().encoded_blocks.cbegin()->first)
+  //        ->setIsAccessBlock(true);
 
   ICOV_DEBUG << "Init extractor";
 
@@ -162,7 +178,7 @@ const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
 }
 
 void decoder::SinglePassDecoder::decodeFullFrame() {
-  m_navigation.Request->setViewport(std::make_shared<DummyViewportManager>(
-      m_icovFile->contentParameterSet().icu_count)); // TODO
+  //  m_navigation.Request->setViewport(
+  //      std::make_shared<DummyViewportManager>()); // TODO
   m_navigation.Request->update(0, 0);
 }

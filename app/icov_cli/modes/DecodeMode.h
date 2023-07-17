@@ -75,6 +75,7 @@ class DecodeMode {
     float viewport_padding;
     std::unique_ptr<LdpcCoderParameters> ldpc_params;
     QaryDistribution::quantization_params bsp_params;
+    bool DummyViewport;
   };
 
 public:

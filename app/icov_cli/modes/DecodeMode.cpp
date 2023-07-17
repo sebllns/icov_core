@@ -65,6 +65,8 @@ DecodeMode::DecodeMode(const po::variables_map &args) {
   m_parameters.viewport_padding =
       args[DecodeMode::params::ViewportPadding_ID].as<float>();
 
+  m_parameters.DummyViewport = true;
+
   ICOV_INFO << boost::format("%-15s %-s") % "Input File:" %
                    m_parameters.input_file;
 }
@@ -104,7 +106,8 @@ void DecodeMode::encode() {
                   .MaxRateNoCoding = 3},
           .AllBlocks = false,
           .StartBlock = 101,
-          .BlockCount = 20},
+          .BlockCount = 3,
+          .DummyViewport = m_parameters.DummyViewport},
       *m_parameters.ldpc_params);
 
   const float fov_x_degree = 60;
@@ -118,7 +121,11 @@ void DecodeMode::decode() {
   // INIT DECODER
   m_decoder = std::make_unique<decoder::SinglePassDecoder>(
       m_encoder->output_media().getPath());
-  m_decoder->initialize(*m_parameters.ldpc_params);
+  m_decoder->initialize(
+      decoder::SinglePassDecoder::params{.DummyViewport =
+                                             m_parameters.DummyViewport},
+
+      *m_parameters.ldpc_params);
 
   // CHECK CPS
   icov::assert::equal(

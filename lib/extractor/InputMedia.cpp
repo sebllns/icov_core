@@ -264,7 +264,7 @@ icov::omnidirectional_layer::Block::id_t
 icov::extractor::InputIcov::getBlockIndexInStream(
     const omnidirectional_layer::Block::id_t &id) const {
   if (m_contentParameterSet.icu_count == 0)
-    return id;
+    return id - 1;
 
 #if ICOV_ASSERTION_ENABLED
   ICOV_ASSERT_MSG(m_contentParameterSet.encoded_blocks.count(id),
