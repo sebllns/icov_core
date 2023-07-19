@@ -77,7 +77,7 @@ public:
     // TODO: unplug openCV from DECODER
     cv::Size sourceSize;
     cv::Size icuSize_luma;
-    
+
     ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
 
     //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
@@ -102,7 +102,8 @@ public:
                         prediction) override;
   void endProcess() override;
   void decode() override;
-  const PelUnitBuf decodingOutput() const;
+  const PelUnitBuf &decodingOutput() const;
+  PelUnitBuf getDecodingOutput();
 
 protected:
   void decode_icu(const omnidirectional_layer::Block &b,
@@ -113,6 +114,7 @@ protected:
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
   int m_channelCount;
   std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
+  PelUnitBuf m_decodingOutput;
   params m_params;
   UnitArea mainFrameArea;
 };

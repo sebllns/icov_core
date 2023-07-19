@@ -7,6 +7,7 @@
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
+#include "video_layer/vtm_utility.h"
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -32,11 +33,11 @@ BlockDecoder::BlockDecoder(
 
   const int sourceWidth = (int)p.sourceSize.width;
   const int sourceHeight = (int)p.sourceSize.height;
-  const int margin_x_360luma = 0;
+  const int margin_x_360luma = m_params.margin_x_360luma;
 
   const UnitArea extendedFrameArea(
-      p.chFormat,
-      Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight)); //???
+      p.chFormat, Area(0, 0, sourceWidth + 2 * margin_x_360luma, sourceHeight));
+
   mainFrameArea = UnitArea(
       p.chFormat, Area(margin_x_360luma, 0, sourceWidth, sourceHeight));
 
@@ -44,6 +45,8 @@ BlockDecoder::BlockDecoder(
   m_vvc_bufs->create(PIC_ORIGINAL, extendedFrameArea);
   m_vvc_bufs->create(PIC_RECONSTRUCTION, extendedFrameArea);
   m_vvc_bufs->create(PIC_PREDICTION, extendedFrameArea);
+
+  m_decodingOutput = getDecodingOutput();
 
   m_dec_struc = std::make_shared<video::EncodingStructure>();
 
@@ -136,6 +139,8 @@ void icov::decoder::BlockDecoder::processBlock(
   for (auto &dec : m_channelDecoder) {
     ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
     dec->decode_icu(icuIndex, pred);
+    //@todo TODO: copy only necessary pixels
+    VTM_Utility::copyBordersFor360(m_decodingOutput, dec->get_params().CompID);
     ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
   }
 
@@ -147,7 +152,11 @@ void icov::decoder::BlockDecoder::endProcess() {}
 
 void icov::decoder::BlockDecoder::decode() {}
 
-const PelUnitBuf BlockDecoder::decodingOutput() const {
+const PelUnitBuf &BlockDecoder::decodingOutput() const {
+  return m_decodingOutput;
+}
+
+PelUnitBuf BlockDecoder::getDecodingOutput() {
   return m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 }
 

@@ -83,6 +83,11 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   icov_visualization.AccessBlockManager->buildAccessBlocks(
       *icov_visualization.Picture, *icov_visualization.ViewportManager);
 
+  m_output->contentParameterSet().viewport_width =
+      static_cast<uint16_t>(vpg.resolution.x());
+  m_output->contentParameterSet().viewport_height =
+      static_cast<uint16_t>(vpg.resolution.y());
+
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
   m_output->contentParameterSet().content_height =
