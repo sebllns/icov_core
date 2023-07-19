@@ -124,19 +124,16 @@ void ChannelDecoder::decode_icu(
 
   //  const auto comp_area_value = m_blockArea.area();
 
-  std::cout << "COMP " << m_params.CompID << " ";
-
   if (!is_access_block) {
-    std::cout << "DECODE BLOCK WITH PRED "
-              << omnidirectional_layer::BlockPrediction::toString(
-                     block_prediction)
-              << std::endl;
+    ICOV_TRACE << "DECODE BLOCK WITH PRED "
+               << omnidirectional_layer::BlockPrediction::toString(
+                      block_prediction);
   } else {
-    std::cout << "DECODE ACCESS BLOCK\n";
+    ICOV_TRACE << "DECODE ACCESS BLOCK";
   }
 
   int bitplaneCount = (int)m_bitstream->pop();
-  std::cout << " BP COUNT = " << bitplaneCount << std::endl;
+  ICOV_TRACE << " BP COUNT = " << bitplaneCount;
 
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
       bitplaneCount);
@@ -148,7 +145,6 @@ void ChannelDecoder::decode_icu(
   m_bsp.reset_src();
   m_bsp.set_si(m_blockSI);
 
-  ICOV_TODO << "TODO: IF AB ELSE...";
   bool coding_flag = false;
 
   if (is_intra_prediction) {

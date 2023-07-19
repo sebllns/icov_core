@@ -110,8 +110,8 @@ void DecodeMode::encode() {
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3},
           .AllBlocks = false,
-          .StartBlock = 1,
-          .BlockCount = 5,
+          .StartBlock = 61,
+          .BlockCount = 31,
           .DummyViewport = m_parameters.DummyViewport},
       *m_parameters.ldpc_params);
 

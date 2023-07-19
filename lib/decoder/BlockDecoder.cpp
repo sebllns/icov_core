@@ -32,7 +32,7 @@ BlockDecoder::BlockDecoder(
 
   const int sourceWidth = (int)p.sourceSize.width;
   const int sourceHeight = (int)p.sourceSize.height;
-  const int margin_x_360luma = 2;
+  const int margin_x_360luma = 0;
 
   const UnitArea extendedFrameArea(
       p.chFormat,

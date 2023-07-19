@@ -104,8 +104,6 @@ protected:
                         BlockPrediction::toPredType(prediction));
 #endif
 
-      return;
-
       if (Extractor) {
 
 #ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
