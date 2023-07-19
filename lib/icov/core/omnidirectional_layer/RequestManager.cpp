@@ -54,11 +54,17 @@ void RequestManager::update(float angle_x, float angle_y) {
   if (m_blockProcessor)
     m_blockProcessor->startProcess();
   while (m_picture->isValidBlock(current_block)) {
-    if (m_blockProcessor)
-      m_blockProcessor->processBlock(
-          *current_block, is_access_block ? 0
-                                          : m_blockPrediction->getPrediction(
-                                                *current_block, *m_ordering));
+    if (m_blockProcessor) {
+      try {
+        m_blockProcessor->processBlock(
+            *current_block, is_access_block ? 0
+                                            : m_blockPrediction->getPrediction(
+                                                  *current_block, *m_ordering));
+      } catch (...) {
+        throw;
+      }
+    }
+
     current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
     is_access_block = false;
   }

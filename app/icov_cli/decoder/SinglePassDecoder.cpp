@@ -164,6 +164,8 @@ const InputIcov &decoder::SinglePassDecoder::icovFile() const {
   return *m_icovFile;
 }
 
+InputIcov &decoder::SinglePassDecoder::icovFile() { return *m_icovFile; }
+
 const factory::Navigation360 &
 decoder::SinglePassDecoder::icovNavigation() const {
   return m_navigation;

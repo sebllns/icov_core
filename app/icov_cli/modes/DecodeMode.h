@@ -68,6 +68,10 @@ class DecodeMode {
     static const char *IcuSize_ID;
     static const char *QP_ID;
     static const char *ViewportPadding_ID;
+    static const char *EncodeAllBlocks_ID;
+    static const char *EncodeStartBlock_ID;
+    static const char *EncodeBlockCount_ID;
+    static const char *EncodeDummyViewport_ID;
 
     fs::path input_file;
     int icu_size;

@@ -24,6 +24,11 @@ const char *DecodeMode::params::InputFile_ID = "decode-input-file";
 const char *DecodeMode::params::IcuSize_ID = "decode-icu-size";
 const char *DecodeMode::params::QP_ID = "decode-qp";
 const char *DecodeMode::params::ViewportPadding_ID = "decode-viewport-padding";
+const char *DecodeMode::params::EncodeAllBlocks_ID = "decode-encode-allblocks";
+const char *DecodeMode::params::EncodeStartBlock_ID = "decode-start-block";
+const char *DecodeMode::params::EncodeBlockCount_ID = "decode-block-count";
+const char *DecodeMode::params::EncodeDummyViewport_ID =
+    "decode-viewport-dummy";
 
 void DecodeMode::AddProgramOptions(
     boost::program_options::options_description &desc) {
@@ -105,8 +110,8 @@ void DecodeMode::encode() {
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3},
           .AllBlocks = false,
-          .StartBlock = 101,
-          .BlockCount = 3,
+          .StartBlock = 1,
+          .BlockCount = 5,
           .DummyViewport = m_parameters.DummyViewport},
       *m_parameters.ldpc_params);
 
@@ -133,6 +138,8 @@ void DecodeMode::decode() {
       m_decoder->icovFile().contentParameterSet(),
       "ContentParameterSet not equal between Encoder & Decoder");
 
+  //  m_decoder->icovFile().contentParameterSet() =
+  //      m_encoder->output_media().contentParameterSet();
   // DECODE FULL FRAME
   m_decoder->decodeFullFrame();
 }

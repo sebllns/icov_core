@@ -92,16 +92,18 @@ int main(int argc, char *argv[]) {
 
   Player player;
 
-  if (parser.isSet(customAudioRoleOption))
-    player.setCustomAudioRole(parser.value(customAudioRoleOption));
+  //  if (parser.isSet(customAudioRoleOption))
+  //    player.setCustomAudioRole(parser.value(customAudioRoleOption));
 
-  if (!parser.positionalArguments().isEmpty() && player.isPlayerAvailable()) {
-    QList<QUrl> urls;
-    for (auto &a : parser.positionalArguments())
-      urls.append(
-          QUrl::fromUserInput(a, QDir::currentPath(), QUrl::AssumeLocalFile));
-    player.addToPlaylist(urls);
-  }
+  //  if (!parser.positionalArguments().isEmpty() && player.isPlayerAvailable())
+  //  {
+  //    QList<QUrl> urls;
+  //    for (auto &a : parser.positionalArguments())
+  //      urls.append(
+  //          QUrl::fromUserInput(a, QDir::currentPath(),
+  //          QUrl::AssumeLocalFile));
+  //    player.addToPlaylist(urls);
+  //  }
 
   player.show();
   return app.exec();

@@ -66,7 +66,6 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   // select blocks to encode
   size_t block_count = 0;
-  bool found_access_block = false;
   for (auto &b : icov_visualization.Picture->icus()) {
     if (m_params.AllBlocks ||
         (b.getIdSelf() >= m_params.StartBlock &&
@@ -75,8 +74,6 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
       m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] =
           block_count;
       ++block_count;
-      if (b.isAccessBlock())
-        found_access_block = true;
     } else {
       std::cout << b.getIdSelf() << std::endl;
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
@@ -97,7 +94,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   m_output->contentParameterSet().block_fixed_size =
       static_cast<bitstream::byte>(32);
   m_output->contentParameterSet().content_chroma_format =
-      (bitstream::byte)m_params.FrameEncoderParams.ChFormat;
+      static_cast<bitstream::byte>(m_params.FrameEncoderParams.ChFormat);
 
   if (m_params.AllBlocks) {
     ICOV_INFO << "All blocks will be encoded";
@@ -108,8 +105,11 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
     m_output->contentParameterSet().icu_count = m_params.BlockCount;
   }
 
+  ICOV_INFO << "Start encoding media";
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
   m_output->writeContentParameterSet();
+  m_output->flush(bitstream::eIcovStream::COUNT);
+  ICOV_INFO << "End encoding media";
 }
 
 /*****************************************************************************/

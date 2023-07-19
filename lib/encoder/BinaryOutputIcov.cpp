@@ -37,6 +37,7 @@ void BinaryOutputIcov::writeContentParameterSet() {
       *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
       boost::archive::no_header);
   o_archive &m_contentParameterSet;
+  flush(bitstream::eIcovStream::MEDIA_HEADER);
 }
 
 void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {

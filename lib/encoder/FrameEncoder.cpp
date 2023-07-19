@@ -211,7 +211,7 @@ void FrameEncoder::encodeBlock(
 
   for (int c = 0; c < (int)m_numComp; ++c) {
     block_comp = c;
-    //#pragma omp parallel for
+#pragma omp parallel for
     for (omnidirectional_layer::IBlockPredictionManager::prediction_t p : v)
       encodeBlockWithPrediction(b, p);
   }

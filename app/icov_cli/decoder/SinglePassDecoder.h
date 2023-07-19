@@ -79,6 +79,8 @@ public:
   void initialize(const params &p, const LdpcCoderParameters &coder_params);
 
   const InputIcov &icovFile() const;
+  InputIcov &icovFile();
+
   const factory::Navigation360 &icovNavigation() const;
   IBlockProcessor &blockProcessor();
   const PelUnitBuf getOutputBuf() const;
@@ -102,8 +104,7 @@ protected:
                         BlockPrediction::toPredType(prediction));
 #endif
 
-      //      if ((int)b.getIdSelf() > blockCount)
-      //        return;
+      return;
 
       if (Extractor) {
 

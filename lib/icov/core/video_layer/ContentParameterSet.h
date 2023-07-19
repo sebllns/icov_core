@@ -103,11 +103,13 @@ struct ContentParameterSet {
         content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
         sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
         is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
-        has_metadata(false), icu_count(0) {}
+        has_metadata(false), icu_count(0), viewport_width(0),
+        viewport_height(0), viewport_fov_x(0), viewport_fov_y(0) {}
 };
 
 inline bool operator==(const ContentParameterSet &a,
                        const ContentParameterSet &b) {
+
   return a.icov_version == b.icov_version && a.content_type == b.content_type &&
          a.content_width == b.content_width &&
          a.content_height == b.content_height &&
