@@ -56,7 +56,9 @@ void icov::extractor::InputIcov::readContentParameterSet() {
 }
 
 void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
-  getStream(bitstream::eIcovStream::SYNDROME).seekg(offset, std::ios_base::cur);
+  if (offset != 0)
+    getStream(bitstream::eIcovStream::SYNDROME)
+        .seekg(offset, std::ios_base::cur);
 }
 
 void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
@@ -68,7 +70,7 @@ void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
   }
 
   if (stored_size > read_size) {
-    str.seekg(stored_size - read_size, std::ios_base::cur);
+    offsetSyndrome(stored_size - read_size);
   }
 }
 

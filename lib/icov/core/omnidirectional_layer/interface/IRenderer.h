@@ -87,6 +87,9 @@ public:
       delete m_pixels;
     if (m_request != nullptr)
       delete m_request;
+
+    m_pixels = nullptr;
+    m_request = nullptr;
   }
 
   /** @brief Renders the video frame on the screen.

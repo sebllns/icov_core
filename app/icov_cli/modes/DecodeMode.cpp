@@ -109,9 +109,9 @@ void DecodeMode::encode() {
                   .BSP_Params = m_parameters.bsp_params,
                   .CheckDecoding = true,
                   .MaxRateNoCoding = 3},
-          .AllBlocks = false,
-          .StartBlock = 1,
-          .BlockCount = 60,
+          .AllBlocks = true,
+          .StartBlock = 61,
+          .BlockCount = 23,
           .DummyViewport = m_parameters.DummyViewport},
       *m_parameters.ldpc_params);
 

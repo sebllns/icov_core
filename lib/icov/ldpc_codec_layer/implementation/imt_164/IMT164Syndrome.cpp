@@ -20,6 +20,7 @@ IMT164SyndromeManager::IMT164SyndromeManager(
 IMT164SyndromeManager::~IMT164SyndromeManager() {
   if (accumulated_syndrome != nullptr)
     delete[] accumulated_syndrome;
+  accumulated_syndrome = nullptr;
 }
 
 int IMT164SyndromeManager::get_m_max() const { return m_tools.get_m_max(); }

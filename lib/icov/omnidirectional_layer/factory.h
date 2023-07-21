@@ -46,6 +46,7 @@
  *
  *****************************************************************************/
 #pragma once
+#include "icov_assert.h"
 #include "icov_math.h"
 #include "implementation/BlockOrdering.h"
 #include "implementation/DummyViewportManager.h"
@@ -85,6 +86,10 @@ inline angle_radian fov(float fov_x_degrees, float y_x_ratio) {
 
 inline viewport_geometry default_geometry(const angle_radian &fov,
                                           const point2d &screen_resolution) {
+  assert::check(fov.x() > 0 && fov.y() > 0, "Fov value > 0");
+  assert::check(screen_resolution.x() > 0 && screen_resolution.y() > 0,
+                "Resolution value > 0");
+
   viewport_geometry vpg;
   vpg.focale = 1 / (2.0f * tan(fov.x() * 0.5)); // focale
   vpg.center = point2d(0.5f, 0.5f);             // center normalised coords

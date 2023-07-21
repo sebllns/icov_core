@@ -125,6 +125,10 @@ protected:
 
         Decoder->processBlock(b, prediction);
       }
+
+      icov::assert::equal<size_t>(ExtractionBitstream->getActualSize(), 0,
+                                  "Buffer was not read in totality");
+      ExtractionBitstream->reset();
     }
     void startProcess() override {
       if (Extractor)
@@ -137,9 +141,6 @@ protected:
         Extractor->endProcess();
       if (Decoder)
         Decoder->endProcess();
-
-      icov::assert::equal(ExtractionBitstream->remains(), 0,
-                          "Buffer was not read in totality");
     }
   };
 

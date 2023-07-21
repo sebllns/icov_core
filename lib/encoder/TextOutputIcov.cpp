@@ -65,13 +65,17 @@ void TextOutputIcov::writeSyndrome(const Syndrome &s) {
   const int byte_size = bitstream::bitToByteCount(s.size());
   m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] += byte_size;
 
-  icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
-  bitstream::write_bits(s, bytes);
+  if (byte_size == 0) {
+    m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] = "";
+  } else {
+    icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
+    bitstream::write_bits(s, bytes);
 
-  m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] =
-      icov::io::make_hex_string(bytes, bytes + byte_size, true, true);
+    m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] =
+        icov::io::make_hex_string(bytes, bytes + byte_size, true, true);
 
-  delete[] bytes;
+    delete[] bytes;
+  }
 }
 
 void TextOutputIcov::writeFrameSize() {

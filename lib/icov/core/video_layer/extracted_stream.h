@@ -47,6 +47,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_assert.h"
 #include "icov_stream.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
@@ -82,6 +83,7 @@ template <typename T> struct RawByteArray : boost::noncopyable {
     Length = 0;
     if (Data != nullptr)
       delete[] Data;
+    Data = nullptr;
   }
   void reset(T l) {
     release();
@@ -137,6 +139,7 @@ struct IcovExtractedBitstream {
 
   void push(const icov::bitstream::byte &val) {
     auto pos = m_WritePosition;
+    icov::assert::check(availableSpace() > 0, "Buffer cannot overflow");
     shiftWritePosition(1);
     ICOV_TRACE << ">>> EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
                << m_ActualSize;
@@ -144,7 +147,7 @@ struct IcovExtractedBitstream {
   }
 
   icov::bitstream::byte get() {
-    icov::assert::check(m_ActualSize > 0, "Buffer is not empty");
+    icov::assert::check(!empty(), "Buffer is not empty");
     ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
                << m_ReadPosition;
     return m_Buffer[m_ReadPosition];
@@ -157,7 +160,8 @@ struct IcovExtractedBitstream {
   }
 
   void get(std::vector<icov::bitstream::byte> &output) {
-    icov::assert::check(m_ActualSize >= output.size(), "Buffer overflows");
+    icov::assert::check(m_ActualSize >= output.size(),
+                        "Buffer cannot overflow");
     std::copy(m_Buffer.cbegin() + m_ReadPosition,
               m_Buffer.cbegin() + m_ReadPosition + output.size(),
               output.begin());
@@ -173,8 +177,8 @@ struct IcovExtractedBitstream {
     m_WritePosition = (m_WritePosition + offset) % m_Buffer.size();
     m_ActualSize += offset;
     // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
-    ICOV_WARNING_MSG(m_ActualSize <= m_Buffer.size(),
-                     "Buffer overflow is forbidden");
+
+    icov::assert::check_not(overflows(), "Buffer write overflow is forbidden");
     m_ActualSize = std::clamp(m_ActualSize, (size_t)0, m_Buffer.size());
   }
 
@@ -185,8 +189,9 @@ struct IcovExtractedBitstream {
   void shiftReadPosition(size_t offset) {
     ICOV_TRACE << __func__ << " " << offset;
     m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
-    ICOV_WARNING_MSG(m_ActualSize >= offset,
-                     "Buffer negative overflow is forbidden");
+
+    icov::assert::check(getActualSize() >= offset,
+                        "Buffer read overflow is forbidden");
     m_ActualSize = m_ActualSize > offset ? m_ActualSize - offset : 0;
   }
 
@@ -230,13 +235,15 @@ struct IcovExtractedBitstream {
    * @brief Checks if the bitstream is empty.
    * @return True if the bitstream is empty, false otherwise.
    */
-  bool empty() const { return m_ActualSize > 0; }
+  bool empty() const { return m_ActualSize == 0; }
 
   /**
    * @brief Retrieves the number of remaining elements in the bitstream.
    * @return The number of remaining elements.
    */
-  int remains() const { return (m_WritePosition - m_ReadPosition); }
+  int availableSpace() const { return (getBufferSize() - getActualSize()); }
+
+  bool overflows() const { return availableSpace() < 0; }
 
 protected:
   size_t m_WritePosition; /**< The write position in the bitstream. */

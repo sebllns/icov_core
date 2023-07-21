@@ -55,18 +55,6 @@ namespace assert {
 #define ICOV_WARNING_MSG(...)
 #endif
 
-template <typename T> void range(T val, T min, T max) {
-  if (min > max)
-    BOOST_THROW_EXCEPTION(std::invalid_argument("Required min <= max"));
-
-  if (val < min || val > max)
-    BOOST_THROW_EXCEPTION(std::out_of_range("VALUE=" + std::to_string(val) +
-                                            " while the acceptable range "
-                                            "is [" +
-                                            std::to_string(min) + ", " +
-                                            std::to_string(max) + "]"));
-}
-
 inline void check(bool expr,
                   const std::string &msg = "Check expression is true") {
   if (!expr) {
@@ -77,19 +65,34 @@ inline void check(bool expr,
   }
 }
 
+inline void check_not(bool expr,
+                      const std::string &msg = "Check expression is false") {
+  check(!expr, msg);
+}
+
+inline void null(const void *p,
+                 const std::string &msg = "Pointer cannot be null") {
+
+  check_not(!!p, msg);
+}
+
 inline void not_null(const void *p,
                      const std::string &msg = "Pointer cannot be null") {
-  if (!p) {
-#ifdef ICOV_CORE_STACKTRACE_ENABLED
-    ICOV_FATAL << boost::stacktrace::stacktrace();
-#endif
-    ICOV_THROW_NULLPTR(msg);
-  }
+  check(!!p, msg);
 }
 
 template <typename T>
 void equal(T a, T b, const std::string &msg = "Elements must be equal") {
   check(a == b, msg);
+}
+
+template <typename T> void range(T val, T min, T max) {
+  check((min > max), "Requires min <= max");
+  check((val < min || val > max),
+        ("VALUE = " + std::to_string(val) +
+         " while the acceptable range "
+         "is [" +
+         std::to_string(min) + ", " + std::to_string(max) + "]"));
 }
 
 } // namespace assert

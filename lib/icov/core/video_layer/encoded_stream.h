@@ -159,6 +159,9 @@ int write_bits(const T &input, icov::bitstream::byte *output, int offset = 0) {
 inline std::string writeSyndrome(const Syndrome &s) {
   const int byte_size = bitstream::bitToByteCount(s.size());
 
+  if (byte_size == 0)
+    return "void";
+
   icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
   bitstream::write_bits(s, bytes);
 
@@ -166,7 +169,7 @@ inline std::string writeSyndrome(const Syndrome &s) {
       icov::io::make_hex_string(bytes, bytes + byte_size, true, true);
 
   delete[] bytes;
-
+  bytes = nullptr;
   return res;
 }
 
@@ -201,6 +204,7 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
   ar &io.content_duration;
   ar &io.viewport_padding;
   ar &io.viewport_fov_x;
+  ar &io.viewport_fov_y;
   ar &io.viewport_height;
   ar &io.viewport_width;
 

@@ -2,6 +2,7 @@
 
 #include "FastArray.h"
 
+#include "icov_assert.h"
 #include "icov_log.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
@@ -280,20 +281,35 @@ void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
              << " bytes to read";
 
   ICOV_TRACE
-      << "FILE SYNDROME "
+      << "SYNDROME POS IN ENCODED FILE START FROM "
       << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
 
-  ICOV_TRACE << "BITSTREAM POS " << m_bitstream->getWritePosition();
+  ICOV_TRACE << "BITSTREAM POS BEFORE READ " << m_bitstream->getWritePosition();
 
-  m_icovFile->readSyndrome(m_bitstream->writableData(), bp.ReadSyndromeByteSize,
-                           bp.StoredSyndromeByteSize);
-  m_bitstream->shiftWritePosition(bp.ReadSyndromeByteSize);
+  int total_read = 0;
+
+  while (total_read < bp.ReadSyndromeByteSize) {
+    int read = std::min((int)(bp.ReadSyndromeByteSize - total_read),
+                        (int)((m_bitstream->getBufferSize() -
+                               m_bitstream->getWritePosition())));
+
+    m_icovFile->readSyndrome(m_bitstream->writableData(), read, read);
+    m_bitstream->shiftWritePosition(read);
+
+    total_read += read;
+  }
+
+  icov::assert::equal(total_read, (int)bp.ReadSyndromeByteSize,
+                      "Syndrome read size bad value");
+  int offset = bp.StoredSyndromeByteSize - bp.ReadSyndromeByteSize;
+  icov::assert::check_not(offset < 0, "Offset can't be negative");
+  m_icovFile->offsetSyndrome(offset);
 
   ICOV_TRACE
-      << "FILE SYNDROME "
+      << "SYNDROME POS NOW IS "
       << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
 
-  ICOV_TRACE << "BITSTREAM POS " << m_bitstream->getWritePosition();
+  ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
 
   std::cout << "END _extractBitplaneSyndrome" << std::endl;
 }

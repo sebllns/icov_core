@@ -39,8 +39,8 @@ public:
   virtual ~FastArray() {
     if (m_capacity > 0 && m_data != nullptr) {
       delete[] m_data;
-      m_data = nullptr;
     }
+    m_data = nullptr;
   }
 
   FastArray<T> &operator=(const FastArray<T> &f) {
@@ -101,6 +101,7 @@ public:
       if (tmp != nullptr && m_capacity > 0 && m_size > 0) {
         std::memcpy(m_data, tmp, m_size * sizeof(T));
         delete[] tmp;
+        tmp = nullptr;
       }
       m_capacity = new_size;
     }

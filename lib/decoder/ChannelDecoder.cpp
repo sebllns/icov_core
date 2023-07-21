@@ -287,7 +287,8 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                     "Numcode value must be set to 1 for access block");
   }
 
-  ICOV_TRACE << "BP ID " << bp + 1 << " / " << m_bsp.bitplane_count();
+  ICOV_TRACE << "CALL LDPC FOR BITPLANE " << bp + 1 << " / "
+             << m_bsp.bitplane_count();
 
   bitstream::VideoStreamDebugger::get_const_instance().assertSyndromeEqual(
       bp, synd);
