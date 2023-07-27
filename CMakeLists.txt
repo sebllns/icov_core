@@ -213,6 +213,7 @@ message(
 
 # ---------------------------------------------------------------------
 # Use Conan message(STATUS "Using conan...")
+# not needed for conan 2
 # include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) conan_basic_setup()
 
 # message("\n")

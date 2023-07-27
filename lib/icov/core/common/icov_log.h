@@ -19,7 +19,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/shared_ptr.hpp>
 
-#ifdef BOOST_LOG_DYN_LINK
+#ifndef BOOST_LOG_DYN_LINK
 #define BOOST_LOG_DYN_LINK 1
 #endif
 
@@ -36,6 +36,8 @@
 #ifndef ICOV_LOG_LEVEL
 #define ICOV_LOG_LEVEL 2
 #endif
+
+//@todo TODO: Make boost log optional
 
 namespace icov {
 namespace logging {

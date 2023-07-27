@@ -28,7 +28,10 @@ ${OPENGL_gl_LIBRARY} ${GLUT_LIBRARY})
 
 set(APP_LINK_LIBS
 ${Boost_LIBRARIES}
+${Boost_LOG_LIBRARY} 
+${Boost_LOG_SETUP_LIBRARY}
 ${OpenCV_LIBS}
+${OpenCV_LIBRARIES}
 IcovCoreLib
 IcovLdpcCodecLayer
 IcovOmnidirectionalLayer

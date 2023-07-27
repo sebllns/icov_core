@@ -28,4 +28,5 @@ opencv*:with_webp = False
 opencv*:with_ffmpeg = False
 opencv*:with_qt = False
 opencv*:with_gtk = False
+opencv*:with_openexr = False
 
