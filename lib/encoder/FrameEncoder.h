@@ -63,7 +63,7 @@
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 
-#include <opencv2/plot.hpp>
+//#include <opencv2/plot.hpp>
 
 #include <cstdint>
 #include <map>
@@ -180,7 +180,7 @@ protected:
 
   std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
 
-  cv::Ptr<cv::plot::Plot2d> plot;
+  //cv::Ptr<cv::plot::Plot2d> plot;
   cv::Mat xData, yData, display;
 
   struct StoredRate {

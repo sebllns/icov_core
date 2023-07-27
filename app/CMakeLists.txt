@@ -15,11 +15,26 @@ endif()
 
 # set(VAL_FIND_DEBUG_MODE ${CMAKE_FIND_DEBUG_MODE}) set(CMAKE_FIND_DEBUG_MODE
 # TRUE)
+set(CMAKE_FIND_DEBUG_MODE TRUE)
+
+message(STATUS "find OpenGL")
 find_package(OpenGL REQUIRED)
+message(STATUS "------------------------------------------------------------------------\n\n")
+
+message(STATUS "find GLUT")
 find_package(GLUT REQUIRED)
+message(STATUS "------------------------------------------------------------------------\n\n")
+
+message(STATUS "find OpenCV")
 find_package(OpenCV REQUIRED)
+message(STATUS "------------------------------------------------------------------------\n\n")
+
+message(STATUS "find glm")
 find_package(glm REQUIRED)
+message(STATUS "------------------------------------------------------------------------\n\n")
+
 # find_package(glfw3 3.3 REQUIRED)
+set(CMAKE_FIND_DEBUG_MODE FALSE)
 
 include(ExternalProject)
 
@@ -67,8 +82,8 @@ message(STATUS "OPENGL_INCLUDE_DIR := ${OPENGL_INCLUDE_DIR}")
 # message(STATUS "OPENGL_LIBRARIES:= ${OPENGL_LIBRARIES}")
 message(STATUS "GLUT_INCLUDE_DIR := ${GLUT_INCLUDE_DIR}")
 message(STATUS "OpenCV = ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "glm = ${GLM_INCLUDE_DIRS}")
-message(STATUS "glad = ${glad_LIBRARY}")
+message(STATUS "glm = ${GLM_BINARY_DIR}, ${GLM_INCLUDE_DIRS}")
+message(STATUS "glad = ${glad_INSTALL_DIR}, ${glad_LIBRARY}")
 
 if(UNIX)
   add_compile_options("-Wno-write-strings")

@@ -87,18 +87,29 @@ option(BUILD_SHARED_LIBS "Build shared libs" ON)
 # Use folders in IDEs for projects (e.g. lib sample app test)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Include functions
-message(VERBOSE "Includes")
+message(VERBOSE "[TRACE] Load cmake includes")
 include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
 include(ExternalProject)
 
 if(NOT ICOV_BYPASS_SETUP)
-  message(DEBUG "Initial setup")
+  message(DEBUG "[DEBUG] Initial setup")
+  
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  # set(CMAKE_CXX_EXTENSIONS OFF)
+  
+  # use folders in IDEs for projects (e.g. lib sample app test)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+  set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+  set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+  link_directories(${LIBRARY_OUTPUT_PATH} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+  
   # some flags needed to build for windows
   if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
@@ -187,6 +198,8 @@ message(STATUS "Cmake infos")
 execute_process(COMMAND "${CMAKE_COMMAND}" --version COMMAND_ECHO STDOUT)
 message(
   "-------------------------------------------------------------------------")
+message(STATUS "[INFO] BIN OUTPUT PATH IS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "[INFO] LIB OUTPUT PATH IS ${LIBRARY_OUTPUT_PATH}")
 
 # ##############################################################################
 # CHECK DEPENDENCIES            #
@@ -458,4 +471,4 @@ if(INSTALL_DEMO)
        ${ICOV_DEMO_DIR} VERBOSE)
 endif()
 
-file(COPY "data/" DESTINATION "${EXECUTABLE_OUTPUT_PATH}/data")
+file(COPY "data/" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data")

@@ -6,7 +6,6 @@
 #ifndef CAMERA_CONTROLLER_H
 #define CAMERA_CONTROLLER_H
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <utility>

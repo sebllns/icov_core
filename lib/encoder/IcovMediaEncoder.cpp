@@ -50,9 +50,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
           .Height = static_cast<uint>(input->getHeight()),
 
-          .ViewportPadding = viewportPadding,
+          .DummyViewport = m_params.DummyViewport,
 
-          .DummyViewport = m_params.DummyViewport
+          .ViewportPadding = viewportPadding
 
       });
 

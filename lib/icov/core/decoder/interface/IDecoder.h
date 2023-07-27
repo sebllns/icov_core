@@ -56,6 +56,7 @@
 #include "omnidirectional_layer/interface/IPicture.h"
 
 #include <memory>
+#include <iostream>
 
 namespace icov {
 namespace decoder {

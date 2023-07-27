@@ -1,0 +1,31 @@
+# https://github.com/conan-io/examples2/blob/main/tutorial/consuming_packages/simple_cmake_project/run_example.sh
+# https://docs.conan.io/2.0/examples/extensions/deployers/dev/development_deploy.html#examples-extensions-builtin-deployers-development
+
+[requires]
+zlib/1.2.13
+boost/1.82.0
+opencv/4.5.5
+#opengl is required for GUI
+opengl/system 
+freeglut/3.4.0
+glm/0.9.9.8
+#omp not working with conan 2.0
+#llvm-openmp/12.0.1
+#ccache/4.8.1
+
+[tool_requires]
+cmake/3.25.3
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
+
+[options]
+opencv*:with_webp = False
+opencv*:with_ffmpeg = False
+opencv*:with_qt = False
+opencv*:with_gtk = False
+

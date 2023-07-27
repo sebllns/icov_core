@@ -28,7 +28,7 @@
 #include <cstdint>
 #include <memory>
 #include <omp.h>
-#include <opencv2/plot.hpp>
+//#include <opencv2/plot.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -411,8 +411,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
       m_channelCoder[comp].access_block = bsp_enc.src_bits();
 
     m_channelCoder[comp].bitplanes = std::vector<BitplaneCoder>(
-        bitplaneCount, BitplaneCoder{.stored_synd_rate = 0,
+        bitplaneCount, BitplaneCoder{
                                      .stored_synd = icov::Syndrome(),
+                                     .stored_synd_rate = 0,
                                      .noSourceThreshold = 0.0,
                                      .sourceFlag = false});
 

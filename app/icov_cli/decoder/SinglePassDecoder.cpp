@@ -70,10 +70,10 @@ void decoder::SinglePassDecoder::initialize(
 
                   .Height = icovFile().contentParameterSet().content_height,
 
-                  .ViewportPadding =
-                      icovFile().contentParameterSet().viewport_padding,
+                  .DummyViewport = p.DummyViewport,
 
-                  .DummyViewport = p.DummyViewport
+                  .ViewportPadding =
+                      icovFile().contentParameterSet().viewport_padding
 
               },
 
