@@ -45,7 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/mat.hpp"
 #include <boost/filesystem.hpp>

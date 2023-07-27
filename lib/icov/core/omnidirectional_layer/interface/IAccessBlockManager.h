@@ -67,6 +67,9 @@ protected:
       m_invalidBlock; /**< Iterator pointing to an invalid block. */
 
 public:
+  //  IAccessBlockManager(const IPicture &pic)
+  //      : m_current(pic.invalidBlock()), m_invalidBlock(pic.invalidBlock()) {}
+
   /**
    * @brief Virtual destructor for IAccessBlockManager.
    */

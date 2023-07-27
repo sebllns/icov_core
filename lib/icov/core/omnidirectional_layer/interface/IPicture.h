@@ -46,7 +46,7 @@
 #pragma once
 
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include <boost/geometry/algorithms/transform.hpp>
 #include <cstddef>
 #include <vector>

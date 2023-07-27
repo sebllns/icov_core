@@ -39,8 +39,8 @@ namespace ldpc_codec_layer {
  * separately, the compression algorithm can take advantage of local
  * correlations between neighboring pixels at different bit depths, which can
  * improve the overall compression performance.
- *
  */
+
 class SymbolCoder {
 public:
   SymbolCoder(IInteractiveCoder &bitcoder);

@@ -7,7 +7,7 @@
 
 #include "icov_log.h"
 #include "omnidirectional_layer/factory.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include <exception>
 #include <memory>
 

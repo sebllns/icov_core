@@ -53,7 +53,7 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/RequestManager.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"

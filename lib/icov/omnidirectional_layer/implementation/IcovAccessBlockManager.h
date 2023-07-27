@@ -57,7 +57,27 @@ public:
   ~IcovAccessBlockManager() = default;
 
   // IAccessBlockManager interface
-  virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) override;
+  virtual void buildAccessBlocks(IPicture &pic, IViewportManager &vpm) override {
+      m_blocks.clear();
+      m_invalidBlock = pic.invalidBlock();
+
+      auto pov = vpm.viewportGeometry().getPov();
+
+      for (auto it = std::begin(pic.icus()); it != std::end(pic.icus()); ++it) {
+          pic.setAccessBlockFlag(it->getIdSelf(), false);
+          if (!it->hidden()) {
+              vpm.viewportGeometry().setPov(angle_radian(
+                  pic.angleX(it->center_u()), pic.angleY(it->center_v()) - M_PI_2));
+
+              if (!pic.isValidBlock(findAccessBlock(vpm))) {
+                  m_blocks.push_back(it);
+                  pic.setAccessBlockFlag(it->getIdSelf(), true);
+              }
+          }
+      }
+
+      vpm.viewportGeometry().setPov(pov);
+  }
 };
 } // namespace omnidirectional_layer
 } // namespace icov

@@ -4,7 +4,7 @@
 
 #include "icov_program/icov_program_options.h"
 #include "omnidirectional_layer/factory.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "opencv2/core/hal/interface.h"
 #include "opencv2/core/mat.hpp"
 #include "opencv2/core/types.hpp"

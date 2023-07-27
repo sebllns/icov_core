@@ -60,6 +60,8 @@ public:
 
   static void AddProgramOptions(po::options_description &desc);
 
+  std::string name() const { return "check"; }
+
 private:
   int encode();
   void fill_src();

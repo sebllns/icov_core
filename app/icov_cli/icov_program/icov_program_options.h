@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/factory/Coder_IMT64.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
@@ -11,40 +10,95 @@
 
 namespace po = boost::program_options;
 
-#define OPT_CODE_LENGTH "code-length"
-#define OPT_BP_ITE "bp-ite"
-#define OPT_NUMCODES "numcodes"
-#define OPT_DATA_PATH "data-path"
-#define OPT_CODER_TYPE "coder"
-#define OPT_HELP "help"
-#define OPT_MODE "mode"
-#define OPT_LOG_LVL "log-level"
-
-#define ICOV_DATA_DIR(args)                                                    \
-  fs::absolute(fs::path(args[OPT_DATA_PATH].as<std::string>()))
-#define ICOV_Q_VALUES_FILE(args) (ICOV_DATA_DIR(args) / "../q-ary/q")
+//#define code_length "code-length"
+//#define bp_ite "bp-ite"
+//#define numcodes "numcodes"
+//#define data_path "data-path"
+//#define coder_type "coder"
+//#define OPT_HELP "help"
+//#define OPT_MODE "mode"
+//#define OPT_LOG_LVL "log-level"
 
 namespace icov {
 namespace options {
 
+const std::string code_length = "code-length";
+const std::string bp_iter = "bp-ite";
+const std::string numcodes = "numcodes";
+const std::string data_path = "data-path";
+const std::string coder_type = "coder";
+const std::string help = "help";
+const std::string mode = "mode";
+const std::string log_lvl = "log-level";
+const std::string input_file = "input-file";
+const std::string output_file = "output-file";
+const std::string qp = "qp";
+const std::string viewport_padding = "viewport-padding";
+const std::string encode_allblocks = "encode-allblocks";
+const std::string start_block = "start-block";
+const std::string block_count = "block-count";
+
+inline void init_options_desc(const std::string &modes,
+                              po::options_description &output) {
+
+  //  output.add_options()
+
+  //      ("help,h", "Produce help message")
+
+  //          ((mode + ",m").c_str(), po::value<std::string>()->required(),
+  //           (std::string("Set the program mode (see documentation for more "
+  //                        "details on each mode)\nAccepted values: ") +
+  //            modes)
+  //               .c_str())
+
+  //              ((coder_type + ",c").c_str(),
+  //               po::value<std::string>()->default_value("imt164"),
+  //               "Set the coder type")
+
+  //                  ((data_path + ",d").c_str(),
+  //                   po::value<std::string>()->default_value("data/"),
+  //                   "Set the data path")
+
+  //                      ((code_length + ",n").c_str(),
+  //                       po::value<int>()->default_value(1024),
+  //                       "Set the codeword length for LDPC")(
+  //                          (std::string(bp_iter) + ",it").c_str(),
+  //                          po::value<int>()->default_value(100),
+  //                          "Set iteration count for belief propagation of
+  //                          LDPC " "coder")
+
+  //                          (numcodes.c_str(),
+  //                           po::value<std::string>()->default_value(
+  //                               "numcodes.txt"),
+  //                           "Set the numcodes steps for iterative coder")
+
+  //                              ((log_lvl + ",lg").c_str(),
+  //                               po::value<int>()->default_value(2),
+  //                               "Set log level filter");
+}
+
+#define ICOV_DATA_DIR(args)                                                    \
+  fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
+#define ICOV_Q_VALUES_FILE(args) (ICOV_DATA_DIR(args) / "../q-ary/q")
+
 inline std::string parseType(const po::variables_map &args) {
-  return args[OPT_CODER_TYPE].as<std::string>();
+  return args[coder_type].as<std::string>();
 }
 
 inline std::string parseDatabase(const po::variables_map &args) {
-  return args[OPT_DATA_PATH].as<std::string>();
+  return args[data_path].as<std::string>();
 }
 
 inline int parseCodeLength(const po::variables_map &args) {
-  return args[OPT_CODE_LENGTH].as<int>();
+  return args[code_length].as<int>();
 }
 
 inline int parseBpIte(const po::variables_map &args) {
-  return args[OPT_BP_ITE].as<int>();
+  return args[bp_iter].as<int>();
 }
 
 inline std::string parseNumcodeFile(const po::variables_map &args) {
-  return args[OPT_NUMCODES].as<std::string>();
+  return args[numcodes].as<std::string>();
 }
 
 inline void parseLdpcParams(const po::variables_map &args,
@@ -58,9 +112,8 @@ inline void parseLdpcParams(const po::variables_map &args,
   params.numcodeFile = parseNumcodeFile(args);
 
   icov::assert::equal(params.type, intented_type,
-                               "Given type was \'" + params.type +
-                                   "\' but intended type was \'" +
-                                   intented_type + "\'");
+                      "Given type was \'" + params.type +
+                          "\' but intended type was \'" + intented_type + "\'");
 }
 
 inline std::unique_ptr<LdpcCoderParameters>

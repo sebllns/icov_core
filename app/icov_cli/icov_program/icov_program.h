@@ -16,6 +16,7 @@
 #include <boost/system/error_code.hpp>
 #include <string>
 
+using namespace icov::options;
 namespace po = boost::program_options;
 typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace>
     traced;
@@ -49,58 +50,69 @@ public:
 class IcovProgramBase : public IIcovProgram {
 public:
   IcovProgramBase(const std::string &modes) {
+
     this->m_options_desc.add_options()
 
-        ("help,h", "produce help message")(
-            (std::string(OPT_MODE) + ",m").c_str(),
-            po::value<std::string>()->required(),
-            (std::string("Set the program mode (see documentation for more "
-                         "details on each mode)\nAccepted values: ") +
-             modes)
-                .c_str())((std::string(OPT_CODER_TYPE) + ",c").c_str(),
-                          po::value<std::string>()->default_value("imt164"),
-                          "Set the coder type")(
-            (std::string(OPT_DATA_PATH) + ",d").c_str(),
-            po::value<std::string>()->default_value("data/"),
-            "Set the data path")((std::string(OPT_CODE_LENGTH) + ",n").c_str(),
-                                 po::value<int>()->default_value(1024),
-                                 "set the code length")(
-            (std::string(OPT_BP_ITE) + ",it").c_str(),
-            po::value<int>()->default_value(100),
-            "Set iteration count for belief propagation of LDPC coder")(
-            OPT_NUMCODES,
-            po::value<std::string>()->default_value("numcodes.txt"),
-            "Set the numcodes steps for iterative coder")(
-            (std::string(OPT_LOG_LVL) + ",lg").c_str(),
-            po::value<int>()->default_value(2), "Set log level filter");
+        ("help,h", "produce help message")
+
+            ((std::string(mode) + ",m").c_str(),
+             po::value<std::string>()->required(),
+             (std::string("Set the program mode (see documentation for more "
+                          "details on each mode)\nAccepted values: ") +
+              modes)
+                 .c_str())
+
+                ((std::string(coder_type) + ",c").c_str(),
+                 po::value<std::string>()->default_value("imt164"),
+                 "Set the coder type")
+
+                    ((std::string(data_path) + ",d").c_str(),
+                     po::value<std::string>()->default_value("data/"),
+                     "Set the data path")
+
+                        ((std::string(code_length) + ",n").c_str(),
+                         po::value<int>()->default_value(1024),
+                         "set the code length")
+
+                            ((std::string(bp_iter) + ",it").c_str(),
+                             po::value<int>()->default_value(100),
+                             "Set iteration count for belief propagation of "
+                             "LDPC coder")
+
+                                (numcodes.c_str(),
+                                 po::value<std::string>()->default_value(
+                                     "numcodes.txt"),
+                                 "Set the numcodes steps for iterative coder")
+
+                                    ((std::string(log_lvl) + ",lg").c_str(),
+                                     po::value<int>()->default_value(2),
+                                     "Set log level filter");
   }
 
   virtual ~IcovProgramBase() = default;
 
   const std::string &programMode() const {
-    return this->m_options_map[OPT_MODE].as<std::string>();
+    return this->m_options_map[mode].as<std::string>();
   }
 
   const std::string &coderType() const {
-    return this->m_options_map[OPT_CODER_TYPE].as<std::string>();
+    return this->m_options_map[coder_type].as<std::string>();
   }
 
   const std::string &dataPath() const {
-    return this->m_options_map[OPT_DATA_PATH].as<std::string>();
+    return this->m_options_map[data_path].as<std::string>();
   }
 
-  int codeLength() const {
-    return this->m_options_map[OPT_CODE_LENGTH].as<int>();
-  }
+  int codeLength() const { return this->m_options_map[code_length].as<int>(); }
 
   int logLevel() const override {
-    return this->m_options_map[OPT_LOG_LVL].as<int>();
+    return this->m_options_map[log_lvl].as<int>();
   }
 
-  int bp_ite() const { return this->m_options_map[OPT_BP_ITE].as<int>(); }
+  int bp_ite() const { return this->m_options_map[bp_iter].as<int>(); }
 
   void launchProgram() override {
-    if (m_options_map.count(OPT_HELP)) {
+    if (m_options_map.count(help)) {
       ICOV_INFO << m_options_desc;
       return;
     } else {

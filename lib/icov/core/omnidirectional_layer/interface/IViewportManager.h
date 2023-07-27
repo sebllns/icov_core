@@ -46,7 +46,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 
 namespace icov {
 namespace omnidirectional_layer {

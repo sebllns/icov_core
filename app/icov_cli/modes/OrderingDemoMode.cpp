@@ -2,9 +2,8 @@
 #include "encoder/FakeEncoder.h"
 #include "encoder/InputMedia.h"
 
-
 #include "omnidirectional_layer/RequestManager.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/implementation/BlockOrdering.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
@@ -109,8 +108,8 @@ void BlockProcessor::processBlock(
     }
 
     m_encoded_image.seekg(sizeof(header) +
-                          ((b.getIdSelf() - 1) * 8 + si_offset) * bw *
-                              bh * blockRegion.elemSize());
+                          ((b.getIdSelf() - 1) * 8 + si_offset) * bw * bh *
+                              blockRegion.elemSize());
     m_encoded_image.read((char *)blockRegion.data,
                          bw * bh * blockRegion.elemSize());
 
@@ -291,9 +290,7 @@ void OrderingDemoMode::run() {
   req_mgr.setOrdering(std::make_shared<BlockOrdering>(picture->icus().size()));
   req_mgr.setViewport(std::make_shared<ViewportManagerCenterPadded>(1.2f));
   req_mgr.setBlockPrediction(std::make_shared<BlockPrediction>());
-
   req_mgr.viewport()->viewportGeometry() = vpg;
-  req_mgr.start();
 
   boost::filesystem::path encoded_file_path("./encoded.icov");
 
@@ -313,6 +310,8 @@ void OrderingDemoMode::run() {
   cv::Mat &blockRequested = blockprocessor->BlockRequested;
   blockRequested.create(equirectangularImage.size(),
                         equirectangularImage.type());
+
+  req_mgr.start();
 
   while (key != 27) {
     blockRequested.setTo(0);

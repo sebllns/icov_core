@@ -86,6 +86,8 @@ public:
   DecodeMode(const po::variables_map &args);
   ~DecodeMode() = default;
 
+  std::string name() const { return "decode"; }
+
   void run();
   void encode();
   void decode();

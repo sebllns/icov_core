@@ -4,7 +4,6 @@
  *  @ingroup ICOV
  */
 
-
 /** @file EncodeDemoMode.h
  *  @brief BRIEF_DESCRIPTION
  *  DESCRIPTION
@@ -71,6 +70,8 @@ class EncodeDemoMode {
 public:
   EncodeDemoMode(const po::variables_map &args);
   ~EncodeDemoMode() = default;
+
+  std::string name() const { return "encode-demo"; }
 
   void run();
 

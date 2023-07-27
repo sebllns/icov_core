@@ -5,7 +5,7 @@
 
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
-#include "omnidirectional_layer/geometry.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/implementation/DummyViewportManager.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/extracted_stream.h"

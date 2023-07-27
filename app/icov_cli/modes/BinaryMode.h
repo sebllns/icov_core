@@ -62,6 +62,8 @@ public:
 
   static void AddProgramOptions(po::options_description &desc);
 
+  std::string name() const { return "binary"; }
+
 private:
   int encode();
   void fill_src();
