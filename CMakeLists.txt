@@ -22,30 +22,16 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 # ICOV_USE_ADDRESS_SANITIZER: use sanitizer - ICOV_BYPASS_SETUP: in case you
 # REALLY want to bypass the default setup. May cause severe issues. -
 # ICOV_LOG_LEVEL: minimum log level
-set(ICOV_BUILD_ENCODER
-    ON
-    CACHE BOOL "Build the icov encoder lib")
-set(ICOV_BUILD_EXTENSIONS
-    ON
-    CACHE BOOL "Build extensions code for ICOV")
-set(ICOV_BUILD_APPS
-    ON
-    CACHE BOOL "Build ICOV apps")
-set(ICOV_WITH_CPPCHECK
-    OFF
-    CACHE BOOL "ENABLE CPPCHECK")
-set(ICOV_WITH_CLANG_TIDY
-    OFF
-    CACHE BOOL "ENABLE CLANG TIDY ANALYSE")
-set(ICOV_USE_ADDRESS_SANITIZER
-    ON
-    CACHE BOOL "Use Sanitizer")
-set(ICOV_BYPASS_SETUP
-    OFF
-    CACHE
-      BOOL
-      "In case you REALLY want to bypass the default setup. May cause severe issues."
-)
+option(ICOV_BUILD_ENCODER "Build the icov encoder lib" ON)
+option(ICOV_BUILD_EXTENSIONS "Build extensions code for ICOV" ON)
+option(ICOV_BUILD_APPS "Build ICOV apps" ON)
+option(ICOV_WITH_CPPCHECK "ENABLE CPPCHECK" OFF)
+option(ICOV_WITH_CLANG_TIDY "ENABLE CLANG TIDY ANALYSE" OFF)
+option(ICOV_USE_ADDRESS_SANITIZER "Use Sanitizer" ON)
+option(
+  ICOV_BYPASS_SETUP
+  "In case you REALLY want to bypass the default setup. May cause severe issues."
+  OFF)
 set(ICOV_LOG_LEVEL
     2
     CACHE STRING "Min Log Level")
@@ -72,13 +58,9 @@ option(
 # Set the ICOV_BUILD_TESTS variable to ON if it is not defined and the
 # CMAKE_BUILD_TYPE matches Debug
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
-  set(ICOV_BUILD_TESTS
-      ON
-      CACHE BOOL "Force ICOV tests to be built. ")
+  option(ICOV_BUILD_TESTS "Force ICOV tests to be built. " ON)
 else()
-  set(ICOV_BUILD_TESTS
-      OFF
-      CACHE BOOL "Force ICOV tests to be built. ")
+  option(ICOV_BUILD_TESTS "Force ICOV tests to be built. " OFF)
 endif()
 
 # Define whether to build shared libraries or not
@@ -87,7 +69,6 @@ option(BUILD_SHARED_LIBS "Build shared libs" ON)
 # Use folders in IDEs for projects (e.g. lib sample app test)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
 # Include functions
 message(VERBOSE "[TRACE] Load cmake includes")
 include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
@@ -95,12 +76,12 @@ include(ExternalProject)
 
 if(NOT ICOV_BYPASS_SETUP)
   message(DEBUG "[DEBUG] Initial setup")
-  
+
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
   # set(CMAKE_CXX_EXTENSIONS OFF)
-  
+
   # use folders in IDEs for projects (e.g. lib sample app test)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -109,7 +90,6 @@ if(NOT ICOV_BYPASS_SETUP)
   set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
   link_directories(${LIBRARY_OUTPUT_PATH} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-  
   # some flags needed to build for windows
   if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
@@ -212,8 +192,7 @@ message(
   "-------------------------------------------------------------------------")
 
 # ---------------------------------------------------------------------
-# Use Conan message(STATUS "Using conan...")
-# not needed for conan 2
+# Use Conan message(STATUS "Using conan...") not needed for conan 2
 # include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) conan_basic_setup()
 
 # message("\n")
