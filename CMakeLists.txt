@@ -24,6 +24,7 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 # ICOV_LOG_LEVEL: minimum log level
 option(ICOV_BUILD_ENCODER "Build the icov encoder lib" ON)
 option(ICOV_BUILD_EXTENSIONS "Build extensions code for ICOV" ON)
+option(ICOV_BUILD_GL_VIEWER "Build GL viewer lib and examples" ON)
 option(ICOV_BUILD_APPS "Build ICOV apps" ON)
 option(ICOV_WITH_CPPCHECK "ENABLE CPPCHECK" OFF)
 option(ICOV_WITH_CLANG_TIDY "ENABLE CLANG TIDY ANALYSE" OFF)
@@ -389,6 +390,11 @@ endif()
 # Check if extensions should be built, then add its subdirectory
 if(ICOV_BUILD_EXTENSIONS)
   add_subdirectory(lib/extensions)
+endif()
+
+# Check if gl viewer should be built, then add its subdirectory
+if(ICOV_BUILD_GL_VIEWER)
+  add_subdirectory(lib/gl_viewer)
 endif()
 
 # ##############################################################################

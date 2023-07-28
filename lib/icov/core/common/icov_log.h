@@ -1,6 +1,15 @@
 #pragma once
 
 #include "icov_console.h"
+#include <iostream>
+#include <memory>
+#include <ostream>
+
+#ifndef ICOV_LOG_LEVEL
+#define ICOV_LOG_LEVEL 2
+#endif
+
+#ifdef ICOV_LOG_BOOST
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/format.hpp>
@@ -24,20 +33,6 @@
 #endif
 
 #define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
-
-#define ICOV_TRACE ICOV_LOG(trace)
-#define ICOV_DEBUG ICOV_LOG(debug)
-#define ICOV_INFO ICOV_LOG(info)
-#define ICOV_WARNING ICOV_LOG(warning)
-#define ICOV_ERROR ICOV_LOG(error)
-#define ICOV_FATAL ICOV_LOG(fatal)
-#define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO
-
-#ifndef ICOV_LOG_LEVEL
-#define ICOV_LOG_LEVEL 2
-#endif
-
-//@todo TODO: Make boost log optional
 
 namespace icov {
 namespace logging {
@@ -81,9 +76,13 @@ inline void colored_formatter(boost::log::record_view const &rec,
        << CONSOLE_FORMAT(CONSOLE_DEFAULT);
 }
 
-inline void initLog() {
+inline void set_filter(int lvl) {
+  boost::log::core::get()->set_filter(boost::log::trivial::severity >= lvl);
+}
 
-  // TODO ADD COLORS
+inline void init_log(bool log_to_file) {
+
+  boost::log::add_common_attributes();
 
   /* log formatter:
    * [TimeStamp] [ThreadId] [Severity Level] [Scope] Log message
@@ -125,22 +124,78 @@ inline void initLog() {
   auto consoleSink = boost::log::add_console_log(std::clog);
   consoleSink->set_formatter(&colored_formatter);
 
-  int rotation_size = 100 * 1024 * 1024;
+  if (log_to_file) {
+    int rotation_size = 100 * 1024 * 1024;
 
-  /* fs sink */
-  auto fsSink = boost::log::add_file_log(
-      boost::log::keywords::file_name = "icov_%Y-%m-%d_%H-%M-%S.%N.log",
-      boost::log::keywords::rotation_size = rotation_size,
-      boost::log::keywords::min_free_space = 3 * rotation_size,
-      boost::log::keywords::open_mode = std::ios_base::app);
-  fsSink->set_formatter(logFmt);
-  fsSink->locked_backend()->auto_flush(true);
+    /* fs sink */
+    auto fsSink = boost::log::add_file_log(
+        boost::log::keywords::file_name = "icov_%Y-%m-%d_%H-%M-%S.%N.log",
+        boost::log::keywords::rotation_size = rotation_size,
+        boost::log::keywords::min_free_space = 3 * rotation_size,
+        boost::log::keywords::open_mode = std::ios_base::app);
+    fsSink->set_formatter(logFmt);
+    fsSink->locked_backend()->auto_flush(true);
+  }
 
-  boost::log::core::get()->set_filter(boost::log::trivial::severity >=
-                                      ICOV_LOG_LEVEL);
-
-  ICOV_INFO << "Log intialized";
+  set_filter(ICOV_LOG_LEVEL);
 }
 
 } // namespace logging
 } // namespace icov
+
+#else
+
+enum severity_level { trace = 0, debug, info, warning, error, fatal };
+
+namespace icov {
+namespace logging {
+
+inline std::ostream &get_log_str() { return std::cout; }
+inline std::ostream &print(int lvl) {
+  auto &str = get_log_str();
+
+  switch (static_cast<severity_level>(lvl)) {
+  case trace:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM)
+        << "\n[trace]   ";
+    break;
+  case debug:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_DEFAULT)
+        << "\n[debug]   ";
+    break;
+  case info:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_GREEN)
+        << "\n[info]    ";
+    break;
+  case warning:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_YELLOW)
+        << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[warning] ";
+    break;
+  case error:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_RED)
+        << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[error]   ";
+    break;
+  case fatal:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_RED)
+        << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[fatal]   ";
+    break;
+  }
+
+  return str;
+}
+inline void set_filter(int lvl) {}
+inline void init_log(bool log_to_file) {}
+} // namespace logging
+} // namespace icov
+
+#define ICOV_LOG(lvl) icov::logging::print(lvl)
+
+#endif
+
+#define ICOV_TRACE ICOV_LOG(0)
+#define ICOV_DEBUG ICOV_LOG(1)
+#define ICOV_INFO ICOV_LOG(2)
+#define ICOV_WARNING ICOV_LOG(3)
+#define ICOV_ERROR ICOV_LOG(4)
+#define ICOV_FATAL ICOV_LOG(5)
+#define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO

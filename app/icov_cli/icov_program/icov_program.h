@@ -6,11 +6,6 @@
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
 #include <boost/system/error_code.hpp>
@@ -137,11 +132,9 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
 #endif
 
   try {
-    boost::log::add_common_attributes();
-    icov::logging::initLog();
+    icov::logging::init_log(true);
     pg.processCommandLine(argc, argv);
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >=
-                                        pg.logLevel());
+    icov::logging::set_filter(pg.logLevel());
     pg.launchProgram();
   } catch (std::exception &e) {
     ICOV_INFO << pg.optionsDesc() << std::endl;

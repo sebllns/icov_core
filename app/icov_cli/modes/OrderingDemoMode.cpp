@@ -2,6 +2,7 @@
 #include "encoder/FakeEncoder.h"
 #include "encoder/InputMedia.h"
 
+#include "gl_viewer/single360degreecamerahandler.h"
 #include "omnidirectional_layer/RequestManager.h"
 #include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/implementation/BlockOrdering.h"
@@ -9,7 +10,6 @@
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 #include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
-#include "opencv_interactive_viewport/single360degreecamerahandler.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/filesystem.hpp>
