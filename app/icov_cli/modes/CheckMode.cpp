@@ -1,6 +1,6 @@
 #include "CheckMode.h"
 
-#include "icov_program/icov_program_options.h"
+#include "app_common/program/icov_program_options.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/io/PcmData.h"
 #include <boost/exception/diagnostic_information.hpp>
@@ -47,8 +47,8 @@ icov::FastMatrix<icov::bit> CheckMode::getHighLevelMatrixImt164() {
   PcmData::read_matrix(path.string(), h);
 
   icov::assert::equal((int)h.cols(), n,
-                               "Bad column count: " + std::to_string(h.cols()) +
-                                   " != " + std::to_string(n));
+                      "Bad column count: " + std::to_string(h.cols()) +
+                          " != " + std::to_string(n));
 
   if ((int)h.rows() != nrows) {
     BOOST_THROW_EXCEPTION(

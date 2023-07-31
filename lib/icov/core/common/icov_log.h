@@ -32,8 +32,6 @@
 #define BOOST_LOG_DYN_LINK 1
 #endif
 
-#define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
-
 namespace icov {
 namespace logging {
 
@@ -143,6 +141,14 @@ inline void init_log(bool log_to_file) {
 } // namespace logging
 } // namespace icov
 
+#define ICOV_LOG(lvl) BOOST_LOG_TRIVIAL(lvl)
+#define ICOV_TRACE ICOV_LOG(trace)
+#define ICOV_DEBUG ICOV_LOG(debug)
+#define ICOV_INFO ICOV_LOG(info)
+#define ICOV_WARNING ICOV_LOG(warning)
+#define ICOV_ERROR ICOV_LOG(error)
+#define ICOV_FATAL ICOV_LOG(fatal)
+#define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO
 #else
 
 enum severity_level { trace = 0, debug, info, warning, error, fatal };
@@ -189,9 +195,6 @@ inline void init_log(bool log_to_file) {}
 } // namespace icov
 
 #define ICOV_LOG(lvl) icov::logging::print(lvl)
-
-#endif
-
 #define ICOV_TRACE ICOV_LOG(0)
 #define ICOV_DEBUG ICOV_LOG(1)
 #define ICOV_INFO ICOV_LOG(2)
@@ -199,3 +202,5 @@ inline void init_log(bool log_to_file) {}
 #define ICOV_ERROR ICOV_LOG(4)
 #define ICOV_FATAL ICOV_LOG(5)
 #define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO
+
+#endif

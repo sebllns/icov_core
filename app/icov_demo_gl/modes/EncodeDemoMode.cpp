@@ -1,6 +1,6 @@
 #include "EncodeDemoMode.h"
+#include "app_common/program/icov_program_options.h"
 #include "encoder/DemoEncoder.h"
-#include "icov_program/icov_program_options.h"
 #include "omnidirectional_layer/implementation/EquiRectPicture.h"
 #include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
 
@@ -73,9 +73,8 @@ EncodeDemoMode::EncodeDemoMode(const po::variables_map &args) {
 void EncodeDemoMode::run() {
   std::unique_ptr<icov::encoder::InputMedia> input;
   icov::encoder::instantiateInputMedia(m_parameters.inputFile, input);
-  icov::assert::equal(
-      input->getType(), (int)eMediaType::IMAGE,
-      "Only image is allowed as input for demo mode !");
+  icov::assert::equal(input->getType(), (int)eMediaType::IMAGE,
+                      "Only image is allowed as input for demo mode !");
   EquiRectPicture icov_pic(input->getWidth(), input->getHeight());
   icov_pic.buildConstantSizeBlocks(m_parameters.icuSize, m_parameters.icuSize);
   IcovAccessBlockManager icov_accessblockMgr;

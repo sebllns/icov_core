@@ -1,11 +1,8 @@
 message(STATUS "[INFO] Building ICOV core apps")
 
-set(ICOV_BUILD_CLI
-    ON
-    CACHE BOOL "Build ICOV CLI app")
-set(ICOV_BUILD_GUI_DEMO
-    OFF
-    CACHE BOOL "Build demo using Qt")
+option(ICOV_BUILD_CLI "Build ICOV CLI app" ON)
+option(ICOV_BUILD_GL_VIEWER "Build GL viewer demo" ON)
+option(ICOV_BUILD_GUI_DEMO "Build demo using Qt" OFF)
 
 if(ICOV_WITH_CLANG_TIDY)
   set(CMAKE_CXX_CLANG_TIDY
@@ -18,8 +15,23 @@ if(UNIX)
   # lib dl
 endif()
 
+link_libraries(
+  ${Boost_LIBRARIES}
+  ${OpenCV_LIBS}
+  IcovCoreLib
+  IcovLdpcCodecLayer
+  IcovOmnidirectionalLayer
+  IcovEncoderLib
+  IcovExtractorLib
+  IcovDecoderLib
+  IcovAppCommonLib)
+
 if(ICOV_BUILD_CLI)
   add_subdirectory(icov_cli)
+endif()
+
+if(ICOV_BUILD_GL_VIEWER)
+  add_subdirectory(icov_demo_gl)
 endif()
 
 if(ICOV_BUILD_GUI_DEMO)

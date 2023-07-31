@@ -22,14 +22,7 @@ set_source_files_properties("*.c" PROPERTIES LANGUAGE "CXX")
 # set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 # ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXE_NAME})
 
-target_link_libraries(
-  ${EXE_NAME}
-  IcovCoreLib
-  IcovLdpcCodecLayer
-  IcovOmnidirectionalLayer
-  IcovEncoderLib
-  IcovExtractorLib
-  IcovDecoderLib
-  IcovGlViewer)
-# set the folder where to place the projects
+# target_link_libraries( ${EXE_NAME} IcovCoreLib IcovLdpcCodecLayer
+# IcovOmnidirectionalLayer IcovEncoderLib IcovExtractorLib IcovDecoderLib
+# IcovGlViewer) set the folder where to place the projects
 set_target_properties(${EXE_NAME} PROPERTIES FOLDER "public/app")

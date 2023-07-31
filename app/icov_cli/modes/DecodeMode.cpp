@@ -1,8 +1,7 @@
 #include "DecodeMode.h"
-#include "decoder/SinglePassDecoder.h"
+#include "app_common/decoder/SinglePassDecoder.h"
+#include "app_common/program/icov_program_options.h"
 #include "encoder/IcovMediaEncoder.h"
-
-#include "icov_program/icov_program_options.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 #include "opencv2/core/hal/interface.h"
@@ -41,13 +40,14 @@ void DecodeMode::AddProgramOptions(
           (DecodeMode::params::IcuSize_ID, po::value<int>()->default_value(32),
            "Size of ICUs blocks")
 
-              (DecodeMode::params::QP_ID, po::value<int>()->default_value(42),
-               "Quantization parameter")
+      // qp_set = { 22, 27, 32, 37, 42 }
+      (DecodeMode::params::QP_ID, po::value<int>()->default_value(42),
+       "Quantization parameter")
 
-                  (DecodeMode::params::ViewportPadding_ID,
-                   po::value<float>()->default_value(1.2),
-                   "Radius used in function to check if a block is "
-                   "visible");
+          (DecodeMode::params::ViewportPadding_ID,
+           po::value<float>()->default_value(1.2),
+           "Radius used in function to check if a block is "
+           "visible");
 }
 
 DecodeMode::DecodeMode(const po::variables_map &args) {

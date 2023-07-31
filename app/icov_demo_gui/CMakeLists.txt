@@ -27,20 +27,7 @@ endif()
 # set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 # ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXE_NAME})
 
-target_link_libraries(
-  ${EXE_NAME}
-  Qt5::Core
-  Qt5::Widgets
-  Qt5::Xml
-  Qt5::Multimedia
-  Qt5::MultimediaWidgets
-  ${Boost_LIBRARIES}
-  ${OpenCV_LIBS}
-  IcovCoreLib
-  IcovLdpcCodecLayer
-  IcovOmnidirectionalLayer
-  IcovEncoderLib
-  IcovExtractorLib
-  IcovDecoderLib)
+target_link_libraries(${EXE_NAME} Qt5::Core Qt5::Widgets Qt5::Xml
+                      Qt5::Multimedia Qt5::MultimediaWidgets)
 # set the folder where to place the projects
 set_target_properties(${EXE_NAME} PROPERTIES FOLDER "public/app")

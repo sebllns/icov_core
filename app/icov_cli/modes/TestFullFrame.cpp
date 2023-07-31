@@ -1,17 +1,17 @@
 #include "TestFullFrame.h"
-#include "decoder/SinglePassDecoder.h"
-#include "encoder/IcovMediaEncoder.h"
 
-#include "icov_program/icov_program_options.h"
+#include "app_common/decoder/SinglePassDecoder.h"
+#include "app_common/program/icov_program_options.h"
+#include "encoder/IcovMediaEncoder.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
-#include "opencv2/core/hal/interface.h"
-#include "opencv2/core/mat.hpp"
-#include "opencv2/core/types.hpp"
-#include "opencv2/highgui.hpp"
-
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/vtm_opencv_utility.h"
+
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/highgui.hpp>
 
 #include <boost/format.hpp>
 

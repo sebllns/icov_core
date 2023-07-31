@@ -1,19 +1,17 @@
 #include "DemoEncoder.h"
 
-#include "enc_helpers.h"
-
+#include "encoder/enc_helpers.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/format/format_fwd.hpp>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>

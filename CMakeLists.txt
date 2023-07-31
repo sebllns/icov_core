@@ -22,9 +22,9 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 # ICOV_USE_ADDRESS_SANITIZER: use sanitizer - ICOV_BYPASS_SETUP: in case you
 # REALLY want to bypass the default setup. May cause severe issues. -
 # ICOV_LOG_LEVEL: minimum log level
+option(ICOV_LOG_BOOST "Build the icov log with boost" ON)
 option(ICOV_BUILD_ENCODER "Build the icov encoder lib" ON)
 option(ICOV_BUILD_EXTENSIONS "Build extensions code for ICOV" ON)
-option(ICOV_BUILD_GL_VIEWER "Build GL viewer lib and examples" ON)
 option(ICOV_BUILD_APPS "Build ICOV apps" ON)
 option(ICOV_WITH_CPPCHECK "ENABLE CPPCHECK" OFF)
 option(ICOV_WITH_CLANG_TIDY "ENABLE CLANG TIDY ANALYSE" OFF)
@@ -69,6 +69,10 @@ option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 # Use folders in IDEs for projects (e.g. lib sample app test)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+if(ICOV_LOG_BOOST)
+  add_compile_definitions(ICOV_LOG_BOOST)
+endif()
 
 # Include functions
 message(VERBOSE "[TRACE] Load cmake includes")
@@ -392,11 +396,6 @@ if(ICOV_BUILD_EXTENSIONS)
   add_subdirectory(lib/extensions)
 endif()
 
-# Check if gl viewer should be built, then add its subdirectory
-if(ICOV_BUILD_GL_VIEWER)
-  add_subdirectory(lib/gl_viewer)
-endif()
-
 # ##############################################################################
 # ADD EXECUTABLES            #
 # ##############################################################################
@@ -419,6 +418,7 @@ if(ICOV_BUILD_APPS)
   message(STATUS "[INFO] Building ICOV core executables")
   message(
     "-------------------------------------------------------------------------")
+  add_subdirectory(lib/app_common)
   add_subdirectory(app)
 endif(ICOV_BUILD_APPS)
 
