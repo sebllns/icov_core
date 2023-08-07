@@ -306,8 +306,8 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
     icov::video::TransformUnit &dec_tu = mp_icu_enc.sourceX_TU(0);
     std::copy(m_bsp.src_symboles().begin(), m_bsp.src_symboles().end(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
-    icov::io::write_vector(std::cout, m_bsp.src_symboles(), ' ');
-    std::cout << std::endl;
+    //    icov::io::write_vector(std::cout, m_bsp.src_symboles(), ' ');
+    //    std::cout << std::endl;
   }
 }
 

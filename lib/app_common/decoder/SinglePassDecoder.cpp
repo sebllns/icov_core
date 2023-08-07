@@ -11,13 +11,16 @@
 #include "video_layer/extracted_stream.h"
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <vector>
 
 icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
     : m_icovFile(std::make_shared<InputIcov>(path)),
-      m_extractionBitstream(
-          std::make_shared<bitstream::IcovExtractedBitstream>()) {}
+      m_extractionBitstream(std::make_shared<bitstream::IcovExtractedBitstream>()),
+      pov_x(std::numeric_limits<float>::max()), pov_y(pov_x), frame(std::numeric_limits<unsigned long>::max())
+{
+}
 
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
@@ -164,5 +167,10 @@ void decoder::SinglePassDecoder::decodeFullFrame() {
 }
 
 void decoder::SinglePassDecoder::request(float x, float y, unsigned long i) {
-  m_navigation.Request->update(x, y);
+  if (x != pov_x || y != pov_y || i != frame)
+    m_navigation.Request->update(x, y);
+
+  pov_x = x;
+  pov_y = y;
+  frame = i;
 }

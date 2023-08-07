@@ -51,6 +51,9 @@ enum KeyName
 
 void InteractiveModeBase::run()
 {
+    pov_x = 0;
+    pov_y = 0;
+
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     m_outputImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
 
@@ -163,6 +166,16 @@ void InteractiveModeBase::run()
 
         ICOV_DEBUG << "pressed key code = " << (int)key;
     }
+}
+
+float InteractiveModeBase::getPov_x() const
+{
+    return pov_x;
+}
+
+float InteractiveModeBase::getPov_y() const
+{
+    return pov_y;
 }
 
 bool InteractiveModeBase::processKey(char key)

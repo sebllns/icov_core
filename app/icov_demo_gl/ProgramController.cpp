@@ -22,12 +22,17 @@ void ProgramController::launchMode(const std::string &mode_id)
 
     auto ldpc_params = parseLdpcParams(args());
 
-    encoder::IcovEncoder::params enc_params(args());
-    encoder::IcovEncoder encoder(enc_params, *ldpc_params);
-    encoder.run();
-
+    bool preEncode = parsePreEncodeOption(args());
     InteractiveDecoder::params dec_params(args());
-    dec_params.icov_file = enc_params.m_outputfile;
+
+    if (preEncode)
+    {
+        encoder::IcovEncoder::params enc_params(args());
+        encoder::IcovEncoder encoder(enc_params, *ldpc_params);
+        encoder.run();
+        dec_params.icov_file = enc_params.m_outputfile;
+    }
+
     InteractiveDecoder decoder(dec_params, *ldpc_params);
     decoder.run();
 

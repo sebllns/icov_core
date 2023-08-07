@@ -150,6 +150,10 @@ protected:
   bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
   factory::Navigation360 m_navigation;
   std::shared_ptr<BlockProcessor> m_blockProcessor;
+
+  float pov_x;
+  float pov_y;
+  unsigned long frame;
 };
 } // namespace decoder
 } // namespace icov

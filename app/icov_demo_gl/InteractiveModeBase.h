@@ -67,6 +67,9 @@ class InteractiveModeBase
 
     void run();
 
+    float getPov_x() const;
+    float getPov_y() const;
+
   private:
     struct Config
     {

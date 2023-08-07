@@ -115,17 +115,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
   for (int c = 0; c < (int)m_numComp; ++c) {
     m_icov_file->setChannel(c);
     // Store syndrome per bitplane
-    std::cout << "<COMP " << c << "> BP";
     m_icov_file->writeBitplaneCount(m_channelCoder[c].bitplanes.size());
-
-    std::cout << " S";
-
     for (const auto &s : m_channelCoder[c].bitplanes) {
       m_icov_file->writeStoredSyndromeSize(s.stored_synd_rate, 0, 0);
 
       // s.stored_synd_rate.c, s.stored_synd_rate.r, s.stored_synd_rate.m
     }
-    std::cout << std::endl;
   }
 
   for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
@@ -133,16 +128,10 @@ void icov::encoder::FrameEncoder::serializeParameters() {
     for (int c = 0; c < (int)m_numComp; ++c) {
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(p);
-      std::cout << "<SI "
-                << omnidirectional_layer::BlockPrediction::toString(
-                       omnidirectional_layer::BlockPrediction::toPredType(p))
-                << " COMP " << c << "> ";
       if (m_channelCoder[c].si.count(p)) {
-        std::cout << "M " << m_channelCoder[c].si[p].dirmode << " ";
         m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
         if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
-          std::cout << "R ";
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
 
@@ -164,7 +153,6 @@ void icov::encoder::FrameEncoder::serializeParameters() {
               }
             }
           }
-          std::cout << std::endl;
         }
       } else if (p != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
         m_icov_file->writeSIMode(bitstream::flag_t::UnavailableSI);
@@ -575,17 +563,14 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     channelDbg.srcBits = bsp_enc.src_bits();
   }
 
-  std ::cout << "GT SYND " << comp << " = ";
 
   channelDbg.storedSyndromeSize.resize(m_channelCoder[comp].bitplanes.size());
   std::transform(m_channelCoder[comp].bitplanes.cbegin(),
                  m_channelCoder[comp].bitplanes.cend(),
                  channelDbg.storedSyndromeSize.begin(), [](const auto &x) {
-                   std ::cout << " " << x.stored_synd_rate;
                    return x.stored_synd_rate;
                  });
 
-  std ::cout << std::endl;
 
   // Checks if the block is an access block and there is no saved data
   if (b.isAccessBlock() &&

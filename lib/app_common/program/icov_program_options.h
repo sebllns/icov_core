@@ -134,6 +134,11 @@ inline float parseViewportPadding(const po::variables_map &args)
   return args[viewport_padding].as<float>();
 }
 
+inline bool parsePreEncodeOption(const po::variables_map &args)
+{
+  return args[pre_encode].as<bool>();
+}
+
 inline void parseLdpcParams(const po::variables_map &args, const std::string &intented_type,
                             LdpcCoderParameters &params)
 {

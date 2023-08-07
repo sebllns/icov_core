@@ -18,11 +18,12 @@ bool InteractiveDecoder::processKey(char key)
         return false;
 
     // decode
-    float pov_x = 0;
-    float pov_y = 0;
+    float pov_x = getPov_x();
+    float pov_y = getPov_y();
     int frame = 0;
     m_decoder->request(pov_x, pov_y, frame);
     VTM_OPENCV_Utility::toBGRMat(m_decoder->getOutputBuf(), m_outputImage);
+
     // process custom keys
 
     return true;
