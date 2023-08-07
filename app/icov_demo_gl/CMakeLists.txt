@@ -84,12 +84,21 @@ message(STATUS "OPENGL_INCLUDE_DIR := ${OPENGL_INCLUDE_DIR}")
 # message(STATUS "OPENGL_LIBRARIES:= ${OPENGL_LIBRARIES}")
 message(STATUS "GLUT_INCLUDE_DIR := ${GLUT_INCLUDE_DIR}")
 message(STATUS "OpenCV = ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "glm = ${GLM_BINARY_DIR}, ${GLM_INCLUDE_DIRS}")
+message(
+  STATUS
+    "glm = ${GLM_BINARY_DIR}, ${GLM_INCLUDE_DIRS}, ${glm_INCLUDE_DIRS}, ${glm_INCLUDE_DIR}"
+)
 message(STATUS "glad = ${glad_INSTALL_DIR}, ${glad_LIBRARY}")
 
 set(LIB_INCLUDE_DIRS
-    ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${GLM_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS} ${glad_INSTALL_DIR}/include
+    ${OPENGL_INCLUDE_DIR}
+    ${GLUT_INCLUDE_DIR}
+    ${GLM_BINARY_DIR}
+    ${GLM_INCLUDE_DIRS}
+    ${glm_INCLUDE_DIRS}
+    ${glm_INCLUDE_DIR}
+    ${OpenCV_INCLUDE_DIRS}
+    ${glad_INSTALL_DIR}/include
     ${glfw3_INSTALL_DIR}/include)
 
 set(LIB_LINK_DIRS ${glad_INSTALL_DIR}/lib ${glfw3_INSTALL_DIR}/lib64
