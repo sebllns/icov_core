@@ -85,6 +85,7 @@ public:
   IBlockProcessor &blockProcessor();
   const PelUnitBuf getOutputBuf() const;
   void decodeFullFrame();
+  void request(float x, float y, unsigned long i);
 
 protected:
   struct BlockProcessor : public IBlockProcessor {

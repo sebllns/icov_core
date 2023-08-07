@@ -92,7 +92,7 @@ inline viewport_geometry default_geometry(const angle_radian &fov,
 
   viewport_geometry vpg;
   vpg.focale = 1 / (2.0f * tan(fov.x() * 0.5)); // focale
-  vpg.center = point2d(0.5f, 0.5f);             // center normalised coords
+  vpg.center = point2d(0.5f, 0.5f);             // center normalised screen coords
   vpg.fov = fov;                                // field of view in radians
   vpg.resolution = screen_resolution;           // resolution in pixels
 

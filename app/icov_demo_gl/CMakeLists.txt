@@ -115,11 +115,6 @@ message(
   STATUS
     "---------------------------------------------------------------------------\n\n"
 )
-message(STATUS "[INFO] App GL link librairies: ${APP_GL_LINK_LIBS}")
-message(
-  STATUS
-    "---------------------------------------------------------------------------\n\n"
-)
 message(STATUS "[INFO] App link librairies: ${LIB_LINK_LIBS}")
 message(
   STATUS

@@ -268,7 +268,7 @@ void OrderingDemoMode::run() {
   // Define the viewport static geometry
   viewport_geometry vpg;
   vpg.focale = 1 / (2.0f * tan(glm::radians(fovX_degree) * 0.5)); // focale
-  vpg.center = point2d(0.5f, 0.5f); // center normalised coords
+  vpg.center = point2d(0.5f, 0.5f);                               // center normalised screen coords
   vpg.fov = angle_radian(fovX_degree * M_PI / 180.0,
                          fovY_radian); // field of view in radians
   vpg.resolution = point2d(outputResolution.width,

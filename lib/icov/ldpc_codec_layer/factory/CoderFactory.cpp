@@ -56,5 +56,20 @@ void LdpcCoderFactory::create_coder_yuv(const LdpcCoderParameters &args,
   ICOV_INFO << "Chroma coder instanciated";
 }
 
+std::unique_ptr<LdpcCoderParameters> createLdpcParams(const std::string &coder_type)
+{
+  std::unique_ptr<LdpcCoderParameters> params;
+
+  if (coder_type == ldpc_codec_layer::LdpcCoder_IMT64::id)
+  {
+    params = std::make_unique<ldpc_codec_layer::LdpcCoder_IMT64::parameters>();
+  }
+  else
+  {
+    throw std::invalid_argument("Unknown coder type: " + coder_type);
+  }
+  return params;
+}
+
 } // namespace ldpc_codec_layer
 } // namespace icov

@@ -11,7 +11,7 @@ file(GLOB_RECURSE INC_FILES "*.h")
 
 add_executable(${EXE_NAME} main.cpp ${SRC_FILES} ${INC_FILES})
 
-target_include_directories(${EXE_NAME} PRIVATE . ${APP_INCLUDE_DIRS})
+target_include_directories(${EXE_NAME} PRIVATE .)
 
 if(UNIX)
   target_link_libraries(${EXE_NAME} dl)

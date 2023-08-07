@@ -36,7 +36,7 @@ inline bool directory_exists(const std::string &path) {
 }
 
 inline void assert_file_exists(const std::string &path) {
-  icov::assert::check(file_exists(path), "Path is a valid file: " + path);
+  icov::assert::check(file_exists(path), "Path is a valid file: '" + path + "'");
 }
 
 inline void assert_directory_exists(const std::string &path) {

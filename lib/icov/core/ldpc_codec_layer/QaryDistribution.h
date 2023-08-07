@@ -402,8 +402,7 @@ public:
     }
 
     p1 += p0;
-    ICOV_ASSERT_MSG(p1 > 0,
-                    "We need p1 > 0 " + std::to_string(getBitplaneCount()));
+    ICOV_ASSERT_MSG(p1 > 0, "We need p1 > 0");
     return p0 / p1;
   }
 

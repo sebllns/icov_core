@@ -84,31 +84,6 @@ void decoder::SinglePassDecoder::initialize(
       },
       vpg);
 
-  //  icov_visualization.AccessBlockManager->buildAccessBlocks(
-  //      *icov_visualization.Picture, *icov_visualization.ViewportManager);
-
-  // select blocks to decode
-  //  bool found_access_block = false;
-  //  for (auto &b : m_navigation.Visualization->Picture->icus()) {
-
-  //    bool visible =
-  //    (m_icovFile->contentParameterSet().encoded_blocks.empty()) ||
-  //                   (m_icovFile->contentParameterSet().encoded_blocks.count(
-  //                        b.getIdSelf()) > 0);
-
-  //    m_navigation.Visualization->Picture->getById(b.getIdSelf())
-  //        ->setHidden(!visible);
-
-  //    if (visible && b.isAccessBlock())
-  //      found_access_block = true;
-  //  }
-
-  //  if (!found_access_block)
-  //    m_navigation.Visualization->Picture
-  //        ->getById(
-  //            m_icovFile->contentParameterSet().encoded_blocks.cbegin()->first)
-  //        ->setIsAccessBlock(true);
-
   ICOV_DEBUG << "Init extractor";
 
   m_icovFile->readBlockPos();
@@ -121,11 +96,14 @@ void decoder::SinglePassDecoder::initialize(
     extractor_params.icu_sizes.push_back(blockArea.block(compID).area());
   }
 
+  auto my_coder_params = coder_params.clone();
+  my_coder_params->codeLength = icu_size * icu_size;
+
   m_blockProcessor = std::make_shared<BlockProcessor>();
   m_blockProcessor->blockCount = m_icovFile->contentParameterSet().icu_count;
   m_blockProcessor->ExtractionBitstream = m_extractionBitstream;
-  m_blockProcessor->Extractor = std::make_unique<BlockExtractor>(
-      m_icovFile, extractor_params, coder_params, m_extractionBitstream);
+  m_blockProcessor->Extractor =
+      std::make_unique<BlockExtractor>(m_icovFile, extractor_params, *my_coder_params, m_extractionBitstream);
 
   ICOV_DEBUG << "Init decoder";
 
@@ -155,7 +133,7 @@ void decoder::SinglePassDecoder::initialize(
               }
 
       },
-      coder_params, m_extractionBitstream);
+      *my_coder_params, m_extractionBitstream);
 
   m_navigation.Request->setBlockProcessor(m_blockProcessor);
 }
@@ -183,4 +161,8 @@ void decoder::SinglePassDecoder::decodeFullFrame() {
   //  m_navigation.Request->setViewport(
   //      std::make_shared<DummyViewportManager>()); // TODO
   m_navigation.Request->update(0, 0);
+}
+
+void decoder::SinglePassDecoder::request(float x, float y, unsigned long i) {
+  m_navigation.Request->update(x, y);
 }

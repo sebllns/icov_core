@@ -1,8 +1,8 @@
 #include "InputMedia.h"
-#include "FastArray.h"
 #include "Media.h"
 
 #include "icov_assert.h"
+#include "icov_path.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -21,6 +21,7 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
   for (int i = bitstream::eIcovStream::MEDIA_HEADER;
        i < bitstream::eIcovStream::COUNT; ++i) {
     std::string part_file = path.string() + "." + std::to_string(i);
+    icov::path::assert_file_exists(part_file);
     ICOV_TRACE << "Open file part " << part_file << std::endl;
     m_fileParts[i] = std::make_unique<std::ifstream>(
         part_file, std::ios_base::binary | std::ios_base::in);

@@ -14,7 +14,6 @@
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
 #include <glm/glm.hpp>
 
-
 class SHADER_PROGRAM
 {
 public:

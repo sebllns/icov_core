@@ -1,4 +1,5 @@
 #include "InputMedia.h"
+#include "icov_assert.h"
 
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
@@ -67,7 +68,7 @@ void instantiateInputMedia(const boost::filesystem::path &path,
 
   output.reset(media);
 
-  ICOV_ASSERT_MSG(media != nullptr, "Format is not supported: " + ext);
+  assert::not_null(media, "Format is not supported: " + ext);
 }
 
 } // namespace encoder

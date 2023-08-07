@@ -62,5 +62,7 @@ public:
                                p_InteractiveCoder &uv_coder);
 };
 
+std::unique_ptr<LdpcCoderParameters> createLdpcParams(const std::string &coder_type);
+
 } // namespace ldpc_codec_layer
 } // namespace icov

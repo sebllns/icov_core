@@ -39,6 +39,11 @@ public:
   optionsDesc() const {
     return m_options_desc;
   }
+
+  const po::variables_map &args() const
+  {
+    return m_options_map;
+  }
 };
 
 ////////////////////////////////////////////////////////////////
@@ -46,42 +51,47 @@ class IcovProgramBase : public IIcovProgram {
 public:
   IcovProgramBase(const std::string &modes) {
 
-    this->m_options_desc.add_options()
+    //    this->m_options_desc.add_options()
 
-        ("help,h", "produce help message")
+    //        ("help,h", "produce help message")
 
-            ((std::string(mode) + ",m").c_str(),
-             po::value<std::string>()->required(),
-             (std::string("Set the program mode (see documentation for more "
-                          "details on each mode)\nAccepted values: ") +
-              modes)
-                 .c_str())
+    //            ((std::string(mode) + ",m").c_str(),
+    //             po::value<std::string>()->required(),
+    //             (std::string("Set the program mode (see documentation for
+    //             more "
+    //                          "details on each mode)\nAccepted values: ") +
+    //              modes)
+    //                 .c_str())
 
-                ((std::string(coder_type) + ",c").c_str(),
-                 po::value<std::string>()->default_value("imt164"),
-                 "Set the coder type")
+    //                ((std::string(coder_type) + ",c").c_str(),
+    //                 po::value<std::string>()->default_value("imt164"),
+    //                 "Set the coder type")
 
-                    ((std::string(data_path) + ",d").c_str(),
-                     po::value<std::string>()->default_value("data/"),
-                     "Set the data path")
+    //                    ((std::string(data_path) + ",d").c_str(),
+    //                     po::value<std::string>()->default_value("data/"),
+    //                     "Set the data path")
 
-                        ((std::string(code_length) + ",n").c_str(),
-                         po::value<int>()->default_value(1024),
-                         "set the code length")
+    //                        ((std::string(code_length) + ",n").c_str(),
+    //                         po::value<int>()->default_value(1024),
+    //                         "set the code length")
 
-                            ((std::string(bp_iter) + ",it").c_str(),
-                             po::value<int>()->default_value(100),
-                             "Set iteration count for belief propagation of "
-                             "LDPC coder")
+    //                            ((std::string(bp_iter) + ",it").c_str(),
+    //                             po::value<int>()->default_value(100),
+    //                             "Set iteration count for belief propagation
+    //                             of " "LDPC coder")
 
-                                (numcodes.c_str(),
-                                 po::value<std::string>()->default_value(
-                                     "numcodes.txt"),
-                                 "Set the numcodes steps for iterative coder")
+    //                                (numcodes.c_str(),
+    //                                 po::value<std::string>()->default_value(
+    //                                     "numcodes.txt"),
+    //                                 "Set the numcodes steps for iterative
+    //                                 coder")
 
-                                    ((std::string(log_lvl) + ",lg").c_str(),
-                                     po::value<int>()->default_value(2),
-                                     "Set log level filter");
+    //                                    ((std::string(log_lvl) +
+    //                                    ",lg").c_str(),
+    //                                     po::value<int>()->default_value(2),
+    //                                     "Set log level filter");
+
+    init_options_desc(modes, m_options_desc);
   }
 
   virtual ~IcovProgramBase() = default;

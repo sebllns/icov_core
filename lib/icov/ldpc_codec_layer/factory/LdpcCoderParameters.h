@@ -47,7 +47,11 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_assert.h"
+#include "icov_io.h"
+#include "icov_path.h"
+#include <memory>
+#include <numeric>
 
 namespace icov {
 struct LdpcCoderParameters {
