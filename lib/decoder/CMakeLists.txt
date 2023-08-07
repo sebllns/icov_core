@@ -16,5 +16,5 @@ add_library(${LIB_NAME} ${SRC_FILES} ${INC_FILES})
 target_include_directories(${LIB_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(
   ${LIB_NAME} PUBLIC IcovCoreLib IcovLdpcCodecLayer IcovOmnidirectionalLayer
-                     IcovVideoLayer ${OpenCV_LIBS})
+                     IcovVideoLayer ${OpenCV_LIBS} ${OpenCV_LIBRARIES})
 set_target_properties(${LIB_NAME} PROPERTIES FOLDER "public/lib")
