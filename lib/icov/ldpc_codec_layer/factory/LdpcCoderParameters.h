@@ -50,6 +50,7 @@
 #include "icov_assert.h"
 #include "icov_io.h"
 #include "icov_path.h"
+#include <cmath>
 #include <memory>
 #include <numeric>
 
@@ -78,8 +79,8 @@ struct LdpcCoderParameters {
         icov::path::get_data_folder(database, n, false), numcodeFile);
     std::vector<int> numcodes_v;
 
-    int min_n = std::ceil(n / max_level);
-    int max_n = std::floor(n / min_level);
+    int min_n = ceilf(n / max_level);
+    int max_n = floorf(n / min_level);
 
     if (icov::path::file_exists(path)) {
       icov::io::read_vector(path, numcodes_v);
