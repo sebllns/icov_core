@@ -52,7 +52,7 @@ void RequestManager::update(float angle_x, float angle_y) {
 #endif
 
   if (m_blockProcessor)
-    m_blockProcessor->startProcess();
+      m_blockProcessor->beforeOrderingLoop();
   while (m_picture->isValidBlock(current_block)) {
     if (m_blockProcessor) {
       try {
@@ -69,7 +69,7 @@ void RequestManager::update(float angle_x, float angle_y) {
     is_access_block = false;
   }
   if (m_blockProcessor)
-    m_blockProcessor->endProcess();
+    m_blockProcessor->afterOrderingLoop();
 }
 
 const std::shared_ptr<IAccessBlockManager> &
@@ -116,5 +116,5 @@ void RequestManager::setBlockProcessor(
     const std::shared_ptr<IBlockProcessor> &newBlockProcessor) {
   m_blockProcessor = newBlockProcessor;
 }
-} // namespace omnidirectional_layer
+} // namespace omnidirectional_layer
 } // namespace icov

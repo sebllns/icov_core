@@ -25,25 +25,22 @@ namespace fs = boost::filesystem;
 using namespace icov::decoder;
 using SI_SIDE = omnidirectional_layer::BlockPrediction::ePredType;
 
-ChannelDecoder::ChannelDecoder(
-    const params &p, const LdpcCoderParameters &LDPC_params,
-    const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
-    const std::shared_ptr<video::EncodingStructure> &encodingStruct,
-    const bitstream::sp_IcovExtractedBitstream &extraction)
+ChannelDecoder::ChannelDecoder(const params &p, const LdpcCoderParameters &LDPC_params,
+                               const std::shared_ptr<icov::video::BufGroups> &vvc_bufs,
+                               const std::shared_ptr<video::EncodingStructure> &encodingStruct,
+                               const bitstream::sp_IcovExtractedBitstream &extraction)
     : m_params(p), m_vvc_bufs(vvc_bufs), m_encodingStruct(encodingStruct),
       //      m_blockArea(
       //          UnitArea(p.QpParam.chromaFomat, Area(0, 0, p.icu_size,
       //          p.icu_size))
       //              .block(p.CompID)),
-      m_ldpc_coder(
-          ldpc_codec_layer::LdpcCoderFactory::create_coder(LDPC_params)),
-      m_blockBitplane(m_ldpc_coder->get_n(), 0),
-      m_blockSI(m_ldpc_coder->get_n(), 0),
+      m_ldpc_coder(ldpc_codec_layer::LdpcCoderFactory::create_coder(LDPC_params)),
+      m_blockBitplane(m_ldpc_coder->get_n(), 0), m_blockSI(m_ldpc_coder->get_n(), 0),
       m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),
-      m_block_prediction(
-          omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN),
-      m_bitstream(extraction), m_blockSymbols(m_ldpc_coder->get_n(), 0) {
-  m_intraPred.init(m_params.QpParam.chromaFomat);
+      m_block_prediction(omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN), m_bitstream(extraction),
+      m_blockSymbols(m_ldpc_coder->get_n(), 0), m_rate(0)
+{
+    m_intraPred.init(m_params.QpParam.chromaFomat);
 }
 
 ChannelDecoder::~ChannelDecoder() {}
@@ -58,9 +55,9 @@ void icov::decoder::ChannelDecoder::_decode_bitplane(
       bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
 
   read_syndrome(syndrome_size);
+  decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode), m_syndrome);
 
-  decode_bitplane(i, static_cast<icov::NumcodeIdx>(quantizedNumcode),
-                  m_syndrome);
+  m_rate += m_ldpc_coder->get_r(syndrome_size, m_ldpc_coder->get_n());
 }
 
 void icov::decoder::ChannelDecoder::_extract_numcodes(
@@ -95,15 +92,15 @@ void icov::decoder::ChannelDecoder::_decode_bitplanes(
   for (int i = 0; i < bitplaneCount; ++i) {
     _decode_bitplane(i, block_prediction);
   }
+  m_rate /= bitplaneCount;
 }
 
-void ChannelDecoder::decode_icu(
-    int icu_enc,
-    omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
-  ICOV_ASSERT_MSG(
-      block_prediction !=
-          omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
-      "Prediction unknown")
+void ChannelDecoder::decode_icu(int icu_enc, omnidirectional_layer::BlockPrediction::ePredType block_prediction)
+{
+
+  m_rate = 0;
+
+  ICOV_ASSERT_MSG(block_prediction != omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN, "Prediction unknown")
 
   bool is_access_block =
       (block_prediction ==
@@ -278,8 +275,8 @@ void ChannelDecoder::read_syndrome(int syndrome_size) {
   }
 }
 
-void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
-                                     const Syndrome &synd) {
+void ChannelDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const Syndrome &synd)
+{
   if (m_block_prediction ==
       icov::omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     ICOV_ASSERT_MSG(numcode ==
@@ -287,16 +284,11 @@ void ChannelDecoder::decode_bitplane(int bp, NumcodeIdx numcode,
                     "Numcode value must be set to 1 for access block");
   }
 
-  ICOV_TRACE << "CALL LDPC FOR BITPLANE " << bp + 1 << " / "
-             << m_bsp.bitplane_count();
-
   bitstream::VideoStreamDebugger::get_const_instance().assertSyndromeEqual(
       bp, synd);
 
   m_ldpc_coder->decode_bitplane(m_blockBitplane, bp, m_bsp, numcode, synd);
 
-  ICOV_TRACE << "assertBitplaneEqual"
-             << " " << bp;
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneEqual(
       bp, m_bsp.src_bits().at(bp));
 
@@ -352,6 +344,11 @@ ChannelDecoder::ldpc_coder() const {
 
 const ChannelDecoder::params &ChannelDecoder::get_params() const {
   return m_params;
+}
+
+Rate ChannelDecoder::rate() const
+{
+  return m_rate;
 }
 } // namespace decoder
 } // namespace icov

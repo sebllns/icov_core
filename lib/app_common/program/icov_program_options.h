@@ -168,5 +168,6 @@ inline ldpc_codec_layer::p_InteractiveCoder create_coder(const boost::program_op
   auto params = parseLdpcParams(args);
   return ldpc_codec_layer::LdpcCoderFactory::create_coder(*params);
 }
+
 } // namespace options
 } // namespace icov

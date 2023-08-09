@@ -48,6 +48,7 @@
 #pragma once
 #include "FastArray.h"
 
+#include "icov_assert.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
@@ -132,12 +133,11 @@ inline byte getQaryQParamByteValue(bool coding_flag, ushort x) {
 inline bool isPredictionAvailable(byte x) { return x != flag_t::UnavailableSI; }
 
 inline void assertPredictionAvailable(byte x) {
-  ICOV_ASSERT_MSG(bitstream::isPredictionAvailable(x),
-                  "No direction mode for the prediction");
+  icov::assert::check(bitstream::isPredictionAvailable(x), "No direction mode for the prediction");
 }
 
 inline ushort getPredDirMode(byte x) {
-  ICOV_ASSERT_MSG(isPredictionAvailable(x), "Prediction must be available");
+  icov::assert::check(isPredictionAvailable(x), "Prediction must be available");
   return x - offset_t::AvailableSI;
 }
 

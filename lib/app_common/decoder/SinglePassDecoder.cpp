@@ -3,10 +3,13 @@
 #include "decoder/BlockDecoder.h"
 #include "extractor/BlockExtractor.h"
 
+#include "icov_assert.h"
+#include "icov_log.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/implementation/DummyViewportManager.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/extracted_stream.h"
 #include <algorithm>
@@ -15,162 +18,274 @@
 #include <memory>
 #include <vector>
 
-icov::decoder::SinglePassDecoder::SinglePassDecoder(const fs::path &path)
-    : m_icovFile(std::make_shared<InputIcov>(path)),
-      m_extractionBitstream(std::make_shared<bitstream::IcovExtractedBitstream>()),
-      pov_x(std::numeric_limits<float>::max()), pov_y(pov_x), frame(std::numeric_limits<unsigned long>::max())
+icov::decoder::SinglePassDecoder::SinglePassDecoder()
+    : m_extractionBitstream(std::make_shared<bitstream::IcovExtractedBitstream>()),
+      m_blockProcessor(std::make_shared<IBlockProcessor>()), pov_x(std::numeric_limits<float>::max()), pov_y(pov_x),
+      frame(std::numeric_limits<unsigned long>::max())
 {
+    m_blockProcessor->setName("Root");
+    m_blockProcessor->setEnabled(true);
 }
 
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
-void decoder::SinglePassDecoder::initialize(
-    const params &p, const LdpcCoderParameters &coder_params) {
+void decoder::SinglePassDecoder::initLocal(const params &p, const boost::filesystem::path &path,
+                                           const LdpcCoderParameters &coder_params)
+{
+    ICOV_INFO << "Init local SinglePassDecoder";
 
-  VideoStreamDebugger::get_mutable_instance().reset();
+    setParams(p);
 
-  ICOV_DEBUG << "Init SinglePassDecoder";
+    ICOV_INFO << "Open ICOV file";
+    openIcovFile(path);
 
-  ICOV_DEBUG << "Load ContentParameterSet";
-  m_icovFile->readContentParameterSet();
-  const auto cps = m_icovFile->contentParameterSet();
+    ICOV_INFO << "Load ContentParameterSet";
+    m_icovFile->readContentParameterSet();
+    setContentParams(m_icovFile->contentParameterSet());
 
-  ICOV_DEBUG << "Icov version: " << cps.icov_version;
-  ICOV_DEBUG << (int)cps.content_chroma_format;
-  ICOV_DEBUG << (int)cps.content_height;
-  ICOV_DEBUG << (int)cps.content_width;
-  ICOV_DEBUG << (int)cps.block_fixed_size;
-  ICOV_DEBUG << (int)cps.qp;
+    const auto &cps = m_contentParams;
 
-  const ChromaFormat chFrmt = (ChromaFormat)cps.content_chroma_format;
+    ICOV_INFO << "Icov version: " << cps.icov_version;
+    ICOV_INFO << (int)cps.content_chroma_format;
+    ICOV_INFO << (int)cps.content_height;
+    ICOV_INFO << (int)cps.content_width;
+    ICOV_INFO << (int)cps.block_fixed_size;
+    ICOV_INFO << (int)cps.qp;
 
-  const int icu_size = (int)cps.block_fixed_size;
+    const ChromaFormat chFrmt = (ChromaFormat)cps.content_chroma_format;
+    const int icu_size = (int)cps.block_fixed_size;
+    UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
+    icov::assert::check(cps.is_block_fixed_size, "Only fixed size blocks is available in this version");
 
-  UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
+    setLdpcParams(coder_params);
+    m_ldpcParams->codeLength = icu_size * icu_size;
 
-  icov::assert::check(cps.is_block_fixed_size,
-                      "Only fixed size blocks is available in this version");
+    ICOV_INFO << "Init 360 navigation";
+    addDefaultNavigation();
 
-  ICOV_DEBUG << "Init 360 navigation";
-  const point2d resolution(cps.viewport_width, cps.viewport_height);
-  const angle_radian fov(cps.viewport_fov_x, cps.viewport_fov_y);
+    ICOV_INFO << "Init extractor";
+    addDefaultExtractor();
 
-  viewport_geometry vpg = factory::default_geometry(fov, resolution);
+    ICOV_INFO << "Init decoder";
+    addDefaultDecoder();
 
-  std::vector<Block::id_t> visibles;
-  std::transform(m_icovFile->contentParameterSet().encoded_blocks.cbegin(),
-                 m_icovFile->contentParameterSet().encoded_blocks.cend(),
-                 std::back_inserter(visibles),
-                 [](const auto &pair) { return pair.first; });
-
-  m_navigation.init(
-      {
-
-          .VisualizationParams =
-              {
-
-                  .Width = icovFile().contentParameterSet().content_width,
-
-                  .Height = icovFile().contentParameterSet().content_height,
-
-                  .DummyViewport = p.DummyViewport,
-
-                  .ViewportPadding =
-                      icovFile().contentParameterSet().viewport_padding
-
-              },
-
-          .IcuSize = icovFile().contentParameterSet().block_fixed_size,
-
-          .VisibleBlocks = visibles
-
-      },
-      vpg);
-
-  ICOV_DEBUG << "Init extractor";
-
-  m_icovFile->readBlockPos();
-
-  const int channelCount = getNumberValidComponents(chFrmt);
-  BlockExtractor::params extractor_params;
-
-  for (int c = 0; c < channelCount; c++) {
-    const auto compID = static_cast<ComponentID>(c);
-    extractor_params.icu_sizes.push_back(blockArea.block(compID).area());
-  }
-
-  auto my_coder_params = coder_params.clone();
-  my_coder_params->codeLength = icu_size * icu_size;
-
-  m_blockProcessor = std::make_shared<BlockProcessor>();
-  m_blockProcessor->blockCount = m_icovFile->contentParameterSet().icu_count;
-  m_blockProcessor->ExtractionBitstream = m_extractionBitstream;
-  m_blockProcessor->Extractor =
-      std::make_unique<BlockExtractor>(m_icovFile, extractor_params, *my_coder_params, m_extractionBitstream);
-
-  ICOV_DEBUG << "Init decoder";
-
-  m_blockProcessor->Decoder = std::make_unique<BlockDecoder>(
-      BlockDecoder::params{
-
-          .qp = cps.qp,
-
-          .chFormat = chFrmt,
-
-          .sourceSize =
-              {
-
-                  (int)cps.content_width,
-
-                  (int)cps.content_height
-
-              },
-
-          .icuSize_luma =
-              {
-
-                  (int)cps.block_fixed_size,
-
-                  (int)cps.block_fixed_size
-
-              }
-
-      },
-      *my_coder_params, m_extractionBitstream);
-
-  m_navigation.Request->setBlockProcessor(m_blockProcessor);
+    IBlockProcessor::func_t check_empty_bitsteam = [this](const Block &, IBlockPredictionManager::prediction_t) {
+        assert::check(m_extractionBitstream->empty(), "Bitstream must be empty after block decoding");
+    };
+    m_blockDecoder->setAfter(check_empty_bitsteam);
 }
 
-const InputIcov &decoder::SinglePassDecoder::icovFile() const {
-  return *m_icovFile;
+void decoder::SinglePassDecoder::openIcovFile(const boost::filesystem::path &path)
+{
+    m_icovFile = std::make_shared<InputIcov>(path);
+    m_icovFile->readBlockPos();
 }
 
-InputIcov &decoder::SinglePassDecoder::icovFile() { return *m_icovFile; }
+void decoder::SinglePassDecoder::addDefaultNavigation()
+{
+    m_navigation = std::make_shared<factory::Navigation360>();
 
-const factory::Navigation360 &
-decoder::SinglePassDecoder::icovNavigation() const {
-  return m_navigation;
+    const auto &cps = m_contentParams;
+
+    const point2d resolution(cps.viewport_width, cps.viewport_height);
+    const angle_radian fov(cps.viewport_fov_x, cps.viewport_fov_y);
+
+    viewport_geometry vpg = factory::default_geometry(fov, resolution);
+
+    std::vector<Block::id_t> visibles;
+    std::transform(cps.encoded_blocks.cbegin(), cps.encoded_blocks.cend(), std::back_inserter(visibles),
+                   [](const auto &pair) { return pair.first; });
+
+    m_navigation->init(
+        {
+
+            .VisualizationParams =
+                {
+
+                    .Width = contentParams().content_width,
+
+                    .Height = contentParams().content_height,
+
+                    .DummyViewport = m_params.DummyViewport,
+
+                    .ViewportPadding = cps.viewport_padding
+
+                },
+
+            .IcuSize = cps.block_fixed_size,
+
+            .VisibleBlocks = visibles
+
+        },
+        vpg);
+
+    m_navigation->Request->setBlockProcessor(m_blockProcessor);
 }
 
-IBlockProcessor &decoder::SinglePassDecoder::blockProcessor() {
-  return *m_blockProcessor;
+void decoder::SinglePassDecoder::addDefaultExtractor()
+{
+    const auto &cps = m_contentParams;
+    const ChromaFormat chFrmt = static_cast<ChromaFormat>(cps.content_chroma_format);
+
+    const int channelCount = getNumberValidComponents(chFrmt);
+    BlockExtractor::params extractor_params;
+
+    const int icu_size = (int)cps.block_fixed_size;
+    UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
+
+    for (int c = 0; c < channelCount; c++)
+    {
+        const auto compID = static_cast<ComponentID>(c);
+        extractor_params.icu_sizes.push_back(blockArea.block(compID).area());
+    }
+
+    setBlockExtractor(
+        std::make_shared<BlockExtractor>(m_icovFile, extractor_params, ldpcParams(), m_extractionBitstream));
 }
 
-const PelUnitBuf decoder::SinglePassDecoder::getOutputBuf() const {
-  return m_blockProcessor->Decoder->decodingOutput();
+void decoder::SinglePassDecoder::addDefaultDecoder()
+{
+
+    const ContentParameterSet &cps = m_contentParams;
+
+    setBlockDecoder(std::make_shared<BlockDecoder>(
+        BlockDecoder::params{
+
+            .qp = cps.qp,
+
+            .chFormat = static_cast<ChromaFormat>(cps.content_chroma_format),
+
+            .sourceSize =
+                {
+
+                    (int)cps.content_width,
+
+                    (int)cps.content_height
+
+                },
+
+            .icuSize_luma =
+                {
+
+                    (int)cps.block_fixed_size,
+
+                    (int)cps.block_fixed_size
+
+                }
+
+        },
+        ldpcParams(), m_extractionBitstream));
 }
 
-void decoder::SinglePassDecoder::decodeFullFrame() {
-  //  m_navigation.Request->setViewport(
-  //      std::make_shared<DummyViewportManager>()); // TODO
-  m_navigation.Request->update(0, 0);
+const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const
+{
+    icov::assert::not_null(m_blockDecoder.get(), "Decoder cannot be null");
+    return m_blockDecoder->decodingOutput();
 }
 
-void decoder::SinglePassDecoder::request(float x, float y, unsigned long i) {
-  if (x != pov_x || y != pov_y || i != frame)
-    m_navigation.Request->update(x, y);
+void decoder::SinglePassDecoder::start()
+{
+    this->request(0, 0, 0);
+}
+
+void decoder::SinglePassDecoder::request(float x, float y, unsigned long i)
+{
+    icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
+    icov::assert::not_null(m_navigation->Request.get(), "Request manager cannot be null");
+
+    VideoStreamDebugger::get_mutable_instance().reset();
+
+    if (x != pov_x || y != pov_y || i != frame)
+    {
+        if (m_blockDecoder)
+            m_blockDecoder->getDecodingOutput().fill(0);
+        m_navigation->Request->update(x, y);
+    }
 
   pov_x = x;
   pov_y = y;
   frame = i;
+}
+
+const LdpcCoderParameters &decoder::SinglePassDecoder::ldpcParams() const
+{
+  assert::not_null(m_ldpcParams.get(), "LDPC parameters cannot be null");
+  return *m_ldpcParams;
+}
+
+void decoder::SinglePassDecoder::setLdpcParams(const LdpcCoderParameters &newLdpcParams)
+{
+  m_ldpcParams = newLdpcParams.clone();
+}
+
+const ContentParameterSet &decoder::SinglePassDecoder::contentParams() const
+{
+  return m_contentParams;
+}
+
+const std::shared_ptr<factory::Navigation360> &decoder::SinglePassDecoder::navigation() const
+{
+  return m_navigation;
+}
+
+void decoder::SinglePassDecoder::setNavigation(const std::shared_ptr<factory::Navigation360> &newNavigation)
+{
+  m_navigation = newNavigation;
+}
+
+const std::shared_ptr<InputIcov> &decoder::SinglePassDecoder::icovFile() const
+{
+  return m_icovFile;
+}
+
+void decoder::SinglePassDecoder::setIcovFile(const std::shared_ptr<InputIcov> &newIcovFile)
+{
+  m_icovFile = newIcovFile;
+}
+
+const sp_IcovExtractedBitstream &decoder::SinglePassDecoder::extractionBitstream() const
+{
+  return m_extractionBitstream;
+}
+
+void decoder::SinglePassDecoder::setContentParams(const ContentParameterSet &newContentParams)
+{
+  m_contentParams = newContentParams;
+}
+
+const decoder::SinglePassDecoder::params &decoder::SinglePassDecoder::getParams() const
+{
+  return m_params;
+}
+
+void decoder::SinglePassDecoder::setParams(const decoder::SinglePassDecoder::params &newParams)
+{
+  m_params = newParams;
+}
+
+const std::shared_ptr<BlockExtractor> &decoder::SinglePassDecoder::blockExtractor() const
+{
+  return m_blockExtractor;
+}
+
+const std::shared_ptr<decoder::BlockDecoder> &decoder::SinglePassDecoder::blockDecoder() const
+{
+  return m_blockDecoder;
+}
+
+const std::shared_ptr<IBlockProcessor> &decoder::SinglePassDecoder::blockProcessor() const
+{
+  return m_blockProcessor;
+}
+
+void decoder::SinglePassDecoder::setBlockExtractor(const std::shared_ptr<BlockExtractor> &newBlockExtractor)
+{
+  m_blockExtractor = newBlockExtractor;
+  IBlockProcessor::addChild(m_blockProcessor, m_blockExtractor);
+}
+
+void decoder::SinglePassDecoder::setBlockDecoder(const std::shared_ptr<decoder::BlockDecoder> &newBlockDecoder)
+{
+  m_blockDecoder = newBlockDecoder;
+  IBlockProcessor::addChild(m_blockProcessor, m_blockDecoder);
 }

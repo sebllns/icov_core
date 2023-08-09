@@ -78,12 +78,6 @@ public:
                  const bitstream::sp_IcovExtractedBitstream &extraction);
   ~BlockExtractor();
 
-  void startProcess() override;
-  void processBlock(const omnidirectional_layer::Block &b,
-                    omnidirectional_layer::IBlockPredictionManager::prediction_t
-                        prediction) override;
-  void endProcess() override;
-
 protected:
   std::shared_ptr<InputIcov>
       m_icovFile; /**< Shared pointer to input ICOV file */
@@ -98,6 +92,13 @@ protected:
                              objects */
 
   params m_params; /**< BlockExtractor parameters */
+
+  // IBlockProcessor interface
+protected:
+  void _beforeOrderingLoop() override;
+  void _afterOrderingLoop() override;
+  void _processBlock(const omnidirectional_layer::Block &b,
+                     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
 };
 } // namespace extractor
 } // namespace icov

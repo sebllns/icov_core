@@ -6,10 +6,10 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
     : InteractiveModeBase(), m_params(params)
 {
     path::assert_file_exists(m_params.icov_file.string());
-    m_decoder = std::make_unique<icov::decoder::SinglePassDecoder>(m_params.icov_file);
-    m_decoder->initialize(decoder::SinglePassDecoder::params{.DummyViewport = m_params.dummyViewport},
-
-                          ldpc_params);
+    m_decoder = std::make_unique<icov::decoder::SinglePassDecoder>();
+    m_decoder->initLocal(decoder::SinglePassDecoder::params{.DummyViewport = m_params.dummyViewport},
+                         m_params.icov_file, ldpc_params);
+    m_decoder->start();
 }
 
 bool InteractiveDecoder::processKey(char key)
@@ -22,7 +22,7 @@ bool InteractiveDecoder::processKey(char key)
     float pov_y = getPov_y();
     int frame = 0;
     m_decoder->request(pov_x, pov_y, frame);
-    VTM_OPENCV_Utility::toBGRMat(m_decoder->getOutputBuf(), m_outputImage);
+    VTM_OPENCV_Utility::toBGRMat(m_decoder->getDecodedBuf(), m_outputImage);
 
     // process custom keys
 

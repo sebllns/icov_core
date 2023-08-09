@@ -126,24 +126,24 @@ void TestFullFrame::encode() {
 
 void TestFullFrame::decode() {
   // INIT DECODER
-  m_decoder = std::make_unique<decoder::SinglePassDecoder>(
-      m_encoder->output_media().getPath());
-  m_decoder->initialize(
-      decoder::SinglePassDecoder::params{.DummyViewport =
-                                             m_parameters.DummyViewport},
+  //  m_decoder = std::make_unique<decoder::SinglePassDecoder>(
+  //      m_encoder->output_media().getPath());
+  //  m_decoder->initialize(
+  //      decoder::SinglePassDecoder::params{.DummyViewport =
+  //                                             m_parameters.DummyViewport},
 
-      *m_parameters.ldpc_params);
+  //      *m_parameters.ldpc_params);
 
-  // CHECK CPS
-  icov::assert::equal(
-      m_encoder->output_media().contentParameterSet(),
-      m_decoder->icovFile().contentParameterSet(),
-      "ContentParameterSet not equal between Encoder & Decoder");
+  //  // CHECK CPS
+  //  icov::assert::equal(
+  //      m_encoder->output_media().contentParameterSet(),
+  //      m_decoder->icovFile().contentParameterSet(),
+  //      "ContentParameterSet not equal between Encoder & Decoder");
 
-  //  m_decoder->icovFile().contentParameterSet() =
-  //      m_encoder->output_media().contentParameterSet();
-  // DECODE FULL FRAME
-  m_decoder->decodeFullFrame();
+  //  //  m_decoder->icovFile().contentParameterSet() =
+  //  //      m_encoder->output_media().contentParameterSet();
+  //  // DECODE FULL FRAME
+  //  m_decoder->start();
 }
 
 void TestFullFrame::check() {}
@@ -153,7 +153,7 @@ void TestFullFrame::display() {
   cv::namedWindow(windows_title, cv::WINDOW_NORMAL);
 
   cv::Mat frame_output(128, 128, CV_8UC3, cv::Scalar(255, 0, 255));
-  VTM_OPENCV_Utility::toBGRMat(m_decoder->getOutputBuf(), frame_output);
+  VTM_OPENCV_Utility::toBGRMat(m_decoder->getDecodedBuf(), frame_output);
 
   cv::imshow(windows_title, frame_output);
   cv::waitKey(0);

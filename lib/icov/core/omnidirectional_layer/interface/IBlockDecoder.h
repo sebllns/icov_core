@@ -63,11 +63,12 @@ protected:
 
 public:
   IBlockDecoder(/*const std::istream &bitstream*/)
-      : /*m_bitstream(bitstream.rdbuf()),*/ m_pixels(nullptr), m_width(0),
-        m_height(0), m_rowPitch(0) {}
+      : /*m_bitstream(bitstream.rdbuf()),*/ m_pixels(nullptr), m_width(0), m_height(0), m_rowPitch(0)
+  {
+      this->setName("Decoder");
+  }
 
   virtual ~IBlockDecoder() = default;
-  virtual void decode(/*stream*/) = 0;
   virtual void setTexture(unsigned char *pixels, int width, int height,
                           int rowPitch) {
     m_pixels = pixels;

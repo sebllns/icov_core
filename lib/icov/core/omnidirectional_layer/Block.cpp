@@ -69,7 +69,14 @@ Block::id_t Block::getId(NeighborDirection index) const {
   return uid[index];
 }
 
-size_t Block::getIdSelf() const { return getId(NeighborDirection::SELF); }
+Block::id_t Block::getIdSelf() const
+{
+  return getId(NeighborDirection::SELF);
+}
+
+// size_t getIndex() const
+//{
+// }
 
 const point3d &Block::getCartesianCoord(uint16_t i) const {
   assert(i >= 0 && i < 5);

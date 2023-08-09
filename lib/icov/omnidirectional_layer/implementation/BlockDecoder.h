@@ -58,15 +58,15 @@ private:
 
 public:
   BlockDecoder();
-  virtual void decode(/*stream*/) override;
+  virtual void decode(/*stream*/);
   float getTime();
   ~BlockDecoder();
 
-  // IBlockManager interface
-public:
-  virtual void
-  processBlock(const Block &b,
-                 IBlockPredictionManager::prediction_t prediction) override;
+  // IBlockProcessor interface
+protected:
+  virtual void _processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction) override;
+  void _beforeOrderingLoop() override;
+  void _afterOrderingLoop() override;
 };
 
 } // namespace omnidirectional_layer

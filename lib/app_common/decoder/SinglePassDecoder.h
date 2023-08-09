@@ -56,8 +56,10 @@
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include "video_layer/ContentParameterSet.h"
 #include <memory>
 #include <queue>
+#include <vector>
 
 using namespace icov;
 using namespace icov::extractor;
@@ -69,87 +71,63 @@ namespace icov {
 namespace decoder {
 class SinglePassDecoder {
 public:
-  struct params {
-    bool DummyViewport;
+  struct params
+  {
+      bool DummyViewport = false;
   };
 
-  SinglePassDecoder(const fs::path &path);
+  SinglePassDecoder();
   ~SinglePassDecoder();
 
-  void initialize(const params &p, const LdpcCoderParameters &coder_params);
+  void initLocal(const params &p, const fs::path &path, const LdpcCoderParameters &coder_params);
 
-  const InputIcov &icovFile() const;
-  InputIcov &icovFile();
+  void openIcovFile(const fs::path &path);
 
-  const factory::Navigation360 &icovNavigation() const;
-  IBlockProcessor &blockProcessor();
-  const PelUnitBuf getOutputBuf() const;
-  void decodeFullFrame();
+  void addDefaultNavigation();
+  void addDefaultExtractor();
+  void addDefaultDecoder();
+
+  const PelUnitBuf getDecodedBuf() const;
+
+  const std::shared_ptr<BlockExtractor> &blockExtractor() const;
+  const std::shared_ptr<BlockDecoder> &blockDecoder() const;
+  const std::shared_ptr<IBlockProcessor> &blockProcessor() const;
+
+  void setBlockExtractor(const std::shared_ptr<BlockExtractor> &newBlockExtractor);
+  void setBlockDecoder(const std::shared_ptr<BlockDecoder> &newBlockDecoder);
+
+  void start();
   void request(float x, float y, unsigned long i);
 
+  const LdpcCoderParameters &ldpcParams() const;
+  void setLdpcParams(const LdpcCoderParameters &newLdpcParams);
+
+  const ContentParameterSet &contentParams() const;
+
+  const std::shared_ptr<factory::Navigation360> &navigation() const;
+  void setNavigation(const std::shared_ptr<factory::Navigation360> &newNavigation);
+
+  const std::shared_ptr<InputIcov> &icovFile() const;
+  void setIcovFile(const std::shared_ptr<InputIcov> &newIcovFile);
+
+  const bitstream::sp_IcovExtractedBitstream &extractionBitstream() const;
+
+  void setContentParams(const ContentParameterSet &newContentParams);
+
+  const params &getParams() const;
+  void setParams(const params &newParams);
+
 protected:
-  struct BlockProcessor : public IBlockProcessor {
-    std::unique_ptr<BlockExtractor> Extractor;
-    std::unique_ptr<BlockDecoder> Decoder;
-    bitstream::sp_IcovExtractedBitstream ExtractionBitstream;
-    int blockCount;
-
-    void
-    processBlock(const icov::omnidirectional_layer::Block &b,
-                 omnidirectional_layer::IBlockPredictionManager::prediction_t
-                     prediction) override {
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-      ICOV_TRACE << "PROCESS BLOCK " << b.getIdSelf() << " WITH PREDICTION "
-                 << BlockPrediction::toString(
-                        BlockPrediction::toPredType(prediction));
-#endif
-
-      if (Extractor) {
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        ICOV_TRACE << "EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
-                   << BlockPrediction::toString(
-                          BlockPrediction::toPredType(prediction));
-#endif
-
-        Extractor->processBlock(b, prediction);
-      }
-
-      if (Decoder) {
-
-#ifdef ICOV_CORE_DEBUG_TRACE_ENABLED
-        ICOV_TRACE << "DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "
-                   << BlockPrediction::toString(
-                          BlockPrediction::toPredType(prediction));
-#endif
-
-        Decoder->processBlock(b, prediction);
-      }
-
-      icov::assert::equal<size_t>(ExtractionBitstream->getActualSize(), 0,
-                                  "Buffer was not read in totality");
-      ExtractionBitstream->reset();
-    }
-    void startProcess() override {
-      if (Extractor)
-        Extractor->startProcess();
-      if (Decoder)
-        Decoder->startProcess();
-    }
-    void endProcess() override {
-      if (Extractor)
-        Extractor->endProcess();
-      if (Decoder)
-        Decoder->endProcess();
-    }
-  };
-
+  params m_params;
   std::vector<float> m_q_values;
-  std::shared_ptr<InputIcov> m_icovFile;
+  ContentParameterSet m_contentParams;
   bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
-  factory::Navigation360 m_navigation;
-  std::shared_ptr<BlockProcessor> m_blockProcessor;
+  std::shared_ptr<factory::Navigation360> m_navigation;
+  std::unique_ptr<LdpcCoderParameters> m_ldpcParams;
+  std::shared_ptr<InputIcov> m_icovFile;
+  std::shared_ptr<IBlockProcessor> m_blockProcessor;
+  std::shared_ptr<BlockExtractor> m_blockExtractor;
+  std::shared_ptr<BlockDecoder> m_blockDecoder;
 
   float pov_x;
   float pov_y;

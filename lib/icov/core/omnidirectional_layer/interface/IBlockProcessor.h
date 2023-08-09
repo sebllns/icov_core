@@ -45,8 +45,12 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_debug.h"
+#include "icov_log.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
+#include <memory>
+#include <vector>
 
 namespace icov {
 namespace omnidirectional_layer {
@@ -56,29 +60,178 @@ namespace omnidirectional_layer {
  *
  *  A IBlockProcessor is
  */
-class IBlockProcessor {
-public:
-  virtual ~IBlockProcessor() = default;
+class IBlockProcessor
+{
+  public:
+    using func_t = std::function<void(const Block &, IBlockPredictionManager::prediction_t)>;
 
-  ///
-  /// \brief startProcess : executed BEFORE loop on processBlock
-  ///
-  inline virtual void startProcess(){};
+    IBlockProcessor();
 
-  ///
-  /// \brief processBlock executed in a loop on each block to process
-  /// \param b
-  /// \param prediction
-  ///
-  virtual void
-  processBlock(const Block &b,
-               IBlockPredictionManager::prediction_t prediction) = 0;
+    virtual ~IBlockProcessor() = default;
 
-  ///
-  /// \brief startProcess : executed AFTER loop on processBlock
-  ///
-  inline virtual void endProcess(){};
+    ///
+    /// \brief startProcess : executed BEFORE loop on processBlock
+    ///
+    void beforeOrderingLoop();
+
+    ///
+    /// \brief processBlock executed in a loop on each block to process
+    /// \param b
+    /// \param prediction
+    ///
+    void processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction);
+
+    ///
+    /// \brief startProcess : executed AFTER loop on processBlock
+    ///
+    void afterOrderingLoop();
+
+    const std::shared_ptr<IBlockProcessor> &parent() const;
+    const std::string prettyName() const;
+    const std::string &name() const;
+    const std::vector<std::shared_ptr<IBlockProcessor>> &childs() const;
+    void setName(const std::string &newName);
+
+    static void removeParent(const std::shared_ptr<IBlockProcessor> &node);
+    static void addChild(const std::shared_ptr<IBlockProcessor> &parent, const std::shared_ptr<IBlockProcessor> &child);
+
+    bool enabled() const;
+    void setEnabled(bool newEnabled);
+
+    void setBefore(const func_t &newBefore);
+    void setAfter(const func_t &newAfter);
+
+  protected:
+    virtual void _beforeOrderingLoop(){};
+    virtual void _afterOrderingLoop(){};
+    virtual void _processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction){};
+
+  private:
+    std::string m_name;
+    std::shared_ptr<IBlockProcessor> m_parent;
+    std::vector<std::shared_ptr<IBlockProcessor>> m_childs;
+    bool m_enabled;
+
+    func_t m_before;
+    func_t m_after;
 };
+
+inline IBlockProcessor::IBlockProcessor() : m_name(""), m_parent(nullptr), m_enabled(true)
+{
+}
+
+inline void IBlockProcessor::beforeOrderingLoop()
+{
+    if (!m_enabled)
+        return;
+
+    if (icov::debug::debug_trace_enabled)
+        ICOV_TRACE << "calling startProcess() for BlockProcessor (" << prettyName() << ")";
+
+    _beforeOrderingLoop();
+
+    for (auto &ch : m_childs)
+        ch->beforeOrderingLoop();
+}
+
+inline void IBlockProcessor::processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction)
+{
+    if (!m_enabled)
+        return;
+
+    if (icov::debug::debug_trace_enabled)
+        ICOV_TRACE << "calling processBlock(block_id=" << b.getIdSelf() << ", pred_id=" << prediction
+                   << ") for BlockProcessor (" << prettyName() << ")";
+
+    if (m_before)
+        m_before(b, prediction);
+
+    _processBlock(b, prediction);
+
+    for (auto &ch : m_childs)
+        ch->processBlock(b, prediction);
+
+    if (m_after)
+        m_after(b, prediction);
+}
+
+inline void IBlockProcessor::afterOrderingLoop()
+{
+    if (!m_enabled)
+        return;
+
+    if (icov::debug::debug_trace_enabled)
+        ICOV_TRACE << "calling endProcess() for BlockProcessor (" << prettyName() << ")";
+
+    _afterOrderingLoop();
+
+    for (auto &ch : m_childs)
+        ch->afterOrderingLoop();
+}
+
+inline const std::shared_ptr<IBlockProcessor> &IBlockProcessor::parent() const
+{
+    return m_parent;
+}
+
+inline const std::string IBlockProcessor::prettyName() const
+{
+    return (m_name.empty() ? "unnamed" : m_name);
+}
+
+inline const std::string &IBlockProcessor::name() const
+{
+    return m_name;
+}
+
+inline const std::vector<std::shared_ptr<IBlockProcessor>> &IBlockProcessor::childs() const
+{
+    return m_childs;
+}
+
+inline void IBlockProcessor::removeParent(const std::shared_ptr<IBlockProcessor> &node)
+{
+    if (node->m_parent)
+    {
+        auto &vec = node->m_parent->m_childs;
+        vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
+    }
+    node->m_parent = std::shared_ptr<IBlockProcessor>(nullptr);
+}
+
+inline void IBlockProcessor::addChild(const std::shared_ptr<IBlockProcessor> &parent,
+                                      const std::shared_ptr<IBlockProcessor> &child)
+{
+    removeParent(child);
+    child->m_parent = parent;
+    if (parent)
+        parent->m_childs.push_back(child);
+}
+
+inline bool IBlockProcessor::enabled() const
+{
+    return m_enabled;
+}
+
+inline void IBlockProcessor::setEnabled(bool newEnabled)
+{
+    m_enabled = newEnabled;
+}
+
+inline void IBlockProcessor::setAfter(const func_t &newAfter)
+{
+    m_after = newAfter;
+}
+
+inline void IBlockProcessor::setBefore(const func_t &newBefore)
+{
+    m_before = newBefore;
+}
+
+inline void IBlockProcessor::setName(const std::string &newName)
+{
+    m_name = newName;
+}
 
 } // namespace omnidirectional_layer
 } // namespace icov

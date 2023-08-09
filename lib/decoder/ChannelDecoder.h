@@ -50,6 +50,7 @@
 #pragma once
 
 #include "FastArray.h"
+#include "common.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
@@ -122,7 +123,7 @@ public:
    */
   void read_syndrome(int syndrome_size);
 
-  void decode_bitplane(int bp, NumcodeIdx numcode, const Syndrome &synd);
+  void decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
   void end_decode_icu();
 
@@ -131,6 +132,8 @@ public:
   const ldpc_codec_layer::AffInteractiveCoder &ldpc_coder() const;
 
   const params &get_params() const;
+
+  Rate rate() const;
 
 private:
   params m_params;
@@ -154,6 +157,7 @@ private:
   int m_icuIndex;
   std::queue<bitstream::byte> m_numcodes;
   SymboleVec m_blockSymbols;
+  Rate m_rate;
 
   void _decode_bitplanes(
       omnidirectional_layer::BlockPrediction::ePredType block_prediction,

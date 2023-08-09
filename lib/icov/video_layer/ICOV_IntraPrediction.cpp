@@ -817,7 +817,8 @@ void icov::video::IntraPrediction::xPredIntraAng(const CPelBuf &pSrc,
   Int width = Int(pDst.width);
   Int height = Int(pDst.height);
 
-  CHECK(!(dirMode > DC_IDX && dirMode < NUM_LUMA_MODE), "Invalid intra dir");
+  if (!(dirMode > DC_IDX && dirMode < NUM_LUMA_MODE))
+    CHECK(!(dirMode > DC_IDX && dirMode < NUM_LUMA_MODE), "Invalid intra dir: " + std::to_string(dirMode));
 
   const Bool bIsModeVer = (dirMode >= DIA_IDX);
   const Int intraPredAngleMode =

@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include "common.h"
 #include "decoder/ChannelDecoder.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
@@ -96,27 +97,26 @@ public:
                const bitstream::sp_IcovExtractedBitstream &extraction);
   ~BlockDecoder();
 
-  void startProcess() override;
-  void processBlock(const omnidirectional_layer::Block &b,
-                    omnidirectional_layer::IBlockPredictionManager::prediction_t
-                        prediction) override;
-  void endProcess() override;
-  void decode() override;
   const PelUnitBuf &decodingOutput() const;
   PelUnitBuf getDecodingOutput();
 
-protected:
-  void decode_icu(const omnidirectional_layer::Block &b,
-                  const icov::video::IcuEncoder &icu_enc,
-                  omnidirectional_layer::BlockPrediction::ePredType pred);
+  Rate rate() const;
 
+protected:
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
-  int m_channelCount;
   std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
   PelUnitBuf m_decodingOutput;
   params m_params;
   UnitArea mainFrameArea;
+  Rate m_rate;
+
+  // IBlockProcessor interface
+protected:
+  void _beforeOrderingLoop() override;
+  void _afterOrderingLoop() override;
+  void _processBlock(const omnidirectional_layer::Block &b,
+                     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
 };
 } // namespace decoder
 } // namespace icov

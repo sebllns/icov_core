@@ -1,11 +1,13 @@
 #include "BlockDecoder.h"
+#include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include <cmath>
 
 namespace icov {
 namespace omnidirectional_layer {
-BlockDecoder::BlockDecoder() {
-  std::cout << "new Decoder" << std::endl;
-  m_startTime = clock();
+BlockDecoder::BlockDecoder() : IBlockDecoder()
+{
+    std::cout << "new Decoder" << std::endl;
+    m_startTime = clock();
 }
 
 BlockDecoder::~BlockDecoder() { std::cout << "destroy Decoder" << std::endl; }
@@ -58,9 +60,17 @@ float BlockDecoder::getTime() {
   return (float)(clock() - m_startTime) / CLOCKS_PER_SEC;
 }
 
-void BlockDecoder::processBlock(
-    const Block &b, IBlockPredictionManager::prediction_t prediction) {
+void BlockDecoder::_processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction)
+{
   std::cout << "decode block " << b.getIdSelf() << std::endl;
 }
 } // namespace omnidirectional_layer
 } // namespace icov
+
+void icov::omnidirectional_layer::BlockDecoder::_beforeOrderingLoop()
+{
+}
+
+void icov::omnidirectional_layer::BlockDecoder::_afterOrderingLoop()
+{
+}
