@@ -47,6 +47,7 @@
 
 #include "InteractiveModeBase.h"
 #include "app_common/decoder/SinglePassDecoder.h"
+#include "decoder/DecodeResult.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/serialization/map.hpp>
@@ -69,11 +70,16 @@ class InteractiveDecoder : public InteractiveModeBase
 
     InteractiveDecoder(const params &params, const LdpcCoderParameters &ldpc_params);
 
-    // InteractiveModeBase interface
-  protected:
-    bool processKey(char key) override;
-
   private:
     params m_params;
+    std::shared_ptr<icov::decoder::DecodeResult> m_results;
     std::unique_ptr<icov::decoder::SinglePassDecoder> m_decoder;
+
+    // InteractiveModeBase interface
+  protected:
+    void updateF1() override;
+    void updateF2() override;
+    void updateF3() override;
+    void updateF4() override;
+    bool processKey(char key) override;
 };

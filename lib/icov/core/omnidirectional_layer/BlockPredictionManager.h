@@ -49,6 +49,7 @@
 
 #include "Block.h"
 
+#include "icov_assert.h"
 #include "icov_exception.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -89,6 +90,16 @@ public:
     COUNT
   };
 
+  enum eSICategory
+  {
+    SI_CAT_UNKNOWN = -1,
+    SI_CAT_NONE = 0,
+    SI_CAT_SINGLE = 1,
+    SI_CAT_DOUBLE = 2,
+    SI_CAT_TEMPORAL = 3,
+    SI_CAT_COUNT
+  };
+
   static const uint8_t SI_Count = 8;
   static const uint8_t PredictionCount = SI_Count + 2;
   static std::string toString(BlockPrediction::ePredType num);
@@ -97,6 +108,7 @@ public:
   getAvailablePredictions(eBorderType b = BORDER_NONE);
   static eBorderType getBorder(const Block &b);
   static bool isValidPrediction(BlockPrediction::ePredType p);
+  static eSICategory getCategory(ePredType p);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
@@ -260,6 +272,37 @@ inline bool BlockPrediction::isValidPrediction(ePredType p) {
       p == ePredType::UNKNOWN)
     return false;
   return true;
+}
+
+inline BlockPrediction::eSICategory BlockPrediction::getCategory(ePredType p)
+{
+  switch (p)
+  {
+  case MAX:
+  case ERROR_PRED:
+  case UNKNOWN:
+    return SI_CAT_UNKNOWN;
+
+  case NONE:
+    return SI_CAT_NONE;
+
+  case RIGHT:
+  case LEFT:
+  case TOP:
+  case BOTTOM:
+    return SI_CAT_SINGLE;
+
+  case TOP_RIGHT:
+  case TOP_LEFT:
+  case BOTTOM_RIGHT:
+  case BOTTOM_LEFT:
+    return SI_CAT_DOUBLE;
+
+  case INTER:
+    return SI_CAT_TEMPORAL;
+  }
+
+  return SI_CAT_UNKNOWN;
 }
 } // namespace omnidirectional_layer
 } // namespace icov

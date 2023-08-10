@@ -1,6 +1,7 @@
 #include "SinglePassDecoder.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
+#include "decoder/DecodeResult.h"
 #include "extractor/BlockExtractor.h"
 
 #include "icov_assert.h"
@@ -173,6 +174,14 @@ void decoder::SinglePassDecoder::addDefaultDecoder()
 
         },
         ldpcParams(), m_extractionBitstream));
+}
+
+std::shared_ptr<decoder::DecodeResult> decoder::SinglePassDecoder::addDefaultResults()
+{
+    assert::not_null(m_blockDecoder.get(), "Decoder cannot be null");
+    auto res = std::make_shared<DecodeResult>();
+    IBlockProcessor::addChild(m_blockDecoder, res);
+    return res;
 }
 
 const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const

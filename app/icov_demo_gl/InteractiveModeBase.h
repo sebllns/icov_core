@@ -60,17 +60,86 @@ namespace po = boost::program_options;
 class InteractiveModeBase
 {
   public:
-    InteractiveModeBase()
+    struct bgrColor
     {
-    }
-    ~InteractiveModeBase() = default;
+        static cv::Scalar GREEN()
+        {
+            return cv::Scalar(0, 255, 0);
+        }
+        static cv::Scalar RED()
+        {
+            return cv::Scalar(0, 0, 255);
+        }
+        static cv::Scalar BLUE()
+        {
+            return cv::Scalar(255, 0, 0);
+        }
+        static cv::Scalar VULCAN()
+        {
+            return cv::Scalar(12, 21, 140);
+        }
+        static cv::Scalar PINK()
+        {
+            return cv::Scalar(255, 0, 255);
+        }
+        static cv::Scalar PURPLE()
+        {
+            return cv::Scalar(255, 51, 51);
+        }
+        static cv::Scalar CYAN()
+        {
+            return cv::Scalar(255, 255, 0);
+        }
+        static cv::Scalar YELLOW()
+        {
+            return cv::Scalar(0, 255, 255);
+        }
+        static cv::Scalar FOREST_GREEN()
+        {
+            return cv::Scalar(0, 102, 51);
+        }
+        static cv::Scalar ORANGE()
+        {
+            return cv::Scalar(0, 128, 255);
+        }
+        static cv::Scalar WHITE()
+        {
+            return cv::Scalar(255, 255, 255);
+        }
+        static cv::Scalar BLACK()
+        {
+            return cv::Scalar(0, 0, 0);
+        }
+        static cv::Scalar GRAY()
+        {
+            return cv::Scalar(96, 96, 96);
+        }
+        static cv::Scalar PASTEL_RED()
+        {
+            return cv::Scalar(204, 204, 255);
+        }
+        static cv::Scalar PASTEL_YELLOW()
+        {
+            return cv::Scalar(204, 255, 255);
+        }
+        static cv::Scalar PASTEL_GREEN()
+        {
+            return cv::Scalar(204, 255, 204);
+        }
+        static cv::Scalar PASTEL_BLUE()
+        {
+            return cv::Scalar(255, 255, 204);
+        }
+        static cv::Scalar PASTEL_PURPLE()
+        {
+            return cv::Scalar(255, 204, 204);
+        }
+        static cv::Scalar PASTEL_PINK()
+        {
+            return cv::Scalar(229, 204, 255);
+        }
+    };
 
-    void run();
-
-    float getPov_x() const;
-    float getPov_y() const;
-
-  private:
     struct Config
     {
         int quit = 27;
@@ -80,13 +149,13 @@ class InteractiveModeBase
         int down = 's';
         int reset = 'r';
         int f1 = -66;
-        int f2 = -65;
-        int f3 = -64;
-        int f4 = -63;
-        int f5 = -62;
-        int f6 = -61;
-        int f7 = -60;
-        int f8 = -59;
+        int f2 = -66;
+        int f3 = -66;
+        int f4 = -66;
+        int f5 = -66;
+        int f6 = -66;
+        int f7 = -66;
+        int f8 = -66;
 
         float start_pitch = 0.;
         float start_yaw = 0.;
@@ -95,14 +164,31 @@ class InteractiveModeBase
         float offset_yaw = 12.;
     };
 
-    Config m_config;
+    InteractiveModeBase();
+    virtual ~InteractiveModeBase();
+
+    void run();
+
+    float getPov_x() const;
+    float getPov_y() const;
+    int special_key() const;
+
+    void clear();
+    void fill(const cv::Scalar &color);
+    void draw();
+
+    const Config &config() const;
+
+  private:
     std::unique_ptr<Single360degreeCameraHandler> viewer;
     std::string fileAddr;
     float fovX_degree;
     int block_size;
     float pov_x;
     float pov_y;
+    int m_special_key;
 
+    bool is_special_key(char key) const;
     void move(float offset_pitch, float offset_yaw);
     void moveLeft();
     void moveRight();
@@ -111,7 +197,32 @@ class InteractiveModeBase
     void reset();
 
   protected:
+    Config m_config;
     cv::Mat m_outputImage;
     const char *window_name = "icov";
     virtual bool processKey(char key);
+    virtual void onSpecialKey(int previous, int current);
+
+    virtual void onF1();
+    virtual void onF2();
+    virtual void onF3();
+    virtual void onF4();
+    virtual void onF5();
+    virtual void onF6();
+    virtual void onF7();
+    virtual void onF8();
+
+    virtual void updateF1();
+    virtual void updateF2();
+    virtual void updateF3();
+    virtual void updateF4();
+    virtual void updateF5();
+    virtual void updateF6();
+    virtual void updateF7();
+    virtual void updateF8();
 };
+
+inline int InteractiveModeBase::special_key() const
+{
+    return m_special_key;
+}

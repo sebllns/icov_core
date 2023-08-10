@@ -49,10 +49,20 @@ enum KeyName
     QUIT,
 };
 
+InteractiveModeBase::InteractiveModeBase()
+{
+}
+
+InteractiveModeBase::~InteractiveModeBase()
+{
+    
+}
+
 void InteractiveModeBase::run()
 {
     pov_x = 0;
     pov_y = 0;
+    m_special_key = m_config.f1;
 
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     m_outputImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
@@ -178,6 +188,39 @@ float InteractiveModeBase::getPov_y() const
     return pov_y;
 }
 
+bool InteractiveModeBase::is_special_key(char key) const
+{
+    return key == m_config.f1 || key == m_config.f2 || key == m_config.f3 || key == m_config.f4 || key == m_config.f5 ||
+           key == m_config.f6 || key == m_config.f7 || key == m_config.f8;
+}
+
+void InteractiveModeBase::draw()
+{
+    if (this->special_key() == config().f1)
+        updateF1();
+
+    else if (this->special_key() == config().f2)
+        updateF2();
+
+    else if (this->special_key() == config().f3)
+        updateF3();
+
+    else if (this->special_key() == config().f4)
+        updateF4();
+
+    else if (this->special_key() == config().f5)
+        updateF5();
+
+    else if (this->special_key() == config().f6)
+        updateF6();
+
+    else if (this->special_key() == config().f7)
+        updateF7();
+
+    else if (this->special_key() == config().f8)
+        updateF8();
+}
+
 bool InteractiveModeBase::processKey(char key)
 {
     if (key == m_config.quit)
@@ -186,19 +229,120 @@ bool InteractiveModeBase::processKey(char key)
     if (key == m_config.reset)
         reset();
 
-    if (key == m_config.left)
+    else if (key == m_config.left)
         moveLeft();
 
-    if (key == m_config.right)
+    else if (key == m_config.right)
         moveRight();
 
-    if (key == m_config.up)
+    else if (key == m_config.up)
         moveUp();
 
-    if (key == m_config.down)
+    else if (key == m_config.down)
         moveDown();
 
+    if (is_special_key(key) && key != m_special_key)
+    {
+        int previous = m_special_key;
+        m_special_key = key;
+        onSpecialKey(previous, key);
+    }
+
     return true;
+}
+
+void InteractiveModeBase::onSpecialKey(int previous, int current)
+{
+    m_special_key = current;
+
+    if (current == m_config.f1)
+        onF1();
+
+    else if (current == m_config.f2)
+        onF2();
+
+    else if (current == m_config.f3)
+        onF3();
+
+    else if (current == m_config.f4)
+        onF4();
+
+    else if (current == m_config.f5)
+        onF5();
+
+    else if (current == m_config.f6)
+        onF6();
+
+    else if (current == m_config.f7)
+        onF7();
+
+    else if (current == m_config.f8)
+        onF8();
+}
+
+void InteractiveModeBase::onF1()
+{
+}
+
+void InteractiveModeBase::onF2()
+{
+}
+
+void InteractiveModeBase::onF3()
+{
+}
+
+void InteractiveModeBase::onF4()
+{
+}
+
+void InteractiveModeBase::onF5()
+{
+}
+
+void InteractiveModeBase::onF6()
+{
+}
+
+void InteractiveModeBase::onF7()
+{
+}
+
+void InteractiveModeBase::onF8()
+{
+}
+
+void InteractiveModeBase::updateF1()
+{
+    
+}
+
+void InteractiveModeBase::updateF2()
+{
+}
+
+void InteractiveModeBase::updateF3()
+{
+}
+
+void InteractiveModeBase::updateF4()
+{
+}
+
+void InteractiveModeBase::updateF5()
+{
+}
+
+void InteractiveModeBase::updateF6()
+{
+}
+
+void InteractiveModeBase::updateF7()
+{
+}
+
+void InteractiveModeBase::updateF8()
+{
 }
 
 void InteractiveModeBase::move(float offset_pitch, float offset_yaw)
@@ -248,4 +392,19 @@ void InteractiveModeBase::reset()
     pov_x = m_config.start_yaw;
     pov_y = m_config.start_pitch;
     viewer->resetOrientation();
+}
+
+void InteractiveModeBase::clear()
+{
+    fill(bgrColor::BLACK());
+}
+
+void InteractiveModeBase::fill(const cv::Scalar &color)
+{
+    m_outputImage.setTo(color);
+}
+
+const InteractiveModeBase::Config &InteractiveModeBase::config() const
+{
+    return m_config;
 }

@@ -51,6 +51,7 @@
 
 #include "Buffer.h"
 #include "decoder/BlockDecoder.h"
+#include "decoder/DecodeResult.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -86,6 +87,7 @@ public:
   void addDefaultNavigation();
   void addDefaultExtractor();
   void addDefaultDecoder();
+  std::shared_ptr<DecodeResult> addDefaultResults();
 
   const PelUnitBuf getDecodedBuf() const;
 
