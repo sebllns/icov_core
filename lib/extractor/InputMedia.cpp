@@ -2,6 +2,7 @@
 #include "Media.h"
 
 #include "icov_assert.h"
+#include "icov_log.h"
 #include "icov_path.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
@@ -98,17 +99,16 @@ void icov::extractor::InputIcov::readBlockPos() {
     m_rates_pos[i] = rate_pos;
     m_synd_pos[i] = synd_pos;
 
-    std::cout
-        << "BLOCK "
-        << std::next(m_contentParameterSet.encoded_blocks.cbegin(), i)->first
-        << ": " << rate_pos << ", " << synd_pos << std::endl;
+    ICOV_TRACE << "BLOCK POS " << std::next(m_contentParameterSet.encoded_blocks.cbegin(), i)->first << ": " << rate_pos
+               << ", " << synd_pos << std::endl;
   }
 }
 
-void icov::extractor::InputIcov::selectBlock(
-    const omnidirectional_layer::Block::id_t &id) {
-  std::cout << "select block " << id << std::endl;
+void icov::extractor::InputIcov::selectBlock(const omnidirectional_layer::Block::id_t &id)
+{
   auto id_pos = getBlockIndexInStream(id);
+  ICOV_TRACE << "select block in stream: block_id=" << id << ", id_pos=" << id_pos;
+  ICOV_TRACE << "rate_pos=" << m_rates_pos[id_pos] << ", synd_pos=" << m_synd_pos[id_pos];
   getStream(bitstream::eIcovStream::ENCODE_PARAMS).clear();
   getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[id_pos], std::ios_base::beg);

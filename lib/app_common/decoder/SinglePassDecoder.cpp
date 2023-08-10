@@ -39,10 +39,6 @@ void decoder::SinglePassDecoder::initLocal(const params &p, const boost::filesys
     ICOV_INFO << "Open ICOV file";
     openIcovFile(path);
 
-    ICOV_INFO << "Load ContentParameterSet";
-    m_icovFile->readContentParameterSet();
-    setContentParams(m_icovFile->contentParameterSet());
-
     const auto &cps = m_contentParams;
 
     ICOV_INFO << "Icov version: " << cps.icov_version;
@@ -78,6 +74,8 @@ void decoder::SinglePassDecoder::initLocal(const params &p, const boost::filesys
 void decoder::SinglePassDecoder::openIcovFile(const boost::filesystem::path &path)
 {
     m_icovFile = std::make_shared<InputIcov>(path);
+    m_icovFile->readContentParameterSet();
+    setContentParams(m_icovFile->contentParameterSet());
     m_icovFile->readBlockPos();
 }
 

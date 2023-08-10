@@ -65,17 +65,15 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   std::vector<Block::id_t> visibles;
 
   // select blocks to encode
-  size_t block_count = 0;
+  size_t block_counter = 0;
   for (auto &b : icov_visualization.Picture->icus()) {
     if (m_params.AllBlocks ||
         (b.getIdSelf() >= m_params.StartBlock &&
          b.getIdSelf() < (m_params.StartBlock + m_params.BlockCount))) {
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(false);
-      m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] =
-          block_count;
-      ++block_count;
+      m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] = block_counter;
+      ++block_counter;
     } else {
-      std::cout << b.getIdSelf() << std::endl;
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
     }
   }
@@ -98,7 +96,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().viewport_padding = viewportPadding;
 
-  m_output->contentParameterSet().icov_version = "icov_test" ICOV_CORE_VERSION;
+  m_output->contentParameterSet().icov_version = "icov_" ICOV_CORE_VERSION;
   m_output->contentParameterSet().content_framecount = 1;
   m_output->contentParameterSet().is_block_fixed_size = true;
   m_output->contentParameterSet().block_fixed_size =
