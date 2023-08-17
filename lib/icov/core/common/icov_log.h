@@ -169,27 +169,24 @@ inline std::ostream &print(int lvl) {
   auto &str = get_log_str();
 
   switch (static_cast<severity_level>(lvl)) {
-  case trace:
-    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM)
-        << "\n[trace]   ";
-    break;
-  case debug:
-    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_DEFAULT)
-        << "\n[debug]   ";
-    break;
-  case info:
-    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_GREEN)
-        << "\n[info]    ";
-    break;
-  case warning:
-    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_YELLOW)
-        << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[warning] ";
-    break;
+  case severity_level::trace:
+      str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM) << "\n[trace]   ";
+      break;
+  case severity_level::debug:
+      str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_DEFAULT) << "\n[debug]   ";
+      break;
+  case severity_level::info:
+      str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_GREEN) << "\n[info]    ";
+      break;
+  case severity_level::warning:
+      str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_YELLOW) << CONSOLE_FORMAT(CONSOLE_BOLD)
+          << "\n[warning] ";
+      break;
   case error:
     str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_RED)
         << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[error]   ";
     break;
-  case fatal:
+  case severity_level::fatal:
     str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_RED)
         << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[fatal]   ";
     break;
