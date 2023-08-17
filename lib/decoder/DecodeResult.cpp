@@ -1,5 +1,6 @@
 #include "DecodeResult.h"
 #include "icov_assert.h"
+#include <numeric>
 
 const std::shared_ptr<icov::decoder::BlockDecoder> icov::decoder::DecodeResult::getParent()
 {
@@ -16,6 +17,13 @@ const std::shared_ptr<icov::decoder::BlockDecoder> icov::decoder::DecodeResult::
 const std::vector<icov::decoder::DecodeResult::block_infos_t> &icov::decoder::DecodeResult::infos() const
 {
     return m_infos;
+}
+
+icov::Rate icov::decoder::DecodeResult::frameBitrate() const
+{
+    return std::accumulate(m_infos.cbegin(), m_infos.cend(), 0.,
+                           [](Rate sum, const block_infos_t &elem) { return sum + elem.rate; }) /
+           m_infos.size();
 }
 
 void icov::decoder::DecodeResult::_beforeOrderingLoop()

@@ -99,9 +99,8 @@ if(NOT ICOV_BYPASS_SETUP)
   if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
   endif()
-  if(MINGW)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-  endif()
+
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
   if(ICOV_USE_ADDRESS_SANITIZER AND CMAKE_BUILD_TYPE MATCHES Debug)
     # set address sanitizer compiler arguments

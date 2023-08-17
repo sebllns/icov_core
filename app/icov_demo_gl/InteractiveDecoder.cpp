@@ -19,6 +19,7 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
     this->m_config.f2 = -65;
     this->m_config.f3 = -64;
     this->m_config.f4 = -63;
+    this->m_config.f5 = -62;
 }
 
 InteractiveDecoder::params::params(const boost::program_options::variables_map &args)
@@ -52,7 +53,7 @@ void InteractiveDecoder::updateF2()
         int bx = (int)(pic->u(pic->angleX(b->u())) * pic->width());
         int by = (int)(pic->v(pic->angleY(b->v())) * pic->height());
         auto rect_block = cv::Rect(bx, by, bw, bh);
-        cv::Scalar color = i.rate * bgrColor().GREEN();
+        cv::Scalar color = i.rate * bgrColor().WHITE();
         this->m_outputImage(rect_block).setTo(color);
     }
 }
@@ -60,42 +61,23 @@ void InteractiveDecoder::updateF2()
 void InteractiveDecoder::updateF3()
 {
     std::cout << "update f3 \n";
+
     this->fill(bgrColor::BLACK());
     const auto pic = m_decoder->navigation()->Visualization->Picture;
+
+    Rate bitrate = m_results->frameBitrate();
+    cv::Scalar color = bitrate * bgrColor().WHITE();
 
     for (const auto &i : m_results->infos())
     {
         const auto b = pic->getById(i.id);
         assert::check(pic->isValidBlock(b), "Block not valid");
-        // std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate << std::endl;
 
         int bw = (int)(b->w() * pic->width());
         int bh = (int)(b->h() * pic->height());
         int bx = (int)(pic->u(pic->angleX(b->u())) * pic->width());
         int by = (int)(pic->v(pic->angleY(b->v())) * pic->height());
         auto rect_block = cv::Rect(bx, by, bw, bh);
-        cv::Scalar color = bgrColor::BLACK();
-
-        switch (BlockPrediction::getCategory(BlockPrediction::toPredType(i.prediction)))
-        {
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_COUNT:
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_UNKNOWN:
-            color = bgrColor::RED();
-            break;
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_NONE:
-            color = bgrColor::GREEN();
-            break;
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_SINGLE:
-            color = bgrColor::BLUE();
-            break;
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_DOUBLE:
-            color = bgrColor::CYAN();
-            break;
-        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_TEMPORAL:
-            color = bgrColor::YELLOW();
-            break;
-        }
-
         this->m_outputImage(rect_block).setTo(color);
     }
 }
@@ -166,6 +148,50 @@ void InteractiveDecoder::updateF4()
         case icov::omnidirectional_layer::BlockPrediction::MAX:
         case icov::omnidirectional_layer::BlockPrediction::ERROR_PRED:
             color = bgrColor::RED();
+            break;
+        }
+
+        this->m_outputImage(rect_block).setTo(color);
+    }
+}
+
+void InteractiveDecoder::updateF5()
+{
+    std::cout << "update f5 \n";
+
+    this->fill(bgrColor::BLACK());
+    const auto pic = m_decoder->navigation()->Visualization->Picture;
+
+    for (const auto &i : m_results->infos())
+    {
+        const auto b = pic->getById(i.id);
+        assert::check(pic->isValidBlock(b), "Block not valid");
+        // std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate << std::endl;
+
+        int bw = (int)(b->w() * pic->width());
+        int bh = (int)(b->h() * pic->height());
+        int bx = (int)(pic->u(pic->angleX(b->u())) * pic->width());
+        int by = (int)(pic->v(pic->angleY(b->v())) * pic->height());
+        auto rect_block = cv::Rect(bx, by, bw, bh);
+        cv::Scalar color = bgrColor::BLACK();
+
+        switch (BlockPrediction::getCategory(BlockPrediction::toPredType(i.prediction)))
+        {
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_COUNT:
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_UNKNOWN:
+            color = bgrColor::RED();
+            break;
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_NONE:
+            color = bgrColor::GREEN();
+            break;
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_SINGLE:
+            color = bgrColor::BLUE();
+            break;
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_DOUBLE:
+            color = bgrColor::CYAN();
+            break;
+        case icov::omnidirectional_layer::BlockPrediction::SI_CAT_TEMPORAL:
+            color = bgrColor::YELLOW();
             break;
         }
 

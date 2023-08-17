@@ -81,5 +81,6 @@ class InteractiveDecoder : public InteractiveModeBase
     void updateF2() override;
     void updateF3() override;
     void updateF4() override;
+    void updateF5() override;
     bool processKey(char key) override;
 };

@@ -69,6 +69,7 @@ class DecodeResult : public omnidirectional_layer::IBlockProcessor
     };
 
     const std::vector<block_infos_t> &infos() const;
+    Rate frameBitrate() const;
 
   protected:
     const std::shared_ptr<BlockDecoder> getParent();

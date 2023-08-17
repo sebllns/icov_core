@@ -151,7 +151,15 @@ inline void init_log(bool log_to_file) {
 #define ICOV_TODO ICOV_DEBUG << CONSOLE_TODO
 #else
 
-enum severity_level { trace = 0, debug, info, warning, error, fatal };
+enum severity_level
+{
+    trace = 0,
+    debug = 1,
+    info = 2,
+    warning = 3,
+    error = 4,
+    fatal = 5
+};
 
 namespace icov {
 namespace logging {
