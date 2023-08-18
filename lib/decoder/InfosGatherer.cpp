@@ -1,4 +1,5 @@
 #include "InfosGatherer.h"
+#include "decoder/CsvOutput.h"
 #include "icov_assert.h"
 #include <numeric>
 

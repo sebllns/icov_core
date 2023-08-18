@@ -68,11 +68,11 @@ class InfosGatherer : public omnidirectional_layer::IBlockProcessor
         omnidirectional_layer::IBlockPredictionManager::prediction_t prediction;
     };
 
+    const std::shared_ptr<BlockDecoder> getParent();
     const std::vector<block_infos_t> &infos() const;
     Rate frameBitrate() const;
 
   protected:
-    const std::shared_ptr<BlockDecoder> getParent();
     std::shared_ptr<BlockDecoder> m_decoderParent;
     std::vector<block_infos_t> m_infos;
 

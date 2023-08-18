@@ -51,6 +51,7 @@
 
 #include "Buffer.h"
 #include "decoder/BlockDecoder.h"
+#include "decoder/CsvOutput.h"
 #include "decoder/InfosGatherer.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
@@ -88,6 +89,7 @@ public:
   void addDefaultExtractor();
   void addDefaultDecoder();
   std::shared_ptr<InfosGatherer> addDefaultGatherer();
+  std::shared_ptr<CsvOutput> addDefaultCsvOutput();
 
   const PelUnitBuf getDecodedBuf() const;
 

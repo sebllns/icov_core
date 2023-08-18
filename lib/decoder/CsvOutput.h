@@ -71,6 +71,8 @@ class CsvOutput : public omnidirectional_layer::IBlockProcessor
     std::ofstream m_frameFile;
     std::ofstream m_blockFile;
 
+    unsigned long m_requestID;
+
     // IBlockProcessor interface
     void _beforeOrderingLoop(const request_t &r) override;
     void _afterOrderingLoop(const request_t &r) override;

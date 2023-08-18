@@ -1,10 +1,13 @@
 #include "InteractiveDecoder.h"
 #include "InteractiveModeBase.h"
 #include "app_common/program/icov_program_options.h"
+#include "decoder/CsvOutput.h"
 #include "icov_assert.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/types.hpp"
 #include "video_layer/vtm_opencv_utility.h"
+#include <memory>
 
 InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderParameters &ldpc_params)
     : InteractiveModeBase(), m_params(params)
@@ -20,6 +23,9 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
     this->m_config.f3 = -64;
     this->m_config.f4 = -63;
     this->m_config.f5 = -62;
+
+    auto csv = std::make_shared<decoder::CsvOutput>("./test_csv");
+    IBlockProcessor::addChild(m_results, csv);
 }
 
 InteractiveDecoder::params::params(const boost::program_options::variables_map &args)
