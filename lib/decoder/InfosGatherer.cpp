@@ -1,8 +1,8 @@
-#include "DecodeResult.h"
+#include "InfosGatherer.h"
 #include "icov_assert.h"
 #include <numeric>
 
-const std::shared_ptr<icov::decoder::BlockDecoder> icov::decoder::DecodeResult::getParent()
+const std::shared_ptr<icov::decoder::BlockDecoder> icov::decoder::InfosGatherer::getParent()
 {
     if (!m_decoderParent)
     {
@@ -14,29 +14,30 @@ const std::shared_ptr<icov::decoder::BlockDecoder> icov::decoder::DecodeResult::
     return m_decoderParent;
 }
 
-const std::vector<icov::decoder::DecodeResult::block_infos_t> &icov::decoder::DecodeResult::infos() const
+const std::vector<icov::decoder::InfosGatherer::block_infos_t> &icov::decoder::InfosGatherer::infos() const
 {
     return m_infos;
 }
 
-icov::Rate icov::decoder::DecodeResult::frameBitrate() const
+icov::Rate icov::decoder::InfosGatherer::frameBitrate() const
 {
     return std::accumulate(m_infos.cbegin(), m_infos.cend(), 0.,
                            [](Rate sum, const block_infos_t &elem) { return sum + elem.rate; }) /
            m_infos.size();
 }
 
-void icov::decoder::DecodeResult::_beforeOrderingLoop()
+void icov::decoder::InfosGatherer::_beforeOrderingLoop(const request_t &r)
 {
     m_infos.clear();
 }
 
-void icov::decoder::DecodeResult::_afterOrderingLoop()
+void icov::decoder::InfosGatherer::_afterOrderingLoop(const request_t &r)
 {
 }
 
-void icov::decoder::DecodeResult::_processBlock(const omnidirectional_layer::Block &b,
-                                                omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+void icov::decoder::InfosGatherer::_processBlock(
+    const request_t &r, const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
 {
     m_infos.push_back(block_infos_t{.id = b.getIdSelf(), .rate = getParent()->rate(), .prediction = prediction});
 }

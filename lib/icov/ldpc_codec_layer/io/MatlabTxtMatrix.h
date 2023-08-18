@@ -48,7 +48,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 
 class MatlabTxtMatrix {
 public:

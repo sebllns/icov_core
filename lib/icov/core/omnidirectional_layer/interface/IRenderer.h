@@ -46,9 +46,9 @@
 
 #pragma once
 
-#include "IRequest.h"
-
-namespace icov {
+#include "icov_request.h"
+namespace icov
+{
 namespace omnidirectional_layer {
 
 /**
@@ -62,7 +62,7 @@ namespace omnidirectional_layer {
     */
 class IRenderer {
 protected:
-  IRequest *m_request; ///< A pointer to the IRequest object representing a
+  request_t m_request; ///< A pointer to the IRequest object representing a
                        ///< request for a video frame.
   unsigned char
       *m_pixels; ///< A pointer to the array of unsigned char pixels
@@ -75,8 +75,9 @@ public:
   /** @brief IRenderer constructor
    *  Initializes the member variables to default values.
    */
-  IRenderer()
-      : m_request(nullptr), m_pixels(nullptr), m_width(0), m_height(0) {}
+  IRenderer() : m_pixels(nullptr), m_width(0), m_height(0)
+  {
+  }
 
   /** @brief IRenderer destructor
    *  Deallocates the memory allocated for the IRequest object and the pixels
@@ -84,12 +85,9 @@ public:
    */
   virtual ~IRenderer() {
     if (m_pixels != nullptr)
-      delete m_pixels;
-    if (m_request != nullptr)
-      delete m_request;
+        delete m_pixels;
 
     m_pixels = nullptr;
-    m_request = nullptr;
   }
 
   /** @brief Renders the video frame on the screen.
@@ -106,13 +104,19 @@ public:
       @param r A pointer to the IRequest object representing a request for a
      video frame.
       */
-  void setRequest(IRequest *r) { m_request = r; }
+  void setRequest(const request_t &r)
+  {
+    m_request = r;
+  }
 
   /** @brief Returns a reference to the IRequest object.
       @return A const reference to the IRequest object representing a request
      for a video frame.
       */
-  const IRequest &getRequest() const { return *m_request; }
+  const request_t &getRequest() const
+  {
+    return m_request;
+  }
 
   /** @brief Returns a const pointer to the array of unsigned char pixels
      representing the video frame that will be rendered. Returns a constant

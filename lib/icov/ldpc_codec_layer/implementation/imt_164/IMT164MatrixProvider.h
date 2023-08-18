@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include "ldpc_codec_layer/aff3ct/IAff3ctMatrixProvider.h"
 #include "ldpc_codec_layer/implementation/imt_164/IMT164SyndromeTools.h"
 #include <stack>

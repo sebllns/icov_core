@@ -46,7 +46,7 @@
 #pragma once
 #include "CommonLib/Common.h"
 #include "CommonLib/TypeDef.h"
-#include "common.h"
+#include "icov_common.h"
 #include <CommonLib/Buffer.h>
 #include <CommonLib/Unit.h>
 

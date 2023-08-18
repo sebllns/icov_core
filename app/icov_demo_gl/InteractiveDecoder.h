@@ -47,7 +47,7 @@
 
 #include "InteractiveModeBase.h"
 #include "app_common/decoder/SinglePassDecoder.h"
-#include "decoder/DecodeResult.h"
+#include "decoder/InfosGatherer.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/serialization/map.hpp>
@@ -72,7 +72,7 @@ class InteractiveDecoder : public InteractiveModeBase
 
   private:
     params m_params;
-    std::shared_ptr<icov::decoder::DecodeResult> m_results;
+    std::shared_ptr<icov::decoder::InfosGatherer> m_results;
     std::unique_ptr<icov::decoder::SinglePassDecoder> m_decoder;
 
     // InteractiveModeBase interface

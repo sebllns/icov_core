@@ -48,7 +48,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include "icov_assert.h"
 #include <algorithm>
 #include <cstddef>

@@ -3,7 +3,7 @@
 #include "InteractiveCoder.h"
 
 #include "FastArray.h"
-#include "common.h"
+#include "icov_common.h"
 #include "icov_log.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 

@@ -1,12 +1,12 @@
 #ifndef Decoder_LDPCA_BP_flooding_SPA_HPP_
 #define Decoder_LDPCA_BP_flooding_SPA_HPP_
 
+#include "FastArray.h"
 #include "Module/Decoder/Decoder_SISO.hpp"
 #include "Module/Decoder/LDPC/BP/Decoder_LDPC_BP.hpp"
 #include "Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp"
 #include "Tools/Code/LDPC/Update_rule/SPA/Update_rule_SPA.hpp"
-#include "FastArray.h"
-#include "common.h"
+#include "icov_common.h"
 #include <cstdint>
 #include <fstream>
 #include <vector>

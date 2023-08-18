@@ -47,6 +47,7 @@
 
 #include "icov_debug.h"
 #include "icov_log.h"
+#include "icov_request.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include <memory>
@@ -63,7 +64,7 @@ namespace omnidirectional_layer {
 class IBlockProcessor
 {
   public:
-    using func_t = std::function<void(const Block &, IBlockPredictionManager::prediction_t)>;
+    using func_t = std::function<void(const request_t &, const Block &, IBlockPredictionManager::prediction_t)>;
 
     IBlockProcessor();
 
@@ -72,19 +73,19 @@ class IBlockProcessor
     ///
     /// \brief startProcess : executed BEFORE loop on processBlock
     ///
-    void beforeOrderingLoop();
+    void beforeOrderingLoop(const request_t &r);
 
     ///
     /// \brief processBlock executed in a loop on each block to process
     /// \param b
     /// \param prediction
     ///
-    void processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction);
+    void processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction);
 
     ///
     /// \brief startProcess : executed AFTER loop on processBlock
     ///
-    void afterOrderingLoop();
+    void afterOrderingLoop(const request_t &r);
 
     const std::shared_ptr<IBlockProcessor> &parent() const;
     const std::string prettyName() const;
@@ -102,9 +103,9 @@ class IBlockProcessor
     void setAfter(const func_t &newAfter);
 
   protected:
-    virtual void _beforeOrderingLoop(){};
-    virtual void _afterOrderingLoop(){};
-    virtual void _processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction){};
+    virtual void _beforeOrderingLoop(const request_t &r){};
+    virtual void _afterOrderingLoop(const request_t &r){};
+    virtual void _processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction){};
 
   private:
     std::string m_name;
@@ -120,7 +121,7 @@ inline IBlockProcessor::IBlockProcessor() : m_name(""), m_parent(nullptr), m_ena
 {
 }
 
-inline void IBlockProcessor::beforeOrderingLoop()
+inline void IBlockProcessor::beforeOrderingLoop(const request_t &r)
 {
     if (!m_enabled)
         return;
@@ -128,13 +129,14 @@ inline void IBlockProcessor::beforeOrderingLoop()
     if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "calling startProcess() for BlockProcessor (" << prettyName() << ")";
 
-    _beforeOrderingLoop();
+    _beforeOrderingLoop(r);
 
     for (auto &ch : m_childs)
-        ch->beforeOrderingLoop();
+        ch->beforeOrderingLoop(r);
 }
 
-inline void IBlockProcessor::processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction)
+inline void IBlockProcessor::processBlock(const request_t &r, const Block &b,
+                                          IBlockPredictionManager::prediction_t prediction)
 {
     if (!m_enabled)
         return;
@@ -144,18 +146,18 @@ inline void IBlockProcessor::processBlock(const Block &b, IBlockPredictionManage
                    << ") for BlockProcessor (" << prettyName() << ")";
 
     if (m_before)
-        m_before(b, prediction);
+        m_before(r, b, prediction);
 
-    _processBlock(b, prediction);
+    _processBlock(r, b, prediction);
 
     for (auto &ch : m_childs)
-        ch->processBlock(b, prediction);
+        ch->processBlock(r, b, prediction);
 
     if (m_after)
-        m_after(b, prediction);
+        m_after(r, b, prediction);
 }
 
-inline void IBlockProcessor::afterOrderingLoop()
+inline void IBlockProcessor::afterOrderingLoop(const request_t &r)
 {
     if (!m_enabled)
         return;
@@ -163,10 +165,10 @@ inline void IBlockProcessor::afterOrderingLoop()
     if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "calling endProcess() for BlockProcessor (" << prettyName() << ")";
 
-    _afterOrderingLoop();
+    _afterOrderingLoop(r);
 
     for (auto &ch : m_childs)
-        ch->afterOrderingLoop();
+        ch->afterOrderingLoop(r);
 }
 
 inline const std::shared_ptr<IBlockProcessor> &IBlockProcessor::parent() const

@@ -46,7 +46,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 
 class TestSequenceInput {
   typedef int data_type;

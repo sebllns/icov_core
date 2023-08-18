@@ -48,7 +48,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>

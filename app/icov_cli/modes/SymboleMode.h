@@ -45,7 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/filesystem.hpp>

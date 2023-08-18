@@ -41,7 +41,7 @@ icov::extractor::BlockExtractor::~BlockExtractor()
 }
 
 void icov::extractor::BlockExtractor::_processBlock(
-    const Block &b, icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+    const request_t &r, const Block &b, icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
 {
 
     icov::omnidirectional_layer::BlockPrediction::ePredType block_prediction =
@@ -109,10 +109,10 @@ void icov::extractor::BlockExtractor::_processBlock(
                << omnidirectional_layer::BlockPrediction::toString(block_prediction);
 }
 
-void icov::extractor::BlockExtractor::_beforeOrderingLoop()
+void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r)
 {
 }
 
-void icov::extractor::BlockExtractor::_afterOrderingLoop()
+void icov::extractor::BlockExtractor::_afterOrderingLoop(const request_t &r)
 {
 }

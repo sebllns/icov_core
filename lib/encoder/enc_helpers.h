@@ -49,7 +49,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include <opencv2/opencv.hpp>
 
 void resize_covering_blocks(const cv::Mat &in_img, const cv::Size &blockSize,

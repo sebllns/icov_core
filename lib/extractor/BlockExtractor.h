@@ -95,9 +95,9 @@ protected:
 
   // IBlockProcessor interface
 protected:
-  void _beforeOrderingLoop() override;
-  void _afterOrderingLoop() override;
-  void _processBlock(const omnidirectional_layer::Block &b,
+  void _beforeOrderingLoop(const request_t &r) override;
+  void _afterOrderingLoop(const request_t &r) override;
+  void _processBlock(const request_t &r, const omnidirectional_layer::Block &b,
                      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
 };
 } // namespace extractor

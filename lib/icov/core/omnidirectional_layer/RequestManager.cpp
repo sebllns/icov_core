@@ -1,11 +1,15 @@
 #include "RequestManager.h"
-#include "common.h"
+#include "icov_assert.h"
+#include "icov_log.h"
+#include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include "omnidirectional_layer/interface/IViewportManager.h"
+#include <limits>
 
 namespace icov {
 namespace omnidirectional_layer {
@@ -20,15 +24,54 @@ void RequestManager::setBlockPrediction(
   m_blockPrediction = newBlockPrediction;
 }
 
-void RequestManager::start() {
+const request_t &RequestManager::request() const
+{
+  return m_request;
+}
+
+void RequestManager::start()
+{
   icov::assert::not_null(m_blockProcessor.get(),
                          "Block processor is not allocated");
   icov::assert::not_null(m_accessBlocks.get(),
                          "Access block manager is not allocated");
   m_accessBlocks->buildAccessBlocks(*m_picture, *m_viewport);
+  m_request.viewpoint.angleX = std::numeric_limits<float>::max();
+  m_request.viewpoint.angleY = std::numeric_limits<float>::max();
+  m_request.frameID = std::numeric_limits<int>::max();
 }
 
-void RequestManager::update(float angle_x, float angle_y) {
+void icov::omnidirectional_layer::RequestManager::processBlock(bool is_access_block,
+                                                               const icov::omnidirectional_layer::Block &current_block)
+{
+  IBlockPredictionManager::prediction_t prediction = 0;
+
+  try
+  {
+      prediction = (is_access_block ? 0 : m_blockPrediction->getPrediction(current_block, *m_ordering));
+
+      if (m_blockProcessor)
+      {
+          m_blockProcessor->processBlock(request(), current_block, prediction);
+      }
+      else
+      {
+          ICOV_TRACE << "Empty processing block " << current_block.getIdSelf() << " with prediction id " << prediction;
+      }
+  }
+  catch (...)
+  {
+      ICOV_ERROR << "Error while processing block " << current_block.getIdSelf() << " with prediction id "
+                 << prediction;
+      throw;
+  }
+}
+
+void RequestManager::update(const request_t &r)
+{
+  if (r == m_request)
+      return;
+
 #if ICOV_ASSERTION_ENABLED
   icov::assert::not_null(m_ordering.get(), "Ordering manager cannot be null");
   icov::assert::not_null(m_viewport.get(), "Viewport manager cannot be null");
@@ -39,12 +82,12 @@ void RequestManager::update(float angle_x, float angle_y) {
                          "Predictions manager manager cannot be null");
 #endif
 
-  m_ordering->reset();
-  m_viewport->viewportGeometry().setPov(angle_radian(angle_x, angle_y));
+      m_ordering->reset();
+      m_viewport->viewportGeometry().setPov(angle_radian(r.viewpoint.angleX, r.viewpoint.angleY));
 
-  auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
+      auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
 
-  bool is_access_block = true;
+      bool is_access_block = true;
 
 #ifdef ICOV_ASSERTION_ENABLED
   icov::assert::check(m_picture->isValidBlock(current_block),
@@ -52,24 +95,18 @@ void RequestManager::update(float angle_x, float angle_y) {
 #endif
 
   if (m_blockProcessor)
-      m_blockProcessor->beforeOrderingLoop();
-  while (m_picture->isValidBlock(current_block)) {
-    if (m_blockProcessor) {
-      try {
-        m_blockProcessor->processBlock(
-            *current_block, is_access_block ? 0
-                                            : m_blockPrediction->getPrediction(
-                                                  *current_block, *m_ordering));
-      } catch (...) {
-        throw;
-      }
-    }
+      m_blockProcessor->beforeOrderingLoop(request());
 
-    current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
-    is_access_block = false;
+  while (m_picture->isValidBlock(current_block))
+  {
+      processBlock(is_access_block, *current_block);
+      current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
+      is_access_block = false;
   }
   if (m_blockProcessor)
-    m_blockProcessor->afterOrderingLoop();
+      m_blockProcessor->afterOrderingLoop(request());
+
+  m_request = r;
 }
 
 const std::shared_ptr<IAccessBlockManager> &

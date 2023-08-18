@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 
 #include "icov_program_options.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"

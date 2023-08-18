@@ -96,16 +96,16 @@ icov::Rate BlockDecoder::rate() const
   return m_rate;
 }
 
-
-void icov::decoder::BlockDecoder::_beforeOrderingLoop()
+void icov::decoder::BlockDecoder::_beforeOrderingLoop(const request_t &r)
 {
 }
 
-void icov::decoder::BlockDecoder::_afterOrderingLoop()
+void icov::decoder::BlockDecoder::_afterOrderingLoop(const request_t &r)
 {
 }
 
-void icov::decoder::BlockDecoder::_processBlock(const omnidirectional_layer::Block &b, omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
+void icov::decoder::BlockDecoder::_processBlock(const request_t &r, const omnidirectional_layer::Block &b,
+                                                omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
 {
   omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(prediction);
@@ -128,12 +128,6 @@ void icov::decoder::BlockDecoder::_processBlock(const omnidirectional_layer::Blo
   uint icuIndex = es.get_icuIndex(pos);
 
   std::cout << icuIndex << std::endl;
-
-  const auto &icu_enc = es.getICU(icuIndex);
-  //  const auto &si_map = icu_enc.get_intraSIsMap();
-
-  //  if (si_map.count(pred) > 0)
-  // decode_icu(b, icu_enc, pred);
 
   bitstream::VideoStreamDebugger::get_mutable_instance().reset();
 

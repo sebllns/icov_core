@@ -49,7 +49,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 
 namespace icov {
 namespace decoder {

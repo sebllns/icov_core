@@ -47,7 +47,7 @@
 
 #include "FastArray.h"
 
-#include "common.h"
+#include "icov_common.h"
 #include "icov_io.h"
 #include "icov_stacktrace.h"
 #include "ldpc_codec_layer/QaryDistribution.h"

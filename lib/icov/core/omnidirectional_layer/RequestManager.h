@@ -48,6 +48,7 @@
 #pragma once
 
 #include "Block.h"
+#include "icov_request.h"
 #include <memory>
 
 namespace icov {
@@ -73,13 +74,16 @@ private:
   std::shared_ptr<IPicture> m_picture;
   std::shared_ptr<IBlockProcessor> m_blockProcessor;
   std::shared_ptr<IBlockPredictionManager> m_blockPrediction;
+  request_t m_request;
+
+  void processBlock(bool is_access_block, const Block &current_block);
 
 public:
   RequestManager() = default;
   ~RequestManager() = default;
 
   void start();
-  void update(float angle_x, float angle_y);
+  void update(const request_t &r);
 
   const std::shared_ptr<IBlockOrdering> &ordering() const;
   void setOrdering(const std::shared_ptr<IBlockOrdering> &newOrdering);
@@ -94,8 +98,8 @@ public:
   void
   setAccessBlocks(const std::shared_ptr<IAccessBlockManager> &newAccessBlocks);
   const std::shared_ptr<IBlockPredictionManager> &blockPrediction() const;
-  void setBlockPrediction(
-      const std::shared_ptr<IBlockPredictionManager> &newBlockPrediction);
+  void setBlockPrediction(const std::shared_ptr<IBlockPredictionManager> &newBlockPrediction);
+  const request_t &request() const;
 };
 } // namespace omnidirectional_layer
 } // namespace icov

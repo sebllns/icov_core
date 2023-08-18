@@ -132,5 +132,10 @@ inline bool operator==(const ContentParameterSet &a,
          a.has_metadata == b.has_metadata &&
          a.encoded_blocks == b.encoded_blocks && a.icu_count == b.icu_count;
 }
+
+inline bool operator!=(const ContentParameterSet &a, const ContentParameterSet &b)
+{
+  return !(a == b);
+}
 } // namespace bitstream
 } // namespace icov

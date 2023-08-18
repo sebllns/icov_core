@@ -60,17 +60,17 @@ float BlockDecoder::getTime() {
   return (float)(clock() - m_startTime) / CLOCKS_PER_SEC;
 }
 
-void BlockDecoder::_processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction)
+void BlockDecoder::_processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction)
 {
   std::cout << "decode block " << b.getIdSelf() << std::endl;
 }
 } // namespace omnidirectional_layer
 } // namespace icov
 
-void icov::omnidirectional_layer::BlockDecoder::_beforeOrderingLoop()
+void icov::omnidirectional_layer::BlockDecoder::_beforeOrderingLoop(const request_t &r)
 {
 }
 
-void icov::omnidirectional_layer::BlockDecoder::_afterOrderingLoop()
+void icov::omnidirectional_layer::BlockDecoder::_afterOrderingLoop(const request_t &r)
 {
 }

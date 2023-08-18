@@ -13,7 +13,7 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
     m_decoder = std::make_unique<icov::decoder::SinglePassDecoder>();
     m_decoder->initLocal(decoder::SinglePassDecoder::params{.DummyViewport = m_params.dummyViewport},
                          m_params.icov_file, ldpc_params);
-    m_results = m_decoder->addDefaultResults();
+    m_results = m_decoder->addDefaultGatherer();
     m_decoder->start();
     this->m_config.f1 = -66;
     this->m_config.f2 = -65;

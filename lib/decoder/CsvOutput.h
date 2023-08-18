@@ -8,8 +8,8 @@
  *  @ingroup ICOV
  */
 
-/** @file DecodeResult.h
- *  @brief Defines an actual ICOV DecodeResult.
+/** @file CsvOutput.h
+ *  @brief Defines an actual ICOV CsvOutput.
  *  @ingroup Decoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -49,37 +49,32 @@
 
 #pragma once
 
-#include "common.h"
-#include "decoder/BlockDecoder.h"
+#include "decoder/InfosGatherer.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include <fstream>
 #include <memory>
 #include <vector>
 
 namespace icov
 {
 namespace decoder {
-class DecodeResult : public omnidirectional_layer::IBlockProcessor
+class CsvOutput : public omnidirectional_layer::IBlockProcessor
 {
   public:
-    struct block_infos_t
-    {
-        omnidirectional_layer::Block::id_t id;
-        Rate rate;
-        omnidirectional_layer::IBlockPredictionManager::prediction_t prediction;
-    };
-
-    const std::vector<block_infos_t> &infos() const;
-    Rate frameBitrate() const;
+    CsvOutput(const std::string &path_prefix);
 
   protected:
-    const std::shared_ptr<BlockDecoder> getParent();
-    std::shared_ptr<BlockDecoder> m_decoderParent;
-    std::vector<block_infos_t> m_infos;
+    const std::shared_ptr<InfosGatherer> getParent();
+    std::shared_ptr<InfosGatherer> m_decoderParent;
+
+    std::ofstream m_requestFile;
+    std::ofstream m_frameFile;
+    std::ofstream m_blockFile;
 
     // IBlockProcessor interface
-    void _beforeOrderingLoop() override;
-    void _afterOrderingLoop() override;
-    void _processBlock(const omnidirectional_layer::Block &b,
+    void _beforeOrderingLoop(const request_t &r) override;
+    void _afterOrderingLoop(const request_t &r) override;
+    void _processBlock(const request_t &r, const omnidirectional_layer::Block &b,
                        omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
 };
 } // namespace decoder

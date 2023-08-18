@@ -1,6 +1,6 @@
 #include "LLRProvider.h"
 
-#include "common.h"
+#include "icov_common.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 
 #include <algorithm>

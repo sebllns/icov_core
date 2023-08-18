@@ -1,11 +1,12 @@
 #include "SinglePassDecoder.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
-#include "decoder/DecodeResult.h"
+#include "decoder/InfosGatherer.h"
 #include "extractor/BlockExtractor.h"
 
 #include "icov_assert.h"
 #include "icov_log.h"
+#include "icov_request.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
@@ -66,7 +67,8 @@ void decoder::SinglePassDecoder::initLocal(const params &p, const boost::filesys
     ICOV_INFO << "Init decoder";
     addDefaultDecoder();
 
-    IBlockProcessor::func_t check_empty_bitsteam = [this](const Block &, IBlockPredictionManager::prediction_t) {
+    IBlockProcessor::func_t check_empty_bitsteam = [this](const request_t &, const Block &,
+                                                          IBlockPredictionManager::prediction_t) {
         assert::check(m_extractionBitstream->empty(), "Bitstream must be empty after block decoding");
     };
     m_blockDecoder->setAfter(check_empty_bitsteam);
@@ -176,10 +178,10 @@ void decoder::SinglePassDecoder::addDefaultDecoder()
         ldpcParams(), m_extractionBitstream));
 }
 
-std::shared_ptr<decoder::DecodeResult> decoder::SinglePassDecoder::addDefaultResults()
+std::shared_ptr<decoder::InfosGatherer> decoder::SinglePassDecoder::addDefaultGatherer()
 {
     assert::not_null(m_blockDecoder.get(), "Decoder cannot be null");
-    auto res = std::make_shared<DecodeResult>();
+    auto res = std::make_shared<InfosGatherer>();
     IBlockProcessor::addChild(m_blockDecoder, res);
     return res;
 }
@@ -192,6 +194,7 @@ const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const
 
 void decoder::SinglePassDecoder::start()
 {
+    m_navigation->Request->start();
     this->request(0, 0, 0);
 }
 
@@ -206,7 +209,7 @@ void decoder::SinglePassDecoder::request(float x, float y, unsigned long i)
     {
         if (m_blockDecoder)
             m_blockDecoder->getDecodingOutput().fill(0);
-        m_navigation->Request->update(x, y);
+        m_navigation->Request->update({.viewpoint = {.angleX = x, .angleY = y}, .frameID = i});
     }
 
   pov_x = x;

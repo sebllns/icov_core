@@ -50,7 +50,7 @@
 #pragma once
 
 #include "Media.h"
-#include "common.h"
+#include "icov_common.h"
 
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"

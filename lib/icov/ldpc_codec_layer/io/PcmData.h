@@ -47,7 +47,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include <Tools/Algo/Matrix/Sparse_matrix/Sparse_matrix.hpp>
 
 using AffMatrix = aff3ct::tools::Sparse_matrix;

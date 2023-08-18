@@ -3,13 +3,14 @@
  *  ICOV, open source Interactive Coder for Omnidirectional Videos.
  */
 
-/** @addtogroup common
+/** @addtogroup Decoder
+ *  Decoder package (client side).
  *  @ingroup ICOV
  */
 
-/** @file povrequest.h
- *  @brief Request object used to transmit a point of view only
- *  @ingroup common
+/** @file InfosGatherer.h
+ *  @brief Defines an actual ICOV InfosGatherer.
+ *  @ingroup Decoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
  *  @date 2023
@@ -48,16 +49,38 @@
 
 #pragma once
 
-#include "interface/IRequest.h"
+#include "icov_common.h"
+#include "decoder/BlockDecoder.h"
+#include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include <memory>
+#include <vector>
 
-namespace icov {
-namespace omnidirectional_layer {
+namespace icov
+{
+namespace decoder {
+class InfosGatherer : public omnidirectional_layer::IBlockProcessor
+{
+  public:
+    struct block_infos_t
+    {
+        omnidirectional_layer::Block::id_t id;
+        Rate rate;
+        omnidirectional_layer::IBlockPredictionManager::prediction_t prediction;
+    };
 
-class PoVRequest : public IRequest {
+    const std::vector<block_infos_t> &infos() const;
+    Rate frameBitrate() const;
 
-public:
-  PoVRequest();
-  ~PoVRequest() {}
+  protected:
+    const std::shared_ptr<BlockDecoder> getParent();
+    std::shared_ptr<BlockDecoder> m_decoderParent;
+    std::vector<block_infos_t> m_infos;
+
+    // IBlockProcessor interface
+    void _beforeOrderingLoop(const request_t &r) override;
+    void _afterOrderingLoop(const request_t &r) override;
+    void _processBlock(const request_t &r, const omnidirectional_layer::Block &b,
+                       omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
 };
-} // namespace omnidirectional_layer
+} // namespace decoder
 } // namespace icov

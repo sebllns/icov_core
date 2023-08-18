@@ -64,9 +64,10 @@ public:
 
   // IBlockProcessor interface
 protected:
-  virtual void _processBlock(const Block &b, IBlockPredictionManager::prediction_t prediction) override;
-  void _beforeOrderingLoop() override;
-  void _afterOrderingLoop() override;
+  virtual void _processBlock(const request_t &r, const Block &b,
+                             IBlockPredictionManager::prediction_t prediction) override;
+  void _beforeOrderingLoop(const request_t &r) override;
+  void _afterOrderingLoop(const request_t &r) override;
 };
 
 } // namespace omnidirectional_layer

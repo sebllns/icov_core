@@ -45,7 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include "encoder/InputMedia.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"

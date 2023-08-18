@@ -6,7 +6,7 @@
 **************************************************************************/
 #include "vtm_opencv_utility.h"
 
-#include "common.h"
+#include "icov_common.h"
 #include "rgb888_ycrcb.h"
 #include <limits>
 #include <opencv2/imgproc.hpp>

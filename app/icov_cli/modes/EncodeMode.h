@@ -46,7 +46,7 @@
 #pragma once
 
 #include "Media.h"
-#include "common.h"
+#include "icov_common.h"
 #include "encoder/InputMedia.h"
 #include "encoder/OutputIcovBase.h"
 #include "encoder/interface/IEncoder.h"

@@ -46,7 +46,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "common.h"
+#include "icov_common.h"
 #include <map>
 
 enum result_data_type {
