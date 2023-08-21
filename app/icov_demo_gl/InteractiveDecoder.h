@@ -48,11 +48,13 @@
 #include "InteractiveModeBase.h"
 #include "app_common/decoder/SinglePassDecoder.h"
 #include "decoder/InfosGatherer.h"
+#include "icov_request.h"
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/serialization/map.hpp>
 #include <fstream>
 #include <memory>
+#include <queue>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -65,15 +67,19 @@ class InteractiveDecoder : public InteractiveModeBase
         bool dummyViewport;
         float viewportPadding;
         fs::path icov_file;
+        fs::path positions_file;
         params(const po::variables_map &args);
     };
 
     InteractiveDecoder(const params &params, const LdpcCoderParameters &ldpc_params);
 
   private:
+    std::queue<viewpoint_t> m_positions;
     params m_params;
     std::shared_ptr<icov::decoder::InfosGatherer> m_results;
     std::unique_ptr<icov::decoder::SinglePassDecoder> m_decoder;
+
+    void readPositions();
 
     // InteractiveModeBase interface
   protected:

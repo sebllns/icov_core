@@ -113,9 +113,7 @@ public:
    * @param icu_enc The ID of ICU block to be decoded.
    * @param block_prediction The type of block prediction used.
    */
-  void decode_icu(
-      int icu_enc,
-      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  void decode_icu(int icu_enc, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
   /**
    * @brief Read the syndrome from extracted bitstream.
@@ -159,9 +157,7 @@ private:
   SymboleVec m_blockSymbols;
   Rate m_rate;
 
-  void _decode_bitplanes(
-      omnidirectional_layer::BlockPrediction::ePredType block_prediction,
-      int bitplaneCount);
+  void _decode_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
   void _decode_bitplane(
       int i,
       omnidirectional_layer::BlockPrediction::ePredType block_prediction);

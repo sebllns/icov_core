@@ -73,7 +73,7 @@ void InteractiveModeBase::run()
     while (processKey(key))
     {
         cv::imshow(window_name, m_outputImage);
-        key = cv::waitKey(0);
+        key = cv::waitKey(1000);
         ICOV_DEBUG << "pressed key code = " << (int)key;
     }
 }

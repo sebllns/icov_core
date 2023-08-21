@@ -3,11 +3,17 @@
 #include "app_common/program/icov_program_options.h"
 #include "decoder/CsvOutput.h"
 #include "icov_assert.h"
+#include "icov_log.h"
+#include "icov_path.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/types.hpp"
 #include "video_layer/vtm_opencv_utility.h"
+#include <cstdio>
+#include <fstream>
 #include <memory>
+#include <string>
 
 InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderParameters &ldpc_params)
     : InteractiveModeBase(), m_params(params)
@@ -26,6 +32,59 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
 
     auto csv = std::make_shared<decoder::CsvOutput>("./test_csv");
     IBlockProcessor::addChild(m_results, csv);
+
+    readPositions();
+}
+
+void InteractiveDecoder::readPositions()
+{
+    m_positions = std::queue<viewpoint_t>();
+
+    if (path::file_exists(m_params.positions_file.string()))
+    {
+        std::ifstream inputFile(m_params.positions_file);
+
+        if (!inputFile.is_open())
+        {
+            ICOV_ERROR << "Failed to open file at:" << m_params.positions_file;
+            return;
+        }
+
+        std::string line;
+        while (std::getline(inputFile, line))
+        {
+            std::istringstream iss(line);
+            std::vector<double> values;
+
+            std::string token;
+            while (std::getline(iss, token, ','))
+            {
+                try
+                {
+                    double value = std::stod(token);
+                    std::cout << value << " ";
+                    values.push_back(value);
+                }
+                catch (const std::exception &e)
+                {
+                    ICOV_ERROR << "Error parsing value: " << e.what();
+                }
+            }
+
+            if (values.size() == 3)
+            {
+                float pov_x = values[2];
+                float pov_y = values[1];
+                m_positions.push({.angleX = pov_x, .angleY = pov_y});
+
+                std::cout << " PUSHED" << std::endl;
+            }
+        }
+
+        std::getchar();
+
+        inputFile.close();
+    }
 }
 
 InteractiveDecoder::params::params(const boost::program_options::variables_map &args)
@@ -33,8 +92,8 @@ InteractiveDecoder::params::params(const boost::program_options::variables_map &
     dummyViewport = false;
     viewportPadding = 1.2f;
     icov_file = options::parseInputFile(args);
+    positions_file = options::parsePositionsInputFile(args);
 }
-
 
 void InteractiveDecoder::updateF1()
 {
@@ -214,10 +273,21 @@ bool InteractiveDecoder::processKey(char key)
     float pov_y = getPov_y();
     int frame = 0;
 
+    if (!m_positions.empty())
+    {
+        pov_x = m_positions.front().angleX;
+        pov_y = m_positions.front().angleY;
+        m_positions.pop();
+    }
+
+    std::cout << "POV " << pov_x << ", " << pov_y << std::endl;
+
     // decode
     m_decoder->request(pov_x, pov_y, frame);
 
     draw();
+
+    // readPositions();
 
     return true;
 }

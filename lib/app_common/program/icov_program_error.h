@@ -1,5 +1,7 @@
 #pragma once
 
+#include "icov_assert.h"
+#include <system_error>
 
 class IcovErrorCode
 {

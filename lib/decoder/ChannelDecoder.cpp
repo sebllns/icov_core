@@ -51,8 +51,7 @@ void icov::decoder::ChannelDecoder::_decode_bitplane(
   bitstream::byte quantizedNumcode = m_numcodes.front();
   m_numcodes.pop();
 
-  int syndrome_size =
-      bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
+  int syndrome_size = bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
 
   read_syndrome(syndrome_size);
   decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode), m_syndrome);
@@ -152,7 +151,8 @@ void ChannelDecoder::decode_icu(int icu_enc, omnidirectional_layer::BlockPredict
     coding_flag = true;
   }
 
-  if (coding_flag) {
+  if (coding_flag)
+  {
     _extract_numcodes(block_prediction, bitplaneCount);
     _decode_bitplanes(block_prediction, bitplaneCount);
   }
@@ -261,7 +261,8 @@ void ChannelDecoder::_set_si(bool coding_flag) {
   }
 }
 
-void ChannelDecoder::read_syndrome(int syndrome_size) {
+void ChannelDecoder::read_syndrome(int syndrome_size)
+{
   m_syndrome.resize(syndrome_size);
   bitstream::byte bitstream_value = 0;
   ICOV_TRACE << "READ SYNDROME " << syndrome_size;

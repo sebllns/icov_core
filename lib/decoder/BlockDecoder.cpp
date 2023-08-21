@@ -135,6 +135,7 @@ void icov::decoder::BlockDecoder::_processBlock(const request_t &r, const omnidi
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingPredictionID(pred);
 
   m_rate = 0;
+
   for (auto &dec : m_channelDecoder)
   {
         if (icov::debug::debug_trace_enabled)

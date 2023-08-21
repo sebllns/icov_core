@@ -32,11 +32,38 @@ const std::string start_block = "start-block";
 const std::string block_count = "block-count";
 const std::string pre_encode = "pre-encode";
 const std::string viewport_type = "viewport-type";
+const std::string csv_output = "csv-output";
+const std::string positions_input = "positions-input";
 
 inline void addPreEncodeOption(po::options_description &output)
 {
     output.add_options()(pre_encode.c_str(), po::value<bool>()->default_value(false),
                          "Pre-encode the media before decode (useful to get more debug informations)");
+}
+
+inline void addCsvOutputOption(po::options_description &output)
+{
+    output.add_options()(csv_output.c_str(), po::value<std::string>()->default_value(""),
+                         "Prefix path if you need to export decoding results into CSV");
+}
+
+inline void addPositionsInputOption(po::options_description &output)
+{
+    output.add_options()(positions_input.c_str(), po::value<std::string>()->default_value(""),
+                         "Path pointing to file that contains viewpoint positions for decoding simulation");
+}
+
+inline void addViewportPaddingOption(po::options_description &output)
+{
+    output.add_options()(viewport_padding.c_str(), po::value<float>()->default_value(1.2),
+                         "Radius factor used in icov viewport to check if a block is "
+                         "visible");
+}
+
+inline void addViewportFovOption(po::options_description &output)
+{
+    output.add_options()((fov + ",f").c_str(), po::value<float>()->default_value(80),
+                         "Viewport horizontal field of view in degrees");
 }
 
 inline void init_options_desc(const std::string &modes, po::options_description &output)
@@ -70,16 +97,13 @@ inline void init_options_desc(const std::string &modes, po::options_description 
                                      po::value<std::string>()->default_value("/tmp/input_file"), "Set input file")
 
                                         ((output_file + ",o").c_str(), po::value<std::string>()->default_value(""),
-                                         "Set output file")
-
-                                            ((fov + ",f").c_str(), po::value<float>()->default_value(80),
-                                             "Viewport horizontal field of view in degrees")
-
-                                                (viewport_padding.c_str(), po::value<float>()->default_value(1.2),
-                                                 "Radius factor used in icov viewport to check if a block is "
-                                                 "visible");
+                                         "Set output file");
 
     addPreEncodeOption(output);
+    addCsvOutputOption(output);
+    addPositionsInputOption(output);
+    addViewportPaddingOption(output);
+    addViewportFovOption(output);
 }
 
 #define ICOV_DATA_DIR(args) fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
@@ -98,6 +122,16 @@ inline std::string parseInputFile(const po::variables_map &args)
 inline std::string parseOutputFile(const po::variables_map &args)
 {
     return args[output_file].as<std::string>();
+}
+
+inline std::string parseCsvOutputFile(const po::variables_map &args)
+{
+    return args[csv_output].as<std::string>();
+}
+
+inline std::string parsePositionsInputFile(const po::variables_map &args)
+{
+    return args[positions_input].as<std::string>();
 }
 
 inline std::string parseLdpcCoderType(const po::variables_map &args)
