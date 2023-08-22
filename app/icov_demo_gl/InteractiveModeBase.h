@@ -179,6 +179,8 @@ class InteractiveModeBase
 
     const Config &config() const;
 
+    void setWait_delay(int newWait_delay);
+
   private:
     std::unique_ptr<Single360degreeCameraHandler> viewer;
     std::string fileAddr;
@@ -187,6 +189,7 @@ class InteractiveModeBase
     float pov_x;
     float pov_y;
     int m_special_key;
+    int m_wait_delay;
 
     bool is_special_key(char key) const;
     void move(float offset_pitch, float offset_yaw);

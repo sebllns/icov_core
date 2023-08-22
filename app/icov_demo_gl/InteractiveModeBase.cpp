@@ -50,6 +50,8 @@ enum KeyName
 };
 
 InteractiveModeBase::InteractiveModeBase()
+    : viewer(nullptr), fileAddr(""), fovX_degree(0.), block_size(0), pov_x(0.), pov_y(0.), m_special_key(0),
+      m_wait_delay(0)
 {
 }
 
@@ -60,12 +62,9 @@ InteractiveModeBase::~InteractiveModeBase()
 
 void InteractiveModeBase::run()
 {
-
     m_special_key = m_config.f1;
-
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     m_outputImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
-
     viewer = std::make_unique<Single360degreeCameraHandler>(cv::Size(1920, 1080), 30, false);
 
     char key = '\0';
@@ -73,7 +72,7 @@ void InteractiveModeBase::run()
     while (processKey(key))
     {
         cv::imshow(window_name, m_outputImage);
-        key = cv::waitKey(1000);
+        key = cv::waitKey(m_wait_delay);
         ICOV_DEBUG << "pressed key code = " << (int)key;
     }
 }
@@ -307,4 +306,9 @@ void InteractiveModeBase::fill(const cv::Scalar &color)
 const InteractiveModeBase::Config &InteractiveModeBase::config() const
 {
     return m_config;
+}
+
+void InteractiveModeBase::setWait_delay(int newWait_delay)
+{
+    m_wait_delay = newWait_delay;
 }

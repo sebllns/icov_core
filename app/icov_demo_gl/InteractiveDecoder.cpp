@@ -76,12 +76,8 @@ void InteractiveDecoder::readPositions()
                 float pov_x = values[2];
                 float pov_y = values[1];
                 m_positions.push({.angleX = pov_x, .angleY = pov_y});
-
-                std::cout << " PUSHED" << std::endl;
             }
         }
-
-        std::getchar();
 
         inputFile.close();
     }
@@ -273,11 +269,14 @@ bool InteractiveDecoder::processKey(char key)
     float pov_y = getPov_y();
     int frame = 0;
 
+    setWait_delay(0);
+
     if (!m_positions.empty())
     {
         pov_x = m_positions.front().angleX;
         pov_y = m_positions.front().angleY;
         m_positions.pop();
+        setWait_delay(1);
     }
 
     std::cout << "POV " << pov_x << ", " << pov_y << std::endl;
