@@ -1,12 +1,16 @@
 #pragma once
 
+#include "icov_request.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/factory/Coder_IMT64.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <memory>
+#include <queue>
+#include <string>
 
 namespace po = boost::program_options;
 
@@ -201,6 +205,66 @@ inline ldpc_codec_layer::p_InteractiveCoder create_coder(const boost::program_op
 {
   auto params = parseLdpcParams(args);
   return ldpc_codec_layer::LdpcCoderFactory::create_coder(*params);
+}
+
+inline std::string parsePositionsFile(const po::variables_map &args)
+{
+  return args[positions_input].as<std::string>();
+}
+
+inline std::queue<viewpoint_t> readPositions(const po::variables_map &args)
+{
+  std::string positions_file = parsePositionsFile(args);
+
+  std::queue<viewpoint_t> m_positions;
+
+  if (path::file_exists(positions_file))
+  {
+      std::ifstream inputFile(positions_file);
+
+      if (!inputFile.is_open())
+      {
+          ICOV_ERROR << "Failed to open file at:" << positions_file;
+      }
+      else
+      {
+          std::string line;
+          while (std::getline(inputFile, line))
+          {
+              std::istringstream iss(line);
+              std::vector<double> values;
+
+              std::string token;
+              while (std::getline(iss, token, ','))
+              {
+                  try
+                  {
+                      double value = std::stod(token);
+                      std::cout << value << " ";
+                      values.push_back(value);
+                  }
+                  catch (const std::exception &e)
+                  {
+                      ICOV_ERROR << "Error parsing value: " << e.what();
+                  }
+              }
+
+              if (values.size() == 3)
+              {
+                  float pov_x = values[2];
+                  float pov_y = values[1];
+                  m_positions.push({.angleX = pov_x, .angleY = pov_y});
+              }
+          }
+          inputFile.close();
+      }
+  }
+  else
+  {
+      ICOV_ERROR << "Failed to open file at:" << positions_file;
+  }
+
+  return m_positions;
 }
 
 } // namespace options

@@ -250,15 +250,8 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode_single_ite(
       auto den = this->values[v];
       auto val = prod;
 
-      if (den == 0) {
-        // FIXME: It seems there is a division by zero in some cases
-        //#if ICOV_CORE_DEBUG_TRACE_ENABLED
-        //        ICOV_TRACE << "WARNING den is zero and prod is " <<
-        //        prod
-        //                                  << std::endl;
-        //#endif
+      if (den == 0)
         den = std::numeric_limits<R>::epsilon();
-      }
 
       val /= den;
       val = (std::abs(val) < (R)1.0)

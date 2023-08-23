@@ -13,6 +13,7 @@ void Aff3ctDecoder::decode(BitVec &o_decoded, int n, int idx,
   int d = std::min(idx, (int)m_decvector.size() - 1);
   m_decvector[d]->reset();
   m_decvector[d]->setSyndrome(&syndrome);
+  // #pragma omp parallel
   m_decvector[d]->decode_siho(llr, o_decoded);
 }
 

@@ -82,11 +82,6 @@ public:
   struct quantization_params {
     bool enable_z_quantization;
     std::vector<float> q_values;
-    //    quantization_params()
-    //        : enable_z_quantization(true),
-    //          q_values({0.125, 0.375, 0.5625, 0.6875, 0.78125, 0.84375,
-    //          0.90625,
-    //                    0.96875}) {}
   };
 
   QaryDistribution()

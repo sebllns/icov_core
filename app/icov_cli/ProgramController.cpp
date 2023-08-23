@@ -17,7 +17,6 @@ ProgramController::ProgramController()
   ExportMode::AddProgramOptions(m_options_desc);
   CheckMode::AddProgramOptions(m_options_desc);
   EncodeMode::AddProgramOptions(m_options_desc);
-  DecodeMode::AddProgramOptions(m_options_desc);
 }
 
 void ProgramController::launchMode(const std::string &mode_id) {
@@ -46,12 +45,16 @@ void ProgramController::launchMode(const std::string &mode_id) {
     EncodeMode mode(m_options_map);
     mode.run();
     ICOV_DEBUG << "end encode\n";
-  } else if (mode_id == "decode") {
+  }
+  else if (mode_id == DecodeMode::name())
+  {
     ICOV_DEBUG << "decode mode started";
     DecodeMode mode(m_options_map);
     mode.run();
     ICOV_DEBUG << "end decode\n";
-  } else {
+  }
+  else
+  {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }
 

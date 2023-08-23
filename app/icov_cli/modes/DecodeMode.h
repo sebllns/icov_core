@@ -46,7 +46,6 @@
 #pragma once
 
 #include "app_common/decoder/SinglePassDecoder.h"
-#include "encoder/IcovMediaEncoder.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
 #include <boost/filesystem.hpp>
@@ -56,48 +55,27 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 using namespace icov;
-using namespace icov::extractor;
-using namespace icov::omnidirectional_layer;
 using namespace icov::ldpc_codec_layer;
-using namespace icov::bitstream;
-using namespace icov::encoder;
 
 class DecodeMode {
   struct params {
-    static const char *InputFile_ID;
-    static const char *IcuSize_ID;
-    static const char *QP_ID;
-    static const char *ViewportPadding_ID;
-    static const char *EncodeAllBlocks_ID;
-    static const char *EncodeStartBlock_ID;
-    static const char *EncodeBlockCount_ID;
-    static const char *EncodeDummyViewport_ID;
-
     fs::path input_file;
-    int icu_size;
-    int qp;
-    float viewport_padding;
     std::unique_ptr<LdpcCoderParameters> ldpc_params;
-    QaryDistribution::quantization_params bsp_params;
-    bool DummyViewport;
   };
 
 public:
   DecodeMode(const po::variables_map &args);
   ~DecodeMode() = default;
 
-  std::string name() const { return "decode"; }
+  static std::string name()
+  {
+    return "decode";
+  }
 
   void run();
-  void encode();
   void decode();
-  void check();
-  void display();
-
-  static void AddProgramOptions(po::options_description &desc);
 
 private:
   params m_parameters;
-  std::unique_ptr<encoder::IcovMediaEncoder> m_encoder;
   std::unique_ptr<decoder::SinglePassDecoder> m_decoder;
 };

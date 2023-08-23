@@ -30,8 +30,11 @@ InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderPara
     this->m_config.f4 = -63;
     this->m_config.f5 = -62;
 
-    auto csv = std::make_shared<decoder::CsvOutput>("./test_csv");
-    IBlockProcessor::addChild(m_results, csv);
+    if (m_params.export_csv)
+    {
+        auto csv = std::make_shared<decoder::CsvOutput>(m_params.csv_file.string());
+        IBlockProcessor::addChild(m_results, csv);
+    }
 
     readPositions();
 }
@@ -89,6 +92,8 @@ InteractiveDecoder::params::params(const boost::program_options::variables_map &
     viewportPadding = 1.2f;
     icov_file = options::parseInputFile(args);
     positions_file = options::parsePositionsInputFile(args);
+    csv_file = options::parseCsvOutputFile(args);
+    export_csv = !csv_file.empty();
 }
 
 void InteractiveDecoder::updateF1()
@@ -114,7 +119,7 @@ void InteractiveDecoder::updateF2()
         int bx = (int)(pic->u(pic->angleX(b->u())) * pic->width());
         int by = (int)(pic->v(pic->angleY(b->v())) * pic->height());
         auto rect_block = cv::Rect(bx, by, bw, bh);
-        cv::Scalar color = i.rate * bgrColor().WHITE();
+        cv::Scalar color = i.rate * ((i.prediction > 0 && i.rate >= 0.5) ? bgrColor().RED() : bgrColor().WHITE());
         this->m_outputImage(rect_block).setTo(color);
     }
 }
@@ -285,8 +290,6 @@ bool InteractiveDecoder::processKey(char key)
     m_decoder->request(pov_x, pov_y, frame);
 
     draw();
-
-    // readPositions();
 
     return true;
 }

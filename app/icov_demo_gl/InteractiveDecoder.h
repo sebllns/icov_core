@@ -68,6 +68,8 @@ class InteractiveDecoder : public InteractiveModeBase
         float viewportPadding;
         fs::path icov_file;
         fs::path positions_file;
+        fs::path csv_file;
+        bool export_csv;
         params(const po::variables_map &args);
     };
 

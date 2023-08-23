@@ -97,6 +97,9 @@ struct ContentParameterSet {
            omnidirectional_layer::Block::id_t>
       encoded_blocks;
 
+  //@todo TODO q_values in ContentParameterSet
+  std::vector<float> q_values;
+
   ContentParameterSet()
       : content_type(0), content_width(0), content_height(0), qp(42),
         content_chroma_format(0), content_framecount(0), content_framerate(0),
