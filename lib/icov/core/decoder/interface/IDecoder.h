@@ -53,6 +53,7 @@
 #include "icov_common.h"
 
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
+#include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 
 #include <memory>
@@ -60,6 +61,8 @@
 
 namespace icov {
 namespace decoder {
+
+using namespace omnidirectional_layer;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
@@ -106,44 +109,11 @@ protected:
                              const IBlockPredictionManager &block_prediction);
   virtual void encodeBlockWithPrediction(std::ostream &output, const Block &b,
                                          IBlockPredictionManager::prediction_t prediction) = 0;
-  virtual std::vector<IBlockPredictionManager::prediction_t>
-  getAvailablePredictions(const Block &b, bool access_block,
-                          const IBlockPredictionManager &block_prediction) {
-    return block_prediction.getAvailablePredictions(b, access_block);
-  }
 
 private:
   IFrameDecoder() = default;
   IFrameDecoder(const IFrameDecoder &) = default;
 };
-
-template <typename T>
-void IFrameDecoder<T>::encode(std::ostream &output, IInputMedia<T> &input,
-                              const IPicture &picture,
-                              const IAccessBlockManager &access_blocks,
-                              const IBlockPredictionManager &block_prediction) {
-
-  input.setFrame(m_frame);
-
-  ICOV_ASSERT_MSG(input.getPixelCount() > 0, "Cannot encode empty frame");
-  ICOV_ASSERT_MSG(input.getHeight() == picture.height() &&
-                      input.getWidth() == picture.width(),
-                  "Picture is not the right size");
-
-  this->processInput(output, input);
-  for (const auto &b : picture.icus()) {
-    encodeBlock(output, b, access_blocks.isAccessBlock(b.getIdSelf()),
-                block_prediction);
-  }
-}
-
-template <typename T>
-void IFrameDecoder<T>::encodeBlock(std::ostream &output, const Block &b,
-                                   bool access_block,
-                                   const IBlockPredictionManager &block_prediction) {
-  for (IBlockPredictionManager::prediction_t p : getAvailablePredictions(b, access_block, block_prediction))
-    encodeBlockWithPrediction(output, b, p);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///
