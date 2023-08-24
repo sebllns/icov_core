@@ -71,6 +71,8 @@ struct ContentParameterSet {
   float viewport_fov_x, viewport_fov_y;
 
   uint16_t qp;
+  uint16_t bp_ite;
+  std::string coder_type;
 
   byte content_chroma_format;
 

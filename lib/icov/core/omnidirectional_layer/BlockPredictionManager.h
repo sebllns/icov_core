@@ -100,8 +100,8 @@ public:
     SI_CAT_COUNT
   };
 
-  static const uint8_t SI_Count = 8;
-  static const uint8_t PredictionCount = SI_Count + 2;
+  static const int8b SI_Count = 8;
+  static const int8b PredictionCount = SI_Count + 2;
   static std::string toString(BlockPrediction::ePredType num);
   static ePredType toPredType(uint num);
   static std::vector<BlockPrediction::ePredType>

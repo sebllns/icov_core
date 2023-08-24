@@ -51,7 +51,7 @@ private:
   std::vector<FastMatrix<index_t>> mapping_file;
   std::vector<std::vector<std::vector<index_t>>> m_decoded_syndrome;
 
-  std::vector<uint8_t> m_levels;
+  std::vector<int8b> m_levels;
   int m_min_level;
   int m_max_level;
 

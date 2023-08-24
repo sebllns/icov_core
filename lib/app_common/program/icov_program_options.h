@@ -8,6 +8,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <cstdint>
 #include <memory>
 #include <queue>
 #include <string>
@@ -19,10 +20,11 @@ namespace icov
 namespace options {
 
 const std::string code_length = "code-length";
+const std::string icu_size = "icu-size";
 const std::string bp_iter = "bp-ite";
 const std::string numcodes = "numcodes";
 const std::string data_path = "data-path";
-const std::string coder_type = "coder";
+const std::string coder_type = "coder-type";
 const std::string help = "help";
 const std::string mode = "mode";
 const std::string log_lvl = "log-level";
@@ -266,6 +268,22 @@ inline std::queue<viewpoint_t> readPositions(const po::variables_map &args)
 
   return m_positions;
 }
+
+struct encoder_param_t
+{
+  uint16_t bp_iter;
+  int8b qp;
+  float viewport_padding;
+  float fov;
+  bool encode_allblocks;
+  std::string input_media_file;
+  std::string output_icov_file;
+};
+
+struct decoder_param_t
+{
+  std::string input_icov_file;
+};
 
 } // namespace options
 } // namespace icov

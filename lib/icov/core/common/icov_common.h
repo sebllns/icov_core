@@ -62,6 +62,7 @@
 #include "icov_path.h"
 #include "icov_stacktrace.h"
 #include "icov_stl_tools.h"
+#include "icov_types.h"
 #include "version.h"
 
 #include "FastArray.h"
@@ -80,38 +81,5 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
-
-namespace icov {
-
-typedef bool bit;
-typedef float LLRVal;
-typedef int SymboleVal;
-typedef int BitVal;
-typedef int SIVal;
-typedef bit SyndVal;
-typedef uint16_t index_t;
-
-namespace bit_t {
-const BitVal zero = 0;
-const BitVal one = 1;
-} // namespace bit_t
-
-// FastArray is faster
-using Syndrome = FastArray<bit>;
-using BitVec = std::vector<BitVal>;
-using SymboleVec = std::vector<SymboleVal>;
-using LLRVec = std::vector<LLRVal>;
-using SIVec = std::vector<SIVal>;
-using Bitplanes = std::vector<BitVec>;
-using Rate = float;
-using NumcodeIdx = uint32_t;
-
-// Bitplane
-using SyndromesVec = std::vector<Syndrome>;
-using NumcodeIdxVec = std::vector<NumcodeIdx>;
-
-using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
-
-} // namespace icov
 
 #endif // COMMON_H
