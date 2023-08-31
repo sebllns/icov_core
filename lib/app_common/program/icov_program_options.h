@@ -48,6 +48,22 @@ const std::string viewport_type = "viewport-type";
 const std::string csv_output = "csv-output";
 const std::string positions_input = "positions-input";
 const std::string dummy_viewport = "dummy-viewport";
+const std::string headless = "headless";
+const std::string ground_truth = "ground-truth";
+
+inline void addGroundPathOption(desc_t &output)
+{
+    output.add_options()(ground_truth.c_str(), po::value<std::string>()->default_value(""),
+                         "Path to use ground truth when non-empty");
+}
+
+inline void addHeadlessOption(desc_t &output)
+{
+    output.add_options()(headless.c_str(), po::value<bool>()->default_value(false),
+                         "Use headless decoder which means no graphical output (only meta-parameters will be extracted "
+                         "from encoded file) but is faster to execute. Will use ground truth when given, "
+                         "to replace graphical output");
+}
 
 inline void addPreEncodeOption(desc_t &output)
 {
@@ -122,6 +138,8 @@ inline void init_options_desc(const std::string &modes, desc_t &output)
     addViewportPaddingOption(output);
     addViewportFovOption(output);
     addDummyViewportOption(output);
+    addHeadlessOption(output);
+    addGroundPathOption(output);
 }
 
 #define ICOV_DATA_DIR(args) fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
