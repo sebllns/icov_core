@@ -1,12 +1,10 @@
 #include "InteractiveDecoder.h"
 #include "InteractiveModeBase.h"
 #include "app_common/program/icov_program_options.h"
-#include "decoder/CsvOutput.h"
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_path.h"
-#include "omnidirectional_layer/BlockPredictionManager.h"
-#include "omnidirectional_layer/icov_geometry.h"
+#include "icov_request.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/types.hpp"
 #include "video_layer/vtm_opencv_utility.h"
@@ -15,90 +13,30 @@
 #include <memory>
 #include <string>
 
-InteractiveDecoder::InteractiveDecoder(const params &params, const LdpcCoderParameters &ldpc_params)
-    : InteractiveModeBase(), m_params(params)
+InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file, const options::args_t &args)
+    : InteractiveModeBase(), m_decoderCtrl(icov_file, args)
 {
-    path::assert_file_exists(m_params.icov_file.string());
-    m_decoder = std::make_unique<icov::decoder::SinglePassDecoder>();
-    m_decoder->initLocal(decoder::SinglePassDecoder::params{.DummyViewport = m_params.dummyViewport},
-                         m_params.icov_file, ldpc_params);
-    m_results = m_decoder->addDefaultGatherer();
-    m_decoder->start();
+    ICOV_DEBUG << "Parse program arguments";
+
     this->m_config.f1 = -66;
     this->m_config.f2 = -65;
     this->m_config.f3 = -64;
     this->m_config.f4 = -63;
     this->m_config.f5 = -62;
 
-    if (m_params.export_csv)
-    {
-        auto csv = std::make_shared<decoder::CsvOutput>(m_params.csv_file.string());
-        IBlockProcessor::addChild(m_results, csv);
-    }
-
-    readPositions();
+    m_decoderCtrl.initAnalyzer();
+    m_results = m_decoderCtrl.analyzer().InfosGatherer;
+    m_requests = m_decoderCtrl.readRequests();
 }
 
-void InteractiveDecoder::readPositions()
+const unique_ptr(decoder::SinglePassDecoder) & InteractiveDecoder::getDecoder() const
 {
-    m_positions = std::queue<viewpoint_t>();
-
-    if (path::file_exists(m_params.positions_file.string()))
-    {
-        std::ifstream inputFile(m_params.positions_file);
-
-        if (!inputFile.is_open())
-        {
-            ICOV_ERROR << "Failed to open file at:" << m_params.positions_file;
-            return;
-        }
-
-        std::string line;
-        while (std::getline(inputFile, line))
-        {
-            std::istringstream iss(line);
-            std::vector<double> values;
-
-            std::string token;
-            while (std::getline(iss, token, ','))
-            {
-                try
-                {
-                    double value = std::stod(token);
-                    std::cout << value << " ";
-                    values.push_back(value);
-                }
-                catch (const std::exception &e)
-                {
-                    ICOV_ERROR << "Error parsing value: " << e.what();
-                }
-            }
-
-            if (values.size() == 3)
-            {
-                float pov_x = values[2];
-                float pov_y = values[1];
-                m_positions.push({.angleX = pov_x, .angleY = pov_y});
-            }
-        }
-
-        inputFile.close();
-    }
-}
-
-InteractiveDecoder::params::params(const boost::program_options::variables_map &args)
-{
-    dummyViewport = false;
-    viewportPadding = 1.2f;
-    icov_file = options::parseInputFile(args);
-    positions_file = options::parsePositionsInputFile(args);
-    csv_file = options::parseCsvOutputFile(args);
-    export_csv = !csv_file.empty();
+    return m_decoderCtrl.getDecoder();
 }
 
 void InteractiveDecoder::updateF1()
 {
-    VTM_OPENCV_Utility::toBGRMat(m_decoder->getDecodedBuf(), m_outputImage);
+    VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_outputImage);
 }
 
 void InteractiveDecoder::updateF2()
@@ -106,7 +44,7 @@ void InteractiveDecoder::updateF2()
     std::cout << "update f2 \n";
 
     this->fill(bgrColor::BLACK());
-    const auto pic = m_decoder->navigation()->Visualization->Picture;
+    const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
     for (const auto &i : m_results->infos())
     {
@@ -129,7 +67,7 @@ void InteractiveDecoder::updateF3()
     std::cout << "update f3 \n";
 
     this->fill(bgrColor::BLACK());
-    const auto pic = m_decoder->navigation()->Visualization->Picture;
+    const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
     Rate bitrate = m_results->frameBitrate();
     cv::Scalar color = bitrate * bgrColor().WHITE();
@@ -153,7 +91,7 @@ void InteractiveDecoder::updateF4()
     std::cout << "update f4 \n";
 
     this->fill(bgrColor::BLACK());
-    const auto pic = m_decoder->navigation()->Visualization->Picture;
+    const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
     for (const auto &i : m_results->infos())
     {
@@ -226,7 +164,7 @@ void InteractiveDecoder::updateF5()
     std::cout << "update f5 \n";
 
     this->fill(bgrColor::BLACK());
-    const auto pic = m_decoder->navigation()->Visualization->Picture;
+    const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
     for (const auto &i : m_results->infos())
     {
@@ -270,24 +208,26 @@ bool InteractiveDecoder::processKey(char key)
     if (!InteractiveModeBase::processKey(key))
         return false;
 
-    float pov_x = getPov_x();
-    float pov_y = getPov_y();
-    int frame = 0;
+    angle_t pov_x = getPov_x();
+    angle_t pov_y = getPov_y();
+    frame_t frame = 0;
 
     setWait_delay(0);
 
-    if (!m_positions.empty())
+    if (!m_requests.empty())
     {
-        pov_x = m_positions.front().angleX;
-        pov_y = m_positions.front().angleY;
-        m_positions.pop();
+        pov_x = m_requests.front().viewpoint.angleX;
+        pov_y = m_requests.front().viewpoint.angleY;
+        frame = m_requests.front().frameID;
+
+        m_requests.pop();
         setWait_delay(1);
     }
 
     std::cout << "POV " << pov_x << ", " << pov_y << std::endl;
 
     // decode
-    m_decoder->request(pov_x, pov_y, frame);
+    getDecoder()->request(pov_x, pov_y, frame);
 
     draw();
 

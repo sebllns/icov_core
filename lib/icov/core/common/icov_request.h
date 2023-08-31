@@ -3,16 +3,19 @@
 namespace icov
 {
 
+typedef float angle_t;
+typedef unsigned long frame_t;
+
 struct viewpoint_t
 {
-    float angleX;
-    float angleY;
+    angle_t angleX;
+    angle_t angleY;
 };
 
 struct request_t
 {
     viewpoint_t viewpoint;
-    unsigned long frameID;
+    frame_t frameID;
 };
 
 inline bool operator==(const viewpoint_t &a, const viewpoint_t &b)

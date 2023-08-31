@@ -84,7 +84,7 @@ public:
 
   void offsetSyndrome(uint offset);
 
-  void readSyndrome(bitstream::byte *output, uint64_t read_size,
+  void readSyndrome(byte *output, uint64_t read_size,
                     uint64_t stored_size);
   void readFrameSize();
   void readBlockPos();
@@ -103,7 +103,7 @@ public:
   }
 
   int readByteIntParam();
-  void readQaryParams(bitstream::byte header, int &q_idx, int &z_min,
+  void readQaryParams(byte header, int &q_idx, int &z_min,
                       int &z_max);
   void readSIRates(NumcodeIdxVec &v);
   void extractBlock(bitstream::BlockChannelDecoderParams &output, int icu_idx);

@@ -1,6 +1,8 @@
 #include "TestSequenceResult.h"
 #include <boost/algorithm/string/trim.hpp>
 
+namespace icov
+{
 TestSequenceResult::TestSequenceResult() {}
 
 // bool TestSequenceResult::write_file(std::string filename) const
@@ -55,15 +57,19 @@ bool TestSequenceResult::read_from_file(std::string filename) {
         std::string type_str =
             boost::algorithm::trim_copy(line.substr(line.rfind(":") + 1));
 
-        if (type_str == "matrix") {
-          result.type = result_data_type::MATRIX;
-        } else if (type_str == "scalar") {
-          result.type = result_data_type::SCALAR;
-          read_data = true;
+        if (type_str == "matrix")
+        {
+            result.type = result_data_type::result_data_type_MATRIX;
+        }
+        else if (type_str == "scalar")
+        {
+            result.type = result_data_type::result_data_type_SCALAR;
+            read_data = true;
         }
       }
 
-      if (result.type == result_data_type::MATRIX) {
+      if (result.type == result_data_type::result_data_type_MATRIX)
+      {
         found = line.rfind("rows:");
         if (found != std::string::npos) {
           std::stringstream row_stream(
@@ -96,3 +102,4 @@ bool TestSequenceResult::read_from_file(std::string filename) {
 
   return true;
 }
+} // namespace icov

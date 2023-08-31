@@ -77,7 +77,7 @@ class IcovEncoder
         angle_radian fov;
         bool m_DummyViewport;
         ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
-        params(const po::variables_map &args);
+        params(const options::args_t &args);
     };
 
     IcovEncoder(const params &params, const LdpcCoderParameters &ldpc_params);

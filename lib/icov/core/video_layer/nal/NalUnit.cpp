@@ -1,4 +1,5 @@
 #include "NalUnit.h"
+#include "icov_types.h"
 
 using namespace icov::bitstream;
 
@@ -11,13 +12,19 @@ enum_t::NalUnitType NalUnit::getType() const { return m_nalUnitType; }
 
 int NalUnit::getRbspLength() const { return m_rbsp_length; }
 
-const byte *NalUnit::getRbsp() const { return m_rbsp; }
+const icov::byte *NalUnit::getRbsp() const
+{
+  return m_rbsp;
+}
 
 void NalUnit::readRbsp(byte *dst, int length, int offset) const {
   memcpy(dst, m_rbsp + offset, length);
 }
 
-byte NalUnit::getRbspByte(int position) const { return m_rbsp[position]; }
+icov::byte NalUnit::getRbspByte(int position) const
+{
+  return m_rbsp[position];
+}
 void NalUnit::serialize(byte *&dst) const {
   const size_t header_size = 6;
   byte header[header_size];

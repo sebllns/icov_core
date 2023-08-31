@@ -69,12 +69,17 @@ class LdpcCoder_IMT64 {
 public:
   struct parameters : public LdpcCoderParameters {
     ~parameters() = default;
+    using LdpcCoderParameters::LdpcCoderParameters;
     std::unique_ptr<LdpcCoderParameters> clone() const override {
       return std::make_unique<parameters>(*this);
     }
   };
 
-  static const std::string id;
+  static const std::string id()
+  {
+    return "imt164";
+  }
+
   static std::map<std::string, std::shared_ptr<IMT164MatrixProvider>>
       matrix_provider_pool;
 

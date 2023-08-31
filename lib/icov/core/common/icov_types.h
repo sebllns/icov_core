@@ -50,6 +50,7 @@
 
 #include "FastArray.h"
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace icov
@@ -91,5 +92,8 @@ using SyndromesVec = std::vector<Syndrome>;
 using NumcodeIdxVec = std::vector<NumcodeIdx>;
 
 using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
+
+#define shared_ptr(t) std::shared_ptr<t>
+#define unique_ptr(t) std::unique_ptr<t>
 
 } // namespace icov

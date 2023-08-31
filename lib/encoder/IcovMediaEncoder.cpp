@@ -100,9 +100,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   m_output->contentParameterSet().content_framecount = 1;
   m_output->contentParameterSet().is_block_fixed_size = true;
   m_output->contentParameterSet().block_fixed_size =
-      static_cast<bitstream::byte>(32);
+      static_cast<byte>(32);
   m_output->contentParameterSet().content_chroma_format =
-      static_cast<bitstream::byte>(m_params.FrameEncoderParams.ChFormat);
+      static_cast<byte>(m_params.FrameEncoderParams.ChFormat);
 
   if (m_params.AllBlocks) {
     ICOV_INFO << "All blocks will be encoded";

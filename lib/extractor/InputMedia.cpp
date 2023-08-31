@@ -28,7 +28,7 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
         part_file, std::ios_base::binary | std::ios_base::in);
   }
 
-  //  bitstream::byte val = 0;
+  //  byte val = 0;
   //  getStream(eIcovStream::RATES).seekg(11, std::ios_base::beg);
   //    icov::io::read_value(getStream(eIcovStream::RATES), &val);
 
@@ -63,7 +63,7 @@ void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
         .seekg(offset, std::ios_base::cur);
 }
 
-void icov::extractor::InputIcov::readSyndrome(icov::bitstream::byte *output,
+void icov::extractor::InputIcov::readSyndrome(icov::byte *output,
                                               uint64_t read_size,
                                               uint64_t stored_size) {
   auto &str = getStream(icov::bitstream::eIcovStream::SYNDROME);
@@ -147,7 +147,7 @@ void icov::extractor::InputIcov::readSyndromesSizes(NumcodeIdxVec &output) {
 }
 
 void icov::extractor::InputIcov::jumpPrediction(int bitplaneCount) {
-  bitstream::byte val = 0;
+  byte val = 0;
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
 
   // read prediction mode + 1
@@ -160,7 +160,7 @@ void icov::extractor::InputIcov::jumpPrediction(int bitplaneCount) {
     if (val > 0) {
       // std::cout << "seek " << (val + 2) << std::endl;
       // shift qary params
-      int byte_shift = (bitplaneCount + 2) * sizeof(bitstream::byte);
+      int byte_shift = (bitplaneCount + 2) * sizeof(byte);
       str.seekg(byte_shift, std::ios_base::cur);
     } // else no coding
   }   // else no prediction
@@ -178,14 +178,14 @@ void icov::extractor::InputIcov::selectPrediction(
 }
 
 int icov::extractor::InputIcov::readByteIntParam() {
-  bitstream::byte val = 0;
+  byte val = 0;
   auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
   icov::io::read_value(str, &val);
   std::cout << "(int) = " << (int)val << std::endl;
   return static_cast<int>(val);
 }
 
-void icov::extractor::InputIcov::readQaryParams(bitstream::byte header,
+void icov::extractor::InputIcov::readQaryParams(byte header,
                                                 int &q_idx, int &z_min,
                                                 int &z_max) {
   // q
@@ -202,9 +202,9 @@ void icov::extractor::InputIcov::readQaryParams(bitstream::byte header,
 
 void icov::extractor::InputIcov::readSIRates(NumcodeIdxVec &v) {
   for (int i = 0; i < (int)v.size(); ++i) {
-    // note : type bitstream::byte should be selected depending on the rate byte
+    // note : type byte should be selected depending on the rate byte
     // encoding length
-    bitstream::byte val = 0;
+    byte val = 0;
     auto &str = getStream(bitstream::eIcovStream::ENCODE_PARAMS);
     icov::io::read_value(str, &val);
     v[i] = static_cast<NumcodeIdx>(val);

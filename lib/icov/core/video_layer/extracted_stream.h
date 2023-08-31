@@ -50,7 +50,10 @@
 #include "icov_assert.h"
 #include "icov_stream.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "omnidirectional_layer/Block.h"
+#include "video_layer/ContentParameterSet.h"
 #include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -69,16 +72,22 @@
 #define BITSTREAM_SIZE 8192
 
 namespace icov {
-namespace bitstream {
+namespace bitstream
+{
 
-// struct BlockBitplaneDecoderParams {
-//  icov::bitstream::byte Numcode;
-//  BlockBitplaneDecoderParams() : Numcode(0), SyndromeBuf(nullptr) {}
-//};
+inline std::unique_ptr<LdpcCoderParameters> parseLdpcParams(const ContentParameterSet &cps)
+{
+    std::string coder_type_val = cps.ldpc_coder_type;
+    std::unique_ptr<LdpcCoderParameters> params = ldpc_codec_layer::createLdpcParams(coder_type_val);
+    icov::assert::not_null(params.get());
+    params->codeLength = cps.block_fixed_size * cps.block_fixed_size;
+    params->beliefPropagationIterations = cps.ldpc_bp_ite;
+    return params;
+}
 
 template <typename T> struct RawByteArray : boost::noncopyable {
   T Length;
-  icov::bitstream::byte *Data;
+  icov::byte *Data;
   void release() {
     Length = 0;
     if (Data != nullptr)
@@ -88,9 +97,9 @@ template <typename T> struct RawByteArray : boost::noncopyable {
   void reset(T l) {
     release();
     Length = l;
-    Data = new icov::bitstream::byte[l];
+    Data = new icov::byte[l];
   }
-  explicit RawByteArray(T l) : Length(l), Data(new icov::bitstream::byte[l]) {}
+  explicit RawByteArray(T l) : Length(l), Data(new icov::byte[l]) {}
   RawByteArray() : Length(0), Data(nullptr) {}
   ~RawByteArray() {}
 };
@@ -111,14 +120,14 @@ struct SIStream {
 };
 
 struct BlockChannelDecoderParams {
-  icov::bitstream::byte DirMode;
-  icov::bitstream::byte QIdx;
-  icov::bitstream::byte Zmin;
-  icov::bitstream::byte Zmax;
-  //  RawByteArray<icov::bitstream::byte> BitplaneNumcodes;
+  icov::byte DirMode;
+  icov::byte QIdx;
+  icov::byte Zmin;
+  icov::byte Zmax;
+  //  RawByteArray<icov::byte> BitplaneNumcodes;
   //  RawByteArray<uint16_t> SyndromeBuf;
 
-  std::queue<icov::bitstream::byte> Bitplanes;
+  std::queue<icov::byte> Bitplanes;
 
   explicit BlockChannelDecoderParams()
       : DirMode(0), QIdx(0), Zmin(0), Zmax(0) {}
@@ -137,7 +146,7 @@ struct IcovExtractedBitstream {
     m_ActualSize = 0;
   }
 
-  void push(const icov::bitstream::byte &val) {
+  void push(const icov::byte &val) {
     auto pos = m_WritePosition;
     icov::assert::check(availableSpace() > 0, "Buffer cannot overflow");
     shiftWritePosition(1);
@@ -146,20 +155,20 @@ struct IcovExtractedBitstream {
     m_Buffer[pos] = val;
   }
 
-  icov::bitstream::byte get() {
+  icov::byte get() {
     icov::assert::check(!empty(), "Buffer is not empty");
     ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
                << m_ReadPosition;
     return m_Buffer[m_ReadPosition];
   }
 
-  icov::bitstream::byte pop() {
+  icov::byte pop() {
     byte val = get();
     shiftReadPosition(1);
     return val;
   }
 
-  void get(std::vector<icov::bitstream::byte> &output) {
+  void get(std::vector<icov::byte> &output) {
     icov::assert::check(m_ActualSize >= output.size(),
                         "Buffer cannot overflow");
     std::copy(m_Buffer.cbegin() + m_ReadPosition,
@@ -167,7 +176,7 @@ struct IcovExtractedBitstream {
               output.begin());
   }
 
-  void pop(std::vector<icov::bitstream::byte> &output) {
+  void pop(std::vector<icov::byte> &output) {
     get(output);
     shiftReadPosition(output.size());
   }
@@ -223,13 +232,13 @@ struct IcovExtractedBitstream {
    * @brief Retrieves a pointer to the writable data in the bitstream.
    * @return A pointer to the writable data.
    */
-  icov::bitstream::byte *writableData();
+  icov::byte *writableData();
 
   /**
    * @brief Retrieves a pointer to the readable data in the bitstream.
    * @return A pointer to the readable data.
    */
-  const icov::bitstream::byte *readableData() const;
+  const icov::byte *readableData() const;
 
   /**
    * @brief Checks if the bitstream is empty.
@@ -249,7 +258,7 @@ protected:
   size_t m_WritePosition; /**< The write position in the bitstream. */
   size_t m_ReadPosition;  /**< The read position in the bitstream. */
   size_t m_ActualSize;    /**< The actual size of the bitstream. */
-  std::array<icov::bitstream::byte, BITSTREAM_SIZE>
+  std::array<icov::byte, BITSTREAM_SIZE>
       m_Buffer; /**< The buffer to store the bitstream data. */
 };
 
@@ -292,9 +301,9 @@ void serialize(Archive &ar, icov::bitstream::RawByteArray<T> &io,
   ar &io.Length;
   if (Archive::is_loading::value) {
     io.release();
-    io.Data = new icov::bitstream::byte[io.Length];
+    io.Data = new icov::byte[io.Length];
   }
-  ar &make_array<icov::bitstream::byte>(io.Data, io.Length);
+  ar &make_array<icov::byte>(io.Data, io.Length);
 }
 
 template <class Archive>
@@ -320,8 +329,8 @@ void serialize(Archive &ar, icov::bitstream::BlockChannelDecoderParams &io,
     }   // else CLONE SI
   }
   //  size_t byte_count = bitToByteCount(io.size());
-  //  icov::bitstream::byte *data = new icov::bitstream::byte[byte_count];
-  //  ar &make_array<icov::bitstream::byte>(data, byte_count);
+  //  icov::byte *data = new icov::byte[byte_count];
+  //  ar &make_array<icov::byte>(data, byte_count);
 }
 
 } // namespace serialization

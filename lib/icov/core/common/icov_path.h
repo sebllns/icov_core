@@ -10,6 +10,8 @@ namespace fs = boost::filesystem;
 namespace icov {
 namespace path {
 
+typedef fs::path path_t;
+
 inline bool try_create_directories(const std::string &path) {
   bool created = false;
   try {

@@ -1,6 +1,8 @@
 #include "TestSequenceInput.h"
 #include <boost/algorithm/string/trim.hpp>
 
+namespace icov
+{
 TestSequenceInput::TestSequenceInput(size_t size):
     m_size(size)
 {
@@ -56,3 +58,4 @@ int TestSequenceInput::get_side_info_count() const
 {
     return m_data.size()-1;
 }
+} // namespace icov

@@ -68,7 +68,7 @@ void TextOutputIcov::writeSyndrome(const Syndrome &s) {
   if (byte_size == 0) {
     m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] = "";
   } else {
-    icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
+    icov::byte *bytes = new icov::byte[byte_size];
     bitstream::write_bits(s, bytes);
 
     m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] =
@@ -134,7 +134,7 @@ void TextOutputIcov::writeSIRate(const NumcodeIdx &n, const Rate &r,
 }
 
 void TextOutputIcov::writeSIMode(const uint &v) {
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
 
   if (v == bitstream::flag_t::UnavailableSI) {
     m_currentPrednodeJSON["available_si_flag"] = false;

@@ -45,8 +45,7 @@
  *****************************************************************************/
 #pragma once
 
-#include "app_common/decoder/SinglePassDecoder.h"
-#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
+#include "app_common/decoder/DecoderController.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -58,13 +57,8 @@ using namespace icov;
 using namespace icov::ldpc_codec_layer;
 
 class DecodeMode {
-  struct params {
-    fs::path input_file;
-    std::unique_ptr<LdpcCoderParameters> ldpc_params;
-  };
-
 public:
-  DecodeMode(const po::variables_map &args);
+  DecodeMode(const path::path_t &icov_file, const po::variables_map &args);
   ~DecodeMode() = default;
 
   static std::string name()
@@ -76,6 +70,7 @@ public:
   void decode();
 
 private:
-  params m_parameters;
-  std::unique_ptr<decoder::SinglePassDecoder> m_decoder;
+  decoder::DecoderController m_decoderCtrl;
+  shared_ptr(icov::decoder::InfosGatherer) m_results;
+  std::queue<request_t> m_requests;
 };

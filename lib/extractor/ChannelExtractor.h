@@ -67,11 +67,11 @@ namespace extractor {
 
 struct BitplaneExtractor {
   ushort Index;
-  bitstream::byte StoredSyndromeQuantizedSize;
+  byte StoredSyndromeQuantizedSize;
   ushort StoredSyndromeBitSize;
   ushort StoredSyndromeByteSize;
 
-  bitstream::byte ReadSyndromeQuantizedSize;
+  byte ReadSyndromeQuantizedSize;
   ushort ReadSyndromeBitSize;
   ushort ReadSyndromeByteSize;
   ushort ReadSyndromePadding;
@@ -88,7 +88,7 @@ public:
    * associated with the channel extractor.
    */
   struct params {
-    bitstream::int8b CompID;
+      int8b CompID;
   };
 
   /**
@@ -112,7 +112,7 @@ public:
   int getCoderSize() const;
 
   // void extract_access_block(const omnidirectional_layer::Block &b,
-  //                        bitstream::byte *syndrome_buf);
+  //                        byte *syndrome_buf);
 
   void extract_block_syndrome(
       const omnidirectional_layer::Block &b,
@@ -147,10 +147,10 @@ private:
 
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   std::vector<BitplaneExtractor> m_bitplanes;
-  bitstream::byte m_bitplaneCount;
+  byte m_bitplaneCount;
   int m_maxSyndromeBufferLength;
   bool m_codingFlag;
-  static bitstream::byte SyndromePadding;
+  static byte SyndromePadding;
 };
 } // namespace extractor
 } // namespace icov

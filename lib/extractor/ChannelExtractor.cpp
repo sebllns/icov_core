@@ -24,7 +24,7 @@ namespace fs = boost::filesystem;
 using namespace icov::extractor;
 using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
-icov::bitstream::byte ChannelExtractor::SyndromePadding = 0;
+icov::byte ChannelExtractor::SyndromePadding = 0;
 
 ChannelExtractor::ChannelExtractor(
     const params &p, std::shared_ptr<InputIcov> &icovFile,
@@ -194,7 +194,7 @@ void ChannelExtractor::_extractIntraParams() {
   std::cout << "CH " << std::to_string(m_params.CompID)
             << ": _extractIntraParams " << std::endl;
 
-  bitstream::byte dirmode = 0;
+  byte dirmode = 0;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
 
   bitstream::assertPredictionAvailable(dirmode);
@@ -204,7 +204,7 @@ void ChannelExtractor::_extractIntraParams() {
 
   ICOV_TRACE << "EXTRACTOR DM ";
   m_bitstream->push(dirmode);
-  bitstream::byte pred_hdr = bitstream::flag_t::NoCodingSI;
+  byte pred_hdr = bitstream::flag_t::NoCodingSI;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
   ICOV_TRACE << "EXTRACTOR QZ ";
   m_bitstream->push(pred_hdr);
@@ -214,9 +214,9 @@ void ChannelExtractor::_extractIntraParams() {
       m_codingFlag);
 
   if (m_codingFlag) {
-    bitstream::byte zmin = 0, zmax = 0;
+    byte zmin = 0, zmax = 0;
 
-    bitstream::byte q0 = bitstream::getQaryQParam(pred_hdr);
+    byte q0 = bitstream::getQaryQParam(pred_hdr);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
 

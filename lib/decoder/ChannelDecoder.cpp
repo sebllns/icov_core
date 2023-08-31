@@ -48,7 +48,7 @@ ChannelDecoder::~ChannelDecoder() {}
 void icov::decoder::ChannelDecoder::_decode_bitplane(
     int i, omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
-  bitstream::byte quantizedNumcode = m_numcodes.front();
+  byte quantizedNumcode = m_numcodes.front();
   m_numcodes.pop();
 
   int syndrome_size = bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
@@ -71,7 +71,7 @@ void icov::decoder::ChannelDecoder::_extract_numcode(
     int bp,
     omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
-  bitstream::byte quantizedNumcode =
+  byte quantizedNumcode =
       (block_prediction ==
        omnidirectional_layer::BlockPrediction::ePredType::NONE)
           ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
@@ -161,7 +161,7 @@ void ChannelDecoder::decode_icu(int icu_enc, omnidirectional_layer::BlockPredict
 }
 
 void ChannelDecoder::_extract_si_dir_mode() {
-  bitstream::byte dirmode = m_bitstream->pop();
+  byte dirmode = m_bitstream->pop();
 
   bitstream::assertPredictionAvailable(dirmode);
 
@@ -206,7 +206,7 @@ void ChannelDecoder::_extract_si_dir_mode() {
 
 void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
 
-  bitstream::byte pred_hdr = m_bitstream->pop();
+  byte pred_hdr = m_bitstream->pop();
 
   codingFlag = bitstream::getCodingFlag(pred_hdr);
 
@@ -215,9 +215,9 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
 
   if (codingFlag) {
 
-    bitstream::byte zmin = 0, zmax = 0;
+    byte zmin = 0, zmax = 0;
 
-    bitstream::byte q0 = bitstream::getQaryQParam(pred_hdr);
+    byte q0 = bitstream::getQaryQParam(pred_hdr);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
 
@@ -264,7 +264,7 @@ void ChannelDecoder::_set_si(bool coding_flag) {
 void ChannelDecoder::read_syndrome(int syndrome_size)
 {
   m_syndrome.resize(syndrome_size);
-  bitstream::byte bitstream_value = 0;
+  byte bitstream_value = 0;
   ICOV_TRACE << "READ SYNDROME " << syndrome_size;
   for (int i = 0; i < syndrome_size; ++i) {
     if ((i % BYTE_SIZE) == 0) {

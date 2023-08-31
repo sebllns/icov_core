@@ -14,7 +14,9 @@
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/extracted_stream.h"
+#include "video_layer/video_common.h"
 #include <algorithm>
+#include <boost/format/format_fwd.hpp>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -31,32 +33,30 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder()
 
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
 
-void decoder::SinglePassDecoder::initLocal(const params &p, const boost::filesystem::path &path,
-                                           const LdpcCoderParameters &coder_params)
+void decoder::SinglePassDecoder::initLocal(const params &p)
 {
     ICOV_INFO << "Init local SinglePassDecoder";
 
     setParams(p);
 
     ICOV_INFO << "Open ICOV file";
-    openIcovFile(path);
+    openIcovFile(p.IcovFile);
 
     const auto &cps = m_contentParams;
 
-    ICOV_INFO << "Icov version: " << cps.icov_version;
-    ICOV_INFO << (int)cps.content_chroma_format;
-    ICOV_INFO << (int)cps.content_height;
-    ICOV_INFO << (int)cps.content_width;
+    ICOV_INFO << boost::format("%-30s %-s") % "Icov version:" % cps.icov_version;
+    ICOV_INFO << boost::format("%-30s %-s") % "Chroma subsampling:" %
+                     video::chromaSubsamplingToStr((int)cps.content_chroma_format);
+
+    ICOV_INFO << boost::format("%-30s %-s") % "Width:" % (int)cps.content_width;
+    ICOV_INFO << boost::format("%-30s %-s") % "Height:" % (int)cps.content_height;
+
     ICOV_INFO << (int)cps.block_fixed_size;
     ICOV_INFO << (int)cps.qp;
 
-    const ChromaFormat chFrmt = (ChromaFormat)cps.content_chroma_format;
-    const int icu_size = (int)cps.block_fixed_size;
-    UnitArea blockArea(chFrmt, Area(0, 0, icu_size, icu_size));
-    icov::assert::check(cps.is_block_fixed_size, "Only fixed size blocks is available in this version");
-
-    setLdpcParams(coder_params);
-    m_ldpcParams->codeLength = icu_size * icu_size;
+    auto coder_params = bitstream::parseLdpcParams(cps);
+    coder_params->database = p.LdpcDatabase.string();
+    setLdpcParams(*coder_params);
 
     ICOV_INFO << "Init 360 navigation";
     addDefaultNavigation();
@@ -198,7 +198,7 @@ void decoder::SinglePassDecoder::start()
     this->request(0, 0, 0);
 }
 
-void decoder::SinglePassDecoder::request(float x, float y, unsigned long i)
+void decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i)
 {
     icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
     icov::assert::not_null(m_navigation->Request.get(), "Request manager cannot be null");

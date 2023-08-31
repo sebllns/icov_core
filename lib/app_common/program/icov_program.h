@@ -19,8 +19,8 @@ typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace>
 ////////////////////////////////////////////////////////////////
 class IIcovProgram {
 protected:
-  po::options_description m_options_desc;
-  po::variables_map m_options_map;
+  desc_t m_options_desc;
+  args_t m_options_map;
 
 public:
   IIcovProgram() : m_options_desc("Program Usage", 1024, 512) {}
@@ -40,7 +40,7 @@ public:
     return m_options_desc;
   }
 
-  const po::variables_map &args() const
+  const args_t &args() const
   {
     return m_options_map;
   }

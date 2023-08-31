@@ -49,7 +49,7 @@ void ProgramController::launchMode(const std::string &mode_id) {
   else if (mode_id == DecodeMode::name())
   {
     ICOV_DEBUG << "decode mode started";
-    DecodeMode mode(m_options_map);
+    DecodeMode mode(parseInputFile(args()), args());
     mode.run();
     ICOV_DEBUG << "end decode\n";
   }

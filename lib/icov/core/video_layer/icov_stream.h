@@ -69,7 +69,7 @@
 namespace icov {
 namespace bitstream {
 
-#define BYTE_SIZE CHAR_BIT * sizeof(icov::bitstream::byte)
+#define BYTE_SIZE CHAR_BIT * sizeof(icov::byte)
 
 namespace flag_t {
 const byte UnavailableSI = 0;
@@ -139,23 +139,23 @@ inline byte getPredDirModeByteValue(bool available, ushort x) {
   return x + offset_t::AvailableSI;
 }
 
-// typedef std::basic_streambuf<icov::bitstream::byte> bitstreambuf;
+// typedef std::basic_streambuf<icov::byte> bitstreambuf;
 
-/// Base class for @c icov::bitstream::byte output streams.
-typedef std::basic_ostream<icov::bitstream::byte> obitstream;
+/// Base class for @c icov::byte output streams.
+typedef std::basic_ostream<icov::byte> obitstream;
 
 class bitstreambuf
-    : public std::basic_streambuf<icov::bitstream::byte,
-                                  std::char_traits<icov::bitstream::byte>> {
+    : public std::basic_streambuf<icov::byte,
+                                  std::char_traits<icov::byte>> {
 
 public:
-  typedef icov::bitstream::byte char_type; // 1
-  typedef std::char_traits<icov::bitstream::byte> traits_type;
+  typedef icov::byte char_type; // 1
+  typedef std::char_traits<icov::byte> traits_type;
   typedef typename traits_type::int_type int_type;
   typedef typename traits_type::off_type off_type;
   typedef typename traits_type::pos_type pos_type;
   typedef std::vector<char_type>::size_type size_type;
-  using Base = std::basic_streambuf<icov::bitstream::byte>;
+  using Base = std::basic_streambuf<icov::byte>;
 
   bitstreambuf() : m_buffer(), read_pos(0) {
     // Base::setp(&(*m_buffer.begin()), &(*(m_buffer.end() - 1))); // set
@@ -194,7 +194,7 @@ private:
 };
 
 inline ushort
-inverseQuantizedSize(icov::bitstream::byte input,
+inverseQuantizedSize(icov::byte input,
                      const ldpc_codec_layer::IInteractiveCoder &coder) {
   return (input == enum_t::SyndromeType::SyndromeType_NO_CODING)
              ? (0)
@@ -211,14 +211,14 @@ inline void getByteCount(int bit_size, ushort &byte_count,
 
 using rate_t =
 #if ICOV_RATE_SIZE == 1
-    icov::bitstream::byte;
+    icov::byte;
 #elif ICOV_RATE_SIZE == 2
     uint16_t;
 #else
     uint32_t;
 #endif
 
-typedef icov::bitstream::byte QaryParams[QARY_PARAMS_SIZE];
+typedef icov::byte QaryParams[QARY_PARAMS_SIZE];
 
 inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
                            int &z_max) {
@@ -244,7 +244,7 @@ inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
 }
 
 class BitVector {
-  typedef icov::bitstream::byte _byte_t;
+  typedef icov::byte _byte_t;
   typedef bool _bit_t;
 
 public:
@@ -334,8 +334,8 @@ protected:
 };
 
 template <typename T>
-icov::bitstream::byte boolToByte(const std::array<T, 8> in) {
-  icov::bitstream::byte result = 0;
+icov::byte boolToByte(const std::array<T, 8> in) {
+  icov::byte result = 0;
   int i = 0;
 
   for (auto &v : in) {

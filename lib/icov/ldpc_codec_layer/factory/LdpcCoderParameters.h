@@ -55,59 +55,69 @@
 #include <numeric>
 
 namespace icov {
-struct LdpcCoderParameters {
-  std::string type;                    ///< Type of LDPC code.
-  std::string database;                ///< Path to the database.
-  int codeLength;                      ///< Length of the code.
-  int beliefPropagationIterations_new; ///< Number of iterations for belief
-                                       ///< propagation.
-  std::string
-      numcodeFile; ///< Relative path from database to the numcodes file.
+struct LdpcCoderParameters
+{
+  public:
+    std::string database;            ///< Path to the database.
+    int codeLength;                  ///< Length of the code.
+    int beliefPropagationIterations; ///< Number of iterations for belief
+                                     ///< propagation.
 
-  LdpcCoderParameters() = default;
-
-  /**
-   * @brief Gets the numcodes vector for a given length of the code.
-   * @param n Length of the code.
-   * @param min_level Minimum level for numcodes.
-   * @param max_level Maximum level for numcodes.
-   * @return std::vector<int> Numcodes vector.
-   */
-  inline std::vector<int> getNumcodes(int n, int min_level,
-                                      int max_level) const {
-    std::string path = icov::path::combine(
-        icov::path::get_data_folder(database, n, false), numcodeFile);
-    std::vector<int> numcodes_v;
-
-    int min_n = ceilf(n / max_level);
-    int max_n = floorf(n / min_level);
-
-    if (icov::path::file_exists(path)) {
-      icov::io::read_vector(path, numcodes_v);
-      icov::assert::check(numcodes_v.front() >= min_n,
-                          "First numcode must be greater than " +
-                              std::to_string(min_n));
-      icov::assert::check(numcodes_v.back() <= max_n,
-                          "Doping numcode must be less than " +
-                              std::to_string(max_n));
-    } else {
-      ICOV_WARNING << "Numcodes file not found at " << path;
-      ICOV_WARNING << "Creating default numcodes vector.";
-
-      int max_doping_n = std::floor(1.5 * n);
-      numcodes_v.resize(max_doping_n - min_n + 1);
-      std::iota(numcodes_v.begin(), numcodes_v.end(), min_n);
-      numcodes_v.push_back(n / 2);
+    LdpcCoderParameters(const std::string &type) : codeLength(0), beliefPropagationIterations(0), m_type(type)
+    {
     }
-    return numcodes_v;
-  }
 
-  /**
-   * @brief Clone the object of LdpcCoderParameters.
-   * @return std::unique_ptr<LdpcCoderParameters> The cloned object of
-   * LdpcCoderParameters.
-   */
-  virtual std::unique_ptr<LdpcCoderParameters> clone() const = 0;
-  virtual ~LdpcCoderParameters() = default;
+    /**
+     * @brief Gets the numcodes vector for a given length of the code.
+     * @param n Length of the code.
+     * @param min_level Minimum level for numcodes.
+     * @param max_level Maximum level for numcodes.
+     * @return std::vector<int> Numcodes vector.
+     */
+    inline std::vector<int> getNumcodes(int n, int min_level, int max_level) const
+    {
+        std::string path = icov::path::combine(icov::path::get_data_folder(database, n, false), "numcodes.txt");
+        std::vector<int> numcodes_v;
+
+        int min_n = ceilf(n / max_level);
+        int max_n = floorf(n / min_level);
+
+        if (icov::path::file_exists(path))
+        {
+            icov::io::read_vector(path, numcodes_v);
+            icov::assert::check(numcodes_v.front() >= min_n,
+                                "First numcode must be greater than " + std::to_string(min_n));
+            icov::assert::check(numcodes_v.back() <= max_n,
+                                "Doping numcode must be less than " + std::to_string(max_n));
+        }
+        else
+        {
+            ICOV_WARNING << "Numcodes file not found at " << path;
+            ICOV_WARNING << "Creating default numcodes vector.";
+
+            int max_doping_n = std::floor(1.5 * n);
+            numcodes_v.resize(max_doping_n - min_n + 1);
+            std::iota(numcodes_v.begin(), numcodes_v.end(), min_n);
+            numcodes_v.push_back(n / 2);
+        }
+        return numcodes_v;
+    }
+
+    /**
+     * @brief Clone the object of LdpcCoderParameters.
+     * @return std::unique_ptr<LdpcCoderParameters> The cloned object of
+     * LdpcCoderParameters.
+     */
+    virtual std::unique_ptr<LdpcCoderParameters> clone() const = 0;
+    virtual ~LdpcCoderParameters() = default;
+
+    const std::string &type() const
+    {
+        return m_type;
+    }
+
+  private:
+    std::string m_type; ///< Type of LDPC code.
 };
+
 } // namespace icov

@@ -49,10 +49,14 @@
 #include "icov_common.h"
 #include <map>
 
-enum result_data_type {
-  UNKNOWN = -1,
-  SCALAR = 0,
-  MATRIX = 1,
+namespace icov
+{
+
+enum result_data_type
+{
+    result_data_type_UNKNOWN = -1,
+    result_data_type_SCALAR = 0,
+    result_data_type_MATRIX = 1,
 };
 
 struct result_data {
@@ -72,9 +76,15 @@ struct result_data {
            (this->data == rhs.data);
   }
 
-  bool operator!=(const result_data &rhs) const { return !operator==(rhs); }
+  bool operator!=(const result_data &rhs) const
+  {
+    return !operator==(rhs);
+  }
 
-  result_data() { type = UNKNOWN; }
+  result_data()
+  {
+    type = result_data_type_UNKNOWN;
+  }
 };
 
 class TestSequenceResult {
@@ -97,3 +107,4 @@ public:
 protected:
   std::map<std::string, result_data> m_data;
 };
+} // namespace icov

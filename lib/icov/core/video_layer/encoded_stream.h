@@ -126,7 +126,7 @@ getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
 }
 
 template <typename T>
-int read_bits(T &output, const icov::bitstream::byte *input, int offset = 0) {
+int read_bits(T &output, const icov::byte *input, int offset = 0) {
   int bit_shift = 0;
   for (size_t i = 0; i < output.size(); ++i) {
     size_t bit_idx = i + offset;
@@ -138,7 +138,7 @@ int read_bits(T &output, const icov::bitstream::byte *input, int offset = 0) {
 }
 
 template <typename T>
-int write_bits(const T &input, icov::bitstream::byte *output, int offset = 0) {
+int write_bits(const T &input, icov::byte *output, int offset = 0) {
   uint b = offset / BYTE_SIZE;
   uint e = b + input.size() / BYTE_SIZE;
   std::fill(output + b, output + e, 0);
@@ -162,7 +162,7 @@ inline std::string writeSyndrome(const Syndrome &s) {
   if (byte_size == 0)
     return "void";
 
-  icov::bitstream::byte *bytes = new icov::bitstream::byte[byte_size];
+  icov::byte *bytes = new icov::byte[byte_size];
   bitstream::write_bits(s, bytes);
 
   std::string res =
@@ -186,8 +186,8 @@ template <class Archive>
 void serialize(Archive &ar, icov::Syndrome &io,
                const unsigned int /*version*/) {
   size_t byte_count = icov::bitstream::bitToByteCount(io.size());
-  icov::bitstream::byte *data = new icov::bitstream::byte[byte_count];
-  ar &make_array<icov::bitstream::byte>(data, byte_count);
+  icov::byte *data = new icov::byte[byte_count];
+  ar &make_array<icov::byte>(data, byte_count);
 }
 
 template <class Archive>

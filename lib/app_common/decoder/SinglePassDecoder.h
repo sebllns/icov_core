@@ -71,71 +71,74 @@ using namespace icov::bitstream;
 
 namespace icov {
 namespace decoder {
-class SinglePassDecoder {
-public:
-  struct params
-  {
-      bool DummyViewport = false;
-  };
+class SinglePassDecoder
+{
+  public:
+    struct params
+    {
+        bool DummyViewport = false;
+        fs::path IcovFile;
+        fs::path LdpcDatabase;
+    };
 
-  SinglePassDecoder();
-  ~SinglePassDecoder();
+    SinglePassDecoder();
+    ~SinglePassDecoder();
 
-  void initLocal(const params &p, const fs::path &path, const LdpcCoderParameters &coder_params);
+    void initLocal(const params &p);
 
-  void openIcovFile(const fs::path &path);
+    void openIcovFile(const fs::path &path);
 
-  void addDefaultNavigation();
-  void addDefaultExtractor();
-  void addDefaultDecoder();
-  std::shared_ptr<InfosGatherer> addDefaultGatherer();
-  std::shared_ptr<CsvOutput> addDefaultCsvOutput();
+    void addDefaultNavigation();
+    void addDefaultExtractor();
+    void addDefaultDecoder();
+    std::shared_ptr<InfosGatherer> addDefaultGatherer();
+    std::shared_ptr<CsvOutput> addDefaultCsvOutput();
 
-  const PelUnitBuf getDecodedBuf() const;
+    const PelUnitBuf getDecodedBuf() const;
 
-  const std::shared_ptr<BlockExtractor> &blockExtractor() const;
-  const std::shared_ptr<BlockDecoder> &blockDecoder() const;
-  const std::shared_ptr<IBlockProcessor> &blockProcessor() const;
+    const std::shared_ptr<BlockExtractor> &blockExtractor() const;
+    const std::shared_ptr<BlockDecoder> &blockDecoder() const;
+    const std::shared_ptr<IBlockProcessor> &blockProcessor() const;
 
-  void setBlockExtractor(const std::shared_ptr<BlockExtractor> &newBlockExtractor);
-  void setBlockDecoder(const std::shared_ptr<BlockDecoder> &newBlockDecoder);
+    void setBlockExtractor(const std::shared_ptr<BlockExtractor> &newBlockExtractor);
+    void setBlockDecoder(const std::shared_ptr<BlockDecoder> &newBlockDecoder);
 
-  void start();
-  void request(float x, float y, unsigned long i);
+    void start();
+    void request(angle_t x, angle_t y, frame_t i);
 
-  const LdpcCoderParameters &ldpcParams() const;
-  void setLdpcParams(const LdpcCoderParameters &newLdpcParams);
+    const LdpcCoderParameters &ldpcParams() const;
+    void setLdpcParams(const LdpcCoderParameters &newLdpcParams);
 
-  const ContentParameterSet &contentParams() const;
+    const ContentParameterSet &contentParams() const;
 
-  const std::shared_ptr<factory::Navigation360> &navigation() const;
-  void setNavigation(const std::shared_ptr<factory::Navigation360> &newNavigation);
+    const std::shared_ptr<factory::Navigation360> &navigation() const;
+    void setNavigation(const std::shared_ptr<factory::Navigation360> &newNavigation);
 
-  const std::shared_ptr<InputIcov> &icovFile() const;
-  void setIcovFile(const std::shared_ptr<InputIcov> &newIcovFile);
+    const std::shared_ptr<InputIcov> &icovFile() const;
+    void setIcovFile(const std::shared_ptr<InputIcov> &newIcovFile);
 
-  const bitstream::sp_IcovExtractedBitstream &extractionBitstream() const;
+    const bitstream::sp_IcovExtractedBitstream &extractionBitstream() const;
 
-  void setContentParams(const ContentParameterSet &newContentParams);
+    void setContentParams(const ContentParameterSet &newContentParams);
 
-  const params &getParams() const;
-  void setParams(const params &newParams);
+    const params &getParams() const;
+    void setParams(const params &newParams);
 
-protected:
-  params m_params;
-  std::vector<float> m_q_values;
-  ContentParameterSet m_contentParams;
-  bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
-  std::shared_ptr<factory::Navigation360> m_navigation;
-  std::unique_ptr<LdpcCoderParameters> m_ldpcParams;
-  std::shared_ptr<InputIcov> m_icovFile;
-  std::shared_ptr<IBlockProcessor> m_blockProcessor;
-  std::shared_ptr<BlockExtractor> m_blockExtractor;
-  std::shared_ptr<BlockDecoder> m_blockDecoder;
+  protected:
+    params m_params;
+    std::vector<float> m_q_values;
+    ContentParameterSet m_contentParams;
+    bitstream::sp_IcovExtractedBitstream m_extractionBitstream;
+    std::shared_ptr<factory::Navigation360> m_navigation;
+    std::unique_ptr<LdpcCoderParameters> m_ldpcParams;
+    std::shared_ptr<InputIcov> m_icovFile;
+    std::shared_ptr<IBlockProcessor> m_blockProcessor;
+    std::shared_ptr<BlockExtractor> m_blockExtractor;
+    std::shared_ptr<BlockDecoder> m_blockDecoder;
 
-  float pov_x;
-  float pov_y;
-  unsigned long frame;
+    float pov_x;
+    float pov_y;
+    unsigned long frame;
 };
 } // namespace decoder
 } // namespace icov

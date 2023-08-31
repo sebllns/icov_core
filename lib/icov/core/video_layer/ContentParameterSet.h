@@ -71,8 +71,8 @@ struct ContentParameterSet {
   float viewport_fov_x, viewport_fov_y;
 
   uint16_t qp;
-  uint16_t bp_ite;
-  std::string coder_type;
+  uint16_t ldpc_bp_ite;
+  std::string ldpc_coder_type;
 
   byte content_chroma_format;
 
@@ -103,13 +103,13 @@ struct ContentParameterSet {
   std::vector<float> q_values;
 
   ContentParameterSet()
-      : content_type(0), content_width(0), content_height(0), qp(42),
-        content_chroma_format(0), content_framecount(0), content_framerate(0),
-        content_duration(0), viewport_padding(1.2), is_sov_fixed_size(true),
-        sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
-        is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1),
-        has_metadata(false), icu_count(0), viewport_width(0),
-        viewport_height(0), viewport_fov_x(0), viewport_fov_y(0) {}
+      : content_type(0), content_width(0), content_height(0), viewport_width(0), viewport_height(0), viewport_fov_x(0),
+        viewport_fov_y(0), qp(42), ldpc_bp_ite(100), ldpc_coder_type("imt164"), content_chroma_format(0),
+        content_framecount(0), content_framerate(0), content_duration(0), viewport_padding(1.2),
+        is_sov_fixed_size(true), sov_fixed_size(1), is_block_fixed_size(true), block_fixed_size(5),
+        is_tu_count_fixed(true), fixed_tu_count(1), numcode_byte_count(1), has_metadata(false), icu_count(0)
+  {
+  }
 };
 
 inline bool operator==(const ContentParameterSet &a,

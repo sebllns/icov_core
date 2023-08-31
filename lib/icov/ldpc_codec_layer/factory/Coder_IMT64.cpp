@@ -5,7 +5,6 @@
 
 namespace icov {
 namespace ldpc_codec_layer {
-const std::string LdpcCoder_IMT64::id = "imt164";
 // std::map<std::string, std::shared_ptr<IMatrixProvider<AffMatrix>>>
 //    LdpcCoder_IMT64::matrix_provider_pool =
 //        std::map<std::string, std::shared_ptr<IMatrixProvider<AffMatrix>>>();
@@ -61,8 +60,7 @@ void LdpcCoder_IMT64::create(
     int k = mat_provider->getMatrixCount() - i - 1;
     if (init_matrix)
       mat_provider->buildMatrix(k);
-    dec->init_decoder(k, p.codeLength, p.beliefPropagationIterations_new,
-                      mat_provider->getMatrix(k));
+    dec->init_decoder(k, p.codeLength, p.beliefPropagationIterations, mat_provider->getMatrix(k));
   }
 
   std::shared_ptr<IMT164SyndromeManager> imt_synd =

@@ -10,23 +10,25 @@ namespace icov {
 namespace ldpc_codec_layer {
 p_InteractiveCoder
 LdpcCoderFactory::create_coder(const LdpcCoderParameters &args) {
-  ICOV_INFO << "Initialization of coder with type " << args.type
-            << " and length " << args.codeLength;
+    ICOV_INFO << "Initialization of coder with type " << args.type() << " and length " << args.codeLength;
 
-  // SHARED PTR -> RESET
-  std::shared_ptr<LLRProvider> llrProvider;
-  std::shared_ptr<ILDPC_Decoder<AffMatrix>> ldpca_dec;
-  std::shared_ptr<ISyndromeManager> syndromeMgr;
-  std::shared_ptr<IMatrixProvider<AffMatrix>> mp;
+    // SHARED PTR -> RESET
+    std::shared_ptr<LLRProvider> llrProvider;
+    std::shared_ptr<ILDPC_Decoder<AffMatrix>> ldpca_dec;
+    std::shared_ptr<ISyndromeManager> syndromeMgr;
+    std::shared_ptr<IMatrixProvider<AffMatrix>> mp;
 
-  const std::string &coder_type = args.type;
+    const std::string &coder_type = args.type();
 
-  if (coder_type == LdpcCoder_IMT64::id) {
-    const auto &p = dynamic_cast<const LdpcCoder_IMT64::parameters &>(args);
-    LdpcCoder_IMT64::create(llrProvider, ldpca_dec, syndromeMgr, mp, p);
-  } else {
-    throw std::invalid_argument("Unknown coder type: " + coder_type);
-  }
+    if (coder_type == LdpcCoder_IMT64::id())
+    {
+        const auto &p = dynamic_cast<const LdpcCoder_IMT64::parameters &>(args);
+        LdpcCoder_IMT64::create(llrProvider, ldpca_dec, syndromeMgr, mp, p);
+    }
+    else
+    {
+        ICOV_THROW_INVALID_ARGUMENT("Unknown coder type: " + coder_type);
+    }
 
   icov::assert::not_null(llrProvider.get(),
                                   "LLRProvider was not instantiated");
@@ -60,13 +62,13 @@ std::unique_ptr<LdpcCoderParameters> createLdpcParams(const std::string &coder_t
 {
   std::unique_ptr<LdpcCoderParameters> params;
 
-  if (coder_type == ldpc_codec_layer::LdpcCoder_IMT64::id)
+  if (coder_type == ldpc_codec_layer::LdpcCoder_IMT64::id())
   {
-    params = std::make_unique<ldpc_codec_layer::LdpcCoder_IMT64::parameters>();
+      params = std::make_unique<ldpc_codec_layer::LdpcCoder_IMT64::parameters>(coder_type);
   }
   else
   {
-    throw std::invalid_argument("Unknown coder type: " + coder_type);
+      ICOV_THROW_INVALID_ARGUMENT("Unknown coder type: " + coder_type);
   }
   return params;
 }

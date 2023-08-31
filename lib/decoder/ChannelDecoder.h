@@ -153,7 +153,7 @@ private:
   bitstream::sp_IcovExtractedBitstream m_bitstream;
   // bitstream::QaryParams m_qaryParams;
   int m_icuIndex;
-  std::queue<bitstream::byte> m_numcodes;
+  std::queue<byte> m_numcodes;
   SymboleVec m_blockSymbols;
   Rate m_rate;
 

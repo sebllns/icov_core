@@ -8,7 +8,7 @@ namespace BitstreamExtension {
 
 typedef int checksum_t;
 
-checksum_t GetCheckSum(const bitstream::byte *buffer, int length) {
+checksum_t GetCheckSum(const byte *buffer, int length) {
   boost::crc_32_type result;
   result.process_bytes(buffer, length);
   return (checksum_t)result.checksum();

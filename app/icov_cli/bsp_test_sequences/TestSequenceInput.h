@@ -48,6 +48,8 @@
 
 #include "icov_common.h"
 
+namespace icov
+{
 class TestSequenceInput {
   typedef int data_type;
 
@@ -63,3 +65,4 @@ protected:
   size_t m_size;
   std::vector<std::vector<data_type>> m_data;
 };
+} // namespace icov

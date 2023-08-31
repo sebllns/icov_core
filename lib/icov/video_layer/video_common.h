@@ -44,48 +44,13 @@
  *
  *****************************************************************************/
 #pragma once
-#include "CommonLib/Common.h"
-#include "CommonLib/TypeDef.h"
-#include "icov_common.h"
-#include <CommonLib/Buffer.h>
-#include <CommonLib/Unit.h>
 
-namespace icov {
+#include <string>
+
+namespace icov
+{
 namespace video {
-
-using Bool = bool;
-using Int = int;
-using UInt = unsigned int;
-using Void = void;
-using Int64 = long long;
-using UInt64 = unsigned long long;
-using UChar = unsigned char; // Unsigned 8-bit values
-
-typedef signed char SChar; // Signed 8-bit values
-
-// typedef       unsigned int        UInt;
-// typedef       int                 Int;
-// typedef       unsigned char       UChar; // Unsigned 8-bit values
-// typedef       void                void;
-// typedef       bool                Bool;
-// typedef       long long           Int64;
-// typedef       unsigned long long  UInt64;
-
-static const Int chromaQPMappingTableSize = 58;
-// extern const UChar
-// g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize];
-
-inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chFmt) {
-  return 0;
-  // return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1),
-  // unscaledChromaQP)];
-}
-
-static const Int ADJ_QUANT_SHIFT = 7;
-static const Int ADJ_DEQUANT_SHIFT = (ADJ_QUANT_SHIFT + 1);
-static const Int MAX_TU_SIZE = 128;
-extern SChar g_aucLog2[MAX_CU_SIZE + 1];
-
 void init_video_lib(int argc, char *argv[]);
+std::string chromaSubsamplingToStr(int value);
 } // namespace video
 } // namespace icov

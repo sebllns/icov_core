@@ -72,11 +72,11 @@ template <class E> void throw_with_trace(const E &e) {
  * @param msg The additional message to include in the debug header.
  * @return The formatted debug header string.
  */
-#define ICOV_DEBUG_HEADER(msg)                                                 \
-  TO_STR(CONSOLE_FORMAT(CONSOLE_BOLD)                                          \
-         << "In file " << __FILE__ << ":" << __LINE__ << " "                   \
-         << CONSOLE_FORMAT(CONSOLE_FG_RED) << msg                              \
-         << CONSOLE_FORMAT(CONSOLE_DEFAULT))
+#define ICOV_DEBUG_HEADER(msg)                                                                                         \
+  TO_STR(CONSOLE_FORMAT(CONSOLE_BOLD) << "In file " << __FILE__ << ":" << __LINE__ << " "                              \
+                                      << CONSOLE_FORMAT(CONSOLE_FG_RED) << msg << CONSOLE_FORMAT(CONSOLE_DEFAULT))
+
+#define ICOV_THROW_STD_EXCEPTION(msg) ICOV_THROW_EXCEPTION(std::exception(ICOV_DEBUG_HEADER(msg)))
 
 /**
  * @def ICOV_THROW_LOGICAL_EXCEPTION(msg)
@@ -132,6 +132,16 @@ template <class E> void throw_with_trace(const E &e) {
  */
 #define ICOV_THROW_NULLPTR(msg)                                                \
   ICOV_THROW_EXCEPTION(std::invalid_argument(ICOV_DEBUG_HEADER(msg)))
+
+#define CATCH_ALL(msg)                                                                                                 \
+  catch (const std::exception &e)                                                                                      \
+  {                                                                                                                    \
+      ICOV_ERROR << msg << ": " << e.what();                                                                           \
+  }                                                                                                                    \
+  catch (...)                                                                                                          \
+  {                                                                                                                    \
+      ICOV_ERROR << msg << ": " << boost::current_exception_diagnostic_information();                                  \
+  }
 
 } // namespace exception
 } // namespace icov

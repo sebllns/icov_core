@@ -20,14 +20,14 @@ void BinaryOutputIcov::writeQaryParams(
     {
         // std::cout << "SI IDENTICAL" << std::endl;
         //    std::cout << "Q 0" << std::endl;
-        icov::io::write_value<bitstream::byte>(getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, true);
-        m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
+        icov::io::write_value<byte>(getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, true);
+        m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
     }
     else
     {
         icov::bitstream::writeQaryParams(m_qaryParams, bsp.getRawQ0(), bsp.getRawZmin(), bsp.getRawZmax());
         icov::io::write_array(getStream(bitstream::eIcovStream::ENCODE_PARAMS), m_qaryParams, QARY_PARAMS_SIZE, true);
-        m_total_write_byte[eWriteCounter::BLOCK_RATE] += QARY_PARAMS_SIZE * sizeof(bitstream::byte);
+        m_total_write_byte[eWriteCounter::BLOCK_RATE] += QARY_PARAMS_SIZE * sizeof(byte);
     }
 }
 
@@ -41,7 +41,7 @@ void BinaryOutputIcov::writeContentParameterSet() {
 
 void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
   const int byte_size = bitstream::bitToByteCount(s.size());
-  bitstream::byte darr[byte_size];
+  byte darr[byte_size];
 
   std::fill(darr, darr + byte_size, 0);
 
@@ -138,10 +138,10 @@ void BinaryOutputIcov::writeSIRate(const NumcodeIdx &v, const Rate &r,
 }
 
 void BinaryOutputIcov::writeSIMode(const uint &v) {
-  icov::io::write_value<bitstream::byte>(
+  icov::io::write_value<byte>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
       static_cast<rate_t>(v), true);
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(bitstream::byte);
+  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
 }
 
 } // namespace encoder

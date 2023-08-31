@@ -20,20 +20,20 @@ void ProgramController::launchMode(const std::string &mode_id)
 
     // mode == icov
 
-    auto ldpc_params = parseLdpcParams(args());
-
     bool preEncode = parsePreEncodeOption(args());
-    InteractiveDecoder::params dec_params(args());
+
+    std::string icov_file = parseInputFile(args());
 
     if (preEncode)
     {
+        auto ldpc_params = parseLdpcParams(args());
         encoder::IcovEncoder::params enc_params(args());
         encoder::IcovEncoder encoder(enc_params, *ldpc_params);
         encoder.run();
-        dec_params.icov_file = enc_params.m_outputfile;
+        icov_file = enc_params.m_outputfile;
     }
 
-    InteractiveDecoder decoder(dec_params, *ldpc_params);
+    InteractiveDecoder decoder(icov_file, args());
     decoder.run();
 
     ICOV_DEBUG << "end program\n";

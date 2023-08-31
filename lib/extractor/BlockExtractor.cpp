@@ -24,7 +24,7 @@ icov::extractor::BlockExtractor::BlockExtractor(std::shared_ptr<InputIcov> &icov
 
     bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(0);
 
-    bitstream::int8b compID = 0;
+    int8b compID = 0;
     for (int n : p.icu_sizes)
     {
         auto channel_params = coder_params.clone();
