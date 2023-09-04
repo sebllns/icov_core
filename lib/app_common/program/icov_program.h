@@ -1,7 +1,6 @@
 #pragma once
 
-#include "icov_common.h"
-
+#include "icov_log.h"
 #include "icov_program_options.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 
@@ -50,47 +49,6 @@ public:
 class IcovProgramBase : public IIcovProgram {
 public:
   IcovProgramBase(const std::string &modes) {
-
-    //    this->m_options_desc.add_options()
-
-    //        ("help,h", "produce help message")
-
-    //            ((std::string(mode) + ",m").c_str(),
-    //             po::value<std::string>()->required(),
-    //             (std::string("Set the program mode (see documentation for
-    //             more "
-    //                          "details on each mode)\nAccepted values: ") +
-    //              modes)
-    //                 .c_str())
-
-    //                ((std::string(coder_type) + ",c").c_str(),
-    //                 po::value<std::string>()->default_value("imt164"),
-    //                 "Set the coder type")
-
-    //                    ((std::string(data_path) + ",d").c_str(),
-    //                     po::value<std::string>()->default_value("data/"),
-    //                     "Set the data path")
-
-    //                        ((std::string(code_length) + ",n").c_str(),
-    //                         po::value<int>()->default_value(1024),
-    //                         "set the code length")
-
-    //                            ((std::string(bp_iter) + ",it").c_str(),
-    //                             po::value<int>()->default_value(100),
-    //                             "Set iteration count for belief propagation
-    //                             of " "LDPC coder")
-
-    //                                (numcodes.c_str(),
-    //                                 po::value<std::string>()->default_value(
-    //                                     "numcodes.txt"),
-    //                                 "Set the numcodes steps for iterative
-    //                                 coder")
-
-    //                                    ((std::string(log_lvl) +
-    //                                    ",lg").c_str(),
-    //                                     po::value<int>()->default_value(2),
-    //                                     "Set log level filter");
-
     init_options_desc(modes, m_options_desc);
   }
 
@@ -131,7 +89,8 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////
-static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
+inline int icov_main(int argc, char *argv[], IIcovProgram &pg)
+{
   icov::maths::rand::init();
 
   icov::ldpc_codec_layer::IInteractiveCoder::params.CheckBitplaneEncoding =
@@ -147,29 +106,24 @@ static int icov_main(int argc, char *argv[], IIcovProgram &pg) {
     icov::logging::set_filter(pg.logLevel());
     pg.launchProgram();
   } catch (std::exception &e) {
-    ICOV_INFO << pg.optionsDesc() << std::endl;
-    ICOV_LOG(fatal) << std::endl
-                    << "Error: program execution has stopped prematurely"
-                    << std::endl;
-    ICOV_LOG(fatal) << boost::current_exception_diagnostic_information()
-                    << std::endl;
+    ICOV_INFO << std::endl << pg.optionsDesc() << std::endl;
+    ICOV_FATAL << std::endl << "Error: program execution has stopped prematurely" << std::endl;
+    ICOV_FATAL << boost::current_exception_diagnostic_information() << std::endl;
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
     const boost::stacktrace::stacktrace *st = boost::get_error_info<traced>(e);
     if (st) {
-      ICOV_LOG(fatal) << *st;
+      ICOV_FATAL << *st;
     } else {
-      ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
+      ICOV_FATAL << boost::stacktrace::stacktrace() << std::endl;
     }
 #endif
     return boost::system::errc::interrupted;
   } catch (...) {
-    ICOV_INFO << pg.optionsDesc() << std::endl;
-    ICOV_LOG(fatal) << "Fatal error" << std::endl;
-    ICOV_LOG(fatal) << std::endl
-                    << boost::current_exception_diagnostic_information()
-                    << std::endl;
+    ICOV_INFO << std::endl << pg.optionsDesc() << std::endl;
+    ICOV_FATAL << "Fatal error" << std::endl;
+    ICOV_FATAL << std::endl << boost::current_exception_diagnostic_information() << std::endl;
 #ifdef ICOV_CORE_STACKTRACE_ENABLED
-    ICOV_LOG(fatal) << boost::stacktrace::stacktrace();
+    ICOV_FATAL << boost::stacktrace::stacktrace() << std::endl;
 #endif
     return boost::system::errc::interrupted;
   }

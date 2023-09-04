@@ -1,4 +1,5 @@
 #include "SinglePassDecoder.h"
+#include "Media.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
 #include "decoder/InfosGatherer.h"
@@ -45,11 +46,12 @@ void decoder::SinglePassDecoder::initLocal(const params &p)
     const auto &cps = m_contentParams;
 
     ICOV_INFO << boost::format("%-30s %-s") % "Icov version:" % cps.icov_version;
+    ICOV_INFO << boost::format("%-30s %-s") % "Type:" % mediaTypeStr(static_cast<eMediaType>(cps.content_type));
     ICOV_INFO << boost::format("%-30s %-s") % "Chroma subsampling:" %
                      video::chromaSubsamplingToStr((int)cps.content_chroma_format);
 
-    ICOV_INFO << boost::format("%-30s %-s") % "Width:" % (int)cps.content_width;
-    ICOV_INFO << boost::format("%-30s %-s") % "Height:" % (int)cps.content_height;
+    ICOV_INFO << boost::format("%-30s %-d") % "Width:" % (int)cps.content_width;
+    ICOV_INFO << boost::format("%-30s %-d") % "Height:" % (int)cps.content_height;
 
     ICOV_INFO << (int)cps.block_fixed_size;
     ICOV_INFO << (int)cps.qp;

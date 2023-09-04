@@ -27,6 +27,12 @@ icov::Rate icov::decoder::InfosGatherer::frameBitrate() const
            m_infos.size();
 }
 
+icov::BitLength icov::decoder::InfosGatherer::frameBitlength() const
+{
+    return std::accumulate(m_infos.cbegin(), m_infos.cend(), 0.,
+                           [](icov::BitLength sum, const block_infos_t &elem) { return sum + elem.bitlength; });
+}
+
 void icov::decoder::InfosGatherer::_beforeOrderingLoop(const request_t &r)
 {
     m_infos.clear();

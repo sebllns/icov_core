@@ -48,11 +48,12 @@
 
 #pragma once
 
-#include "icov_common.h"
-
+#include "icov_assert.h"
+#include "icov_path.h"
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <fstream>
 #include <ios>
 #include <memory>
 #include <ostream>
@@ -70,6 +71,28 @@ enum eMediaType {
   COUNT,
   ERROR
 };
+
+inline std::string mediaTypeStr(eMediaType t)
+{
+  switch (t)
+  {
+  case IMAGE:
+      return "image";
+  case VIDEO:
+      return "video";
+  case MODEL_3D:
+      return "3D model";
+  case ICOV:
+      return "ICOV";
+  case COUNT:
+      return "count";
+  case ERROR:
+      return "error";
+  case UNKNOWN:
+  default:
+      return "unknown";
+  }
+}
 
 class IMedia {
 public:
@@ -147,10 +170,9 @@ protected:
   std::unique_ptr<std::ostream> m_outputStream;
 
 public:
-  explicit IOutputMedia(const fs::path &path,
-                        int media_type = (int)eMediaType::UNKNOWN)
-      : IMedia(path, media_type),
-        m_outputStream(std::make_unique<std::ofstream>(path)) {
+  explicit IOutputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
+      : IMedia(path, media_type), m_outputStream(std::make_unique<std::ofstream>(path))
+  {
     icov::assert::not_null(m_outputStream.get());
     icov::path::assert_file_exists(path.string());
   }

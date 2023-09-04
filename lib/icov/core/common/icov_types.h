@@ -86,6 +86,7 @@ using SIVec = std::vector<SIVal>;
 using Bitplanes = std::vector<BitVec>;
 using Rate = float;
 using NumcodeIdx = uint32_t;
+using BitLength = size_t;
 
 // Bitplane
 using SyndromesVec = std::vector<Syndrome>;

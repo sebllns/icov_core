@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include "app_common/decoder/SinglePassDecoder.h"
 #include "app_common/program/icov_program_options.h"
 #include "decoder/CsvOutput.h"
 #include "icov_path.h"

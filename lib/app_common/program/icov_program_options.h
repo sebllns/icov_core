@@ -1,11 +1,6 @@
 #pragma once
 
-#include "app_common/decoder/SinglePassDecoder.h"
-#include "icov_exception.h"
-#include "icov_path.h"
-#include "icov_request.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "ldpc_codec_layer/factory/Coder_IMT64.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/filesystem/path.hpp>
