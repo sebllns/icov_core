@@ -55,6 +55,7 @@
 #include "icov_path.h"
 #include "icov_request.h"
 #include "icov_types.h"
+#include <boost/format.hpp>
 #include <memory>
 
 namespace icov

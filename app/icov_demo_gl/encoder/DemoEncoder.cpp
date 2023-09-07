@@ -11,7 +11,8 @@
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/format/format_fwd.hpp>
+#include <boost/format.hpp>
+
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
