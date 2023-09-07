@@ -148,6 +148,10 @@ public:
     icov::path::assert_file_exists(path.string());
   }
 
+  virtual void setMaxFrame(int frame)
+  {
+    m_frameCount = std::max(frame, m_frameCount);
+  }
   virtual void setFrame(int frame) { m_frameID = frame; }
   inline int getFrameID() const { return m_frameID; }
 
@@ -173,8 +177,8 @@ public:
   explicit IOutputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
       : IMedia(path, media_type), m_outputStream(std::make_unique<std::ofstream>(path))
   {
-    icov::assert::not_null(m_outputStream.get());
     icov::path::assert_file_exists(path.string());
+    icov::assert::not_null(m_outputStream.get());
   }
 
   virtual ~IOutputMedia() = default;

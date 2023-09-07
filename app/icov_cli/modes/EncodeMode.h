@@ -45,46 +45,19 @@
  *****************************************************************************/
 #pragma once
 
-#include "Media.h"
-#include "icov_common.h"
-#include "encoder/InputMedia.h"
-#include "encoder/OutputIcovBase.h"
-#include "encoder/interface/IEncoder.h"
-#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
-
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+#include "app_common/encoder/IcovEncoder.h"
+#include "app_common/program/icov_program_options.h"
 
 class EncodeMode {
-  struct params {
-
-    static const char *inputFile_id;
-    static const char *outputFile_id;
-    static const char *icuSize_id;
-    static const char *qp_id;
-    static const char *viewportPadding_id;
-
-    fs::path inputFile;
-    fs::path encodedFile;
-    fs::path q_valuesPath;
-    int icuSize;
-    int qp;
-    float viewportPadding;
-
-    std::unique_ptr<icov::LdpcCoderParameters> ldpc_params;
-  };
 
 public:
-  explicit EncodeMode(const po::variables_map &args);
+  explicit EncodeMode(const icov::options::args_t &args);
   ~EncodeMode() = default;
 
   void run();
 
-  static void AddProgramOptions(po::options_description &desc);
+  static void AddProgramOptions(icov::options::desc_t &desc);
 
 private:
-  int encode();
-  params m_parameters;
+  icov::encoder::IcovEncoder m_encoder;
 };

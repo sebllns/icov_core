@@ -1,3 +1,52 @@
+/****************************************************************************/
+/** @addtogroup ICOV
+ *  ICOV, open source Interactive Coder for Omnidirectional Videos.
+ */
+
+/** @addtogroup Encoder
+ *  ICOV Encoder Lib
+ *  @ingroup ICOV
+ */
+
+/** @file SourceMedia.h
+ *  @brief Defines an actual ICOV SourceMedia.
+ *  @ingroup SourceMedia
+ *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
+ *  @version 1.0.3
+ *  @date 2023
+ *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
+ * The copyright in this software is being made available under
+ * the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ * <br/>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * <br/>
+ * <b> For using ICOV under terms that will not comply with the GNU
+ * AGPL, please contact Inria about acquiring an ICOV Professional
+ * Edition License. </b>
+ * <br/>
+ * See contact section in README file for more information.
+ * <br/>
+ * This software was developed at:
+ * Inria Rennes - Bretagne Atlantique
+ * Campus Universitaire de Beaulieu
+ * 35042 Rennes Cedex
+ * France
+ * <br/>
+ * If you have questions regarding the use of this software, please contact
+ * Inria using the contact section in the README file.
+ * <br/>
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *****************************************************************************/
+
 #pragma once
 
 #include "ldpc_codec_layer/factory/CoderFactory.h"
@@ -22,29 +71,37 @@ namespace options {
 typedef po::variables_map args_t;
 typedef po::options_description desc_t;
 
-const std::string code_length = "code-length";
-const std::string icu_size = "icu-size";
-const std::string bp_iter = "bp-ite";
-const std::string data_path = "data-path";
-const std::string coder_type = "coder-type";
 const std::string help = "help";
 const std::string mode = "mode";
 const std::string log_lvl = "log-level";
 const std::string input_file = "input-file";
 const std::string output_file = "output-file";
-const std::string qp = "qp";
-const std::string viewport_padding = "viewport-padding";
-const std::string fov = "fov";
+
+const std::string code_length = "ldpc-code-length";
+const std::string bp_iter = "ldpc-bp-ite";
+const std::string coder_type = "ldpc-coder-type";
+const std::string data_path = "ldpc-data-path";
+
 const std::string encode_allblocks = "encode-allblocks";
-const std::string start_block = "start-block";
-const std::string block_count = "block-count";
-const std::string pre_encode = "pre-encode";
-const std::string viewport_type = "viewport-type";
-const std::string csv_output = "csv-output";
-const std::string positions_input = "positions-input";
-const std::string dummy_viewport = "dummy-viewport";
-const std::string headless = "headless";
-const std::string ground_truth = "ground-truth";
+const std::string start_block = "encode-start-block";
+const std::string block_count = "encode-block-count";
+const std::string frame_count = "encode-frame-count";
+const std::string viewport_padding = "encode-viewport-padding";
+const std::string icu_size = "encode-icu-size";
+const std::string qp = "encode-qp";
+const std::string fov = "encode-fov";
+const std::string dummy_viewport = "encode-dummy-viewport";
+
+const std::string pre_encode = "decode-preencode";
+const std::string csv_output = "decode-csv-output";
+const std::string positions_input = "decode-positions-input";
+const std::string headless = "decode-headless";
+const std::string ground_truth = "decode-ground-truth";
+
+inline void addEncodeIcuSizeOption(desc_t &output)
+{
+    output.add_options()(icu_size.c_str(), po::value<int>()->default_value(32), "ICU width for encoding");
+}
 
 inline void addGroundPathOption(desc_t &output)
 {
@@ -135,6 +192,7 @@ inline void init_options_desc(const std::string &modes, desc_t &output)
     addDummyViewportOption(output);
     addHeadlessOption(output);
     addGroundPathOption(output);
+    addEncodeIcuSizeOption(output);
 }
 
 #define ICOV_DATA_DIR(args) fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
@@ -205,6 +263,11 @@ inline bool parseDummyViewportOption(const args_t &args)
   return args[dummy_viewport].as<bool>();
 }
 
+inline int parseEncodeIcuSizeOption(const args_t &args)
+{
+  return args[icu_size].as<int>();
+}
+
 inline void parseLdpcParams(const args_t &args, const std::string &intented_type, LdpcCoderParameters &params)
 {
   icov::assert::equal(params.type(), intented_type,
@@ -229,17 +292,6 @@ inline ldpc_codec_layer::p_InteractiveCoder create_coder(const boost::program_op
   auto params = parseLdpcParams(args);
   return ldpc_codec_layer::LdpcCoderFactory::create_coder(*params);
 }
-
-struct encoder_param_t
-{
-  uint16_t bp_iter;
-  int8b qp;
-  float viewport_padding;
-  float fov;
-  bool encode_allblocks;
-  std::string input_media_file;
-  std::string output_icov_file;
-};
 
 } // namespace options
 } // namespace icov

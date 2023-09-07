@@ -173,7 +173,7 @@ template <class Matrix> class BitplaneVecEncoder : IBitplaneVecEncoder
             encode_bitplane(m_bsp, i, numcodeIdx[i], stored_synd[i], predec);
         }
 
-        ICOV_ASSERT_MSG(predec == bsp.src_symboles(), "Symbole values are not recovered from encoding process");
+        ICOV_ASSERT_MSG(predec == m_bsp.src_symboles(), "Symbole values are not recovered from encoding process");
     }
 
     NumcodeIdx encode_bitplane(int bitplane_idx);

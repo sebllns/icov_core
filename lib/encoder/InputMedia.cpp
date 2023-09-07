@@ -1,5 +1,7 @@
 #include "InputMedia.h"
 #include "icov_assert.h"
+#include "icov_exception.h"
+#include "opencv2/videoio.hpp"
 
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
@@ -12,6 +14,8 @@ InputImage::InputImage(const fs::path &path) : icov::IImage<cv::Mat>(path) {
   ICOV_ASSERT_MSG(m_frameData.total() > 0, "Empty image");
   m_width = m_frameData.cols;
   m_height = m_frameData.rows;
+  icov::assert::check(m_width > 0, ICOV_DEBUG_HEADER("Image width > 0"));
+  icov::assert::check(m_height > 0, ICOV_DEBUG_HEADER("Image height > 0"));
 }
 
 void InputImage::writeInfos(std::ofstream &output, int key, void *param) {
@@ -29,11 +33,26 @@ void InputImage::writeInfos(std::ofstream &output, int key, void *param) {
   }
 }
 
-InputVideo::InputVideo(const fs::path &path) : icov::IVideo<cv::Mat>(path) {
+InputVideo::InputVideo(const fs::path &path) : icov::IVideo<cv::Mat>(path), m_videoCV(path.string())
+{
   std::cout << "open video " << m_path << std::endl;
+  icov::assert::check(m_videoCV.isOpened(), ICOV_DEBUG_HEADER("Video width > 0"));
+
+  m_width = m_videoCV.get(cv::CAP_PROP_FRAME_WIDTH);
+  icov::assert::check(m_width > 0, ICOV_DEBUG_HEADER("Video width > 0"));
+
+  m_height = m_videoCV.get(cv::CAP_PROP_FRAME_HEIGHT);
+  icov::assert::check(m_height > 0, ICOV_DEBUG_HEADER("Video height > 0"));
+
+  m_frameCount = m_videoCV.get(cv::CAP_PROP_FRAME_COUNT);
+  icov::assert::check(m_frameCount > 0, ICOV_DEBUG_HEADER("Video frame count > 0"));
 }
 
-void InputVideo::setFrame(int) { m_frameData = 0; /*image = 1 frame only*/ }
+void InputVideo::setFrame(int i)
+{
+  m_videoCV.set(cv::CAP_PROP_POS_FRAMES, i);
+}
+
 void InputVideo::writeInfos(std::ofstream &output, int key, void *param) {
 
   switch (key) {

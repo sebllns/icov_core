@@ -16,7 +16,6 @@ ProgramController::ProgramController()
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
   CheckMode::AddProgramOptions(m_options_desc);
-  EncodeMode::AddProgramOptions(m_options_desc);
 }
 
 void ProgramController::launchMode(const std::string &mode_id) {

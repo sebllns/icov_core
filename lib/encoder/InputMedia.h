@@ -70,14 +70,14 @@ public:
 
 class InputVideo : public icov::IVideo<cv::Mat> {
 protected:
-  cv::VideoCapture videoCV;
+  cv::VideoCapture m_videoCV;
 
 public:
   InputVideo(const fs::path &path);
   ~InputVideo() = default;
 
   // IMedia interface
-  void setFrame(int frame) override;
+  void setFrame(int i) override;
   void writeInfos(std::ofstream &output, int key,
                   void *param = nullptr) override;
 };

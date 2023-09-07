@@ -66,16 +66,23 @@ class IcovEncoder
   public:
     struct params
     {
-        std::string m_inputfile;
-        std::string m_outputfile;
+        std::string Inputfile;
+        std::string Outputfile;
+        uint QP;
+        bool DummyViewport;
+        bool AllBlocks;
+        omnidirectional_layer::Block::id_t StartBlock;
+        size_t BlockCount;
+        float ViewportPadding;
+        point2d ViewportResolution;
+        uint FrameCount;
+
         uint m_debugframecount;
-        uint m_qp;
         uint m_icuSize;
         float fov_x_degree;
-        float viewport_padding;
-        point2d resolution;
+
         angle_radian fov;
-        bool m_DummyViewport;
+
         ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
         params(const options::args_t &args);
     };
@@ -86,8 +93,8 @@ class IcovEncoder
 
     const LdpcCoderParameters &ldpc_params() const;
     const params &getParams() const;
-    const fs::path &inputfile() const;
-    const fs::path &outputfile() const;
+    fs::path inputfile() const;
+    fs::path outputfile() const;
 
   private:
     params m_params;

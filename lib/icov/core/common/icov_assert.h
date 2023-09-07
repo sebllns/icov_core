@@ -86,6 +86,11 @@ void equal(T a, T b, const std::string &msg = "Elements must be equal") {
   check(a == b, msg);
 }
 
+template <typename T> void not_equal(T a, T b, const std::string &msg = "Elements cannot be equal")
+{
+  check(a != b, msg);
+}
+
 template <typename T> void range(T val, T min, T max) {
   check((min > max), "Requires min <= max");
   check((val < min || val > max),

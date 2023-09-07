@@ -110,13 +110,6 @@ class BitplaneDecoder
     ~BitplaneDecoder();
 
     /**
-     * @brief Decode an ICU (Interactive Coding Unit) block.
-     * @param icu_enc The ID of ICU block to be decoded.
-     * @param block_prediction The type of block prediction used.
-     */
-    void decode_icu(int icu_enc, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
-
-    /**
      * @brief Read the syndrome from extracted bitstream.
      * @param syndrome_size The size of the syndrome.
      */
@@ -124,13 +117,8 @@ class BitplaneDecoder
 
     void decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
-    void end_decode_icu();
-
     Syndrome &syndrome();
 
-    const ldpc_codec_layer::AffInteractiveCoder &ldpc_coder() const;
-
-    const params &get_params() const;
 
     Rate rate() const;
 
@@ -156,18 +144,8 @@ class BitplaneDecoder
     SymboleVec m_blockSymbols;
     Rate m_rate;
 
-    void _decode_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
     void _decode_bitplane(int i, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
-    void _extract_qary_params(bool &coding_flag);
-    void _extract_numcodes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
     void _extract_numcode(int bp, omnidirectional_layer::BlockPrediction::ePredType block_prediction);
-    void _set_si(bool coding_flag);
-
-    /**
-     * @brief Set the SI (Side Information) direction mode.
-     * @param dir_mode The direction mode to be set.
-     */
-    void _extract_si_dir_mode();
 };
 } // namespace decoder
 } // namespace icov

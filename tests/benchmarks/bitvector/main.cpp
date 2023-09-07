@@ -6,7 +6,7 @@
 
 #include <aff3ct.hpp>
 //#include <boost/filesystem.hpp>
-#include "common.h"
+#include "icov_common.h"
 
 #include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>

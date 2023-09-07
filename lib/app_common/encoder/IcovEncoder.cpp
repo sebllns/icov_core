@@ -7,7 +7,7 @@
 icov::encoder::IcovEncoder::IcovEncoder(const params &params, const LdpcCoderParameters &ldpc_params)
     : m_params(params), m_ldpc_params(ldpc_params.clone())
 {
-    path::assert_file_exists(m_params.m_inputfile);
+    path::assert_file_exists(m_params.Inputfile);
 
     m_ldpc_params->codeLength = m_params.m_icuSize * m_params.m_icuSize;
 
@@ -17,11 +17,11 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params, const LdpcCoderPar
 
     m_encoder = std::make_unique<encoder::IcovMediaEncoder>(
         encoder::IcovMediaEncoder::params{
-            .InputPath = m_params.m_inputfile,
-            .OutputPath = m_params.m_outputfile,
+            .InputPath = m_params.Inputfile,
+            .OutputPath = m_params.Outputfile,
             .OutputType = encoder::IcovMediaEncoder::BINARY,
             .FrameEncoderParams =
-                icov::encoder::FrameEncoder::params{.QP = static_cast<int>(m_params.m_qp),
+                icov::encoder::FrameEncoder::params{.QP = static_cast<int>(m_params.QP),
                                                     .ChFormat = CHROMA_420,
                                                     .ICU_Size = cv::Size(m_params.m_icuSize, m_params.m_icuSize),
                                                     .BSP_Params = m_params.bsp_params,
@@ -30,7 +30,7 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params, const LdpcCoderPar
             .AllBlocks = true,
             .StartBlock = 61,
             .BlockCount = 23,
-            .DummyViewport = m_params.m_DummyViewport},
+            .DummyViewport = m_params.DummyViewport},
         this->ldpc_params());
 }
 
@@ -40,8 +40,11 @@ icov::encoder::IcovEncoder::~IcovEncoder()
 
 void icov::encoder::IcovEncoder::run()
 {
-    viewport_geometry vpg = factory::default_geometry(m_params.fov, m_params.resolution);
-    m_encoder->defaultEncode(m_params.viewport_padding, vpg);
+    ICOV_INFO << boost::format("%-15s %-s") % "Input File:" % m_params.Inputfile;
+    ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" % m_params.Outputfile;
+
+    viewport_geometry vpg = factory::default_geometry(m_params.fov, m_params.ViewportResolution);
+    m_encoder->defaultEncode(m_params.ViewportPadding, vpg);
 }
 
 const icov::LdpcCoderParameters &icov::encoder::IcovEncoder::ldpc_params() const
@@ -54,33 +57,35 @@ const icov::encoder::IcovEncoder::params &icov::encoder::IcovEncoder::getParams(
     return m_params;
 }
 
-const boost::filesystem::path &icov::encoder::IcovEncoder::inputfile() const
+boost::filesystem::path icov::encoder::IcovEncoder::inputfile() const
 {
-    return m_params.m_inputfile;
+    return m_params.Inputfile;
 }
 
-const boost::filesystem::path &icov::encoder::IcovEncoder::outputfile() const
+boost::filesystem::path icov::encoder::IcovEncoder::outputfile() const
 {
-    return m_params.m_outputfile;
+    return m_params.Outputfile;
 }
 
 icov::encoder::IcovEncoder::params::params(const boost::program_options::variables_map &args)
 {
     m_debugframecount = 100;
-    m_DummyViewport = false;
-    m_qp = 42;
-    m_icuSize = 32;
+    DummyViewport = false;
+    QP = 42;
+    m_icuSize = options::parseEncodeIcuSizeOption(args);
 
-    viewport_padding = 1.2;
+    ViewportPadding = 1.2;
     fov_x_degree = 60;
-    resolution = point2d(1920, 1080);
-    fov = factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
+    ViewportResolution = point2d(1920, 1080);
+    fov = factory::fov(fov_x_degree, factory::y_x_ratio(ViewportResolution));
+
+    FrameCount = 10;
 
     bsp_params.enable_z_quantization = true;
     icov::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), bsp_params.q_values);
 
-    m_inputfile = options::parseInputFile(args);
-    m_outputfile = options::parseOutputFile(args);
-    if (m_outputfile.empty())
-        m_outputfile = fs::path(m_inputfile).replace_extension(".icov").string();
+    Inputfile = options::parseInputFile(args);
+    Outputfile = options::parseOutputFile(args);
+    if (Outputfile.empty())
+        Outputfile = fs::path(Inputfile).replace_extension(".icov").string();
 }

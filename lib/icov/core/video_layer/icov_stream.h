@@ -227,9 +227,9 @@ inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
   z_min = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN];
   z_max = input[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX];
 
-  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
-            << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
-            << std::endl;
+  //  std::cout << "Q " << (int)input[0] << " " << (int)input[1] << " "
+  //            << (int)input[2] << " -> " << q_idx << " " << z_min << " " << z_max
+  //            << std::endl;
 }
 
 inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
@@ -239,8 +239,8 @@ inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
   output[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN] = z_min;
   output[ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX] = z_max;
 
-  std::cout << "Q " << (uint)output[0] << " " << (uint)output[1] << " "
-            << (uint)output[2] << std::endl;
+  //  std::cout << "Q " << (uint)output[0] << " " << (uint)output[1] << " "
+  //            << (uint)output[2] << std::endl;
 }
 
 class BitVector {

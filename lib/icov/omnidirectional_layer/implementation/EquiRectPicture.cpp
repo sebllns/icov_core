@@ -1,4 +1,6 @@
 #include "EquiRectPicture.h"
+#include "icov_assert.h"
+#include "icov_exception.h"
 #include <cmath>
 
 namespace icov {
@@ -8,42 +10,51 @@ namespace omnidirectional_layer {
 EquiRectPicture::EquiRectPicture(int pw, int ph)
     : IPicture(pw, ph, 0, M_PI / 2, 2 * M_PI, M_PI) {}
 
-void EquiRectPicture::buildConstantSizeBlocks(int pw, int ph) {
-  int w = m_width;
-  int h = m_height;
+void EquiRectPicture::buildConstantSizeBlocks(int pw, int ph)
+{
 
-  // Calculate the number of columns and rows needed to build the blocks
-  block_cols = (int)std::ceil((double)w / pw);
-  block_rows = (int)std::ceil((double)h / ph);
+    int w = m_width;
+    int h = m_height;
 
-  // Calculate the total width and height of the blocks
-  m_total_w = block_cols * pw;
-  m_total_h = block_rows * ph;
+    assert::check(w > 0, ICOV_DEBUG_HEADER("Width > 0"));
+    assert::check(h > 0, ICOV_DEBUG_HEADER("Height > 0"));
+    assert::check(pw > 0, ICOV_DEBUG_HEADER("ICU Width > 0"));
+    assert::check(ph > 0, ICOV_DEBUG_HEADER("ICU Height > 0"));
 
-  // Calculate the width and height of each block
-  float bw = 1.0 / block_cols;
-  float bh = 1.0 / block_rows;
+    // Calculate the number of columns and rows needed to build the blocks
+    block_cols = (int)std::ceil((double)w / pw);
+    block_rows = (int)std::ceil((double)h / ph);
 
-  // Reserve memory for the blocks
-  m_icus.reserve(block_cols * block_rows);
+    // Calculate the total width and height of the blocks
+    m_total_w = block_cols * pw;
+    m_total_h = block_rows * ph;
 
-  // Build each block
-  for (int i = 0; i < block_rows; i++) {
-    for (int j = 0; j < block_cols; j++) {
+    // Calculate the width and height of each block
+    float bw = 1.0 / block_cols;
+    float bh = 1.0 / block_rows;
 
-      // Get the ID of the current block
-      auto id = getId(i, j);
+    // Reserve memory for the blocks
+    m_icus.reserve(block_cols * block_rows);
 
-      // Add the block and set its coordinates and size
-      auto b = addBlock(id, j * bw, i * bh, bw, bh);
+    // Build each block
+    for (int i = 0; i < block_rows; i++)
+    {
+        for (int j = 0; j < block_cols; j++)
+        {
 
-      // Set the IDs of the neighboring blocks
-      b->setId(Block::LEFT, getId(i, j - 1));
-      b->setId(Block::RIGHT, getId(i, j + 1));
-      b->setId(Block::UP, getId(i - 1, j));
-      b->setId(Block::DOWN, getId(i + 1, j));
+            // Get the ID of the current block
+            auto id = getId(i, j);
+
+            // Add the block and set its coordinates and size
+            auto b = addBlock(id, j * bw, i * bh, bw, bh);
+
+            // Set the IDs of the neighboring blocks
+            b->setId(Block::LEFT, getId(i, j - 1));
+            b->setId(Block::RIGHT, getId(i, j + 1));
+            b->setId(Block::UP, getId(i - 1, j));
+            b->setId(Block::DOWN, getId(i + 1, j));
+        }
     }
-  }
 }
 
 size_t EquiRectPicture::getId(int i, int j) const {
