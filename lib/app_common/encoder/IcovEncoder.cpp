@@ -1,5 +1,6 @@
 #include "IcovEncoder.h"
 #include "app_common/program/icov_program_options.h"
+#include "boost/format.hpp"
 #include "icov_path.h"
 #include "omnidirectional_layer/factory.h"
 #include <boost/filesystem/path.hpp>

@@ -5,6 +5,7 @@
 #include "decoder/InfosGatherer.h"
 #include "extractor/BlockExtractor.h"
 
+#include "boost/format.hpp"
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_request.h"
@@ -17,7 +18,6 @@
 #include "video_layer/extracted_stream.h"
 #include "video_layer/video_common.h"
 #include <algorithm>
-#include <boost/format/format_fwd.hpp>
 #include <iterator>
 #include <limits>
 #include <memory>
