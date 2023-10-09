@@ -7,8 +7,8 @@
  *  @ingroup ICOV
  */
 
-/** @file ContentParameterSet.h
- *  @brief ContentParameterSet VCL data for ICOV coder
+/** @file encoded_stream.h
+ *  @brief Contains various utilities and types related to bitstream manipulation.
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -75,6 +75,7 @@ typedef enum {
   BLOCKS_SIZE,
   ENCODE_PARAMS,
   SYNDROME,
+  METRICS,
   COUNT
 } eIcovStream;
 

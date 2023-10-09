@@ -52,18 +52,12 @@
 #include "Media.h"
 #include "OutputIcovBase.h"
 #include "PredictionsEncoder.h"
-#include "icov_common.h"
 #include "encoder/interface/IEncoder.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
-
-#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
-#include "video_layer/ExtractedStreamDebugger.h"
-
-//#include <opencv2/plot.hpp>
 
 #include <cstdint>
 #include <map>
@@ -180,8 +174,7 @@ protected:
 
   std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
 
-  //cv::Ptr<cv::plot::Plot2d> plot;
-  cv::Mat xData, yData, display;
+  cv::Mat m_reco;
 
   struct StoredRate {
     NumcodeIdx c; // rate quantized

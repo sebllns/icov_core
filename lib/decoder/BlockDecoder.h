@@ -49,8 +49,9 @@
 
 #pragma once
 
-#include "icov_common.h"
 #include "decoder/ChannelDecoder.h"
+#include "icov_common.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 
@@ -100,8 +101,6 @@ public:
   const PelUnitBuf &decodingOutput() const;
   PelUnitBuf getDecodingOutput();
 
-  Rate rate() const;
-
 protected:
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
@@ -109,7 +108,6 @@ protected:
   PelUnitBuf m_decodingOutput;
   params m_params;
   UnitArea mainFrameArea;
-  Rate m_rate;
 
   // IBlockProcessor interface
 protected:

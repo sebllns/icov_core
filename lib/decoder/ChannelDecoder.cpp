@@ -9,6 +9,7 @@
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/ICOV_Transform2d.h"
+#include "video_layer/VideoMetrics.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
 #include "video_layer/vtm_utility.h"
@@ -38,7 +39,7 @@ ChannelDecoder::ChannelDecoder(const params &p, const LdpcCoderParameters &LDPC_
       m_blockBitplane(m_ldpc_coder->get_n(), 0), m_blockSI(m_ldpc_coder->get_n(), 0),
       m_syndrome(m_ldpc_coder->get_m_max()), m_bsp(m_ldpc_coder->get_n()),
       m_block_prediction(omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN), m_bitstream(extraction),
-      m_blockSymbols(m_ldpc_coder->get_n(), 0), m_rate(0)
+      m_blockSymbols(m_ldpc_coder->get_n(), 0)
 {
     m_intraPred.init(m_params.QpParam.chromaFomat);
 }
@@ -52,11 +53,15 @@ void icov::decoder::ChannelDecoder::_decode_bitplane(
   m_numcodes.pop();
 
   int syndrome_size = bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
-
   read_syndrome(syndrome_size);
+
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[m_icuIndex].encodedBitlength += syndrome_size;
+
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[m_icuIndex].decodedBitlength += m_ldpc_coder->get_n();
+
+  // if flag
   decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode), m_syndrome);
 
-  m_rate += m_ldpc_coder->get_r(syndrome_size, m_ldpc_coder->get_n());
 }
 
 void icov::decoder::ChannelDecoder::_extract_numcodes(
@@ -91,13 +96,10 @@ void icov::decoder::ChannelDecoder::_decode_bitplanes(
   for (int i = 0; i < bitplaneCount; ++i) {
     _decode_bitplane(i, block_prediction);
   }
-  m_rate /= bitplaneCount;
 }
 
 void ChannelDecoder::decode_icu(int icu_enc, omnidirectional_layer::BlockPrediction::ePredType block_prediction)
 {
-
-  m_rate = 0;
 
   ICOV_ASSERT_MSG(block_prediction != omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN, "Prediction unknown")
 
@@ -347,9 +349,5 @@ const ChannelDecoder::params &ChannelDecoder::get_params() const {
   return m_params;
 }
 
-Rate ChannelDecoder::rate() const
-{
-  return m_rate;
-}
 } // namespace decoder
 } // namespace icov

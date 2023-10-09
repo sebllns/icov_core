@@ -242,7 +242,8 @@ void ChannelExtractor::_extractIntraParams() {
   std::cout << "END _extractIntraParams" << std::endl;
 }
 
-void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
+void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp)
+{
   std::cout << "CH " << std::to_string(m_params.CompID)
             << ": _extractBitplaneNumcode" << std::endl;
 
@@ -273,7 +274,8 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneExtractor &bp) {
   std::cout << "END _extractBitplaneNumcode" << std::endl;
 }
 
-void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneExtractor &bp) {
+void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneSyndromeExtractor &bp)
+{
 
   ICOV_TRACE << "CH " << std::to_string(m_params.CompID)
              << ": _extractBitplaneSyndrome";

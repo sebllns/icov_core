@@ -15,7 +15,6 @@ DecodeMode::DecodeMode(const path::path_t &icov_file, const po::variables_map &a
     ICOV_DEBUG << "Parse program arguments";
 
     m_decoderCtrl.initAnalyzer();
-    m_results = m_decoderCtrl.analyzer().InfosGatherer;
     m_requests = m_decoderCtrl.readRequests();
 }
 

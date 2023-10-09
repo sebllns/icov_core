@@ -71,6 +71,5 @@ public:
 
 private:
   decoder::DecoderController m_decoderCtrl;
-  shared_ptr(icov::decoder::InfosGatherer) m_results;
   std::queue<request_t> m_requests;
 };

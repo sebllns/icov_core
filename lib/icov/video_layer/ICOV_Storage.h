@@ -46,7 +46,6 @@
 #pragma once
 #include "CommonLib/CommonDef.h"
 #include "CommonLib/Unit.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
 
 namespace icov::video {
 

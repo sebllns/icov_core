@@ -46,6 +46,7 @@
 #pragma once
 #include "CommonLib/Unit.h"
 #include "Encodingstructure.h"
+#include "ICOV_DistorsionCost.h"
 
 namespace VTM_Utility {
 Area &operator&=(Area &a, const Area &b);
@@ -134,15 +135,68 @@ setNotMaskTo(AreaBuf<T> &buff, const AreaBuf<bool> &buff_mask,
   }
 }
 
+template <typename T>
+inline double calculatePSNR(const T &org, const T &cur, const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
+                            double *mse_ptr = nullptr, uint *maxval_ptr = nullptr)
+{
+  CHECK((org.chromaFormat != cur.chromaFormat), "chroma format must be similar between org and cur");
+
+  ChromaFormat chromaFormatIDC = org.chromaFormat;
+
+  const UInt numCh = getNumberValidComponents(chromaFormatIDC);
+
+  Int maximumBitDepth = internalBitDepth[CHANNEL_TYPE_LUMA];
+  if (numCh > 1)
+    maximumBitDepth = std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
+
+  icov::video::DistortionCost distCost;
+
+  double mse_frame = 0.;
+  Int scale = 0;
+
+  for (UInt ch = 0; ch < numCh; ch++)
+  {
+    const ComponentID compID = ComponentID(ch);
+    const UInt csx = getComponentScaleX(compID, chromaFormatIDC);
+    const UInt csy = getComponentScaleY(compID, chromaFormatIDC);
+    const Int scaleChan = (4 >> (csx + csy));
+    const UInt bitDepthShift =
+        2 * (maximumBitDepth - internalBitDepth[toChannelType(compID)]); //*2 because this is a squared number
+
+    uint64_t dist_frame =
+        distCost.getDistPart(org.get(compID), cur.get(compID), internalBitDepth[toChannelType(compID)], compID, DF_SSE);
+
+    Double channelMSE = double(dist_frame) / double(org.get(compID).area());
+    channelMSE *= Double(1 << bitDepthShift);
+
+    scale += scaleChan;
+    mse_frame += scaleChan * channelMSE;
+  }
+  mse_frame /= Double(scale); // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
+
+  double min_mse_val = 1e-10;
+  mse_frame = ((mse_frame <= min_mse_val) ? (0) : (mse_frame));
+
+  const UInt maxval = 255 << (maximumBitDepth - 8);
+
+  if (maxval_ptr)
+    *maxval_ptr = maxval;
+
+  if (mse_ptr)
+    *mse_ptr = mse_frame;
+
+  return (mse_frame == 0) ? std::numeric_limits<double>::infinity() : 10.0 * log10((maxval * maxval) / mse_frame);
+}
+
+// template <>
+// double calculatePSNR(const CPelUnitBuf &, const CPelUnitBuf &, const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
+//                      double *, uint *);
+
+// template <>
+// double calculatePSNR(const CCoeffUnitBuf &, const CCoeffUnitBuf &, const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
+//                      double *, uint *);
+
 void positionRelativeTo(UnitArea &inputOutput, const Position &origin);
-
-double calculatePSNR(const CPelUnitBuf &org, const CPelUnitBuf &cur,
-                     const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
-                     double *mse_ptr = nullptr, uint *maxval_ptr = nullptr);
-
-double calculatePSNR(const CCoeffUnitBuf &org, const CCoeffUnitBuf &cur,
-                     const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
-                     double *mse_ptr = nullptr, uint *maxval_ptr = nullptr);
 
 void quantizeFrame(const int qp, const PelUnitBuf &originalImage,
                    PelUnitBuf &quantizedImage,

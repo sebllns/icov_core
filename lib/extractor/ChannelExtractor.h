@@ -65,16 +65,17 @@
 namespace icov {
 namespace extractor {
 
-struct BitplaneExtractor {
-  ushort Index;
-  byte StoredSyndromeQuantizedSize;
-  ushort StoredSyndromeBitSize;
-  ushort StoredSyndromeByteSize;
+struct BitplaneSyndromeExtractor
+{
+    ushort Index;
+    byte StoredSyndromeQuantizedSize;
+    ushort StoredSyndromeBitSize;
+    ushort StoredSyndromeByteSize;
 
-  byte ReadSyndromeQuantizedSize;
-  ushort ReadSyndromeBitSize;
-  ushort ReadSyndromeByteSize;
-  ushort ReadSyndromePadding;
+    byte ReadSyndromeQuantizedSize;
+    ushort ReadSyndromeBitSize;
+    ushort ReadSyndromeByteSize;
+    ushort ReadSyndromePadding;
 };
 
 /**
@@ -114,9 +115,8 @@ public:
   // void extract_access_block(const omnidirectional_layer::Block &b,
   //                        byte *syndrome_buf);
 
-  void extract_block_syndrome(
-      const omnidirectional_layer::Block &b,
-      omnidirectional_layer::BlockPrediction::ePredType block_prediction);
+  void extract_block_syndrome(const omnidirectional_layer::Block &b,
+                              omnidirectional_layer::BlockPrediction::ePredType block_prediction);
 
   void extract_stored_syndrome_size(bool is_access_block);
 
@@ -130,13 +130,13 @@ public:
 
 private:
   void _extractIntraParams();
-  void _extractBitplaneNumcode(BitplaneExtractor &bp);
+  void _extractBitplaneNumcode(BitplaneSyndromeExtractor &bp);
 
   /**
    * @brief Extract the bitplane syndrome
    * @param bp The bitplane to extract the syndrome from
    */
-  void _extractBitplaneSyndrome(const BitplaneExtractor &bp);
+  void _extractBitplaneSyndrome(const BitplaneSyndromeExtractor &bp);
 
   params m_params; ///< The parameters of the channel extractor
 
@@ -146,7 +146,7 @@ private:
   std::shared_ptr<InputIcov> m_icovFile; ///< The input file
 
   bitstream::sp_IcovExtractedBitstream m_bitstream;
-  std::vector<BitplaneExtractor> m_bitplanes;
+  std::vector<BitplaneSyndromeExtractor> m_bitplanes;
   byte m_bitplaneCount;
   int m_maxSyndromeBufferLength;
   bool m_codingFlag;

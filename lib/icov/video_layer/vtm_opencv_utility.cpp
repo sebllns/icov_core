@@ -6,27 +6,29 @@
 **************************************************************************/
 #include "vtm_opencv_utility.h"
 
-#include "icov_common.h"
+#include "icov_assert.h"
+#include "icov_exception.h"
 #include "rgb888_ycrcb.h"
 #include <limits>
 #include <opencv2/imgproc.hpp>
 
 namespace VTM_OPENCV_Utility {
 
-double mse(const cv::Mat &I1, const cv::Mat &I2) {
-  ICOV_ASSERT_MSG((I1.type() == I2.type()) && (I1.size == I2.size),
-                  "Matrices must have the same types and sizes");
+double mse(const cv::Mat &I1, const cv::Mat &I2)
+{
+    icov::assert::check((I1.type() == I2.type()) && (I1.size == I2.size),
+                        ICOV_DEBUG_HEADER("Matrices must have the same types and sizes"));
 
-  cv::Mat s1;
-  absdiff(I1, I2, s1);                         // |I1 - I2|
-  s1.convertTo(s1, CV_32F);                    // cannot make a square on 8 bits
-  s1 = s1.mul(s1);                             // |I1 - I2|^2
-  cv::Scalar s = sum(s1);                      // sum elements per channel
-  double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
-  if (sse <= 1e-10)                            // for small values return zero
-    return 0;
-  else
-    return sse / (double)(I1.channels() * I1.total());
+    cv::Mat s1;
+    absdiff(I1, I2, s1);                         // |I1 - I2|
+    s1.convertTo(s1, CV_32F);                    // cannot make a square on 8 bits
+    s1 = s1.mul(s1);                             // |I1 - I2|^2
+    cv::Scalar s = sum(s1);                      // sum elements per channel
+    double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
+    if (sse <= 1e-10)                            // for small values return zero
+        return 0;
+    else
+        return sse / (double)(I1.channels() * I1.total());
 }
 
 double psnr(const cv::Mat &I1, const cv::Mat &I2) {
@@ -172,7 +174,7 @@ void cvMatToYUV(const cv::Mat &input, PelUnitBuf &pic) {
                           pic.get(COMPONENT_Cr).stride, false, false));
   } else // TODO: implement for other formats
   {
-    std::cerr << "not implemented yet." << std::endl;
+    ICOV_THROW_STD_EXCEPTION("not implemented yet");
   }
 }
 

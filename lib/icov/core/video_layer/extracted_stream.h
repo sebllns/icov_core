@@ -49,10 +49,8 @@
 
 #include "icov_assert.h"
 #include "icov_stream.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
-#include "omnidirectional_layer/Block.h"
 #include "video_layer/ContentParameterSet.h"
 #include <algorithm>
 #include <boost/archive/binary_iarchive.hpp>
@@ -66,6 +64,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <queue>
 #include <sys/types.h>
 #include <vector>
 
@@ -75,15 +74,6 @@ namespace icov {
 namespace bitstream
 {
 
-inline std::unique_ptr<LdpcCoderParameters> parseLdpcParams(const ContentParameterSet &cps)
-{
-    std::string coder_type_val = cps.ldpc_coder_type;
-    std::unique_ptr<LdpcCoderParameters> params = ldpc_codec_layer::createLdpcParams(coder_type_val);
-    icov::assert::not_null(params.get());
-    params->codeLength = cps.block_fixed_size * cps.block_fixed_size;
-    params->beliefPropagationIterations = cps.ldpc_bp_ite;
-    return params;
-}
 
 template <typename T> struct RawByteArray : boost::noncopyable {
   T Length;
@@ -127,7 +117,7 @@ struct BlockChannelDecoderParams {
   //  RawByteArray<icov::byte> BitplaneNumcodes;
   //  RawByteArray<uint16_t> SyndromeBuf;
 
-  std::queue<icov::byte> Bitplanes;
+  std::queue<byte> Bitplanes;
 
   explicit BlockChannelDecoderParams()
       : DirMode(0), QIdx(0), Zmin(0), Zmax(0) {}
@@ -287,6 +277,47 @@ inline byte *IcovExtractedBitstream::writableData() {
 
 inline const byte *IcovExtractedBitstream::readableData() const {
   return m_Buffer.data() + getReadPosition();
+}
+
+class SyndromeSizeConversion
+{
+public:
+  SyndromeSizeConversion(byte QuantizedSize, const ldpc_codec_layer::IInteractiveCoder &coder)
+      : m_QuantizedSize(QuantizedSize), m_BitSize(bitstream::inverseQuantizedSize(QuantizedSize, coder))
+  {
+    bitstream::getByteCount(m_BitSize, m_ByteSize, m_Padding);
+  }
+
+  byte QuantizedSize() const;
+  ushort BitSize() const;
+  ushort ByteSize() const;
+  ushort Padding() const;
+
+private:
+  byte m_QuantizedSize;
+  ushort m_BitSize;
+  ushort m_ByteSize;
+  ushort m_Padding;
+};
+
+inline byte SyndromeSizeConversion::QuantizedSize() const
+{
+  return m_QuantizedSize;
+}
+
+inline ushort SyndromeSizeConversion::BitSize() const
+{
+  return m_BitSize;
+}
+
+inline ushort SyndromeSizeConversion::ByteSize() const
+{
+  return m_ByteSize;
+}
+
+inline ushort SyndromeSizeConversion::Padding() const
+{
+  return m_Padding;
 }
 
 } // namespace bitstream

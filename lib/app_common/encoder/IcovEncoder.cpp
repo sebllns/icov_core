@@ -72,7 +72,7 @@ icov::encoder::IcovEncoder::params::params(const boost::program_options::variabl
 {
     m_debugframecount = 100;
     DummyViewport = false;
-    QP = 42;
+    QP = 27;
     m_icuSize = options::parseEncodeIcuSizeOption(args);
 
     ViewportPadding = 1.2;

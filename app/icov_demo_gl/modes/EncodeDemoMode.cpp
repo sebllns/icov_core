@@ -50,6 +50,8 @@ EncodeDemoMode::EncodeDemoMode(const po::variables_map &args) {
                                    0.78125, 0.84375, 0.90625, 0.96875};
     QaryDistribution::quantization_params bsp_params = {enable_z_quantization,
                                                         q_values};
+
+    // qp_set = { 22, 27, 32, 37, 42 };
     icov::encoder::DemoEncoder::params enc_params = {
         42,
         CHROMA_420,

@@ -76,7 +76,7 @@ template <class E> void throw_with_trace(const E &e) {
   TO_STR(CONSOLE_FORMAT(CONSOLE_BOLD) << "In file " << __FILE__ << ":" << __LINE__ << " "                              \
                                       << CONSOLE_FORMAT(CONSOLE_FG_RED) << msg << CONSOLE_FORMAT(CONSOLE_DEFAULT))
 
-#define ICOV_THROW_STD_EXCEPTION(msg) ICOV_THROW_EXCEPTION(std::exception(ICOV_DEBUG_HEADER(msg)))
+#define ICOV_THROW_STD_EXCEPTION(msg) ICOV_THROW_EXCEPTION(std::runtime_error(ICOV_DEBUG_HEADER(msg)))
 
 /**
  * @def ICOV_THROW_LOGICAL_EXCEPTION(msg)

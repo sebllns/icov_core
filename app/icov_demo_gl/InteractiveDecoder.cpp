@@ -7,6 +7,7 @@
 #include "icov_request.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "opencv2/core/types.hpp"
+#include "video_layer/VideoMetrics.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include <cstdio>
 #include <fstream>
@@ -25,7 +26,6 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file, const opti
     this->m_config.f5 = -62;
 
     m_decoderCtrl.initAnalyzer();
-    m_results = m_decoderCtrl.analyzer().InfosGatherer;
     m_requests = m_decoderCtrl.readRequests();
 }
 
@@ -46,18 +46,18 @@ void InteractiveDecoder::updateF2()
     this->fill(bgrColor::BLACK());
     const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
-    for (const auto &i : m_results->infos())
+    for (const auto &i : icov::video_layer::VideoMetrics::get_const_instance().metrics)
     {
         const auto b = pic->getById(i.id);
         assert::check(pic->isValidBlock(b), "Block not valid");
-        std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate << std::endl;
+        std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate() << std::endl;
 
         int bw = (int)(b->w() * pic->width());
         int bh = (int)(b->h() * pic->height());
         int bx = (int)(pic->u(pic->angleX(b->u())) * pic->width());
         int by = (int)(pic->v(pic->angleY(b->v())) * pic->height());
         auto rect_block = cv::Rect(bx, by, bw, bh);
-        cv::Scalar color = i.rate * ((i.prediction > 0 && i.rate >= 0.5) ? bgrColor().RED() : bgrColor().WHITE());
+        cv::Scalar color = i.rate() * ((i.prediction > 0 && i.rate() >= 0.5) ? bgrColor().RED() : bgrColor().WHITE());
         this->m_outputImage(rect_block).setTo(color);
     }
 }
@@ -69,10 +69,10 @@ void InteractiveDecoder::updateF3()
     this->fill(bgrColor::BLACK());
     const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
-    Rate bitrate = m_results->frameBitrate();
+    Rate bitrate = icov::video_layer::VideoMetrics::get_const_instance().viewportRate();
     cv::Scalar color = bitrate * bgrColor().WHITE();
 
-    for (const auto &i : m_results->infos())
+    for (const auto &i : icov::video_layer::VideoMetrics::get_const_instance().metrics)
     {
         const auto b = pic->getById(i.id);
         assert::check(pic->isValidBlock(b), "Block not valid");
@@ -93,11 +93,10 @@ void InteractiveDecoder::updateF4()
     this->fill(bgrColor::BLACK());
     const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
-    for (const auto &i : m_results->infos())
+    for (const auto &i : icov::video_layer::VideoMetrics::get_const_instance().metrics)
     {
         const auto b = pic->getById(i.id);
         assert::check(pic->isValidBlock(b), "Block not valid");
-        std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate << std::endl;
 
         int bw = (int)(b->w() * pic->width());
         int bh = (int)(b->h() * pic->height());
@@ -166,7 +165,7 @@ void InteractiveDecoder::updateF5()
     this->fill(bgrColor::BLACK());
     const auto pic = getDecoder()->navigation()->Visualization->Picture;
 
-    for (const auto &i : m_results->infos())
+    for (const auto &i : icov::video_layer::VideoMetrics::get_const_instance().metrics)
     {
         const auto b = pic->getById(i.id);
         assert::check(pic->isValidBlock(b), "Block not valid");

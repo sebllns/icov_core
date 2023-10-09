@@ -98,9 +98,11 @@ const std::string positions_input = "decode-positions-input";
 const std::string headless = "decode-headless";
 const std::string ground_truth = "decode-ground-truth";
 
-inline void addEncodeIcuSizeOption(desc_t &output)
+inline void addEncodeOptions(desc_t &output)
 {
     output.add_options()(icu_size.c_str(), po::value<int>()->default_value(32), "ICU width for encoding");
+    // 22, 27, 32, 37, 42
+    output.add_options()(qp.c_str(), po::value<int>()->default_value(27), "QP value for encoding");
 }
 
 inline void addGroundPathOption(desc_t &output)
@@ -192,7 +194,7 @@ inline void init_options_desc(const std::string &modes, desc_t &output)
     addDummyViewportOption(output);
     addHeadlessOption(output);
     addGroundPathOption(output);
-    addEncodeIcuSizeOption(output);
+    addEncodeOptions(output);
 }
 
 #define ICOV_DATA_DIR(args) fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))

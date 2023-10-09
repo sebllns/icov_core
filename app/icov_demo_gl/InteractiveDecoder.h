@@ -65,7 +65,6 @@ class InteractiveDecoder : public InteractiveModeBase
   private:
     std::queue<request_t> m_requests;
     decoder::DecoderController m_decoderCtrl;
-    shared_ptr(icov::decoder::InfosGatherer) m_results;
 
     // InteractiveModeBase interface
   protected:

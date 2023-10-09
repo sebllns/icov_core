@@ -8,6 +8,8 @@
 #include "ICOV_DistorsionCost.h"
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
+#include <algorithm>
+#include <limits>
 
 Area &VTM_Utility::operator&=(Area &a, const Area &b) {
   Int x1 = std::max(a.x, b.x);
@@ -61,121 +63,10 @@ void dfs_360(AreaBuf<bool> &inputOutput,
   }
 }
 
-double VTM_Utility::calculatePSNR(const CPelUnitBuf &org,
-                                  const CPelUnitBuf &cur,
-                                  const Int internalBitDepth[], double *mse_ptr,
-                                  uint *maxval_ptr) {
-  CHECK((org.chromaFormat != cur.chromaFormat),
-        "chroma format must be similar between org and cur");
-
-  ChromaFormat chromaFormatIDC = org.chromaFormat;
-
-  const UInt numCh = getNumberValidComponents(chromaFormatIDC);
-
-  Int maximumBitDepth = internalBitDepth[CHANNEL_TYPE_LUMA];
-  if (numCh > 1)
-    maximumBitDepth =
-        std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
-
-  icov::video::DistortionCost distCost;
-
-  double mse_frame = 0.;
-  Int scale = 0;
-
-  for (UInt ch = 0; ch < numCh; ch++) {
-    const ComponentID compID = ComponentID(ch);
-    const UInt csx = getComponentScaleX(compID, chromaFormatIDC);
-    const UInt csy = getComponentScaleY(compID, chromaFormatIDC);
-    const Int scaleChan = (4 >> (csx + csy));
-    const UInt bitDepthShift =
-        2 *
-        (maximumBitDepth - internalBitDepth[toChannelType(
-                               compID)]); //*2 because this is a squared number
-
-    uint64_t dist_frame = distCost.getDistPart(
-        org.get(compID), cur.get(compID),
-        internalBitDepth[toChannelType(compID)], compID, DF_SSE);
-
-    Double channelMSE = double(dist_frame) / double(org.get(compID).area());
-    channelMSE *= Double(1 << bitDepthShift);
-
-    scale += scaleChan;
-    mse_frame += scaleChan * channelMSE;
-  }
-  mse_frame /= Double(scale); // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
-
-  const UInt maxval = 255 << (maximumBitDepth - 8);
-
-  if (maxval_ptr)
-    *maxval_ptr = maxval;
-
-  if (mse_ptr)
-    *mse_ptr = mse_frame;
-
-  return (mse_frame == 0) ? 999.99
-                          : 10.0 * log10((maxval * maxval) / mse_frame);
-}
-
-double VTM_Utility::calculatePSNR(const CCoeffUnitBuf &org,
-                                  const CCoeffUnitBuf &cur,
-                                  const Int internalBitDepth[], double *mse_ptr,
-                                  uint *maxval_ptr) {
-  CHECK((org.chromaFormat != cur.chromaFormat),
-        "chroma format must be similar between org and cur");
-
-  ChromaFormat chromaFormatIDC = org.chromaFormat;
-
-  const UInt numCh = getNumberValidComponents(chromaFormatIDC);
-
-  Int maximumBitDepth = internalBitDepth[CHANNEL_TYPE_LUMA];
-  if (numCh > 1)
-    maximumBitDepth =
-        std::max(maximumBitDepth, internalBitDepth[CHANNEL_TYPE_CHROMA]);
-
-  icov::video::DistortionCost distCost;
-
-  double mse_frame = 0.;
-  Int scale = 0;
-
-  for (UInt ch = 0; ch < numCh; ch++) {
-    const ComponentID compID = ComponentID(ch);
-    const UInt csx = getComponentScaleX(compID, chromaFormatIDC);
-    const UInt csy = getComponentScaleY(compID, chromaFormatIDC);
-    const Int scaleChan = (4 >> (csx + csy));
-    const UInt bitDepthShift =
-        2 *
-        (maximumBitDepth - internalBitDepth[toChannelType(
-                               compID)]); //*2 because this is a squared number
-
-    uint64_t dist_frame = distCost.getDistPart(
-        org.get(compID), cur.get(compID),
-        internalBitDepth[toChannelType(compID)], compID, DF_SSE);
-
-    Double channelMSE = double(dist_frame) / double(org.get(compID).area());
-    channelMSE *= Double(1 << bitDepthShift);
-
-    scale += scaleChan;
-    mse_frame += scaleChan * channelMSE;
-  }
-  mse_frame /= Double(scale); // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
-
-  const UInt maxval = 255 << (maximumBitDepth - 8);
-
-  if (maxval_ptr)
-    *maxval_ptr = maxval;
-
-  if (mse_ptr)
-    *mse_ptr = mse_frame;
-
-  return (mse_frame == 0) ? 999.99
-                          : 10.0 * log10((maxval * maxval) / mse_frame);
-}
-
-void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
-                                PelUnitBuf &quantizedImage,
-                                icov::video::EncodingStructure &encStruct,
-                                const int bitDepths[MAX_NUM_CHANNEL_TYPE],
-                                int maxLog2TrDynamicRange) {
+void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage, PelUnitBuf &quantizedImage,
+                                icov::video::EncodingStructure &encStruct, const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+                                int maxLog2TrDynamicRange)
+{
   if (originalImage.chromaFormat != quantizedImage.chromaFormat)
     throw std::runtime_error("The original image and the quantized image "
                              "should have similar chroma");
@@ -210,7 +101,8 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
 
   // FOR EACH BLOCK (ICU) PARALLELIZATION DOES NOT WORK
   //#pragma omp parallel
-  for (UInt i = 0; i < encStruct.vec_icus.size(); i++) {
+  for (UInt i = 0; i < encStruct.vec_icus().size(); i++)
+  {
     icov::video::InteractiveCodingUnit &curr_icu =
         encStruct.getICU(i).get_sourceX();
 

@@ -1,6 +1,7 @@
 #include "video_common.h"
 #include "CommonDef.h"
 #include "CommonLib/version.h"
+#include "Encodingstructure.h"
 #include "Rom.h"
 #include "Utilities/program_options_lite.h"
 
@@ -51,3 +52,12 @@ std::string icov::video::chromaSubsamplingToStr(int value)
       return "unknown";
   }
 }
+
+// uint icov::video::getIcuIdx(const icov::video::EncodingStructure &es, const omnidirectional_layer::Block &b)
+//{
+//   int x_block = b.parent()->col(b.u());
+//   int y_block = b.parent()->row(b.v());
+
+//  Position pos(static_cast<float>(x_block) / static_cast<float>(m_params.icuSize_luma.width),
+//               static_cast<float>(y_block) / static_cast<float>(m_params.icuSize_luma.height));
+//}

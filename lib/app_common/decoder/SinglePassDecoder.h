@@ -52,7 +52,6 @@
 #include "Buffer.h"
 #include "decoder/BlockDecoder.h"
 #include "decoder/CsvOutput.h"
-#include "decoder/InfosGatherer.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -71,6 +70,7 @@ using namespace icov::bitstream;
 
 namespace icov {
 namespace decoder {
+
 class SinglePassDecoder
 {
   public:
@@ -91,7 +91,6 @@ class SinglePassDecoder
     void addDefaultNavigation();
     void addDefaultExtractor();
     void addDefaultDecoder();
-    std::shared_ptr<InfosGatherer> addDefaultGatherer();
     std::shared_ptr<CsvOutput> addDefaultCsvOutput();
 
     const PelUnitBuf getDecodedBuf() const;

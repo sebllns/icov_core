@@ -8,6 +8,7 @@
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
+#include "video_layer/VideoMetrics.h"
 #include "video_layer/vtm_utility.h"
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
@@ -24,7 +25,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 BlockDecoder::BlockDecoder(const params &p, const LdpcCoderParameters &coder_params,
                            const bitstream::sp_IcovExtractedBitstream &extraction)
-    : IBlockDecoder(), m_params(p), m_rate(0)
+    : IBlockDecoder(), m_params(p)
 {
     // CONSTANTS
     const Size icuSize_luma = Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
@@ -91,11 +92,6 @@ PelUnitBuf BlockDecoder::getDecodingOutput() {
   return m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 }
 
-icov::Rate BlockDecoder::rate() const
-{
-  return m_rate;
-}
-
 void icov::decoder::BlockDecoder::_beforeOrderingLoop(const request_t &r)
 {
 }
@@ -131,18 +127,21 @@ void icov::decoder::BlockDecoder::_processBlock(const request_t &r, const omnidi
 
   bitstream::VideoStreamDebugger::get_mutable_instance().reset();
 
-  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(b.getIdSelf() - 1);
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(b.parent()->getBlockIndexPos(b));
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingPredictionID(pred);
 
-  m_rate = 0;
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(b.parent()->blockCount());
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].reset();
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].id = b.getIdSelf();
+  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].prediction = prediction;
 
   for (auto &dec : m_channelDecoder)
   {
         if (icov::debug::debug_trace_enabled)
             ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
 
+        // dec->setBlockIt(b.parent()->getById(b.getIdSelf()));
         dec->decode_icu(icuIndex, pred);
-        m_rate += dec->rate();
 
         //@todo TODO: copy only necessary pixels
         VTM_Utility::copyBordersFor360(m_decodingOutput, dec->get_params().CompID);
@@ -150,8 +149,6 @@ void icov::decoder::BlockDecoder::_processBlock(const request_t &r, const omnidi
         if (icov::debug::debug_trace_enabled)
             ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
   }
-
-  m_rate /= m_channelDecoder.size();
 
   ICOV_DEBUG << "END DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "
              << omnidirectional_layer::BlockPrediction::toString(pred);

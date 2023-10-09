@@ -126,7 +126,6 @@ struct decoder_factory_t
 
 struct decoder_analyzer_t
 {
-    shared_ptr(icov::decoder::InfosGatherer) InfosGatherer;
     shared_ptr(icov::decoder::CsvOutput) CsvOutput;
 };
 
@@ -149,11 +148,9 @@ class DecoderController
 
     void initAnalyzer()
     {
-        m_analyzer.InfosGatherer = getDecoder()->addDefaultGatherer();
         if (getDecoderParams().enable_export_csv)
         {
             m_analyzer.CsvOutput = std::make_shared<decoder::CsvOutput>(getDecoderParams().csv_export_file.string());
-            IBlockProcessor::addChild(m_analyzer.InfosGatherer, m_analyzer.CsvOutput);
         }
     }
 

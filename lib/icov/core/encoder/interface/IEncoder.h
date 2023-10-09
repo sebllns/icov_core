@@ -358,8 +358,6 @@ void IFrameEncoder<T>::encodeBlock(
         &block_prediction_mgr) {
   for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
        getAvailablePredictions(b, access_block, block_prediction_mgr)) {
-    // bitstream::VideoStreamDebugger::get_mutable_instance()
-    //   .DebuggingPrediction.
     encodeBlockWithPrediction(b, p);
   }
 }
@@ -401,7 +399,8 @@ void IMediaEncoder<T>::encode(
   int frameCount = input.getFrameCount();
   auto pFrameEnc = createFrameEncoder();
 
-  for (int i = 0; i < frameCount; i++) {
+  for (int i = 0; i < frameCount; ++i)
+  {
     try {
       ICOV_TRACE << "Encode frame " << i;
       bitstream::VideoStreamDebugger::get_mutable_instance()

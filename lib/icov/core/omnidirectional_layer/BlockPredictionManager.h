@@ -51,6 +51,7 @@
 
 #include "icov_assert.h"
 #include "icov_exception.h"
+#include "icov_types.h"
 #include "omnidirectional_layer/interface/IBlockOrdering.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"

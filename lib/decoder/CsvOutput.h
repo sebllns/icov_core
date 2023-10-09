@@ -49,7 +49,6 @@
 
 #pragma once
 
-#include "decoder/InfosGatherer.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include <fstream>
 #include <memory>
@@ -62,10 +61,6 @@ class CsvOutput : public omnidirectional_layer::IBlockProcessor
 {
   public:
     CsvOutput(const std::string &path_prefix);
-
-  protected:
-    const std::shared_ptr<InfosGatherer> getParent();
-    std::shared_ptr<InfosGatherer> m_decoderParent;
 
     std::ofstream m_requestFile;
     std::ofstream m_frameFile;

@@ -163,3 +163,8 @@ void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(
     const NumcodeIdx &v, const Rate &r, const uint &m) {
   writeSIRate(v, 0, 0);
 }
+
+void icov::encoder::BinaryOutputIcov::writeMse(const float &mse)
+{
+  icov::io::write_value<float>(*m_fileParts[bitstream::eIcovStream::METRICS], mse, true);
+}

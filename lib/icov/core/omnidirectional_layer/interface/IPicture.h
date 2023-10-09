@@ -90,16 +90,26 @@ public:
     return id > 0 && id <= m_icus.size();
   }
 
+  BlockVector::size_type getBlockIndexPos(Block::id_t id) const
+  {
+    return id - 1;
+  }
+
+  BlockVector::size_type getBlockIndexPos(const Block &b) const
+  {
+    return getBlockIndexPos(b.getIdSelf());
+  }
+
   BlockVector::iterator getById(Block::id_t id) {
     if (!blockExists(id))
       return m_icus.end();
-    return m_icus.begin() + id - 1;
+    return m_icus.begin() + getBlockIndexPos(id);
   }
 
   BlockVector::const_iterator getById(Block::id_t id) const {
     if (!blockExists(id))
-      return m_icus.end();
-    return m_icus.begin() + id - 1;
+      return m_icus.cend();
+    return m_icus.cbegin() + getBlockIndexPos(id);
   }
 
   BlockVector::const_iterator getBlock(int i, int j) const {

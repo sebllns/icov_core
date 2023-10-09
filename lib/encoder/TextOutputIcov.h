@@ -133,6 +133,10 @@ private:
 
   //  void _initNode(boost::json::object &m_blockNodeJSON,
   //                 const omnidirectional_layer::Block &b);
+
+  // OutputIcovBase interface
+public:
+  void writeMse(const float &mse) override;
 };
 
 } // namespace encoder

@@ -201,3 +201,8 @@ void icov::encoder::TextOutputIcov::endWriteBlock(
 //      .as_object()[std::to_string(channel())]
 //      .as_object();
 //}
+
+
+void icov::encoder::TextOutputIcov::writeMse(const float &mse)
+{
+}

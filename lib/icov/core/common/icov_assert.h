@@ -35,19 +35,21 @@ namespace icov {
 namespace assert {
 
 #ifndef NDEBUG
-#define ICOV_ASSERT_MSG(cond, msg)                                             \
-  {                                                                            \
-    if (!(cond)) {                                                             \
-      ICOV_FATAL << msg;                                                       \
-    }                                                                          \
-    BOOST_ASSERT(cond);                                                        \
+#define ICOV_ASSERT_MSG(cond, msg)                                                                                     \
+  {                                                                                                                    \
+      if (!(cond))                                                                                                     \
+      {                                                                                                                \
+          ICOV_FATAL << ICOV_DEBUG_HEADER(msg);                                                                        \
+      }                                                                                                                \
+      BOOST_ASSERT(cond);                                                                                              \
   }
 
-#define ICOV_WARNING_MSG(cond, msg)                                            \
-  {                                                                            \
-    if (!(cond)) {                                                             \
-      ICOV_WARNING << msg;                                                     \
-    }                                                                          \
+#define ICOV_WARNING_MSG(cond, msg)                                                                                    \
+  {                                                                                                                    \
+      if (!(cond))                                                                                                     \
+      {                                                                                                                \
+          ICOV_WARNING << ICOV_DEBUG_HEADER(msg);                                                                      \
+      }                                                                                                                \
   }
 
 #else

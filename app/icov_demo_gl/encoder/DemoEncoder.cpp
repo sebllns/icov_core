@@ -68,10 +68,8 @@ void DemoEncoder::onMouseViewPred(int event, int x, int y, int flags) {
   if (event == cv::EVENT_LBUTTONDOWN) {
     int bx = x / m_params.icuSize_luma.width;
     int by = y / m_params.icuSize_luma.height;
-    if (bx < (int)m_enc_struc.n_icusPerRow &&
-        by < (int)m_enc_struc.n_icusPerCol)
-      onSelectBlock(bx * m_params.icuSize_luma.width,
-                    by * m_params.icuSize_luma.height);
+    if (bx < (int)m_enc_struc.n_icusPerRow() && by < (int)m_enc_struc.n_icusPerCol())
+        onSelectBlock(bx * m_params.icuSize_luma.width, by * m_params.icuSize_luma.height);
   }
 }
 
@@ -421,14 +419,16 @@ void DemoEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   m_cvMat_reconstructedEquiImage = m_cvmat[PIC_RECONSTRUCTION].clone();
 
-  for (uint bi = 0; bi <= m_enc_struc.n_icusPerCol; bi++) {
+  for (uint bi = 0; bi <= m_enc_struc.n_icusPerCol(); bi++)
+  {
     cv::line(m_cvMat_reconstructedEquiImage,
              cv::Point(0, bi * icuSize_luma.height),
              cv::Point(m_cvMat_reconstructedEquiImage.cols,
                        bi * icuSize_luma.height),
              cv::Scalar(0, 255, 0), 1);
   }
-  for (uint bj = 0; bj <= m_enc_struc.n_icusPerRow; bj++) {
+  for (uint bj = 0; bj <= m_enc_struc.n_icusPerRow(); bj++)
+  {
     cv::line(
         m_cvMat_reconstructedEquiImage, cv::Point(bj * icuSize_luma.width, 0),
         cv::Point(bj * icuSize_luma.width, m_cvMat_reconstructedEquiImage.rows),

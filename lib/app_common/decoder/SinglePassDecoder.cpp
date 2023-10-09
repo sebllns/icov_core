@@ -2,12 +2,12 @@
 #include "Media.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
-#include "decoder/InfosGatherer.h"
 #include "extractor/BlockExtractor.h"
 
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_request.h"
+#include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
@@ -22,6 +22,16 @@
 #include <limits>
 #include <memory>
 #include <vector>
+
+std::unique_ptr<LdpcCoderParameters> parseLdpcParams(const ContentParameterSet &cps)
+{
+    std::string coder_type_val = cps.ldpc_coder_type;
+    std::unique_ptr<LdpcCoderParameters> params = ldpc_codec_layer::createLdpcParams(coder_type_val);
+    icov::assert::not_null(params.get());
+    params->codeLength = cps.block_fixed_size * cps.block_fixed_size;
+    params->beliefPropagationIterations = cps.ldpc_bp_ite;
+    return params;
+}
 
 icov::decoder::SinglePassDecoder::SinglePassDecoder()
     : m_extractionBitstream(std::make_shared<bitstream::IcovExtractedBitstream>()),
@@ -56,7 +66,7 @@ void decoder::SinglePassDecoder::initLocal(const params &p)
     ICOV_INFO << (int)cps.block_fixed_size;
     ICOV_INFO << (int)cps.qp;
 
-    auto coder_params = bitstream::parseLdpcParams(cps);
+    auto coder_params = parseLdpcParams(cps);
     coder_params->database = p.LdpcDatabase.string();
     setLdpcParams(*coder_params);
 
@@ -178,14 +188,6 @@ void decoder::SinglePassDecoder::addDefaultDecoder()
 
         },
         ldpcParams(), m_extractionBitstream));
-}
-
-std::shared_ptr<decoder::InfosGatherer> decoder::SinglePassDecoder::addDefaultGatherer()
-{
-    assert::not_null(m_blockDecoder.get(), "Decoder cannot be null");
-    auto res = std::make_shared<InfosGatherer>();
-    IBlockProcessor::addChild(m_blockDecoder, res);
-    return res;
 }
 
 const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const

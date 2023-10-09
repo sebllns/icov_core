@@ -23,28 +23,24 @@ void icov::video::EncodingStructure::set(const std::vector<IcuEncoder> &icus,
                                          const UInt icusPerColumn) {
   deallocate();
 
-  vec_icus = icus;
-  n_icusPerRow = icusPerRow;
-  n_icusPerCol = icusPerColumn;
-  CHECK(vec_icus.size() != n_icusPerRow * n_icusPerCol,
-        "incorrect number of icus per row and per column");
+  _vec_icus = icus;
+  _n_icusPerRow = icusPerRow;
+  _n_icusPerCol = icusPerColumn;
+  CHECK(_vec_icus.size() != _n_icusPerRow * _n_icusPerCol, "incorrect number of icus per row and per column");
 
-  bool *reqPtr = (bool *)xMalloc(bool, n_icusPerRow *n_icusPerCol);
-  _requestedICUs =
-      AreaBuf<bool>(reqPtr, n_icusPerRow, n_icusPerRow, n_icusPerCol);
-  bool *prePtr = (bool *)xMalloc(bool, n_icusPerRow *n_icusPerCol);
-  _decodedICUs =
-      AreaBuf<bool>(prePtr, n_icusPerRow, n_icusPerRow, n_icusPerCol);
+  bool *reqPtr = (bool *)xMalloc(bool, _n_icusPerRow *_n_icusPerCol);
+  _requestedICUs = AreaBuf<bool>(reqPtr, _n_icusPerRow, _n_icusPerRow, _n_icusPerCol);
+  bool *prePtr = (bool *)xMalloc(bool, _n_icusPerRow *_n_icusPerCol);
+  _decodedICUs = AreaBuf<bool>(prePtr, _n_icusPerRow, _n_icusPerRow, _n_icusPerCol);
 
-  UInt n_icus = n_icusPerRow * n_icusPerCol;
+  UInt n_icus = _n_icusPerRow * _n_icusPerCol;
   _vec_pixelsRequestedPerICU.resize(n_icus);
 
   _vec_decodedICUs.reserve(n_icus);
 
   _vec_tmp_alreadyProcessedICUs.reserve(n_icus);
-  bool *alreadyProPtr = (bool *)xMalloc(bool, n_icusPerRow *n_icusPerCol);
-  _tmp_alreadyProcessedICUs =
-      AreaBuf<bool>(alreadyProPtr, n_icusPerRow, n_icusPerRow, n_icusPerCol);
+  bool *alreadyProPtr = (bool *)xMalloc(bool, _n_icusPerRow *_n_icusPerCol);
+  _tmp_alreadyProcessedICUs = AreaBuf<bool>(alreadyProPtr, _n_icusPerRow, _n_icusPerRow, _n_icusPerCol);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -56,26 +52,26 @@ void icov::video::EncodingStructure::setCheckPoints(
 
 ////////////////////////////////////////////////////////////////////
 void icov::video::EncodingStructure::setCheckPoint(const Position &checkPoint) {
-  CHECK((checkPoint.x < 0) || (checkPoint.x >= int(n_icusPerRow)) ||
-            (checkPoint.y < 0) || (checkPoint.y >= int(n_icusPerCol)),
+  CHECK((checkPoint.x < 0) || (checkPoint.x >= int(_n_icusPerRow)) || (checkPoint.y < 0) ||
+            (checkPoint.y >= int(_n_icusPerCol)),
         "check point is not inside the image");
-  for (unsigned int i = 0; i < vec_checkPoints.size(); i++) {
-    if (vec_checkPoints[i].x == checkPoint.x &&
-        vec_checkPoints[i].y == checkPoint.y) {
-      std::cout << "warning: added check point already exists." << std::endl;
-      return;
+  for (unsigned int i = 0; i < _vec_checkPoints.size(); i++)
+  {
+    if (_vec_checkPoints[i].x == checkPoint.x && _vec_checkPoints[i].y == checkPoint.y)
+    {
+        std::cout << "warning: added check point already exists." << std::endl;
+        return;
     }
   }
-  vec_checkPoints.push_back(checkPoint);
+  _vec_checkPoints.push_back(checkPoint);
 }
 
 ////////////////////////////////////////////////////////////////////
 bool icov::video::EncodingStructure::isAccessBlock(
     const Position &accessBlockPoint) {
-  for (unsigned int ab_ind = 0; ab_ind < vec_checkPoints.size(); ab_ind++)
-    if (vec_checkPoints[ab_ind].x == accessBlockPoint.x &&
-        vec_checkPoints[ab_ind].y == accessBlockPoint.y)
-      return true;
+  for (unsigned int ab_ind = 0; ab_ind < _vec_checkPoints.size(); ab_ind++)
+    if (_vec_checkPoints[ab_ind].x == accessBlockPoint.x && _vec_checkPoints[ab_ind].y == accessBlockPoint.y)
+        return true;
 
   return false;
 }
@@ -84,16 +80,31 @@ bool icov::video::EncodingStructure::isAccessBlock(
 Position
 icov::video::EncodingStructure::get_icuPosition(const UInt icu_index) const {
   div_t divresult;
-  divresult = div(icu_index, Int(n_icusPerRow));
+  divresult = div(icu_index, Int(_n_icusPerRow));
   UInt icu_x = divresult.rem;
   UInt icu_y = divresult.quot;
   Position block_position(icu_x, icu_y);
 
   if (this->get_icuIndex(block_position) != icu_index)
-    throw std::logic_error(
-        "The output block position is not correct. Something is missing");
+    throw std::logic_error("The output block position is not correct. Something is missing");
 
   return block_position;
+}
+
+UInt icov::video::EncodingStructure::get_icuIndex(const omnidirectional_layer::Block &b) const
+{
+  int x_block = b.parent()->col(b.u());
+  int y_block = b.parent()->row(b.v());
+
+  int w_block = b.parent()->col(b.w());
+  int h_block = b.parent()->row(b.h());
+
+  std::cout << x_block << ", " << y_block << ", " << w_block << ", " << h_block;
+
+  Position pos(static_cast<float>(x_block) / static_cast<float>(w_block),
+               static_cast<float>(y_block) / static_cast<float>(h_block));
+
+  return get_icuIndex(pos);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -269,64 +280,6 @@ void icov::video::EncodingStructure::
                            si_createInverseQuantizedTransformBuffer);
       }
     }
-
-    // give all possible SIs for non-border ICUs
-    //    if ((icuYPosTopLeft > 0) &&
-    //        (icuYPosTopLeft < ny_icus - 1)) // all icus except top and bottom
-    //    {
-    //      for (UInt i = 0; i < mapSize; i++) {
-    //        icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE refSamp =
-    //            mapOfSidesCondition[i];
-    //        icu_enc.addIntraSI(refSamp, si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //      }
-    //    } else {
-    //      if (icuYPosTopLeft == 0) // top icus
-    //      {
-    //        icu_enc.addIntraSI(
-    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT,
-    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
-    //            si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(
-    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT,
-    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
-    //            si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(
-    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM,
-    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
-    //            si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM_LEFT,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::BOTTOM_RIGHT,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //      } else {
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::LEFT,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(
-    //            icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT,
-    //            si_createTransformBuffer, si_createQuantizedTransformBuffer,
-    //            si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::TOP,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::LEFT_TOP,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //        icu_enc.addIntraSI(icov::video::IntraPrediction::RIGHT_TOP,
-    //                           si_createTransformBuffer,
-    //                           si_createQuantizedTransformBuffer,
-    //                           si_createInverseQuantizedTransformBuffer);
-    //      }
-    //    }
   }
   set(icus_enc, nx_icus, ny_icus);
 }
@@ -364,13 +317,15 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   int x1 = 0, y1 = 0, x2, y2;
   int n_nonzero;
   int n_requestedICUs = 0;
-  for (UInt y = 0; y < n_icusPerCol; y++) {
+  for (UInt y = 0; y < _n_icusPerCol; y++)
+  {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
     //        bool* previous_rowPtr = &_decodedICUs.at(0,y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
-      int i = y * n_icusPerRow + x;
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
+      int i = y * _n_icusPerRow + x;
 
-      const InteractiveCodingUnit &icu = vec_icus[i].get_sourceX();
+      const InteractiveCodingUnit &icu = _vec_icus[i].get_sourceX();
       // the reason that we can not use the x,y and of icu is because for
       // example for 360 images, first icu position starts from point
       // (margin_x,y), but maskRequestioPixels contains the main frame area with
@@ -423,21 +378,21 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   //        cv::waitKey(0);
   //    }
 
-  int iWidth = int(n_icusPerRow); // if we do not convert to int, the traversing
-                                  // equation for 360 video (neighbor_x =
-                                  // (iWidth + (neighbor_x%iWidth)) % iWidth)
-                                  // converts everything to UInt
-  int iHeight = int(n_icusPerCol);
+  int iWidth = int(_n_icusPerRow); // if we do not convert to int, the traversing
+                                   // equation for 360 video (neighbor_x =
+                                   // (iWidth + (neighbor_x%iWidth)) % iWidth)
+                                   // converts everything to UInt
+  int iHeight = int(_n_icusPerCol);
   bool neighborAlreadyDecoded;
   requestedICUs_closeToDecodedICUs.clear();
   int n_remainingRequestedICUs = n_requestedICUs;
-  for (UInt y = 0; y < n_icusPerCol;
-       y++) // check for requested ICUs where there is at least an already
+  for (UInt y = 0; y < _n_icusPerCol; y++) // check for requested ICUs where there is at least an already
   // decoded ICU there
   {
     const bool *requested_rowPtr = &_requestedICUs.at(0, y);
     const bool *decoded_rowPtr = &_decodedICUs.at(0, y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
       if (requested_rowPtr[x] &&
           decoded_rowPtr[x]) // I used || (or) instead of && (and) because I
       // saw some situations where a block beside the
@@ -505,8 +460,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   {
     // the number of check points is less than number of pixels. so it is better
     // to traveresed through checkpoints this time
-    for (UInt chk = 0; chk < vec_checkPoints.size(); chk++) {
-      const Position &chPoint_pos = vec_checkPoints[chk];
+    for (UInt chk = 0; chk < _vec_checkPoints.size(); chk++)
+    {
+      const Position &chPoint_pos = _vec_checkPoints[chk];
       if (_requestedICUs.at(chPoint_pos.x, chPoint_pos.y)) {
         neighborcheckPointInTheComponent.push_back(chPoint_pos);
         requestedICUs_closeTocheckPoints.push_back(std::vector<Position>());
@@ -530,21 +486,21 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   int thresholdToNeglectICU = 15;
 
   if (n_remainingRequestedICUs != 0) {
-    UInt halfRows =
-        (n_icusPerCol % 2 == 0) ? n_icusPerCol / 2 : n_icusPerCol / 2 + 1;
+    UInt halfRows = (_n_icusPerCol % 2 == 0) ? _n_icusPerCol / 2 : _n_icusPerCol / 2 + 1;
     UInt y;
     UInt icu_index;
     for (UInt i = 0; i < halfRows; i++) {
       y = i;
       bool *requested_rowPtrTop = &_requestedICUs.at(0, y);
-      for (UInt x = 0; x < n_icusPerRow; x++) {
+      for (UInt x = 0; x < _n_icusPerRow; x++)
+      {
         if (requested_rowPtrTop[x]) // if on the top row there is a block which
         // is not assigned to any of
         // requestedICUs_closeToDecodedICUs,
         // requestedICUs_closeTocheckPoints,
         // neighborcheckPointInTheComponent
         {
-          icu_index = y * n_icusPerRow + x;
+          icu_index = y * _n_icusPerRow + x;
           if (_vec_pixelsRequestedPerICU[icu_index] < thresholdToNeglectICU) {
             n_remainingRequestedICUs--;
             requested_rowPtrTop[x] = false;
@@ -561,16 +517,17 @@ void icov::video::EncodingStructure::updateRequestedICUs(
       if (n_remainingRequestedICUs == 0)
         break;
 
-      y = n_icusPerCol - 1 - i;
+      y = _n_icusPerCol - 1 - i;
       bool *requested_rowPtrBottom = &_requestedICUs.at(0, y);
-      for (UInt x = 0; x < n_icusPerRow; x++) {
+      for (UInt x = 0; x < _n_icusPerRow; x++)
+      {
         if (requested_rowPtrBottom[x]) // if on the top row there is a block
         // which is not assigned to any of
         // requestedICUs_closeToDecodedICUs,
         // requestedICUs_closeTocheckPoints,
         // neighborcheckPointInTheComponent
         {
-          icu_index = y * n_icusPerRow + x;
+          icu_index = y * _n_icusPerRow + x;
           if (_vec_pixelsRequestedPerICU[icu_index] < thresholdToNeglectICU) {
             n_remainingRequestedICUs--;
             requested_rowPtrBottom[x] = false;
@@ -666,13 +623,15 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   int x1 = 0, y1 = 0, x2, y2;
   int n_nonzero;
   int n_requestedICUs = 0;
-  for (UInt y = 0; y < n_icusPerCol; y++) {
+  for (UInt y = 0; y < _n_icusPerCol; y++)
+  {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
     //        bool* previous_rowPtr = &_decodedICUs.at(0,y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
-      int i = y * n_icusPerRow + x;
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
+      int i = y * _n_icusPerRow + x;
 
-      const InteractiveCodingUnit &icu = vec_icus[i].get_sourceX();
+      const InteractiveCodingUnit &icu = _vec_icus[i].get_sourceX();
       // the reason that we can not use the x,y and of icu is because for
       // example for 360 images, first icu position starts from point
       // (margin_x,y), but maskRequestioPixels contains the main frame area with
@@ -725,21 +684,21 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   //        cv::waitKey(0);
   //    }
 
-  int iWidth = int(n_icusPerRow); // if we do not convert to int, the traversing
-                                  // equation for 360 video (neighbor_x =
-                                  // (iWidth + (neighbor_x%iWidth)) % iWidth)
-                                  // converts everything to UInt
-  int iHeight = int(n_icusPerCol);
+  int iWidth = int(_n_icusPerRow); // if we do not convert to int, the traversing
+                                   // equation for 360 video (neighbor_x =
+                                   // (iWidth + (neighbor_x%iWidth)) % iWidth)
+                                   // converts everything to UInt
+  int iHeight = int(_n_icusPerCol);
   bool neighborAlreadyDecoded;
   requestedICUs_closeToDecodedICUs.clear();
   int n_remainingRequestedICUs = n_requestedICUs;
-  for (UInt y = 0; y < n_icusPerCol;
-       y++) // check for requested ICUs where there is at least an already
+  for (UInt y = 0; y < _n_icusPerCol; y++) // check for requested ICUs where there is at least an already
   // decoded ICU there
   {
     const bool *requested_rowPtr = &_requestedICUs.at(0, y);
     const bool *decoded_rowPtr = &_decodedICUs.at(0, y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
       if (requested_rowPtr[x] &&
           decoded_rowPtr[x]) // I used || (or) instead of && (and) because I
       // saw some situations where a block beside the
@@ -817,8 +776,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   {
     // the number of check points is less than number of pixels. so it is better
     // to traveresed through checkpoints this time
-    for (UInt chk = 0; chk < vec_checkPoints.size(); chk++) {
-      const Position &chPoint_pos = vec_checkPoints[chk];
+    for (UInt chk = 0; chk < _vec_checkPoints.size(); chk++)
+    {
+      const Position &chPoint_pos = _vec_checkPoints[chk];
       if (_requestedICUs.at(chPoint_pos.x, chPoint_pos.y)) {
         neighborcheckPointInTheComponent.push_back(chPoint_pos);
         requestedICUs_closeTocheckPoints.push_back(std::vector<Position>());
@@ -853,11 +813,11 @@ void icov::video::EncodingStructure::updateRequestedICUs(
   {
     int n_remainingRequestedICUs_temp = n_remainingRequestedICUs;
     std::vector<std::vector<Position>> remaining_connected_blocks;
-    for (UInt y = 0; y < n_icusPerCol;
-         y++) // check for the remaining requested blocks
+    for (UInt y = 0; y < _n_icusPerCol; y++) // check for the remaining requested blocks
     {
       const bool *requested_rowPtr = &_requestedICUs.at(0, y);
-      for (UInt x = 0; x < n_icusPerRow; x++) {
+      for (UInt x = 0; x < _n_icusPerRow; x++)
+      {
         if (requested_rowPtr[x]) {
           remaining_connected_blocks.push_back(std::vector<Position>());
           dfs_360(_requestedICUs, remaining_connected_blocks.back(), x, y,
@@ -943,9 +903,9 @@ void icov::video::EncodingStructure::updateRequestedICUs(
         Position diff;
         for (unsigned int block_id = 0; block_id < currentCC.size();
              block_id++) {
-          for (unsigned int access_block_id = 0;
-               access_block_id < vec_checkPoints.size(); access_block_id++) {
-            diff = currentCC[block_id] - vec_checkPoints[access_block_id];
+          for (unsigned int access_block_id = 0; access_block_id < _vec_checkPoints.size(); access_block_id++)
+          {
+            diff = currentCC[block_id] - _vec_checkPoints[access_block_id];
             distance_squared = static_cast<unsigned int>(diff.x * diff.x) +
                                static_cast<unsigned int>(diff.y * diff.y);
             if (distance_squared < minimum_distance_squared) {
@@ -957,8 +917,7 @@ void icov::video::EncodingStructure::updateRequestedICUs(
         }
 
         const Position &chosen_block_pos = currentCC[chosen_block_id];
-        const Position &chosen_access_block_pos =
-            vec_checkPoints[chosen_access_block_id];
+        const Position &chosen_access_block_pos = _vec_checkPoints[chosen_access_block_id];
         // check if any block in between is already processsed
 
         Position diff_chosen_blocks =
@@ -1267,7 +1226,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
   const ChannelType chType = toChannelType(compID);
 
   int processed = 0;
-  int max_count = vec_icus.size();
+  int max_count = _vec_icus.size();
 #pragma omp parallel for
   for (UInt i = 0; i < max_count; i++) {
 
@@ -1296,7 +1255,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     processed++;
 
     std::cout << "    " << progress << "%                \r" << std::flush;
-    IcuEncoder &icu_enc = vec_icus[i];
+    IcuEncoder &icu_enc = _vec_icus[i];
     std::map<omnidirectional_layer::BlockPrediction::ePredType, SideInformationUnit> &currICUintraMap =
         icu_enc.get_intraSIsMap();
 
@@ -1471,13 +1430,15 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
 
   int x1 = 0, y1 = 0, x2, y2;
   int n_nonzero;
-  for (UInt y = 0; y < n_icusPerCol; y++) {
+  for (UInt y = 0; y < _n_icusPerCol; y++)
+  {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
     //        bool* previous_rowPtr = &_decodedICUs.at(0,y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
-      int i = y * n_icusPerRow + x;
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
+      int i = y * _n_icusPerRow + x;
 
-      const InteractiveCodingUnit &icu = vec_icus[i].get_sourceX();
+      const InteractiveCodingUnit &icu = _vec_icus[i].get_sourceX();
       // the reason that we can not use the x,y and of icu is because for
       // example for 360 images, first icu position starts from point
       // (margin_x,y), but maskRequestioPixels contains the main frame area with
@@ -1508,12 +1469,12 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
   requestedICUs_closeToDecodedICUs.clear();
   decodedICUs_inRequestedICUs.clear();
 
-  for (UInt y = 0; y < n_icusPerCol;
-       y++) // check for requested ICUs where there is at least an already
+  for (UInt y = 0; y < _n_icusPerCol; y++) // check for requested ICUs where there is at least an already
   // decoded ICU there
   {
     bool *requested_rowPtr = &_requestedICUs.at(0, y);
-    for (UInt x = 0; x < n_icusPerRow; x++) {
+    for (UInt x = 0; x < _n_icusPerRow; x++)
+    {
       if (requested_rowPtr[x]) // checking toghether, we are sure that the
       // first starting point of
       // requestedICUs_connectedComponents is close an
@@ -1531,8 +1492,8 @@ void icov::video::EncodingStructure::get_decodedICUsInRequestedICUs(
 
 void icov::video::EncodingStructure::updateDecodedICU(
     const Position &ICU_position) {
-  CHECK(ICU_position.x < 0 || ICU_position.x >= Int(n_icusPerRow) ||
-            ICU_position.y < 0 || ICU_position.y >= Int(n_icusPerCol),
+  CHECK(ICU_position.x < 0 || ICU_position.x >= Int(_n_icusPerRow) || ICU_position.y < 0 ||
+            ICU_position.y >= Int(_n_icusPerCol),
         "out of range");
   bool &val = _decodedICUs.at(ICU_position.x, ICU_position.y);
   if (!val) {
@@ -1596,8 +1557,7 @@ int icov::video::EncodingStructure::getAvailableDecodedSides_regularImage(
   if ((icuPos.x - 1 >= 0) && (rowPtr[icuPos.x - 1] == true)) // check left side
     availableSides |= icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::LEFT;
 
-  if ((icuPos.x + 1 < int(n_icusPerRow)) &&
-      (rowPtr[icuPos.x + 1] == true)) // check right side
+  if ((icuPos.x + 1 < int(_n_icusPerRow)) && (rowPtr[icuPos.x + 1] == true)) // check right side
     availableSides |=
         icov::video::IntraPrediction::REFERENCE_SAMPLE_SIDE::RIGHT;
 
@@ -1674,8 +1634,8 @@ int icov::video::EncodingStructure::getAvailableDecodedSides_360Image(
 
 void icov::video::EncodingStructure::updateAlreadyProccessedICU(
     const Position &ICU_position) {
-  CHECK(ICU_position.x < 0 || ICU_position.x >= Int(n_icusPerRow) ||
-            ICU_position.y < 0 || ICU_position.y >= Int(n_icusPerCol),
+  CHECK(ICU_position.x < 0 || ICU_position.x >= Int(_n_icusPerRow) || ICU_position.y < 0 ||
+            ICU_position.y >= Int(_n_icusPerCol),
         "out of range");
   bool &val = _tmp_alreadyProcessedICUs.at(ICU_position.x, ICU_position.y);
   if (!val) {
@@ -1706,54 +1666,51 @@ void icov::video::EncodingStructure::deallocate() {
     _tmp_alreadyProcessedICUs = AreaBuf<bool>();
   }
 
-  vec_icus.clear();
-  vec_checkPoints.clear();
+  _vec_icus.clear();
+  _vec_checkPoints.clear();
   _vec_decodedICUs.clear();
   _vec_pixelsRequestedPerICU.clear();
   _vec_tmp_alreadyProcessedICUs.clear();
 
-  n_icusPerRow = 0;
-  n_icusPerCol = 0;
+  _n_icusPerRow = 0;
+  _n_icusPerCol = 0;
 }
 
 icov::video::IcuEncoder &
 icov::video::EncodingStructure::getICU(const UInt icu_index) {
 #ifdef ICOV_ASSERTION_ENABLED
-  ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < vec_icus.size(),
-                  "Cannot retrieve ICU " + std::to_string(icu_index) +
-                      " from vector of size " +
-                      std::to_string(vec_icus.size()));
+  ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < _vec_icus.size(), "Cannot retrieve ICU " + std::to_string(icu_index) +
+                                                                      " from vector of size " +
+                                                                      std::to_string(_vec_icus.size()));
 #endif
-  return vec_icus[icu_index];
+  return _vec_icus[icu_index];
 }
 
 icov::video::IcuEncoder &
 icov::video::EncodingStructure::getICU(const UInt x_index, const UInt y_index) {
-  return getICU(y_index * n_icusPerRow + x_index);
+  return getICU(y_index * _n_icusPerRow + x_index);
 }
 
 const icov::video::IcuEncoder &
 icov::video::EncodingStructure::getICU(const UInt icu_index) const {
-  ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < vec_icus.size(),
-                  "Cannot retrieve ICU " + std::to_string(icu_index) +
-                      " from vector of size " +
-                      std::to_string(vec_icus.size()));
-  return vec_icus[icu_index];
+  ICOV_ASSERT_MSG(icu_index >= 0 && icu_index < _vec_icus.size(), "Cannot retrieve ICU " + std::to_string(icu_index) +
+                                                                      " from vector of size " +
+                                                                      std::to_string(_vec_icus.size()));
+  return _vec_icus[icu_index];
 }
 
 bool icov::video::EncodingStructure::isLeftVerticalBorder(
     const UInt icu_index) const {
-  return (icu_index < vec_icus.size()) && (icu_index % n_icusPerRow == 0);
+  return (icu_index < _vec_icus.size()) && (icu_index % _n_icusPerRow == 0);
 }
 
 bool icov::video::EncodingStructure::isRightVerticalBorder(
     const UInt icu_index) const {
-  return (icu_index < vec_icus.size()) &&
-         (icu_index % n_icusPerRow == n_icusPerRow - 1);
+  return (icu_index < _vec_icus.size()) && (icu_index % _n_icusPerRow == _n_icusPerRow - 1);
 }
 
 UInt icov::video::EncodingStructure::get_icuIndex(const Position &pos) const {
-  return UInt(pos.y) * n_icusPerRow + UInt(pos.x);
+  return UInt(pos.y) * _n_icusPerRow + UInt(pos.x);
 }
 
 void icov::video::EncodingStructure::resetDecodedICUs() {
@@ -1773,7 +1730,7 @@ icov::video::EncodingStructure::get_vecDecodedICUs() const {
 
 const std::vector<Position> &
 icov::video::EncodingStructure::get_vecCheckpoints() const {
-  return vec_checkPoints;
+  return _vec_checkPoints;
 }
 
 void icov::video::EncodingStructure::resetAlreadyProcessedICUs() {
@@ -1790,4 +1747,24 @@ void icov::video::EncodingStructure::copyProccessedICUsFromDecodedICUs() {
 bool icov::video::EncodingStructure::isICUAlreadyProcessed(
     const Position &ICU_position) {
   return _tmp_alreadyProcessedICUs.at(ICU_position.x, ICU_position.y);
+}
+
+const std::vector<icov::video::IcuEncoder> &icov::video::EncodingStructure::vec_icus() const
+{
+  return _vec_icus;
+}
+
+UInt icov::video::EncodingStructure::n_icusPerRow() const
+{
+  return _n_icusPerRow;
+}
+
+UInt icov::video::EncodingStructure::n_icusPerCol() const
+{
+  return _n_icusPerCol;
+}
+
+size_t icov::video::EncodingStructure::n_icus() const
+{
+  return _vec_icus.size();
 }

@@ -3,6 +3,7 @@
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
+#include "video_layer/VideoMetrics.h"
 #include <chrono>
 #include <numeric>
 
@@ -17,18 +18,6 @@ icov::decoder::CsvOutput::CsvOutput(const std::string &path_prefix)
     m_frameFile << "request id,block count,bitrate" << std::endl;
 }
 
-const std::shared_ptr<icov::decoder::InfosGatherer> icov::decoder::CsvOutput::getParent()
-{
-    if (!m_decoderParent)
-    {
-        auto p = this->parent();
-        assert::not_null(p.get(), "Parent cannot be null");
-        m_decoderParent = std::dynamic_pointer_cast<InfosGatherer>(p);
-        assert::not_null(m_decoderParent.get(), "Downcast to parent type failed");
-    }
-    return m_decoderParent;
-}
-
 void icov::decoder::CsvOutput::_beforeOrderingLoop(const request_t &r)
 {
     m_requestFile << ++m_requestID << ',';
@@ -38,7 +27,9 @@ void icov::decoder::CsvOutput::_beforeOrderingLoop(const request_t &r)
 
 void icov::decoder::CsvOutput::_afterOrderingLoop(const request_t &r)
 {
-    m_frameFile << m_requestID << ',' << getParent()->infos().size() << ',' << getParent()->frameBitrate() << std::endl;
+    // write the block count in the viewport into CSV
+    m_frameFile << m_requestID << ',' << icov::video_layer::VideoMetrics::get_const_instance().metrics.size() << ','
+                << icov::video_layer::VideoMetrics::get_const_instance().viewportRate() << std::endl;
 }
 
 void icov::decoder::CsvOutput::_processBlock(const request_t &r, const omnidirectional_layer::Block &b,
@@ -47,5 +38,8 @@ void icov::decoder::CsvOutput::_processBlock(const request_t &r, const omnidirec
     m_blockFile << m_requestID << ',' << b.getIdSelf() << ',' << b.center_u() << ',' << b.center_v() << ','
                 << omnidirectional_layer::BlockPrediction::toString(
                        omnidirectional_layer::BlockPrediction::toPredType(prediction))
-                << ',' << getParent()->getParent()->rate() << std::endl;
+                << ',' << icov::video_layer::VideoMetrics::get_const_instance().getBlock(b).encodedBitlength << ','
+                << icov::video_layer::VideoMetrics::get_const_instance().getBlock(b).decodedBitlength << ','
+                << icov::video_layer::VideoMetrics::get_const_instance().getBlock(b).rate() << ','
+                << icov::video_layer::VideoMetrics::get_const_instance().getBlock(b).mse << std::endl;
 }

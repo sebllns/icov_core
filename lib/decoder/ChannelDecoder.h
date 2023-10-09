@@ -51,9 +51,11 @@
 
 #include "FastArray.h"
 #include "icov_common.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ICOV_Quant.h"
@@ -131,7 +133,8 @@ public:
 
   const params &get_params() const;
 
-  Rate rate() const;
+  const omnidirectional_layer::BlockVector::const_iterator &blockIt() const;
+  void setBlockIt(const omnidirectional_layer::BlockVector::const_iterator &newBlockIt);
 
 private:
   params m_params;
@@ -155,7 +158,7 @@ private:
   int m_icuIndex;
   std::queue<byte> m_numcodes;
   SymboleVec m_blockSymbols;
-  Rate m_rate;
+  // omnidirectional_layer::BlockVector::const_iterator m_blockIt;
 
   void _decode_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
   void _decode_bitplane(

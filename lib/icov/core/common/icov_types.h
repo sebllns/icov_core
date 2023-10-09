@@ -67,9 +67,29 @@ typedef char int8b;
 typedef bool bit;
 typedef float LLRVal;
 typedef int SymboleVal;
+
+/**
+ * @typedef BitVal
+ * @brief Alias type representing bit values.
+ */
 typedef int BitVal;
+
+/**
+ * @typedef SIVal
+ * @brief Alias type for values in a side info.
+ */
 typedef int SIVal;
+
+/**
+ * @typedef SyndVal
+ * @brief Alias type for values in a syndrome.
+ */
 typedef bit SyndVal;
+
+/**
+ * @typedef index_t
+ * @brief Alias type for indexing value.
+ */
 typedef uint16_t index_t;
 
 namespace bit_t {
@@ -86,7 +106,12 @@ using SIVec = std::vector<SIVal>;
 using Bitplanes = std::vector<BitVec>;
 using Rate = float;
 using NumcodeIdx = uint32_t;
-using BitLength = size_t;
+
+/**
+ * @typedef BitLength
+ * @brief Alias type representing bit lengths.
+ */
+using BitLength = unsigned long long;
 
 // Bitplane
 using SyndromesVec = std::vector<Syndrome>;
@@ -94,7 +119,16 @@ using NumcodeIdxVec = std::vector<NumcodeIdx>;
 
 using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
 
+/**
+ * @def shared_ptr(t)
+ * @brief A macro for declaring a shared_ptr of type 't'.
+ */
 #define shared_ptr(t) std::shared_ptr<t>
+
+/**
+ * @def unique_ptr(t)
+ * @brief A macro for declaring a unique_ptr of type 't'.
+ */
 #define unique_ptr(t) std::unique_ptr<t>
 
 } // namespace icov
