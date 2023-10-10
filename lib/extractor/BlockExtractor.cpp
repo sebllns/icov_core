@@ -41,6 +41,21 @@ icov::extractor::BlockExtractor::~BlockExtractor()
 {
 }
 
+void icov::extractor::BlockExtractor::fill_metrics(
+    icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction, const Block &b)
+{
+    icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(b.parent()->blockCount());
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).id = b.getIdSelf();
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).prediction = prediction;
+
+    // extract mse
+    float mse = 0.;
+    m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
+    std::cout << "************************************** MSE = " << mse << std::endl;
+}
+
 void icov::extractor::BlockExtractor::_processBlock(
     const request_t &r, const Block &b, icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
 {
@@ -58,17 +73,6 @@ void icov::extractor::BlockExtractor::_processBlock(
 
     std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
     m_icovFile->selectBlock(b.getIdSelf());
-
-    icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(b.parent()->blockCount());
-    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
-    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).id = b.getIdSelf();
-    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).prediction = prediction;
-
-    // extract mse
-    float mse = 0.;
-    m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
-    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
-    std::cout << "************************************** MSE = " << mse << std::endl;
 
     // get stored syndrome size per bitplane
     std::cout << "extract_syndrome_sizes" << std::endl;
@@ -119,10 +123,13 @@ void icov::extractor::BlockExtractor::_processBlock(
 
     ICOV_DEBUG << "END EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
                << omnidirectional_layer::BlockPrediction::toString(block_prediction);
+
+    fill_metrics(prediction, b);
 }
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r)
 {
+    m_viewportBlockCount = 0;
 }
 
 void icov::extractor::BlockExtractor::_afterOrderingLoop(const request_t &r)

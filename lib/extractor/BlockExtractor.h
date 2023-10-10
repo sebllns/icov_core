@@ -57,6 +57,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
 namespace icov {
@@ -93,12 +94,17 @@ protected:
 
   params m_params; /**< BlockExtractor parameters */
 
+  uint m_viewportBlockCount;
+
   // IBlockProcessor interface
 protected:
   void _beforeOrderingLoop(const request_t &r) override;
   void _afterOrderingLoop(const request_t &r) override;
   void _processBlock(const request_t &r, const omnidirectional_layer::Block &b,
                      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
+private:
+  void fill_metrics(icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
+                    const omnidirectional_layer::Block &b);
 };
 } // namespace extractor
 } // namespace icov

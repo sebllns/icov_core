@@ -9,12 +9,12 @@
 
 icov::decoder::CsvOutput::CsvOutput(const std::string &path_prefix)
     : omnidirectional_layer::IBlockProcessor(), m_requestFile(path_prefix + "_requests.csv"),
-      m_frameFile(path_prefix + "_frames.csv"), m_blockFile(path_prefix + "_blocks.csv"), m_requestID(0)
+      m_frameFile(path_prefix + "_viewports.csv"), m_blockFile(path_prefix + "_blocks.csv"), m_requestID(0)
 {
     setName("CsvOutput");
 
     m_requestFile << "id,timestamp,viewpoint x,viewpoint y,frame" << std::endl;
-    m_blockFile << "request id,block id,center u,center v,prediction,bitrate" << std::endl;
+    m_blockFile << "request id,block id,center u,center v, prediction,bitrate" << std::endl;
     m_frameFile << "request id,block count,bitrate" << std::endl;
 }
 
