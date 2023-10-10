@@ -55,6 +55,7 @@
 #include <boost/serialization/singleton.hpp>
 #include <limits>
 #include <numeric>
+#include <sys/types.h>
 #include <vector>
 
 namespace icov
@@ -71,6 +72,8 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
         frame_t frame;
         omnidirectional_layer::Block::id_t id;
         omnidirectional_layer::IBlockPredictionManager::prediction_t prediction;
+        uint decodingOrder;
+        ushort bitplaneCount;
         BitLength encodedBitlength;
         BitLength decodedBitlength;
         float mse;

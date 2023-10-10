@@ -130,11 +130,6 @@ void icov::decoder::BlockDecoder::_processBlock(const request_t &r, const omnidi
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(b.parent()->getBlockIndexPos(b));
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingPredictionID(pred);
 
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(b.parent()->blockCount());
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].reset();
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].id = b.getIdSelf();
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[icuIndex].prediction = prediction;
-
   for (auto &dec : m_channelDecoder)
   {
         if (icov::debug::debug_trace_enabled)

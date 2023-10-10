@@ -2,6 +2,7 @@
 #include "extractor/ChannelExtractor.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
+#include "video_layer/VideoMetrics.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
@@ -57,6 +58,17 @@ void icov::extractor::BlockExtractor::_processBlock(
 
     std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
     m_icovFile->selectBlock(b.getIdSelf());
+
+    icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(b.parent()->blockCount());
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).id = b.getIdSelf();
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).prediction = prediction;
+
+    // extract mse
+    float mse = 0.;
+    m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
+    icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
+    std::cout << "************************************** MSE = " << mse << std::endl;
 
     // get stored syndrome size per bitplane
     std::cout << "extract_syndrome_sizes" << std::endl;

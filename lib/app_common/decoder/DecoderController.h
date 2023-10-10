@@ -151,6 +151,7 @@ class DecoderController
         if (getDecoderParams().enable_export_csv)
         {
             m_analyzer.CsvOutput = std::make_shared<decoder::CsvOutput>(getDecoderParams().csv_export_file.string());
+            IBlockProcessor::addChild(getDecoder()->blockDecoder(), m_analyzer.CsvOutput);
         }
     }
 

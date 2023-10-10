@@ -259,8 +259,8 @@ void icov::extractor::InputIcov::setFrame(int frame) {
       .seekg(m_frameID * m_blockCount, std::ios_base::beg);
   getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[0], std::ios_base::beg);
-  getStream(bitstream::eIcovStream::SYNDROME)
-      .seekg(m_synd_pos[0], std::ios_base::beg);
+  getStream(bitstream::eIcovStream::SYNDROME).seekg(m_synd_pos[0], std::ios_base::beg);
+  getStream(bitstream::eIcovStream::METRICS).seekg(m_frameID * m_blockCount * sizeof(float), std::ios_base::beg);
 }
 
 icov::omnidirectional_layer::Block::id_t

@@ -91,8 +91,6 @@ class SinglePassDecoder
     void addDefaultNavigation();
     void addDefaultExtractor();
     void addDefaultDecoder();
-    std::shared_ptr<CsvOutput> addDefaultCsvOutput();
-
     const PelUnitBuf getDecodedBuf() const;
 
     const std::shared_ptr<BlockExtractor> &blockExtractor() const;
