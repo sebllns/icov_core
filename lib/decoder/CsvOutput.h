@@ -49,24 +49,42 @@
 
 #pragma once
 
+#include "icov_io.h"
+#include "icov_string.h"
+#include "icov_types.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include <fstream>
+#include <map>
 #include <memory>
+#include <sstream>
+#include <string>
+#include <sys/types.h>
+#include <utility>
 #include <vector>
 
 namespace icov
 {
-namespace decoder {
+
+namespace decoder
+{
 class CsvOutput : public omnidirectional_layer::IBlockProcessor
 {
   public:
     CsvOutput(const std::string &path_prefix);
 
-    std::ofstream m_requestFile;
-    std::ofstream m_frameFile;
-    std::ofstream m_blockFile;
+    io::CsvFileWriter m_requestFile;
+    io::CsvFileWriter m_viewportFile;
+    io::CsvFileWriter m_blockFile;
+    io::CsvFileWriter m_infosFile;
 
     unsigned long m_requestID;
+
+    uint m_viewportBlockCount;
+    BitLength m_viewportEncodedSize;
+    BitLength m_viewportDecodedSize;
+    PixelArea m_erpDecodedArea;
+    PixelArea m_displayArea;
+    Mse m_ErpMse;
 
     // IBlockProcessor interface
     void _beforeOrderingLoop(const request_t &r) override;

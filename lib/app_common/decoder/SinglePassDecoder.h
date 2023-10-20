@@ -87,6 +87,7 @@ class SinglePassDecoder
     void initLocal(const params &p);
 
     void openIcovFile(const fs::path &path);
+    void addGroundTruth(const fs::path &path);
 
     void addDefaultNavigation();
     void addDefaultExtractor();
@@ -136,6 +137,8 @@ class SinglePassDecoder
     float pov_x;
     float pov_y;
     unsigned long frame;
+
+    bool m_hasGroundTruth;
 };
 } // namespace decoder
 } // namespace icov

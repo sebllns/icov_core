@@ -46,6 +46,7 @@
 #pragma once
 
 #include "app_common/program/icov_program.h"
+
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 

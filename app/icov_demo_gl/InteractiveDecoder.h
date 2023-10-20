@@ -60,7 +60,7 @@ class InteractiveDecoder : public InteractiveModeBase
   public:
     InteractiveDecoder(const path::path_t &icov_file, const options::args_t &args);
 
-    const unique_ptr(decoder::SinglePassDecoder) & getDecoder() const;
+    const icov_unique_ptr(decoder::SinglePassDecoder) & getDecoder() const;
 
   private:
     std::queue<request_t> m_requests;

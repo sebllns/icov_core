@@ -89,7 +89,50 @@ float Block::v() const { return m_v; }
 
 float Block::w() const { return m_w; }
 
-float Block::h() const { return m_h; }
+float Block::h() const
+{
+  return m_h;
+}
+
+float Block::area() const
+{
+  return w() * h();
+}
+
+int Block::x() const
+{
+  return u() * parent()->width();
+}
+
+int Block::y() const
+{
+  return v() * parent()->height();
+}
+
+int Block::center_x() const
+{
+  return center_u() * parent()->width();
+}
+
+int Block::center_y() const
+{
+  return center_v() * parent()->height();
+}
+
+int Block::iw() const
+{
+  return w() * parent()->width();
+}
+
+int Block::ih() const
+{
+  return h() * parent()->height();
+}
+
+int Block::iarea() const
+{
+  return iw() * ih();
+}
 
 float Block::center_u() const { return u() + 0.5f * w(); }
 

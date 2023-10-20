@@ -97,9 +97,8 @@ inline viewport_geometry default_geometry(const angle_radian &fov,
   vpg.resolution = screen_resolution;           // resolution in pixels
 
   // viewport geometry in cartesian coords
-  vpg.roi_size =
-      point2d(std::abs(2 * tan(fov.x())), std::abs(2 * tan(fov.y())));
-
+  vpg.roi_size = point2d(std::abs(2 * tan(fov.x() * 0.5)),
+                         std::abs(2 * tan(fov.y() * 0.5)));
   return vpg;
 }
 

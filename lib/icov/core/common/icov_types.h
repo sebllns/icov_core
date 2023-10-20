@@ -105,6 +105,8 @@ using LLRVec = std::vector<LLRVal>;
 using SIVec = std::vector<SIVal>;
 using Bitplanes = std::vector<BitVec>;
 using Rate = float;
+using Mse = float;
+using Psnr = float;
 using NumcodeIdx = uint32_t;
 
 /**
@@ -112,6 +114,8 @@ using NumcodeIdx = uint32_t;
  * @brief Alias type representing bit lengths.
  */
 using BitLength = unsigned long long;
+
+using PixelArea = unsigned long long;
 
 // Bitplane
 using SyndromesVec = std::vector<Syndrome>;
@@ -123,12 +127,12 @@ using SINumcodeIdxVec = std::vector<NumcodeIdxVec>;
  * @def shared_ptr(t)
  * @brief A macro for declaring a shared_ptr of type 't'.
  */
-#define shared_ptr(t) std::shared_ptr<t>
+#define icov_shared_ptr(t) std::shared_ptr<t>
 
 /**
  * @def unique_ptr(t)
  * @brief A macro for declaring a unique_ptr of type 't'.
  */
-#define unique_ptr(t) std::unique_ptr<t>
+#define icov_unique_ptr(t) std::unique_ptr<t>
 
 } // namespace icov

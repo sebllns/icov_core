@@ -94,8 +94,6 @@ protected:
 
   params m_params; /**< BlockExtractor parameters */
 
-  uint m_viewportBlockCount;
-
   // IBlockProcessor interface
 protected:
   void _beforeOrderingLoop(const request_t &r) override;

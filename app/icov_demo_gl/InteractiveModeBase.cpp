@@ -1,17 +1,10 @@
 #include "InteractiveModeBase.h"
-#include "encoder/FakeEncoder.h"
-#include "encoder/InputMedia.h"
 
 #include "gl_viewer/single360degreecamerahandler.h"
 #include "icov_log.h"
-#include "omnidirectional_layer/RequestManager.h"
-#include "omnidirectional_layer/icov_geometry.h"
-#include "omnidirectional_layer/implementation/BlockOrdering.h"
-#include "omnidirectional_layer/implementation/EquiRectPicture.h"
-#include "omnidirectional_layer/implementation/IcovAccessBlockManager.h"
-#include "omnidirectional_layer/implementation/ViewportManagerCenterPadded.h"
-#include "omnidirectional_layer/interface/IBlockProcessor.h"
-#include "opencv2/core/types.hpp"
+
+#include <opencv2/core/types.hpp>
+#include <opencv2/highgui.hpp>
 
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -23,11 +16,8 @@
 #include <iomanip> // std::setprecision
 #include <iostream>
 #include <memory>
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <time.h> /* time */
-
-using namespace icov::omnidirectional_layer;
 
 enum KeyName
 {
@@ -50,42 +40,39 @@ enum KeyName
 };
 
 InteractiveModeBase::InteractiveModeBase()
-    : viewer(nullptr), fileAddr(""), fovX_degree(0.), block_size(0), pov_x(0.), pov_y(0.), m_special_key(0),
-      m_wait_delay(0)
-{
-}
+    : m_360viewer(nullptr), fovX_degree(0.), block_size(0), pov_x(0.),
+      pov_y(0.), m_special_key(0), m_wait_delay(0) {}
 
 InteractiveModeBase::~InteractiveModeBase()
 {
     
 }
 
-void InteractiveModeBase::run()
-{
-    m_special_key = m_config.f1;
-    cv::namedWindow(window_name, cv::WINDOW_NORMAL);
-    m_outputImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
-    viewer = std::make_unique<Single360degreeCameraHandler>(cv::Size(1920, 1080), 30, false);
+void InteractiveModeBase::run() {
+  m_special_key = m_config.f1;
+  cv::namedWindow(const_window_name, cv::WINDOW_NORMAL);
 
-    char key = '\0';
-    reset();
-    while (processKey(key))
-    {
-        cv::imshow(window_name, m_outputImage);
-        key = cv::waitKey(m_wait_delay);
-        ICOV_DEBUG << "pressed key code = " << (int)key;
-    }
+  m_erpImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
+  m_viewportImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
+
+  showErp();
+
+  // default
+  init360Viewer(1920, 1080, 35);
+
+  char key = '\0';
+  reset();
+  while (processKey(key)) {
+    draw();
+    cv::imshow(const_window_name, m_displayImage);
+    key = cv::waitKey(m_wait_delay);
+    ICOV_DEBUG << "pressed key code = " << (int)key;
+  }
 }
 
-float InteractiveModeBase::getPov_x() const
-{
-    return pov_x;
-}
+float InteractiveModeBase::getPov_x_DEG() const { return pov_x; }
 
-float InteractiveModeBase::getPov_y() const
-{
-    return pov_y;
-}
+float InteractiveModeBase::getPov_y_DEG() const { return pov_y; }
 
 bool InteractiveModeBase::is_special_key(char key) const
 {
@@ -118,6 +105,16 @@ void InteractiveModeBase::draw()
 
     else if (this->special_key() == config().f8)
         updateF8();
+
+    if (m_showViewport)
+        showViewport();
+    else
+        showErp();
+}
+
+void InteractiveModeBase::init360Viewer(int width, int height, int fov_y_DEG) {
+    m_360viewer = std::make_unique<Single360degreeCameraHandler>(
+        cv::Size(width, height), fov_y_DEG, false);
 }
 
 bool InteractiveModeBase::processKey(char key)
@@ -140,8 +137,10 @@ bool InteractiveModeBase::processKey(char key)
     else if (key == m_config.down)
         moveDown();
 
-    if (is_special_key(key) && key != m_special_key)
-    {
+    else if (key == m_config.view_switch)
+        switchView();
+
+    else if (is_special_key(key) && key != m_special_key) {
         int previous = m_special_key;
         m_special_key = key;
         onSpecialKey(previous, key);
@@ -262,8 +261,8 @@ void InteractiveModeBase::move(float offset_pitch, float offset_yaw)
     if (pov_y < -90.0f)
         pov_y = -90.0f;
 
-    viewer->pitch(pov_y - previous_pov_y);
-    viewer->yaw(previous_pov_x - pov_x);
+    m_360viewer->pitch(pov_y - previous_pov_y);
+    m_360viewer->yaw(previous_pov_x - pov_x);
 }
 
 void InteractiveModeBase::moveLeft()
@@ -290,7 +289,7 @@ void InteractiveModeBase::reset()
 {
     pov_x = m_config.start_yaw;
     pov_y = m_config.start_pitch;
-    viewer->resetOrientation();
+    m_360viewer->resetOrientation();
 }
 
 void InteractiveModeBase::clear()
@@ -300,7 +299,7 @@ void InteractiveModeBase::clear()
 
 void InteractiveModeBase::fill(const cv::Scalar &color)
 {
-    m_outputImage.setTo(color);
+    m_erpImage.setTo(color);
 }
 
 const InteractiveModeBase::Config &InteractiveModeBase::config() const
@@ -311,4 +310,21 @@ const InteractiveModeBase::Config &InteractiveModeBase::config() const
 void InteractiveModeBase::setWait_delay(int newWait_delay)
 {
     m_wait_delay = newWait_delay;
+}
+
+void InteractiveModeBase::switchView() {
+    m_showViewport ? showErp() : showViewport();
+}
+
+void InteractiveModeBase::showErp() {
+    m_showViewport = false;
+    m_displayImage = m_erpImage;
+}
+
+void InteractiveModeBase::showViewport() {
+    m_360viewer->loadEquirectangularImage(m_erpImage);
+    m_360viewer->getImage_BGR(m_viewportImage);
+
+    m_showViewport = true;
+    m_displayImage = m_viewportImage;
 }

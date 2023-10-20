@@ -50,9 +50,12 @@
 #include "icov_request.h"
 #include "icov_types.h"
 #include "omnidirectional_layer/Block.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
+#include "video_layer/ContentParameterSet.h"
 #include <boost/serialization/singleton.hpp>
+#include <cmath>
 #include <limits>
 #include <numeric>
 #include <sys/types.h>
@@ -78,6 +81,8 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
         BitLength decodedBitlength;
         float mse;
 
+        block_infos_t() { reset(); }
+
         void reset()
         {
             frame = 0;
@@ -96,10 +101,18 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
             }
             return static_cast<Rate>(encodedBitlength) / static_cast<Rate>(decodedBitlength);
         }
+
+        float psnr() const {
+            return (mse == 0) ? std::numeric_limits<double>::infinity()
+                              : 10.0 * log10((255 * 255) / mse);
+        }
     };
 
     request_t request;
+    omnidirectional_layer::viewport_geometry vpg;
+    std::vector<omnidirectional_layer::Block::id_t> visible_blocks;
     std::vector<block_infos_t> metrics;
+    bitstream::ContentParameterSet metadata;
 
     block_infos_t &getBlock(const omnidirectional_layer::Block &b)
     {

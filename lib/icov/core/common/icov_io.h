@@ -1,10 +1,14 @@
 #pragma once
 
+#include "icov_string.h"
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <ostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #define WRITE_CHARS(buf, data) buf.write((char *)&data, sizeof(data))
@@ -90,6 +94,132 @@ std::string make_hex_string(TInputIter first, TInputIter last,
   }
   return ss.str();
 }
+
+class CsvFileWriter
+{
+public:
+  explicit CsvFileWriter(const std::string &path) : m_columnSeparator(","), m_file(path)
+  {
+  }
+
+  void writeColumnNames()
+  {
+    std::stringstream ss = icov::string::join(m_columnsName, m_columnSeparator);
+    m_file << ss.str() << std::endl;
+  }
+
+  void writeValues()
+  {
+    std::stringstream ss = icov::string::join(m_columnsValue, m_columnSeparator);
+    m_file << ss.str() << std::endl;
+  }
+
+  void clear()
+  {
+    m_columnsName.clear();
+    m_columnsValue.clear();
+    m_columnsIdx.clear();
+  }
+
+  void clearValues()
+  {
+    m_columnsValue = std::vector<std::string>(m_columnsName.size());
+  }
+
+  void writeAndClearValues()
+  {
+    writeValues();
+    clearValues();
+  }
+
+  void insertValue(const std::string &val)
+  {
+    m_columnsValue.push_back(val);
+  }
+
+  void addColumn(const std::string &name)
+  {
+    m_columnsIdx.insert(std::pair(name, m_columnsName.size()));
+    m_columnsName.push_back(name);
+    insertValue(std::string());
+  }
+
+  int getColumnCount() const
+  {
+    return m_columnsName.size();
+  }
+
+  int getColumnIdx(const std::string &name) const
+  {
+    return m_columnsIdx.at(name);
+  }
+
+  const std::string &getColumnName(int idx) const
+  {
+    return m_columnsName[idx];
+  }
+
+  const std::string &getColumnName(const std::string &name) const
+  {
+    return m_columnsName[getColumnIdx(name)];
+  }
+
+  const std::string &getColumnValue(int idx) const
+  {
+    return m_columnsValue[idx];
+  }
+
+  const std::string &getColumnValue(const std::string &name) const
+  {
+    return m_columnsValue[getColumnIdx(name)];
+  }
+
+  std::string &columnValue(int idx)
+  {
+    return m_columnsValue[idx];
+  }
+
+  std::string &columnValue(const std::string &name)
+  {
+    return m_columnsValue[getColumnIdx(name)];
+  }
+
+  template <typename T> void setColumnValue(int idx, const T &val)
+  {
+    columnValue(idx) = std::to_string(val);
+  }
+
+  template <typename T> void setColumnValue(const std::string &name, const T &val)
+  {
+    columnValue(name) = std::to_string(val);
+  }
+
+  void setColumnValue(int idx, const std::string &val)
+  {
+    columnValue(idx) = val;
+  }
+
+  void setColumnValue(const std::string &name, const std::string &val)
+  {
+    columnValue(name) = val;
+  }
+
+  const std::string &columnSeparator() const
+  {
+    return m_columnSeparator;
+  }
+  void setColumnSeparator(const std::string &newColumnSeparator)
+  {
+    m_columnSeparator = newColumnSeparator;
+  }
+
+private:
+  std::vector<std::string> m_columnsName;
+  std::vector<std::string> m_columnsValue;
+  std::map<std::string, ushort> m_columnsIdx;
+  std::string m_columnSeparator;
+  std::ofstream m_file;
+};
 
 } // namespace io
 } // namespace icov

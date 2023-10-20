@@ -48,12 +48,13 @@ void icov::extractor::BlockExtractor::fill_metrics(
     icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
     icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).id = b.getIdSelf();
     icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).prediction = prediction;
+    icov::video_layer::VideoMetrics::get_mutable_instance()
+        .visible_blocks.push_back(b.getIdSelf());
 
     // extract mse
     float mse = 0.;
     m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
     icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
-    std::cout << "************************************** MSE = " << mse << std::endl;
 }
 
 void icov::extractor::BlockExtractor::_processBlock(
@@ -129,7 +130,8 @@ void icov::extractor::BlockExtractor::_processBlock(
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r)
 {
-    m_viewportBlockCount = 0;
+    icov::video_layer::VideoMetrics::get_mutable_instance()
+        .visible_blocks.clear();
 }
 
 void icov::extractor::BlockExtractor::_afterOrderingLoop(const request_t &r)

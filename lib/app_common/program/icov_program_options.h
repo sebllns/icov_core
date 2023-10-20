@@ -52,8 +52,10 @@
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
+#include <boost/any.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <cstdint>
 #include <exception>
@@ -64,233 +66,271 @@
 
 namespace po = boost::program_options;
 
-namespace icov
-{
+namespace icov {
 namespace options {
 
 typedef po::variables_map args_t;
 typedef po::options_description desc_t;
 
+// GENERAL OPTIONS
 const std::string help = "help";
 const std::string mode = "mode";
 const std::string log_lvl = "log-level";
 const std::string input_file = "input-file";
 const std::string output_file = "output-file";
 
+// LDPC OPTIONS
 const std::string code_length = "ldpc-code-length";
 const std::string bp_iter = "ldpc-bp-ite";
 const std::string coder_type = "ldpc-coder-type";
 const std::string data_path = "ldpc-data-path";
 
+// ENCODER OPTIONS
 const std::string encode_allblocks = "encode-allblocks";
 const std::string start_block = "encode-start-block";
 const std::string block_count = "encode-block-count";
 const std::string frame_count = "encode-frame-count";
 const std::string viewport_padding = "encode-viewport-padding";
+const std::string viewport_width = "encode-viewport-width";
+const std::string viewport_height = "encode-viewport-height";
 const std::string icu_size = "encode-icu-size";
 const std::string qp = "encode-qp";
 const std::string fov = "encode-fov";
 const std::string dummy_viewport = "encode-dummy-viewport";
 
+// DECODER OPTIONS
 const std::string pre_encode = "decode-preencode";
 const std::string csv_output = "decode-csv-output";
 const std::string positions_input = "decode-positions-input";
 const std::string headless = "decode-headless";
 const std::string ground_truth = "decode-ground-truth";
 
-inline void addEncodeOptions(desc_t &output)
-{
-    output.add_options()(icu_size.c_str(), po::value<int>()->default_value(32), "ICU width for encoding");
-    // 22, 27, 32, 37, 42
-    output.add_options()(qp.c_str(), po::value<int>()->default_value(27), "QP value for encoding");
+struct decoder_params {
+  bool pre_encode;
+  bool headless;
+  fs::path csv_output;
+  fs::path positions_input;
+  fs::path ground_truth;
+
+  decoder_params() : pre_encode(false) {}
+};
+
+class DecoderArgs {
+  std::string pre_encode_id() const { return "decode-preencode"; }
+  std::string csv_output_id() const { return "decode-csv-output"; }
+  std::string positions_input_id() const { return "decode-positions-input"; }
+  std::string headless_id() const { return "decode-headless"; }
+  std::string ground_truth_id() const { return "decode-ground-truth"; }
+
+  void addOptions(desc_t &output) const {
+    decoder_params default_values;
+
+    output.add_options()(
+        pre_encode_id().c_str(),
+        po::value<bool>()->default_value(default_values.pre_encode),
+        "Pre-encode the media before decode (useful to get more "
+        "debug informations)");
+  }
+
+  decoder_params parsePreencodeOption(const args_t &args) const {
+    decoder_params p;
+
+    p.pre_encode = args[pre_encode_id()].as<bool>();
+
+    return p;
+  }
+};
+
+inline void addEncoderOptions(desc_t &output) {
+  output.add_options()(icu_size.c_str(), po::value<int>()->default_value(32),
+                       "ICU width for encoding");
+  // 22, 27, 32, 37, 42
+  output.add_options()(qp.c_str(), po::value<int>()->default_value(27),
+                       "QP value for encoding");
+
+  output.add_options()(viewport_width.c_str(),
+                       po::value<int>()->default_value(1920),
+                       "Viewport width for encoding");
+
+  output.add_options()(viewport_height.c_str(),
+                       po::value<int>()->default_value(1080),
+                       "Viewport height for encoding");
+
+  output.add_options()(
+      viewport_padding.c_str(), po::value<float>()->default_value(1.2),
+      "Radius factor used in icov viewport to check if a block is "
+      "visible");
+
+  output.add_options()((fov + ",f").c_str(),
+                       po::value<float>()->default_value(80),
+                       "Viewport horizontal field of view in degrees");
+
+  output.add_options()(dummy_viewport.c_str(),
+                       po::value<bool>()->default_value(false),
+                       "Use dummy viewport (all blocks are visible)");
 }
 
-inline void addGroundPathOption(desc_t &output)
-{
-    output.add_options()(ground_truth.c_str(), po::value<std::string>()->default_value(""),
-                         "Path to use ground truth when non-empty");
+inline void addDecoderOptions(desc_t &output) {
+  output.add_options()(pre_encode.c_str(),
+                       po::value<bool>()->default_value(false),
+                       "Pre-encode the media before decode (useful to get more "
+                       "debug informations)");
+
+  output.add_options()(ground_truth.c_str(),
+                       po::value<std::string>()->default_value(""),
+                       "Path to use ground truth when non-empty");
+
+  output.add_options()(positions_input.c_str(),
+                       po::value<std::string>()->default_value(""),
+                       "Path pointing to file that contains viewpoint "
+                       "positions for decoding simulation");
+
+  output.add_options()(
+      csv_output.c_str(), po::value<std::string>()->default_value(""),
+      "Prefix path if you need to export decoding results into CSV");
+
+  output.add_options()(headless.c_str(),
+                       po::value<bool>()->default_value(false),
+                       "Use headless decoder which means no graphical output "
+                       "(only meta-parameters will be extracted "
+                       "from encoded file) but is faster to execute. Will use "
+                       "ground truth as display when provided, "
+                       "to replace graphical output");
 }
 
-inline void addHeadlessOption(desc_t &output)
-{
-    output.add_options()(headless.c_str(), po::value<bool>()->default_value(false),
-                         "Use headless decoder which means no graphical output (only meta-parameters will be extracted "
-                         "from encoded file) but is faster to execute. Will use ground truth when given, "
-                         "to replace graphical output");
+inline void init_options_desc(const std::string &modes, desc_t &output) {
+  output.add_options()
+
+      ("help,h", "Produce help message")
+
+          ((mode + ",m").c_str(), po::value<std::string>()->required(),
+           (std::string("Set the program mode (see documentation for more "
+                        "details on each mode)\nAccepted values: ") +
+            modes)
+               .c_str())
+
+              ((coder_type + ",c").c_str(),
+               po::value<std::string>()->default_value("imt164"),
+               "Set the coder type")
+
+                  ((data_path + ",d").c_str(),
+                   po::value<std::string>()->default_value("data/"),
+                   "Set the data path")
+
+                      ((code_length + ",n").c_str(),
+                       po::value<int>()->default_value(1024),
+                       "Set the codeword length for LDPC")(
+                          (std::string(bp_iter) + ",it").c_str(),
+                          po::value<int>()->default_value(100),
+                          "Set iteration count for belief propagation of LDPC "
+                          "coder")
+
+                          ((log_lvl + ",lg").c_str(),
+                           po::value<int>()->default_value(2),
+                           "Set log level filter")
+
+                              ((input_file + ",i").c_str(),
+                               po::value<std::string>()->default_value(
+                                   "/tmp/input_file"),
+                               "Set input file")
+
+                                  ((output_file + ",o").c_str(),
+                                   po::value<std::string>()->default_value(""),
+                                   "Set output file");
+
+  addEncoderOptions(output);
+  addDecoderOptions(output);
 }
 
-inline void addPreEncodeOption(desc_t &output)
-{
-    output.add_options()(pre_encode.c_str(), po::value<bool>()->default_value(false),
-                         "Pre-encode the media before decode (useful to get more debug informations)");
-}
-
-inline void addCsvOutputOption(desc_t &output)
-{
-    output.add_options()(csv_output.c_str(), po::value<std::string>()->default_value(""),
-                         "Prefix path if you need to export decoding results into CSV");
-}
-
-inline void addPositionsInputOption(desc_t &output)
-{
-    output.add_options()(positions_input.c_str(), po::value<std::string>()->default_value(""),
-                         "Path pointing to file that contains viewpoint positions for decoding simulation");
-}
-
-inline void addViewportPaddingOption(desc_t &output)
-{
-    output.add_options()(viewport_padding.c_str(), po::value<float>()->default_value(1.2),
-                         "Radius factor used in icov viewport to check if a block is "
-                         "visible");
-}
-
-inline void addViewportFovOption(desc_t &output)
-{
-    output.add_options()((fov + ",f").c_str(), po::value<float>()->default_value(80),
-                         "Viewport horizontal field of view in degrees");
-}
-
-inline void addDummyViewportOption(desc_t &output)
-{
-    output.add_options()(dummy_viewport.c_str(), po::value<bool>()->default_value(false),
-                         "Use dummy viewport (all blocks are visible)");
-}
-
-inline void init_options_desc(const std::string &modes, desc_t &output)
-{
-    output.add_options()
-
-        ("help,h", "Produce help message")
-
-            ((mode + ",m").c_str(), po::value<std::string>()->required(),
-             (std::string("Set the program mode (see documentation for more "
-                          "details on each mode)\nAccepted values: ") +
-              modes)
-                 .c_str())
-
-                ((coder_type + ",c").c_str(), po::value<std::string>()->default_value("imt164"), "Set the coder type")
-
-                    ((data_path + ",d").c_str(), po::value<std::string>()->default_value("data/"), "Set the data path")
-
-                        ((code_length + ",n").c_str(), po::value<int>()->default_value(1024),
-                         "Set the codeword length for LDPC")((std::string(bp_iter) + ",it").c_str(),
-                                                             po::value<int>()->default_value(100),
-                                                             "Set iteration count for belief propagation of LDPC "
-                                                             "coder")
-
-                            ((log_lvl + ",lg").c_str(), po::value<int>()->default_value(2), "Set log level filter")
-
-                                ((input_file + ",i").c_str(),
-                                 po::value<std::string>()->default_value("/tmp/input_file"), "Set input file")
-
-                                    ((output_file + ",o").c_str(), po::value<std::string>()->default_value(""),
-                                     "Set output file");
-
-    addPreEncodeOption(output);
-    addCsvOutputOption(output);
-    addPositionsInputOption(output);
-    addViewportPaddingOption(output);
-    addViewportFovOption(output);
-    addDummyViewportOption(output);
-    addHeadlessOption(output);
-    addGroundPathOption(output);
-    addEncodeOptions(output);
-}
-
-#define ICOV_DATA_DIR(args) fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
+#define ICOV_DATA_DIR(args)                                                    \
+  fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
 #define ICOV_Q_VALUES_FILE(args) (ICOV_DATA_DIR(args) / "../q-ary/q")
 
-template <typename T> T parse(const std::string &id, const args_t &args)
-{
-    return args[id].as<T>();
+template <typename T> T parse(const std::string &id, const args_t &args) {
+  return args[id].as<T>();
 }
 
-inline std::string parseInputFile(const args_t &args)
-{
-    return args[input_file].as<std::string>();
+inline std::string parseInputFile(const args_t &args) {
+  return args[input_file].as<std::string>();
 }
 
-inline std::string parseOutputFile(const args_t &args)
-{
-    return args[output_file].as<std::string>();
+inline std::string parseOutputFile(const args_t &args) {
+  return args[output_file].as<std::string>();
 }
 
-inline std::string parseCsvOutputFile(const args_t &args)
-{
-    return args[csv_output].as<std::string>();
+inline std::string parseCsvOutputFile(const args_t &args) {
+  return args[csv_output].as<std::string>();
 }
 
-inline std::string parsePositionsInputFile(const args_t &args)
-{
-    return args[positions_input].as<std::string>();
+inline std::string parsePositionsInputFile(const args_t &args) {
+  return args[positions_input].as<std::string>();
 }
 
-inline std::string parseLdpcCoderType(const args_t &args)
-{
-    return args[coder_type].as<std::string>();
+inline std::string parseLdpcCoderType(const args_t &args) {
+  return args[coder_type].as<std::string>();
 }
 
-inline std::string parseDatabase(const args_t &args)
-{
-    return args[data_path].as<std::string>();
+inline std::string parseDatabase(const args_t &args) {
+  return args[data_path].as<std::string>();
 }
 
-inline int parseCodeLength(const args_t &args)
-{
-    return args[code_length].as<int>();
+inline int parseCodeLength(const args_t &args) {
+  return args[code_length].as<int>();
 }
 
-inline int parseBpIte(const args_t &args)
-{
-  return args[bp_iter].as<int>();
+inline int parseQP(const args_t &args) { return args[qp].as<int>(); }
+
+inline int parseBpIte(const args_t &args) { return args[bp_iter].as<int>(); }
+
+inline float parseFov(const args_t &args) { return args[fov].as<float>(); }
+
+inline int parseViewportWidth(const args_t &args) {
+  return args[viewport_width].as<int>();
+}
+inline int parseViewportHeight(const args_t &args) {
+  return args[viewport_height].as<int>();
 }
 
-inline float parseFov(const args_t &args)
-{
-  return args[fov].as<float>();
-}
-
-inline float parseViewportPadding(const args_t &args)
-{
+inline float parseViewportPadding(const args_t &args) {
   return args[viewport_padding].as<float>();
 }
 
-inline bool parsePreEncodeOption(const args_t &args)
-{
+inline bool parsePreEncodeOption(const args_t &args) {
   return args[pre_encode].as<bool>();
 }
 
-inline bool parseDummyViewportOption(const args_t &args)
-{
+inline bool parseDummyViewportOption(const args_t &args) {
   return args[dummy_viewport].as<bool>();
 }
 
-inline int parseEncodeIcuSizeOption(const args_t &args)
-{
+inline int parseEncodeIcuSizeOption(const args_t &args) {
   return args[icu_size].as<int>();
 }
 
-inline void parseLdpcParams(const args_t &args, const std::string &intented_type, LdpcCoderParameters &params)
-{
+inline void parseLdpcParams(const args_t &args,
+                            const std::string &intented_type,
+                            LdpcCoderParameters &params) {
   icov::assert::equal(params.type(), intented_type,
-                      "Given type was \'" + params.type() + "\' but intended type was \'" + intented_type + "\'");
+                      "Given type was \'" + params.type() +
+                          "\' but intended type was \'" + intented_type + "\'");
 
   params.database = parseDatabase(args);
   params.codeLength = parseCodeLength(args);
   params.beliefPropagationIterations = parseBpIte(args);
 }
 
-inline std::unique_ptr<LdpcCoderParameters> parseLdpcParams(const boost::program_options::variables_map &args)
-{
+inline std::unique_ptr<LdpcCoderParameters>
+parseLdpcParams(const boost::program_options::variables_map &args) {
   std::string coder_type_val = parseLdpcCoderType(args);
-  std::unique_ptr<LdpcCoderParameters> params = ldpc_codec_layer::createLdpcParams(coder_type_val);
+  std::unique_ptr<LdpcCoderParameters> params =
+      ldpc_codec_layer::createLdpcParams(coder_type_val);
   icov::assert::not_null(params.get());
   parseLdpcParams(args, coder_type_val, *params);
   return params;
 }
 
-inline ldpc_codec_layer::p_InteractiveCoder create_coder(const boost::program_options::variables_map &args)
-{
+inline ldpc_codec_layer::p_InteractiveCoder
+create_coder(const boost::program_options::variables_map &args) {
   auto params = parseLdpcParams(args);
   return ldpc_codec_layer::LdpcCoderFactory::create_coder(*params);
 }

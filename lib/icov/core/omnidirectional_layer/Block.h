@@ -229,6 +229,15 @@ public:
    */
   float center_v() const;
 
+  float area() const;
+  int x() const;
+  int y() const;
+  int center_x() const;
+  int center_y() const;
+  int iw() const;
+  int ih() const;
+  int iarea() const;
+
   /**
    * @brief Checks if the Block is an access block.
    *

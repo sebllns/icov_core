@@ -111,7 +111,7 @@ struct decoder_param_t
 struct decoder_factory_t
 {
     decoder_param_t Params;
-    unique_ptr(decoder::SinglePassDecoder) Decoder;
+    icov_unique_ptr(decoder::SinglePassDecoder) Decoder;
 
     decoder_factory_t(const path::path_t &icov_file, const options::args_t &args)
         : Params(icov_file, args), Decoder(std::make_unique<decoder::SinglePassDecoder>())
@@ -126,7 +126,7 @@ struct decoder_factory_t
 
 struct decoder_analyzer_t
 {
-    shared_ptr(icov::decoder::CsvOutput) CsvOutput;
+    icov_shared_ptr(icov::decoder::CsvOutput) CsvOutput;
 };
 
 class DecoderController
@@ -141,8 +141,7 @@ class DecoderController
         return m_factory.Params;
     }
 
-    const unique_ptr(decoder::SinglePassDecoder) & getDecoder() const
-    {
+    const icov_unique_ptr(decoder::SinglePassDecoder) & getDecoder() const {
         return m_factory.Decoder;
     }
 

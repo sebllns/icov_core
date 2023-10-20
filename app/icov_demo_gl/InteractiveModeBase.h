@@ -46,12 +46,13 @@
 #pragma once
 
 #include "gl_viewer/single360degreecamerahandler.h"
-#include "omnidirectional_layer/icov_geometry.h"
-#include "omnidirectional_layer/interface/IBlockProcessor.h"
+
 #include "opencv2/core/mat.hpp"
+
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/serialization/map.hpp>
+
 #include <fstream>
 
 namespace fs = boost::filesystem;
@@ -156,6 +157,7 @@ class InteractiveModeBase
         int f6 = -66;
         int f7 = -66;
         int f8 = -66;
+        int view_switch = 'w';
 
         float start_pitch = 0.;
         float start_yaw = 0.;
@@ -169,27 +171,29 @@ class InteractiveModeBase
 
     void run();
 
-    float getPov_x() const;
-    float getPov_y() const;
+    float getPov_x_DEG() const;
+    float getPov_y_DEG() const;
+
     int special_key() const;
 
     void clear();
     void fill(const cv::Scalar &color);
     void draw();
+    void init360Viewer(int width, int height, int fov_y_DEG);
 
     const Config &config() const;
 
     void setWait_delay(int newWait_delay);
 
   private:
-    std::unique_ptr<Single360degreeCameraHandler> viewer;
-    std::string fileAddr;
+    std::unique_ptr<Single360degreeCameraHandler> m_360viewer;
     float fovX_degree;
     int block_size;
     float pov_x;
     float pov_y;
     int m_special_key;
     int m_wait_delay;
+    bool m_showViewport;
 
     bool is_special_key(char key) const;
     void move(float offset_pitch, float offset_yaw);
@@ -199,10 +203,17 @@ class InteractiveModeBase
     void moveDown();
     void reset();
 
+    void switchView();
+    void showErp();
+    void showViewport();
+
   protected:
+    const char *const_window_name = "icov";
     Config m_config;
-    cv::Mat m_outputImage;
-    const char *window_name = "icov";
+    cv::Mat m_erpImage;
+    cv::Mat m_viewportImage;
+    cv::Mat m_displayImage;
+
     virtual bool processKey(char key);
     virtual void onSpecialKey(int previous, int current);
 

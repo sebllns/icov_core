@@ -48,6 +48,7 @@
 
 #pragma once
 
+#include "icov_assert.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -118,6 +119,13 @@ inline int quantize(float value, const std::vector<float> &v) {
     idx = idx_prev;
   }
   return idx;
+}
+
+inline double psnr(double mse, double max_value = 255) {
+  ICOV_ASSERT_MSG(mse > 0, "mse should never be negative");
+  return (mse <= std::numeric_limits<double>::epsilon())
+             ? std::numeric_limits<double>::infinity()
+             : 10.0 * log10((max_value * max_value) / mse);
 }
 
 namespace rand {

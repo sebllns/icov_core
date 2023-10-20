@@ -6,6 +6,7 @@
 
 #include "icov_assert.h"
 #include "icov_log.h"
+#include "icov_math.h"
 #include "icov_request.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/Block.h"
@@ -34,10 +35,12 @@ std::unique_ptr<LdpcCoderParameters> parseLdpcParams(const ContentParameterSet &
 }
 
 icov::decoder::SinglePassDecoder::SinglePassDecoder()
-    : m_extractionBitstream(std::make_shared<bitstream::IcovExtractedBitstream>()),
-      m_blockProcessor(std::make_shared<IBlockProcessor>()), pov_x(std::numeric_limits<float>::max()), pov_y(pov_x),
-      frame(std::numeric_limits<unsigned long>::max())
-{
+    : m_extractionBitstream(
+          std::make_shared<bitstream::IcovExtractedBitstream>()),
+      m_blockProcessor(std::make_shared<IBlockProcessor>()),
+      pov_x(std::numeric_limits<float>::max()), pov_y(pov_x),
+      frame(std::numeric_limits<unsigned long>::max()),
+      m_hasGroundTruth(false) {
     m_blockProcessor->setName("Root");
     m_blockProcessor->setEnabled(true);
 }
@@ -50,7 +53,9 @@ void decoder::SinglePassDecoder::initLocal(const params &p)
 
     setParams(p);
 
-    ICOV_INFO << "Open ICOV file";
+    ICOV_INFO << "------------------";
+    ICOV_INFO << "| Open ICOV file |";
+    ICOV_INFO << "------------------";
     openIcovFile(p.IcovFile);
 
     const auto &cps = m_contentParams;
@@ -60,11 +65,22 @@ void decoder::SinglePassDecoder::initLocal(const params &p)
     ICOV_INFO << boost::format("%-30s %-s") % "Chroma subsampling:" %
                      video::chromaSubsamplingToStr((int)cps.content_chroma_format);
 
-    ICOV_INFO << boost::format("%-30s %-d") % "Width:" % (int)cps.content_width;
-    ICOV_INFO << boost::format("%-30s %-d") % "Height:" % (int)cps.content_height;
+    ICOV_INFO << boost::format("%-30s %-d") % "ERP Width:" %
+                     (int)cps.content_width;
+    ICOV_INFO << boost::format("%-30s %-d") % "ERP Height:" %
+                     (int)cps.content_height;
 
-    ICOV_INFO << (int)cps.block_fixed_size;
-    ICOV_INFO << (int)cps.qp;
+    ICOV_INFO << boost::format("%-30s %-d") % "VP Width:" %
+                     (int)cps.viewport_width;
+    ICOV_INFO << boost::format("%-30s %-d") % "VP Height:" %
+                     (int)cps.viewport_height;
+    ICOV_INFO << boost::format("%-30s %-.2f") % "VP H-FOV (DEG):" %
+                     ((float)cps.viewport_fov_x * RAD2DEG);
+    ICOV_INFO << boost::format("%-30s %-.2f") % "VP V-FOV (DEG):" %
+                     ((float)cps.viewport_fov_y * RAD2DEG);
+    ICOV_INFO << boost::format("%-30s %-d") % "Block size:" %
+                     (int)cps.block_fixed_size;
+    ICOV_INFO << boost::format("%-30s %-d") % "QP:" % (int)cps.qp;
 
     auto coder_params = parseLdpcParams(cps);
     coder_params->database = p.LdpcDatabase.string();
@@ -92,6 +108,14 @@ void decoder::SinglePassDecoder::openIcovFile(const boost::filesystem::path &pat
     m_icovFile->readContentParameterSet();
     setContentParams(m_icovFile->contentParameterSet());
     m_icovFile->readBlockPos();
+}
+
+void decoder::SinglePassDecoder::addGroundTruth(
+    const boost::filesystem::path &path) {
+
+    // open file
+
+    m_hasGroundTruth = true;
 }
 
 void decoder::SinglePassDecoder::addDefaultNavigation()

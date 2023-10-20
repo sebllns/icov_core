@@ -62,8 +62,6 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 
-  std::vector<Block::id_t> visibles;
-
   // select blocks to encode
   size_t block_counter = 0;
   for (auto &b : icov_visualization.Picture->icus()) {
@@ -88,8 +86,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().viewport_width =
       static_cast<uint16_t>(vpg.resolution.x());
-  m_output->contentParameterSet().viewport_height =
-      static_cast<uint16_t>(vpg.resolution.y());
+  m_output->contentParameterSet().viewport_height = static_cast<uint16_t>(vpg.resolution.y());
+
+  m_output->contentParameterSet().qp = m_params.FrameEncoderParams.QP;
 
   m_output->contentParameterSet().viewport_fov_x = vpg.fov.x();
   m_output->contentParameterSet().viewport_fov_y = vpg.fov.y();
@@ -97,12 +96,15 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   m_output->contentParameterSet().viewport_padding = viewportPadding;
 
   m_output->contentParameterSet().icov_version = "icov_" ICOV_CORE_VERSION;
+
+  //@todo TODO VIDEO set frame count
   m_output->contentParameterSet().content_framecount = 1;
-  m_output->contentParameterSet().is_block_fixed_size = true;
-  m_output->contentParameterSet().block_fixed_size =
-      static_cast<byte>(32);
-  m_output->contentParameterSet().content_chroma_format =
-      static_cast<byte>(m_params.FrameEncoderParams.ChFormat);
+
+  m_output->contentParameterSet().is_block_fixed_size = (m_params.FrameEncoderParams.ICU_Size.aspectRatio() == 1);
+
+  m_output->contentParameterSet().block_fixed_size = static_cast<byte>(m_params.FrameEncoderParams.ICU_Size.width);
+
+  m_output->contentParameterSet().content_chroma_format = static_cast<byte>(m_params.FrameEncoderParams.ChFormat);
 
   if (m_params.AllBlocks) {
     ICOV_INFO << "All blocks will be encoded";
