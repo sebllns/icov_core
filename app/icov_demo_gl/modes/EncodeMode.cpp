@@ -103,9 +103,14 @@ void EncodeMode::run() {
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
 
-  const float fov_x_degree = 60;
-  const point2d resolution(1920, 1080);
-  angle_radian fov = factory::fov(fov_x_degree, factory::y_x_ratio(resolution));
-  viewport_geometry vpg = factory::default_geometry(fov, resolution);
-  encoder.defaultEncode(m_parameters.viewportPadding, vpg);
+  //  const float fov_x_degree = 60;
+  //  const point2d resolution(1920, 1080);
+  //  angle_radian fov = factory::fov(fov_x_degree,
+  //  factory::y_x_ratio(resolution)); viewport_geometry vpg =
+  //  factory::default_geometry(fov, resolution);
+  //  encoder.defaultEncode(m_parameters.viewportPadding, vpg);
+
+#warning FIXME
+#pragma message("FIXME")
+  throw "FIXME";
 }

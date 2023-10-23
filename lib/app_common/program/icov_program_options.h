@@ -91,8 +91,10 @@ const std::string start_block = "encode-start-block";
 const std::string block_count = "encode-block-count";
 const std::string frame_count = "encode-frame-count";
 const std::string viewport_padding = "encode-viewport-padding";
-const std::string viewport_width = "encode-viewport-width";
-const std::string viewport_height = "encode-viewport-height";
+const std::string viewport_erp_horizontal_ratio_id =
+    "encode-viewport-erp-horizontal-ratio";
+const std::string viewport_image_ratio_id = "encode-viewport-image-ratio";
+
 const std::string icu_size = "encode-icu-size";
 const std::string qp = "encode-qp";
 const std::string fov = "encode-fov";
@@ -105,6 +107,24 @@ const std::string positions_input = "decode-positions-input";
 const std::string headless = "decode-headless";
 const std::string ground_truth = "decode-ground-truth";
 
+struct EncoderArgs {
+  std::string viewport_erp_horizontal_ratio_id() const {
+    return "{ENC}viewport-erp-horizontal-ratio";
+  }
+
+  std::string viewport_image_ratio_id() const {
+    return "{ENC}viewport-image-ratio";
+  }
+
+  std::string viewport_fovx_id() const {
+    return "{ENC}viewport-horizontal-fov";
+  }
+
+  std::string qp_id() const { return "{ENC}qp"; }
+
+  std::string icu_size_id() const { return "{ENC}icu-size"; }
+};
+
 struct decoder_params {
   bool pre_encode;
   bool headless;
@@ -115,12 +135,12 @@ struct decoder_params {
   decoder_params() : pre_encode(false) {}
 };
 
-class DecoderArgs {
-  std::string pre_encode_id() const { return "decode-preencode"; }
-  std::string csv_output_id() const { return "decode-csv-output"; }
-  std::string positions_input_id() const { return "decode-positions-input"; }
-  std::string headless_id() const { return "decode-headless"; }
-  std::string ground_truth_id() const { return "decode-ground-truth"; }
+struct DecoderArgs {
+  std::string pre_encode_id() const { return "DEC-preencode"; }
+  std::string csv_output_id() const { return "DEC-csv-output"; }
+  std::string positions_input_id() const { return "DEC-positions-input"; }
+  std::string headless_id() const { return "DEC-headless"; }
+  std::string ground_truth_id() const { return "DEC-ground-truth"; }
 
   void addOptions(desc_t &output) const {
     decoder_params default_values;
@@ -148,13 +168,13 @@ inline void addEncoderOptions(desc_t &output) {
   output.add_options()(qp.c_str(), po::value<int>()->default_value(27),
                        "QP value for encoding");
 
-  output.add_options()(viewport_width.c_str(),
-                       po::value<int>()->default_value(1920),
-                       "Viewport width for encoding");
+  output.add_options()(viewport_erp_horizontal_ratio_id.c_str(),
+                       po::value<float>()->default_value(40.0 / 100.0),
+                       "Viewport/ERP horizontal ratio");
 
-  output.add_options()(viewport_height.c_str(),
-                       po::value<int>()->default_value(1080),
-                       "Viewport height for encoding");
+  output.add_options()(viewport_image_ratio_id.c_str(),
+                       po::value<float>()->default_value(16.0 / 9.0),
+                       "Viewport image format i.e. width/height ratio");
 
   output.add_options()(
       viewport_padding.c_str(), po::value<float>()->default_value(1.2),
@@ -284,11 +304,12 @@ inline int parseBpIte(const args_t &args) { return args[bp_iter].as<int>(); }
 
 inline float parseFov(const args_t &args) { return args[fov].as<float>(); }
 
-inline int parseViewportWidth(const args_t &args) {
-  return args[viewport_width].as<int>();
+inline float parseViewportErpRatio(const args_t &args) {
+  return args[viewport_erp_horizontal_ratio_id].as<float>();
 }
-inline int parseViewportHeight(const args_t &args) {
-  return args[viewport_height].as<int>();
+
+inline float parseViewportImageRatio(const args_t &args) {
+  return args[viewport_image_ratio_id].as<float>();
 }
 
 inline float parseViewportPadding(const args_t &args) {

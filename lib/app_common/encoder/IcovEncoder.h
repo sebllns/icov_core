@@ -74,16 +74,17 @@ class IcovEncoder
         omnidirectional_layer::Block::id_t StartBlock;
         size_t BlockCount;
         float ViewportPadding;
-        point2d ViewportResolution;
         uint FrameCount;
 
         uint m_debugframecount;
         uint m_icuSize;
-        float fov_x_degree;
 
-        angle_radian fov;
+        float fov_x_degree;
+        float display_horizontal_ratio;
+        float viewport_image_format;
 
         ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
+
         params(const options::args_t &args);
     };
 

@@ -36,7 +36,8 @@ icov::encoder::IcovMediaEncoder::~IcovMediaEncoder() {
 
 /*****************************************************************************/
 void icov::encoder::IcovMediaEncoder::defaultEncode(
-    float viewportPadding, const viewport_geometry &vpg) {
+    float fov_x_degree, float viewportPadding, float display_horizontal_ratio,
+    float viewport_image_format) {
 
   std::unique_ptr<icov::encoder::InputMedia> input;
 
@@ -59,6 +60,16 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   icov::assert::equal(m_params.FrameEncoderParams.ICU_Size.width,
                       m_params.FrameEncoderParams.ICU_Size.height,
                       "Assert square ICU");
+
+  float y_x_format = 1.0f / viewport_image_format;
+  angle_radian fov = factory::fov(fov_x_degree, y_x_format);
+  int vp_width =
+      static_cast<int>(floor(input->getWidth() * display_horizontal_ratio));
+  int vp_height = static_cast<int>(floor(vp_width * y_x_format));
+
+  point2d viewportResolution(vp_width, vp_height);
+
+  viewport_geometry vpg = factory::default_geometry(fov, viewportResolution);
 
   icov_visualization.init(m_params.FrameEncoderParams.ICU_Size.width, vpg);
 

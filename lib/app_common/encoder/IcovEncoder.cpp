@@ -48,9 +48,9 @@ void icov::encoder::IcovEncoder::run() {
   ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
                    m_params.Outputfile;
 
-  viewport_geometry vpg =
-      factory::default_geometry(m_params.fov, m_params.ViewportResolution);
-  m_encoder->defaultEncode(m_params.ViewportPadding, vpg);
+  m_encoder->defaultEncode(m_params.fov_x_degree, m_params.ViewportPadding,
+                           m_params.display_horizontal_ratio,
+                           m_params.viewport_image_format);
 
   ICOV_INFO << "--------------------";
   ICOV_INFO << "| STOPPING ENCODER |";
@@ -86,9 +86,9 @@ icov::encoder::IcovEncoder::params::params(
 
   ViewportPadding = options::parseViewportPadding(args);
   fov_x_degree = options::parseFov(args);
-  ViewportResolution = point2d(options::parseViewportWidth(args),
-                               options::parseViewportHeight(args));
-  fov = factory::fov(fov_x_degree, factory::y_x_ratio(ViewportResolution));
+
+  display_horizontal_ratio = options::parseViewportErpRatio(args);
+  viewport_image_format = options::parseViewportImageRatio(args);
 
   FrameCount = 10;
 
