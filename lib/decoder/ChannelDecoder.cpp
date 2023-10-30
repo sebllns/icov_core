@@ -55,9 +55,9 @@ void icov::decoder::ChannelDecoder::_decode_bitplane(
   int syndrome_size = bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
   read_syndrome(syndrome_size);
 
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[m_icuIndex].encodedBitlength += syndrome_size;
-
-  icov::video_layer::VideoMetrics::get_mutable_instance().metrics[m_icuIndex].decodedBitlength += m_ldpc_coder->get_n();
+  icov::video_layer::VideoMetrics::get_mutable_instance()
+      .metrics[m_icuIndex]
+      .encodedBitlength += syndrome_size;
 
   // if flag
   decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode), m_syndrome);
@@ -152,6 +152,10 @@ void ChannelDecoder::decode_icu(int icu_enc, omnidirectional_layer::BlockPredict
   } else if (is_access_block) {
     coding_flag = true;
   }
+
+  icov::video_layer::VideoMetrics::get_mutable_instance()
+      .metrics[m_icuIndex]
+      .decodedBitlength += bitplaneCount * m_ldpc_coder->get_n();
 
   if (coding_flag)
   {

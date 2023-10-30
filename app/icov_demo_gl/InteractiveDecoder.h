@@ -48,8 +48,11 @@
 #include "InteractiveModeBase.h"
 
 #include "app_common/decoder/DecoderController.h"
+#include "icov_io.h"
 #include "icov_path.h"
 #include "icov_types.h"
+#include "omnidirectional_layer/Block.h"
+#include "video_layer/VideoMetrics.h"
 
 #include <fstream>
 #include <memory>
@@ -62,9 +65,34 @@ class InteractiveDecoder : public InteractiveModeBase
 
     const icov_unique_ptr(decoder::SinglePassDecoder) & getDecoder() const;
 
+    const decoder::DecoderController &decoderCtrl() const;
+
   private:
     std::queue<request_t> m_requests;
     decoder::DecoderController m_decoderCtrl;
+    Rate m_viewportRate;
+    float m_viewportMse;
+    bool m_showSource;
+    cv::Mat m_sourceViewport;
+
+    float m_vp_rate_sum;
+    float m_vp_psnr_sum;
+    float m_erp_rate_sum;
+    float m_erp_psnr_sum;
+    int m_req_count;
+
+    enum class drawType {
+      BLOCK_RATE,
+      VIEWPORT_RATE,
+      PREDICTION,
+      PREDICTION_CAT,
+      SOURCE,
+    };
+
+    void drawBlocks(drawType type);
+    void drawBlock(drawType type, const omnidirectional_layer::Block &b,
+                   const video_layer::VideoMetrics::block_infos_t &i,
+                   cv::Mat &output);
 
     // InteractiveModeBase interface
   protected:

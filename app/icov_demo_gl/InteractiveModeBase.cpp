@@ -41,7 +41,10 @@ enum KeyName
 
 InteractiveModeBase::InteractiveModeBase()
     : m_360viewer(nullptr), fovX_degree(0.), block_size(0), pov_x(0.),
-      pov_y(0.), m_special_key(0), m_wait_delay(0) {}
+      pov_y(0.), m_special_key(0), m_wait_delay(0) {
+  // default
+  init360Viewer(1920, 1080, 35);
+}
 
 InteractiveModeBase::~InteractiveModeBase()
 {
@@ -57,9 +60,6 @@ void InteractiveModeBase::run() {
 
   showErp();
 
-  // default
-  init360Viewer(1920, 1080, 35);
-
   char key = '\0';
   reset();
   while (processKey(key)) {
@@ -74,6 +74,10 @@ float InteractiveModeBase::getPov_x_DEG() const { return pov_x; }
 
 float InteractiveModeBase::getPov_y_DEG() const { return pov_y; }
 
+void InteractiveModeBase::setPOV_DEG(float pov_x, float pov_y) {
+  move(pov_y - this->pov_y, pov_x - this->pov_x);
+}
+
 bool InteractiveModeBase::is_special_key(char key) const
 {
     return key == m_config.f1 || key == m_config.f2 || key == m_config.f3 || key == m_config.f4 || key == m_config.f5 ||
@@ -82,6 +86,8 @@ bool InteractiveModeBase::is_special_key(char key) const
 
 void InteractiveModeBase::draw()
 {
+    this->fill(bgrColor::BLACK());
+
     if (this->special_key() == config().f1)
         updateF1();
 
@@ -112,7 +118,10 @@ void InteractiveModeBase::draw()
         showErp();
 }
 
-void InteractiveModeBase::init360Viewer(int width, int height, int fov_y_DEG) {
+void InteractiveModeBase::init360Viewer(int width, int height,
+                                        float fov_y_DEG) {
+    ICOV_DEBUG << "Init viewer " << width << "x" << height
+               << " with vertical FOV of " << fov_y_DEG;
     m_360viewer = std::make_unique<Single360degreeCameraHandler>(
         cv::Size(width, height), fov_y_DEG, false);
 }
@@ -310,6 +319,11 @@ const InteractiveModeBase::Config &InteractiveModeBase::config() const
 void InteractiveModeBase::setWait_delay(int newWait_delay)
 {
     m_wait_delay = newWait_delay;
+}
+
+const std::unique_ptr<Single360degreeCameraHandler> &
+InteractiveModeBase::get360viewer() const {
+    return m_360viewer;
 }
 
 void InteractiveModeBase::switchView() {

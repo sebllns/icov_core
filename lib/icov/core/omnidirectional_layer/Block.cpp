@@ -2,6 +2,7 @@
 
 #include "icov_assert.h"
 #include "icov_stacktrace.h"
+#include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IPicture.h"
 #include <sys/types.h>
 
@@ -19,26 +20,30 @@ Block::Block(Block::id_t id, IPicture *parent, float pu, float pv, float pw,
   std::fill(uid, uid + NeighborDirection::COUNT, 0);
   setId(NeighborDirection::SELF, id);
 
+  // CENTER
   float phi = parent->angleX(center_u());
   float theta = parent->angleY(center_v());
   point3d cart_coord(0, 0, 0);
-
   bg::transform(angle_radian(phi, theta), cart_coord);
   cartesian_coords[0] = cart_coord;
 
+  // TOP LEFT
   phi = parent->angleX(u());
   theta = parent->angleY(v());
   bg::transform(angle_radian(phi, theta), cart_coord);
   cartesian_coords[1] = cart_coord;
 
+  // TOP RIGHT
   phi = parent->angleX(u() + w());
   bg::transform(angle_radian(phi, theta), cart_coord);
   cartesian_coords[2] = cart_coord;
 
+  // BOTTOM RIGHT
   theta = parent->angleY(v() + h());
   bg::transform(angle_radian(phi, theta), cart_coord);
   cartesian_coords[3] = cart_coord;
 
+  // BOTTOM LEFT
   phi = parent->angleX(u());
   bg::transform(angle_radian(phi, theta), cart_coord);
   cartesian_coords[4] = cart_coord;
@@ -54,6 +59,31 @@ const IPicture *Block::parent() const {
 bool Block::hidden() const { return m_hidden; }
 
 void Block::setHidden(bool newHidden) { m_hidden = newHidden; }
+
+bool Block::is_block_visible(const viewport_geometry &vpg,
+                             float padding) const {
+  int corner = 0;
+
+  while (corner < 5 && !is_corner_visible(corner, vpg, padding)) {
+    ++corner;
+  }
+
+  return (corner < 5);
+}
+
+bool Block::is_corner_visible(int corner, const viewport_geometry &vpg,
+                              float padding) const {
+  auto rotated =
+      inverse_YPR(getCartesianCoord(corner), vpg.pov.x(), vpg.pov.y(), 0);
+
+  auto roi = vpg.roi_size;
+
+  if (rotated.x() < 0)
+    return false;
+
+  bg::multiply_value(roi, padding);
+  return is_point_visible(rotated, roi);
+}
 
 void Block::setId(NeighborDirection index, Block::id_t id) {
   assert(index >= NeighborDirection::SELF && index < NeighborDirection::COUNT);

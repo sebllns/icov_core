@@ -1,9 +1,10 @@
 #include "SinglePassDecoder.h"
+
 #include "Media.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
+#include "encoder/InputMedia.h"
 #include "extractor/BlockExtractor.h"
-
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_math.h"
@@ -12,13 +13,14 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
-#include "omnidirectional_layer/implementation/DummyViewportManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/video_common.h"
-#include <algorithm>
+
 #include <boost/format.hpp>
+
+#include <algorithm>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -39,8 +41,7 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder()
           std::make_shared<bitstream::IcovExtractedBitstream>()),
       m_blockProcessor(std::make_shared<IBlockProcessor>()),
       pov_x(std::numeric_limits<float>::max()), pov_y(pov_x),
-      frame(std::numeric_limits<unsigned long>::max()),
-      m_hasGroundTruth(false) {
+      frame(std::numeric_limits<unsigned long>::max()) {
     m_blockProcessor->setName("Root");
     m_blockProcessor->setEnabled(true);
 }
@@ -78,6 +79,8 @@ void decoder::SinglePassDecoder::initLocal(const params &p)
                      ((float)cps.viewport_fov_x * RAD2DEG);
     ICOV_INFO << boost::format("%-30s %-.2f") % "VP V-FOV (DEG):" %
                      ((float)cps.viewport_fov_y * RAD2DEG);
+    ICOV_INFO << boost::format("%-30s %-.3f") % "VP Padding:" %
+                     cps.viewport_padding;
     ICOV_INFO << boost::format("%-30s %-d") % "Block size:" %
                      (int)cps.block_fixed_size;
     ICOV_INFO << boost::format("%-30s %-d") % "QP:" % (int)cps.qp;
@@ -110,14 +113,6 @@ void decoder::SinglePassDecoder::openIcovFile(const boost::filesystem::path &pat
     m_icovFile->readBlockPos();
 }
 
-void decoder::SinglePassDecoder::addGroundTruth(
-    const boost::filesystem::path &path) {
-
-    // open file
-
-    m_hasGroundTruth = true;
-}
-
 void decoder::SinglePassDecoder::addDefaultNavigation()
 {
     m_navigation = std::make_shared<factory::Navigation360>();
@@ -139,9 +134,9 @@ void decoder::SinglePassDecoder::addDefaultNavigation()
             .VisualizationParams =
                 {
 
-                    .Width = contentParams().content_width,
+                    .Width = cps.content_width,
 
-                    .Height = contentParams().content_height,
+                    .Height = cps.content_height,
 
                     .DummyViewport = m_params.DummyViewport,
 
@@ -226,8 +221,8 @@ void decoder::SinglePassDecoder::start()
     this->request(0, 0, 0);
 }
 
-void decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i)
-{
+bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
+    bool decoded = false;
     icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
     icov::assert::not_null(m_navigation->Request.get(), "Request manager cannot be null");
 
@@ -238,11 +233,14 @@ void decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i)
         if (m_blockDecoder)
             m_blockDecoder->getDecodingOutput().fill(0);
         m_navigation->Request->update({.viewpoint = {.angleX = x, .angleY = y}, .frameID = i});
+        decoded = true;
     }
 
   pov_x = x;
   pov_y = y;
   frame = i;
+
+  return decoded;
 }
 
 const LdpcCoderParameters &decoder::SinglePassDecoder::ldpcParams() const

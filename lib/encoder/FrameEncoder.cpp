@@ -5,6 +5,7 @@
 #include "FastArray.h"
 #include "enc_helpers.h"
 #include "encoder/interface/IEncoder.h"
+#include "icov_assert.h"
 #include "icov_debug.h"
 #include "icov_exception.h"
 #include "icov_io.h"
@@ -24,6 +25,8 @@
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/file_status.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 
 #include <algorithm>
@@ -196,6 +199,16 @@ void FrameEncoder::encodeBlock(
 
 /*****************************************************************************/
 void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
+
+  m_frame_dir =
+      m_icov_file->getPath().parent_path() / std::to_string(this->frame());
+
+  if (!fs::is_directory(m_frame_dir)) {
+    fs::create_directories(m_frame_dir);
+  }
+
+  ICOV_ASSERT_MSG(!ec.failed(), "Error create directory");
+
   cv::Mat img_src = input.getCurrentFrame();
 
   ICOV_ASSERT_MSG(img_src.total() > 0, "Cannot encode empty image");
@@ -310,6 +323,7 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   // compute mse
 
+  // compute access block
   VTM_OPENCV_Utility::toBGRMat(mainFrameReco, m_reco);
 
   for (const auto &icu : m_enc_struc.vec_icus())
@@ -772,6 +786,12 @@ void FrameEncoder::encodeBlockWithPrediction(
 
   ICOV_DEBUG << "Encode block with pred "
              << omnidirectional_layer::BlockPrediction::toString(pred);
+
+  if (pred == omnidirectional_layer::BlockPrediction::ePredType::NONE) {
+    fs::path ab_file(std::to_string(b.getIdSelf()) + ".jpg");
+    cv::imwrite(m_frame_dir.append(ab_file).string(),
+                m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
+  }
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());

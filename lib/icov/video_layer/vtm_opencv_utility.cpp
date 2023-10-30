@@ -8,27 +8,30 @@
 
 #include "icov_assert.h"
 #include "icov_exception.h"
+#include "omnidirectional_layer/interface/IPicture.h"
 #include "rgb888_ycrcb.h"
+
 #include <limits>
+
 #include <opencv2/imgproc.hpp>
 
 namespace VTM_OPENCV_Utility {
 
-double mse(const cv::Mat &I1, const cv::Mat &I2)
-{
-    icov::assert::check((I1.type() == I2.type()) && (I1.size == I2.size),
-                        ICOV_DEBUG_HEADER("Matrices must have the same types and sizes"));
+double mse(const cv::Mat &I1, const cv::Mat &I2) {
+  icov::assert::check(
+      (I1.type() == I2.type()) && (I1.size == I2.size),
+      ICOV_DEBUG_HEADER("Matrices must have the same types and sizes"));
 
-    cv::Mat s1;
-    absdiff(I1, I2, s1);                         // |I1 - I2|
-    s1.convertTo(s1, CV_32F);                    // cannot make a square on 8 bits
-    s1 = s1.mul(s1);                             // |I1 - I2|^2
-    cv::Scalar s = sum(s1);                      // sum elements per channel
-    double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
-    if (sse <= 1e-10)                            // for small values return zero
-        return 0;
-    else
-        return sse / (double)(I1.channels() * I1.total());
+  cv::Mat s1;
+  absdiff(I1, I2, s1);                         // |I1 - I2|
+  s1.convertTo(s1, CV_32F);                    // cannot make a square on 8 bits
+  s1 = s1.mul(s1);                             // |I1 - I2|^2
+  cv::Scalar s = sum(s1);                      // sum elements per channel
+  double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
+  if (sse <= 1e-10)                            // for small values return zero
+    return 0;
+  else
+    return sse / (double)(I1.channels() * I1.total());
 }
 
 double psnr(const cv::Mat &I1, const cv::Mat &I2) {
@@ -176,6 +179,20 @@ void cvMatToYUV(const cv::Mat &input, PelUnitBuf &pic) {
   {
     ICOV_THROW_STD_EXCEPTION("not implemented yet");
   }
+}
+
+cv::Rect getBlockRoi(const icov::omnidirectional_layer::Block &b) {
+
+  const auto pic = b.parent();
+
+  icov::assert::not_null(pic, ICOV_DEBUG_HEADER("Picture is not null"));
+
+  int bw = (int)(b.w() * pic->width());
+  int bh = (int)(b.h() * pic->height());
+  int bx = (int)(pic->u(pic->angleX(b.u())) * pic->width());
+  int by = (int)(pic->v(pic->angleY(b.v())) * pic->height());
+
+  return cv::Rect(bx, by, bw, bh);
 }
 
 } // namespace VTM_OPENCV_Utility

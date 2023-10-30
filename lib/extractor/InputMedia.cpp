@@ -115,6 +115,11 @@ void icov::extractor::InputIcov::selectBlock(const omnidirectional_layer::Block:
   getStream(bitstream::eIcovStream::SYNDROME).clear();
   getStream(bitstream::eIcovStream::SYNDROME)
       .seekg(m_synd_pos[id_pos], std::ios_base::beg);
+
+  getStream(bitstream::eIcovStream::METRICS).clear();
+  getStream(bitstream::eIcovStream::METRICS)
+      .seekg((m_frameID * m_blockCount + id_pos) * sizeof(float),
+             std::ios_base::beg);
 }
 
 void icov::extractor::InputIcov::readSyndromesSizes(

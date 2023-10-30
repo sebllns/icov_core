@@ -199,6 +199,7 @@ void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
   ar &io.content_type;
   ar &io.content_width;
   ar &io.content_height;
+  ar &io.qp;
   ar &io.content_chroma_format;
   ar &io.content_framecount;
   ar &io.content_framerate;

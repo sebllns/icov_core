@@ -35,9 +35,9 @@ icov::decoder::CsvOutput::CsvOutput(const std::string &path_prefix)
     m_blockFile.addColumn("prediction");                        // 7
     m_blockFile.addColumn("encoded bitrate");                   // 8
     m_blockFile.addColumn("all intra bitrate");                 // 9
+    m_blockFile.addColumn("encoded bits per decoded pixel");    // 11
+    m_blockFile.addColumn("all intra bits per decoded pixel");  // 12
     m_blockFile.addColumn("bitrate ratio (encoded/all intra)"); // 10
-    m_blockFile.addColumn("bpp (encoded)");                     // 11
-    m_blockFile.addColumn("bpp (all intra)");                   // 12
     m_blockFile.addColumn("mse");                               // 13
     m_blockFile.addColumn("psnr");                              // 14
     m_blockFile.writeColumnNames();
@@ -49,8 +49,8 @@ icov::decoder::CsvOutput::CsvOutput(const std::string &path_prefix)
     m_viewportFile.addColumn("encoded bitrate");                   // 3
     m_viewportFile.addColumn("all intra bitrate");                 // 4
     m_viewportFile.addColumn("bitrate ratio (encoded/all intra)"); // 5
-    m_viewportFile.addColumn("bpp (erp)");                         // 6
-    m_viewportFile.addColumn("bpp (display)");                     // 7
+    m_viewportFile.addColumn("bits per decoded pixel");            // 6
+    m_viewportFile.addColumn("bits per displayed pixel");          // 7
     m_viewportFile.addColumn("mse (erp)");                         // 8
     m_viewportFile.addColumn("mse (display)");                     // 9
     m_viewportFile.addColumn("psnr (erp)");                        // 10
@@ -101,7 +101,6 @@ void icov::decoder::CsvOutput::_afterOrderingLoop(const request_t &r)
     m_viewportFile.setColumnValue("request id", m_requestID); // 1
     m_viewportFile.setColumnValue("decoded pixel area (erp)",
                                   m_erpDecodedArea);                        // 3
-    m_viewportFile.setColumnValue("display pixel area", m_displayArea);     // 3
     m_viewportFile.setColumnValue("block count", m_viewportBlockCount);     // 2
     m_viewportFile.setColumnValue("encoded bitrate",
                                   m_viewportEncodedSize); // 3
@@ -111,18 +110,12 @@ void icov::decoder::CsvOutput::_afterOrderingLoop(const request_t &r)
         "bitrate ratio (encoded/all intra)",
         static_cast<Rate>(m_viewportEncodedSize) /
             static_cast<Rate>(m_viewportDecodedSize)); // 5
-    m_viewportFile.setColumnValue("bpp (erp)",
+    m_viewportFile.setColumnValue("bits per decoded pixel",
                                   static_cast<double>(m_viewportEncodedSize) /
-                                      m_erpDecodedArea); // 6
-    m_viewportFile.setColumnValue("bpp (display)",
-                                  static_cast<double>(m_viewportEncodedSize) /
-                                      m_displayArea);     // 7
+                                      m_erpDecodedArea);  // 6
     m_viewportFile.setColumnValue("mse (erp)", m_ErpMse); // 8
-    m_viewportFile.setColumnValue("mse (display)", -1);   // 9
     m_viewportFile.setColumnValue("psnr (erp)",
                                   icov::maths::psnr(m_ErpMse, 255)); // 10
-    m_viewportFile.setColumnValue("psnr (display)", -1);             // 11
-    m_viewportFile.writeAndClearValues();
 }
 
 void icov::decoder::CsvOutput::_processBlock(const request_t &r, const omnidirectional_layer::Block &b,
@@ -170,10 +163,10 @@ void icov::decoder::CsvOutput::_processBlock(const request_t &r, const omnidirec
     m_blockFile.setColumnValue("all intra bitrate", decodedSize); // 9
     m_blockFile.setColumnValue("bitrate ratio (encoded/all intra)",
                                rate); // 10
-    m_blockFile.setColumnValue("bpp (encoded)",
+    m_blockFile.setColumnValue("encoded bits per decoded pixel",
                                static_cast<float>(encodedSize) /
                                    static_cast<float>(area)); // 11
-    m_blockFile.setColumnValue("bpp (all intra)",
+    m_blockFile.setColumnValue("all intra bits per decoded pixel",
                                static_cast<float>(decodedSize) /
                                    static_cast<float>(area)); // 12
     m_blockFile.setColumnValue("mse", mse);                   // 13

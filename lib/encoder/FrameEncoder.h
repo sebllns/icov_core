@@ -59,6 +59,7 @@
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 
+#include <boost/filesystem/path.hpp>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -175,6 +176,7 @@ protected:
   std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
 
   cv::Mat m_reco;
+  fs::path m_frame_dir;
 
   struct StoredRate {
     NumcodeIdx c; // rate quantized

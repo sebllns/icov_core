@@ -44,11 +44,18 @@
  *
  *****************************************************************************/
 #pragma once
+
 #include "CommonLib/Unit.h"
+
+#include "omnidirectional_layer/Block.h"
+
 #include <opencv2/core.hpp>
+#include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 
 namespace VTM_OPENCV_Utility {
+
+cv::Rect getBlockRoi(const icov::omnidirectional_layer::Block &b);
 
 double mse(const cv::Mat &I1, const cv::Mat &I2);
 double psnr(const cv::Mat &I1, const cv::Mat &I2);

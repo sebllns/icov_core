@@ -51,13 +51,12 @@
 
 #include "Buffer.h"
 #include "decoder/BlockDecoder.h"
-#include "decoder/CsvOutput.h"
 #include "extractor/BlockExtractor.h"
 #include "extractor/InputMedia.h"
-#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ContentParameterSet.h"
+
 #include <memory>
 #include <queue>
 #include <vector>
@@ -102,7 +101,7 @@ class SinglePassDecoder
     void setBlockDecoder(const std::shared_ptr<BlockDecoder> &newBlockDecoder);
 
     void start();
-    void request(angle_t x, angle_t y, frame_t i);
+    bool request(angle_t x, angle_t y, frame_t i);
 
     const LdpcCoderParameters &ldpcParams() const;
     void setLdpcParams(const LdpcCoderParameters &newLdpcParams);
@@ -137,8 +136,6 @@ class SinglePassDecoder
     float pov_x;
     float pov_y;
     unsigned long frame;
-
-    bool m_hasGroundTruth;
 };
 } // namespace decoder
 } // namespace icov

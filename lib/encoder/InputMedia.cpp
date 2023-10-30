@@ -1,6 +1,7 @@
 #include "InputMedia.h"
 #include "icov_assert.h"
 #include "icov_exception.h"
+#include "icov_path.h"
 #include "opencv2/videoio.hpp"
 
 #include <boost/filesystem.hpp>
@@ -70,6 +71,8 @@ void InputVideo::writeInfos(std::ofstream &output, int key, void *param) {
 
 void instantiateInputMedia(const boost::filesystem::path &path,
                            std::unique_ptr<InputMedia> &output) {
+
+  path::assert_file_exists(path.string());
 
   InputMedia *media = nullptr;
   std::string ext =

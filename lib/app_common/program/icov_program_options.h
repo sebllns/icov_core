@@ -286,6 +286,10 @@ inline std::string parsePositionsInputFile(const args_t &args) {
   return args[positions_input].as<std::string>();
 }
 
+inline std::string parseGroundTruth(const args_t &args) {
+  return args[ground_truth].as<std::string>();
+}
+
 inline std::string parseLdpcCoderType(const args_t &args) {
   return args[coder_type].as<std::string>();
 }

@@ -253,6 +253,11 @@ public:
   void setIsAccessBlock(bool newIsAccessBlock);
   bool hidden() const;
   void setHidden(bool newHidden);
+
+  bool is_block_visible(const viewport_geometry &vpg,
+                        float padding = 1.0f) const;
+  bool is_corner_visible(int corner, const viewport_geometry &vpg,
+                         float padding = 1.0f) const;
 };
 
 /**

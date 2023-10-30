@@ -70,7 +70,7 @@ struct ContentParameterSet {
   uint16_t viewport_width, viewport_height;
   float viewport_fov_x, viewport_fov_y;
 
-  uint16_t qp;
+  byte qp;
   uint16_t ldpc_bp_ite;
   std::string ldpc_coder_type;
 

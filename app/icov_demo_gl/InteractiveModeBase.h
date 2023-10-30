@@ -54,6 +54,8 @@
 #include <boost/serialization/map.hpp>
 
 #include <fstream>
+#include <map>
+#include <string>
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -164,6 +166,8 @@ class InteractiveModeBase
 
         float offset_pitch = 10.;
         float offset_yaw = 12.;
+
+        std::map<std::string, int> custom_keys;
     };
 
     InteractiveModeBase();
@@ -179,11 +183,15 @@ class InteractiveModeBase
     void clear();
     void fill(const cv::Scalar &color);
     void draw();
-    void init360Viewer(int width, int height, int fov_y_DEG);
+    void init360Viewer(int width, int height, float fov_y_DEG);
 
     const Config &config() const;
 
     void setWait_delay(int newWait_delay);
+
+    const std::unique_ptr<Single360degreeCameraHandler> &get360viewer() const;
+
+    void setPOV_DEG(float pov_x, float pov_y);
 
   private:
     std::unique_ptr<Single360degreeCameraHandler> m_360viewer;
