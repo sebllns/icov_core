@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./icov_demo_gl --log-level 2 --ldpc-coder-type "imt164" --ldpc-data-path "./data/imt_164_v2/" --mode "icov" --input-file "/home/sbelleno/NOSAVE/icov/images/Oberkaisern/Oberkaisern_1280_2/Oberkaisern_1280_2.icov" --decode-csv-output "/home/sbelleno/NOSAVE/icov/images/Oberkaisern/metricsV2" --decode-ground-truth "/home/sbelleno/NOSAVE/icov/images/Oberkaisern/Oberkaisern_1280.jpg" --decode-positions-input "/home/sbelleno/_ICOV/CODE/adt.git/tests/positions.txt" 

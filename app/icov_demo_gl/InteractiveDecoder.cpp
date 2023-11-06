@@ -222,11 +222,10 @@ bool InteractiveDecoder::processKey(char key)
 
         if (m_requests.empty()) {
         // write values for the RD curves
-        std::cout << "ERP RD " << m_erp_rate_sum / m_req_count << ","
-                  << m_erp_psnr_sum / m_req_count << std::endl;
-        std::cout << "DISP RD " << m_vp_rate_sum / m_req_count << ","
-                  << m_vp_psnr_sum / m_req_count << std::endl;
-        cv::waitKey(0);
+        ICOV_INFO << "ERP RD " << m_erp_rate_sum / m_req_count << ","
+                  << m_erp_psnr_sum / m_req_count;
+        ICOV_INFO << "DISP RD " << m_vp_rate_sum / m_req_count << ","
+                  << m_vp_psnr_sum / m_req_count;
         }
 
         setWait_delay(1);
