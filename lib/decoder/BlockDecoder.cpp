@@ -8,16 +8,18 @@
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
-#include "video_layer/VideoMetrics.h"
 #include "video_layer/vtm_utility.h"
+
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <memory>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+
+#include <memory>
 
 namespace fs = boost::filesystem;
 using namespace icov::decoder;

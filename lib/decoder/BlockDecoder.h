@@ -50,22 +50,19 @@
 #pragma once
 
 #include "decoder/ChannelDecoder.h"
-#include "icov_common.h"
-#include "icov_types.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
-
 #include "omnidirectional_layer/Block.h"
-#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockDecoder.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/Encodingstructure.h"
 #include "video_layer/extracted_stream.h"
 
 #include <boost/type_traits/extent.hpp>
+
+#include <opencv2/opencv.hpp>
+
 #include <map>
 #include <memory>
-#include <opencv2/opencv.hpp>
 
 namespace icov {
 namespace decoder {
@@ -76,7 +73,6 @@ public:
     int qp;
     ChromaFormat chFormat;
 
-    // TODO: unplug openCV from DECODER
     cv::Size sourceSize;
     cv::Size icuSize_luma;
 

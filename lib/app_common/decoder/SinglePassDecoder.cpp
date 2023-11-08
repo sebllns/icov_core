@@ -3,7 +3,6 @@
 #include "Media.h"
 #include "Unit.h"
 #include "decoder/BlockDecoder.h"
-#include "encoder/InputMedia.h"
 #include "extractor/BlockExtractor.h"
 #include "icov_assert.h"
 #include "icov_log.h"
