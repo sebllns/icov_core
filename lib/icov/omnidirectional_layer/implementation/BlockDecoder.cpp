@@ -60,8 +60,10 @@ float BlockDecoder::getTime() {
   return (float)(clock() - m_startTime) / CLOCKS_PER_SEC;
 }
 
-void BlockDecoder::_processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction)
-{
+void BlockDecoder::_processBlock(
+    const request_t &r, const Block &b,
+    IBlockPredictionManager::prediction_t prediction,
+    frame_t previouslyDecoded) {
   std::cout << "decode block " << b.getIdSelf() << std::endl;
 }
 } // namespace omnidirectional_layer

@@ -80,7 +80,9 @@ class IBlockProcessor
     /// \param b
     /// \param prediction
     ///
-    void processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction);
+    void processBlock(const request_t &r, const Block &b,
+                      IBlockPredictionManager::prediction_t prediction,
+                      frame_t previouslyDecoded);
 
     ///
     /// \brief startProcess : executed AFTER loop on processBlock
@@ -102,16 +104,21 @@ class IBlockProcessor
     void setBefore(const func_t &newBefore);
     void setAfter(const func_t &newAfter);
 
+    const request_t &previousRequest() const { return m_previousRequest; }
+
   protected:
     virtual void _beforeOrderingLoop(const request_t &r){};
     virtual void _afterOrderingLoop(const request_t &r){};
-    virtual void _processBlock(const request_t &r, const Block &b, IBlockPredictionManager::prediction_t prediction){};
+    virtual void _processBlock(const request_t &r, const Block &b,
+                               IBlockPredictionManager::prediction_t prediction,
+                               frame_t previouslyDecoded){};
 
   private:
     std::string m_name;
     std::shared_ptr<IBlockProcessor> m_parent;
     std::vector<std::shared_ptr<IBlockProcessor>> m_childs;
     bool m_enabled;
+    request_t m_previousRequest;
 
     func_t m_before;
     func_t m_after;
@@ -135,9 +142,10 @@ inline void IBlockProcessor::beforeOrderingLoop(const request_t &r)
         ch->beforeOrderingLoop(r);
 }
 
-inline void IBlockProcessor::processBlock(const request_t &r, const Block &b,
-                                          IBlockPredictionManager::prediction_t prediction)
-{
+inline void
+IBlockProcessor::processBlock(const request_t &r, const Block &b,
+                              IBlockPredictionManager::prediction_t prediction,
+                              frame_t previouslyDecoded) {
     if (!m_enabled)
         return;
 
@@ -148,10 +156,10 @@ inline void IBlockProcessor::processBlock(const request_t &r, const Block &b,
     if (m_before)
         m_before(r, b, prediction);
 
-    _processBlock(r, b, prediction);
+    _processBlock(r, b, prediction, previouslyDecoded);
 
     for (auto &ch : m_childs)
-        ch->processBlock(r, b, prediction);
+        ch->processBlock(r, b, prediction, previouslyDecoded);
 
     if (m_after)
         m_after(r, b, prediction);
@@ -169,6 +177,8 @@ inline void IBlockProcessor::afterOrderingLoop(const request_t &r)
 
     for (auto &ch : m_childs)
         ch->afterOrderingLoop(r);
+
+    m_previousRequest = r;
 }
 
 inline const std::shared_ptr<IBlockProcessor> &IBlockProcessor::parent() const

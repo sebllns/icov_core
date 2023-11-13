@@ -109,8 +109,10 @@ protected:
 protected:
   void _beforeOrderingLoop(const request_t &r) override;
   void _afterOrderingLoop(const request_t &r) override;
-  void _processBlock(const request_t &r, const omnidirectional_layer::Block &b,
-                     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction) override;
+  void _processBlock(
+      const request_t &r, const omnidirectional_layer::Block &b,
+      omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
+      frame_t previouslyDecoded) override;
 };
 } // namespace decoder
 } // namespace icov

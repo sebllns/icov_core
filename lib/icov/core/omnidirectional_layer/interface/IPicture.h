@@ -100,6 +100,8 @@ public:
     return getBlockIndexPos(b.getIdSelf());
   }
 
+  Block::id_t getInvalidBlockId() const { return 0; }
+
   BlockVector::iterator getById(Block::id_t id) {
     if (!blockExists(id))
       return m_icus.end();

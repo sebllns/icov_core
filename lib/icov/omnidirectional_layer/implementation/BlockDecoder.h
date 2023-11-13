@@ -65,7 +65,8 @@ public:
   // IBlockProcessor interface
 protected:
   virtual void _processBlock(const request_t &r, const Block &b,
-                             IBlockPredictionManager::prediction_t prediction) override;
+                             IBlockPredictionManager::prediction_t prediction,
+                             frame_t previouslyDecoded) override;
   void _beforeOrderingLoop(const request_t &r) override;
   void _afterOrderingLoop(const request_t &r) override;
 };

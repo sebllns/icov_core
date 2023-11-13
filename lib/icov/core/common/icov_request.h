@@ -10,12 +10,16 @@ struct viewpoint_t
 {
     angle_t angleX;
     angle_t angleY;
+
+    viewpoint_t() = default;
 };
 
 struct request_t
 {
     viewpoint_t viewpoint;
     frame_t frameID;
+
+    request_t() = default;
 };
 
 inline bool operator==(const viewpoint_t &a, const viewpoint_t &b)

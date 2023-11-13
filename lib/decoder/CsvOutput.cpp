@@ -118,9 +118,10 @@ void icov::decoder::CsvOutput::_afterOrderingLoop(const request_t &r)
                                   icov::maths::psnr(m_ErpMse, 255)); // 10
 }
 
-void icov::decoder::CsvOutput::_processBlock(const request_t &r, const omnidirectional_layer::Block &b,
-                                             omnidirectional_layer::IBlockPredictionManager::prediction_t prediction)
-{
+void icov::decoder::CsvOutput::_processBlock(
+    const request_t &r, const omnidirectional_layer::Block &b,
+    omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
+    frame_t previouslyDecoded) {
     BitLength encodedSize =
         icov::video_layer::VideoMetrics::get_const_instance()
             .getBlock(b)
