@@ -21,13 +21,6 @@ message(
     "------------------------------------------------------------------------\n\n"
 )
 
-message(STATUS "find OpenCV")
-find_package(OpenCV REQUIRED)
-message(
-  STATUS
-    "------------------------------------------------------------------------\n\n"
-)
-
 message(STATUS "find glm")
 find_package(glm REQUIRED)
 message(

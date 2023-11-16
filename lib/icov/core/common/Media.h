@@ -50,6 +50,7 @@
 
 #include "icov_assert.h"
 #include "icov_path.h"
+#include "icov_request.h"
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -112,7 +113,7 @@ public:
   inline size_t getWidth() const { return m_width; }
   inline size_t getHeight() const { return m_height; }
   inline int getType() const { return m_type; }
-  inline int getFrameCount() const { return m_frameCount; }
+  inline frame_t getFrameCount() const { return m_frameCount; }
   inline size_t getPixelCount() const { return m_width * m_height; }
   inline const boost::filesystem::path &getPath() const { return m_path; }
 
@@ -121,7 +122,7 @@ protected:
   fs::path m_path;
   size_t m_width;
   size_t m_height;
-  int m_frameCount;
+  frame_t m_frameCount;
 
 private:
   IMedia() = default;
@@ -138,7 +139,7 @@ private:
 
 protected:
   T m_frameData;
-  int m_frameID;
+  frame_t m_frameID;
 
 public:
   // using IMedia::IMedia;
@@ -148,12 +149,8 @@ public:
     icov::path::assert_file_exists(path.string());
   }
 
-  virtual void setMaxFrame(int frame)
-  {
-    m_frameCount = std::max(frame, m_frameCount);
-  }
-  virtual void setFrame(int frame) { m_frameID = frame; }
-  inline int getFrameID() const { return m_frameID; }
+  virtual void setFrame(frame_t frame) { m_frameID = frame; }
+  inline frame_t getFrameID() const { return m_frameID; }
 
   virtual inline const T &getCurrentFrame() const { return m_frameData; }
   inline virtual const boost::any getProperty(std::string id) {
@@ -195,7 +192,7 @@ public:
 
   // IMedia interface
 public:
-  void setFrame(int frame = 0) override {
+  void setFrame(frame_t frame = 0) override {
     this->m_frameID = 0; /*image = 1 frame only*/
   }
 };

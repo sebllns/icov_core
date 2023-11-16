@@ -298,14 +298,19 @@ find_package(
   "${AFF3CT_PACKAGE_DIR}"
   NO_DEFAULT_PATH)
 message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
-
-# include_directories(SYSTEM third-party/aff3ct/src third-party/aff3ct/include
-# third-party/aff3ct/lib/MIPP/src third-party/aff3ct/lib/cli/src
-# third-party/aff3ct/lib/rang/include)
-
+message("\n")
 message(
-  WARNING
-    "(DEV ONLY) TODO Move aff3ct to better place (lib/icov/ldpc_codec_layer)")
+  "-------------------------------------------------------------------------")
+
+# ---------------------------------------------------------------------
+# Link with OpenCV
+message(STATUS "[INFO] Checking OpenCV support...")
+find_package(OpenCV REQUIRED)
+set(ICOV_OPENCV_INCLUDE ${OpenCV_INCLUDE_DIRS})
+set(ICOV_OPENCV_LIBS ${OpenCV_LIBS} ${OpenCV_LIBRARIES})
+message(
+  STATUS
+    "[INFO] FOUND OpenCV: inc=${ICOV_OPENCV_INCLUDE} lib=${ICOV_OPENCV_LIBS}")
 message("\n")
 message(
   "-------------------------------------------------------------------------")
@@ -316,8 +321,8 @@ message(
 
 # Define the ICOV core version number
 set(ICOV_CORE_VERSION_MAJOR "1")
-set(ICOV_CORE_VERSION_MINOR "0")
-set(ICOV_CORE_VERSION_PATCH "1")
+set(ICOV_CORE_VERSION_MINOR "3")
+set(ICOV_CORE_VERSION_PATCH "0")
 set(ICOV_CORE_VERSION
     "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}"
 )

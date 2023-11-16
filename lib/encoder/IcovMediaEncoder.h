@@ -73,6 +73,8 @@ public:
     omnidirectional_layer::Block::id_t StartBlock;
     size_t BlockCount;
     bool DummyViewport;
+
+    params() = default;
   };
 
   IcovMediaEncoder(const params &p, const LdpcCoderParameters &LDPC_params);

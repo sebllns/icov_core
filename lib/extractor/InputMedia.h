@@ -109,7 +109,7 @@ public:
   void extractBlock(bitstream::BlockChannelDecoderParams &output, int icu_idx);
 
   void writeInfos(std::ofstream &output, int key, void *param) override;
-  void setFrame(int frame) override;
+  void setFrame(frame_t frame) override;
 
   omnidirectional_layer::Block::id_t
   getBlockIndexInStream(const omnidirectional_layer::Block::id_t &id) const;

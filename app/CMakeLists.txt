@@ -15,8 +15,6 @@ if(UNIX)
   # lib dl
 endif()
 
-find_package(OpenCV REQUIRED)
-
 link_libraries(
   ${Boost_LIBRARIES}
   ${OpenCV_LIBS}

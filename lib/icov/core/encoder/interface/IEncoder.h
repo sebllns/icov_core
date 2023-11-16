@@ -52,6 +52,7 @@
 #include "Media.h"
 
 #include "icov_log.h"
+#include "icov_request.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IPicture.h"
@@ -371,6 +372,8 @@ void IFrameEncoder<T>::encodeBlock(
 template <typename T> class IMediaEncoder : public IEncoder<T> {
 
 public:
+  IMediaEncoder() = default;
+
   /**
    * @brief Encodes the input 360 media data consisting of multiple frames.
    *
@@ -382,6 +385,12 @@ public:
       IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
       const omnidirectional_layer::IBlockPredictionManager &block_prediction);
 
+  frame_t maxFrameCount() const { return m_max_frame_count; }
+
+  void setMaxFrameCount(frame_t newMax_frame_count) {
+    m_max_frame_count = newMax_frame_count;
+  }
+
 protected:
   /**
    * @brief Creates a frame encoder for encoding individual frames.
@@ -389,6 +398,10 @@ protected:
    * @return A unique pointer to the frame encoder.
    */
   virtual std::unique_ptr<IFrameEncoder<T>> createFrameEncoder() const = 0;
+
+private:
+  frame_t m_max_frame_count;
+  frame_t m_start_frame;
 };
 
 template <typename T>
@@ -396,24 +409,26 @@ void IMediaEncoder<T>::encode(
     IInputMedia<T> &input, const omnidirectional_layer::IPicture &picture,
     const omnidirectional_layer::IBlockPredictionManager &block_prediction) {
   this->processInput(input);
-  int frameCount = input.getFrameCount();
   auto pFrameEnc = createFrameEncoder();
+  frame_t i = 0;
 
-  for (int i = 0; i < frameCount; ++i)
-  {
+  while (i < input.getFrameCount() &&
+         (m_max_frame_count == 0 || i < m_max_frame_count)) {
+    frame_t f = i + m_start_frame;
     try {
-      ICOV_TRACE << "Encode frame " << i;
+      ICOV_TRACE << "Encode frame " << f;
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingFrameID(i);
-      input.setFrame(i);
+      input.setFrame(f);
       pFrameEnc->setFrame(i);
       pFrameEnc->encode(input, picture, block_prediction);
+      ++i;
     } catch (const std::exception &e) {
-      ICOV_ERROR << "Catched error while encoding frame " << i;
+      ICOV_ERROR << "Catched error while encoding frame " << f;
       ICOV_ERROR << e.what();
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     } catch (...) {
-      ICOV_ERROR << "Unknown error while encoding frame " << i;
+      ICOV_ERROR << "Unknown error while encoding frame " << f;
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     }
   }

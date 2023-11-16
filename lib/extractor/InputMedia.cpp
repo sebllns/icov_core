@@ -222,7 +222,7 @@ void icov::extractor::InputIcov::extractBlock(
 void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}
 
-void icov::extractor::InputIcov::setFrame(int frame) {
+void icov::extractor::InputIcov::setFrame(frame_t frame) {
 
   uint32_t frameRateSize = 0;
   uint32_t frameSyndromeSize = 0;

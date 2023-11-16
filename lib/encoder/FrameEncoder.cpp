@@ -789,6 +789,7 @@ void FrameEncoder::encodeBlockWithPrediction(
 
   if (pred == omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     fs::path ab_file(std::to_string(b.getIdSelf()) + ".jpg");
+    ICOV_DEBUG << "JPGAB = " << ab_file;
     cv::imwrite(m_frame_dir.append(ab_file).string(),
                 m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
   }

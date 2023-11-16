@@ -77,7 +77,7 @@ public:
   ~InputVideo() = default;
 
   // IMedia interface
-  void setFrame(int i) override;
+  void setFrame(frame_t i) override;
   void writeInfos(std::ofstream &output, int key,
                   void *param = nullptr) override;
 };

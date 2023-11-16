@@ -49,6 +49,7 @@
 
 #pragma once
 
+#include "icov_request.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
@@ -89,6 +90,7 @@ const std::string data_path = "ldpc-data-path";
 const std::string encode_allblocks = "encode-allblocks";
 const std::string start_block = "encode-start-block";
 const std::string block_count = "encode-block-count";
+const std::string frame_start = "encode-start-frame";
 const std::string frame_count = "encode-frame-count";
 const std::string viewport_padding = "encode-viewport-padding";
 const std::string viewport_erp_horizontal_ratio_id =
@@ -164,7 +166,7 @@ struct DecoderArgs {
 inline void addEncoderOptions(desc_t &output) {
   output.add_options()(icu_size.c_str(), po::value<int>()->default_value(32),
                        "ICU width for encoding");
-  // 22, 27, 32, 37, 42
+  // example:  22, 27, 32, 37, 42
   output.add_options()(qp.c_str(), po::value<int>()->default_value(27),
                        "QP value for encoding");
 
@@ -188,6 +190,14 @@ inline void addEncoderOptions(desc_t &output) {
   output.add_options()(dummy_viewport.c_str(),
                        po::value<bool>()->default_value(false),
                        "Use dummy viewport (all blocks are visible)");
+
+  output.add_options()(
+      frame_count.c_str(), po::value<frame_t>()->default_value(0),
+      "Frame number to be encoded from video (0 means all frames)");
+
+  output.add_options()(frame_start.c_str(),
+                       po::value<frame_t>()->default_value(0),
+                       "Frame to start the encoding from");
 }
 
 inline void addDecoderOptions(desc_t &output) {
@@ -307,6 +317,14 @@ inline int parseQP(const args_t &args) { return args[qp].as<int>(); }
 inline int parseBpIte(const args_t &args) { return args[bp_iter].as<int>(); }
 
 inline float parseFov(const args_t &args) { return args[fov].as<float>(); }
+
+inline int parseFrameCount(const args_t &args) {
+  return args[frame_count].as<frame_t>();
+}
+
+inline int parseFrameStart(const args_t &args) {
+  return args[frame_start].as<frame_t>();
+}
 
 inline float parseViewportErpRatio(const args_t &args) {
   return args[viewport_erp_horizontal_ratio_id].as<float>();

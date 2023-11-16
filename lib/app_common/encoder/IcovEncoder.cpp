@@ -48,6 +48,7 @@ void icov::encoder::IcovEncoder::run() {
   ICOV_INFO << boost::format("%-15s %-s ") % "Output File:" %
                    m_params.Outputfile;
 
+  m_encoder->setMaxFrameCount(getParams().FrameCount);
   m_encoder->defaultEncode(m_params.fov_x_degree, m_params.ViewportPadding,
                            m_params.display_horizontal_ratio,
                            m_params.viewport_image_format);
@@ -77,7 +78,6 @@ boost::filesystem::path icov::encoder::IcovEncoder::outputfile() const {
 
 icov::encoder::IcovEncoder::params::params(
     const boost::program_options::variables_map &args) {
-  //@todo TODO !!!!
 
   m_debugframecount = 100;
   DummyViewport = options::parseDummyViewportOption(args);
@@ -90,7 +90,7 @@ icov::encoder::IcovEncoder::params::params(
   display_horizontal_ratio = options::parseViewportErpRatio(args);
   viewport_image_format = options::parseViewportImageRatio(args);
 
-  FrameCount = 10;
+  FrameCount = options::parseFrameCount(args);
 
   bsp_params.enable_z_quantization = true;
   icov::io::read_vector(ICOV_Q_VALUES_FILE(args).string(), bsp_params.q_values);

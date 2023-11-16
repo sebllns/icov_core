@@ -4,6 +4,8 @@
 #include "Encodingstructure.h"
 #include "Rom.h"
 #include "Utilities/program_options_lite.h"
+#include "icov_log.h"
+#include "opencv2/core/utility.hpp"
 
 void
 icov::video::init_video_lib(int argc, char* argv[])
@@ -32,6 +34,8 @@ icov::video::init_video_lib(int argc, char* argv[])
   // initialize global variables
   initROM(); // really necessary, but it should be called once
              // END NEEDED FOR VVC
+
+  ICOV_DEBUG << cv::getBuildInformation();
 }
 
 std::string icov::video::chromaSubsamplingToStr(int value)
