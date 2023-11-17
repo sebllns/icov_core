@@ -391,6 +391,9 @@ public:
     m_max_frame_count = newMax_frame_count;
   }
 
+  frame_t startFrame() const { return m_start_frame; }
+  void setStartFrame(frame_t newStart_frame) { m_start_frame = newStart_frame; }
+
 protected:
   /**
    * @brief Creates a frame encoder for encoding individual frames.

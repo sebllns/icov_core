@@ -49,17 +49,16 @@
 
 #pragma once
 
-#include "FastArray.h"
 #include "Media.h"
-#include "icov_common.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
-#include <array>
+
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <memory>
@@ -72,10 +71,10 @@ namespace encoder {
 class OutputIcovBase : public icov::IOutputIcov {
 public:
   enum eWriteCounter {
-    BLOCK_RATE = 0,
-    BLOCK_SYNDROME,
-    FRAME_RATE,
-    FRAME_SYNDROME,
+    ENC_BLOCK_RATE_SIZE = 0,
+    ENC_BLOCK_SYNDROME_SIZE,
+    ENC_FRAME_RATE_SIZE,
+    ENC_FRAME_SYNDROME_SIZE,
     TOTAL_WRITE,
     TOTAL_LOST,
     COUNT

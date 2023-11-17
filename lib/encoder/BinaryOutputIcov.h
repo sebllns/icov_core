@@ -49,15 +49,14 @@
 
 #pragma once
 
-#include "FastArray.h"
-#include "Media.h"
 #include "OutputIcovBase.h"
-#include "ldpc_codec_layer/BitSymbolProvider.h"
+
 #include "omnidirectional_layer/Block.h"
-#include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
+
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+
 #include <cstdint>
 #include <fstream>
 #include <memory>

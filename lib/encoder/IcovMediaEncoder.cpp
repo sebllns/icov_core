@@ -108,8 +108,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().icov_version = "icov_" ICOV_CORE_VERSION;
 
-  //@todo TODO VIDEO set frame count
-  m_output->contentParameterSet().content_framecount = 1;
+  m_output->contentParameterSet().content_framecount = 0;
 
   m_output->contentParameterSet().is_block_fixed_size = (m_params.FrameEncoderParams.ICU_Size.aspectRatio() == 1);
 

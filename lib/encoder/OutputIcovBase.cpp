@@ -1,4 +1,5 @@
 #include "OutputIcovBase.h"
+#include "version.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
 #include <algorithm>
@@ -13,6 +14,7 @@ OutputIcovBase::OutputIcovBase(const boost::filesystem::path &path,
                                int openflag)
     : icov::IOutputIcov(path) {
 
+  (*m_outputStream) << "ICOV " << ICOV_CORE_VERSION << std::endl;
   int flags = std::ios_base::out | openflag;
   for (int i = bitstream::eIcovStream::MEDIA_HEADER;
        i < bitstream::eIcovStream::COUNT; ++i) {

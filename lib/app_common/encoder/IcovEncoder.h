@@ -51,6 +51,7 @@
 
 #include "app_common/program/icov_program_options.h"
 #include "encoder/IcovMediaEncoder.h"
+#include "icov_request.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include <boost/filesystem/path.hpp>
 #include <memory>
@@ -74,7 +75,8 @@ class IcovEncoder
         omnidirectional_layer::Block::id_t StartBlock;
         size_t BlockCount;
         float ViewportPadding;
-        uint FrameCount;
+        frame_t FrameCount;
+        frame_t FrameStart;
 
         uint m_debugframecount;
         uint m_icuSize;

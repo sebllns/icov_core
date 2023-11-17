@@ -8,7 +8,8 @@
  */
 
 /** @file encoded_stream.h
- *  @brief Contains various utilities and types related to bitstream manipulation.
+ *  @brief Contains various utilities and types related to bitstream
+ *manipulation.
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.0.3
@@ -94,6 +95,7 @@ static const omnidirectional_layer::IBlockPredictionManager::prediction_t
 
 inline int
 getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
+
   switch (pred) {
 
   case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
@@ -119,6 +121,10 @@ getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   case omnidirectional_layer::BlockPrediction::BOTTOM:
     return 7;
+
+    //@todo TODO
+    //  case omnidirectional_layer::BlockPrediction::INTER:
+    //    return 8;
 
   default:
     ICOV_THROW_INVALID_ARGUMENT("Unrecognized prediction value");

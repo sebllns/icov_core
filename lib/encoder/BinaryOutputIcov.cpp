@@ -20,14 +20,16 @@ void BinaryOutputIcov::writeQaryParams(
     {
         // std::cout << "SI IDENTICAL" << std::endl;
         //    std::cout << "Q 0" << std::endl;
-        icov::io::write_value<byte>(getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, true);
-        m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
+        icov::io::write_value<byte>(
+            getStream(bitstream::eIcovStream::ENCODE_PARAMS), 0, false);
+        m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(byte);
     }
     else
     {
         icov::bitstream::writeQaryParams(m_qaryParams, bsp.getRawQ0(), bsp.getRawZmin(), bsp.getRawZmax());
-        icov::io::write_array(getStream(bitstream::eIcovStream::ENCODE_PARAMS), m_qaryParams, QARY_PARAMS_SIZE, true);
-        m_total_write_byte[eWriteCounter::BLOCK_RATE] += QARY_PARAMS_SIZE * sizeof(byte);
+        icov::io::write_array(getStream(bitstream::eIcovStream::ENCODE_PARAMS),
+                              m_qaryParams, QARY_PARAMS_SIZE, false);
+        m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += QARY_PARAMS_SIZE * sizeof(byte);
     }
 }
 
@@ -49,7 +51,7 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
 
   int lost = bitstream::byteToBitCount(byte_size) - s.size();
 
-  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] += byte_size;
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] += byte_size;
 
   //  std::cout << "WRITE BYTES " << byte_size << std::endl;
   //  std::cout << "WRITE BITS " << s.size() << std::endl;
@@ -69,41 +71,40 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
   //  m_fileParts[eIcovStream::SYNDROME]->flush();
 
   icov::io::write_array(*m_fileParts[bitstream::eIcovStream::SYNDROME], darr,
-                        byte_size, true);
+                        byte_size, false);
 }
 
 void BinaryOutputIcov::writeFrameSize() {
   icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::FRAMES_SIZE],
-      m_total_write_byte[eWriteCounter::FRAME_RATE], false);
+      m_total_write_byte[eWriteCounter::ENC_FRAME_RATE_SIZE], false);
   icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::FRAMES_SIZE],
-      m_total_write_byte[eWriteCounter::FRAME_SYNDROME], true);
+      m_total_write_byte[eWriteCounter::ENC_FRAME_SYNDROME_SIZE], false);
 
-  m_total_write_byte[eWriteCounter::FRAME_RATE] = 0;
-  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] = 0;
+  m_total_write_byte[eWriteCounter::ENC_FRAME_RATE_SIZE] = 0;
+  m_total_write_byte[eWriteCounter::ENC_FRAME_SYNDROME_SIZE] = 0;
+
+  // flush bitstream at the end of the frame encoding
+  this->flush(bitstream::eIcovStream::COUNT);
 }
 
 void BinaryOutputIcov::writeBlockSize() {
 
-  //  std::cout << "WRITE SIZE " << m_total_write_byte[eWriteCounter::BLOCK_RATE]
-  //            << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
-  //            << std::endl;
-
   icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::BLOCKS_SIZE],
-      m_total_write_byte[eWriteCounter::BLOCK_RATE], true);
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE], false);
   icov::io::write_value<uint32_t>(
       *m_fileParts[bitstream::eIcovStream::BLOCKS_SIZE],
-      m_total_write_byte[eWriteCounter::BLOCK_SYNDROME], true);
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE], false);
 
-  m_total_write_byte[eWriteCounter::FRAME_RATE] +=
-      m_total_write_byte[eWriteCounter::BLOCK_RATE];
-  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] +=
-      m_total_write_byte[eWriteCounter::BLOCK_SYNDROME];
-
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] = 0;
-  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
+  m_total_write_byte[eWriteCounter::ENC_FRAME_RATE_SIZE] +=
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE];
+  m_total_write_byte[eWriteCounter::ENC_FRAME_SYNDROME_SIZE] +=
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE];
+  
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] = 0;
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] = 0;
 }
 
 void BinaryOutputIcov::writeBitplaneCount(const uint &v) {
@@ -134,14 +135,14 @@ void BinaryOutputIcov::writeSIRate(const NumcodeIdx &v, const Rate &r,
       static_cast<rate_t>(v), true);
 
   // std::cout << " " << v;
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(rate_t);
 }
 
 void BinaryOutputIcov::writeSIMode(const uint &v) {
   icov::io::write_value<byte>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
       static_cast<rate_t>(v), true);
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(byte);
 }
 
 } // namespace encoder
@@ -166,5 +167,6 @@ void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(
 
 void icov::encoder::BinaryOutputIcov::writeMse(const float &mse)
 {
-  icov::io::write_value<float>(*m_fileParts[bitstream::eIcovStream::METRICS], mse, true);
+  icov::io::write_value<float>(*m_fileParts[bitstream::eIcovStream::METRICS],
+                               mse, false);
 }

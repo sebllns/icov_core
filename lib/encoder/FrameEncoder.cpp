@@ -339,6 +339,8 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
     // write mse into file
     m_icov_file->writeMse(mse);
   }
+
+  m_icov_file->contentParameterSet().content_framecount++;
 }
 
 void icov::encoder::FrameEncoder::checkDecoding(

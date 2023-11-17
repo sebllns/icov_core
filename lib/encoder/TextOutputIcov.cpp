@@ -63,7 +63,7 @@ void TextOutputIcov::writeContentParameterSet() {
 
 void TextOutputIcov::writeSyndrome(const Syndrome &s) {
   const int byte_size = bitstream::bitToByteCount(s.size());
-  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] += byte_size;
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] += byte_size;
 
   if (byte_size == 0) {
     m_syndromeNodeJSON.getChannelNodeJSON(channel())["syndrome"] = "";
@@ -79,8 +79,8 @@ void TextOutputIcov::writeSyndrome(const Syndrome &s) {
 }
 
 void TextOutputIcov::writeFrameSize() {
-  m_total_write_byte[eWriteCounter::FRAME_RATE] = 0;
-  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] = 0;
+  m_total_write_byte[eWriteCounter::ENC_FRAME_RATE_SIZE] = 0;
+  m_total_write_byte[eWriteCounter::ENC_FRAME_SYNDROME_SIZE] = 0;
 }
 
 void TextOutputIcov::writeBlockSize() {
@@ -89,14 +89,14 @@ void TextOutputIcov::writeBlockSize() {
   //  m_total_write_byte[eWriteCounter::BLOCK_RATE]
   //            << " " << m_total_write_byte[eWriteCounter::BLOCK_SYNDROME]
   //            << std::endl;
-
-  m_total_write_byte[eWriteCounter::FRAME_RATE] +=
-      m_total_write_byte[eWriteCounter::BLOCK_RATE];
-  m_total_write_byte[eWriteCounter::FRAME_SYNDROME] +=
-      m_total_write_byte[eWriteCounter::BLOCK_SYNDROME];
-
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] = 0;
-  m_total_write_byte[eWriteCounter::BLOCK_SYNDROME] = 0;
+  
+  m_total_write_byte[eWriteCounter::ENC_FRAME_RATE_SIZE] +=
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE];
+  m_total_write_byte[eWriteCounter::ENC_FRAME_SYNDROME_SIZE] +=
+      m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE];
+  
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] = 0;
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] = 0;
 }
 
 void TextOutputIcov::writeBitplaneCount(const uint &v) {
@@ -124,7 +124,7 @@ void TextOutputIcov::writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
 
 void TextOutputIcov::writeSIRate(const NumcodeIdx &n, const Rate &r,
                                  const uint &m) {
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(rate_t);
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(rate_t);
   m_currentPrednodeJSON["syndrome_numcode"].as_array().push_back(
       std::to_string(n).c_str());
   m_currentPrednodeJSON["syndrome_rate"].as_array().push_back(
@@ -134,7 +134,7 @@ void TextOutputIcov::writeSIRate(const NumcodeIdx &n, const Rate &r,
 }
 
 void TextOutputIcov::writeSIMode(const uint &v) {
-  m_total_write_byte[eWriteCounter::BLOCK_RATE] += sizeof(byte);
+  m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(byte);
 
   if (v == bitstream::flag_t::UnavailableSI) {
     m_currentPrednodeJSON["available_si_flag"] = false;

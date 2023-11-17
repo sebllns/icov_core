@@ -1,16 +1,14 @@
 #include "EncodeMode.h"
+
 #include "app_common/program/icov_program_options.h"
 #include "encoder/IcovMediaEncoder.h"
-#include "ldpc_codec_layer/factory/CoderFactory.h"
-#include "omnidirectional_layer/factory.h"
-
-#include <algorithm>
-#include <boost/format.hpp>
-#include <boost/serialization/array_wrapper.hpp>
-#include <cstdint>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/serialization/array_wrapper.hpp>
+
+#include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <memory>
 #include <utility>
@@ -103,14 +101,7 @@ void EncodeMode::run() {
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
 
-  //  const float fov_x_degree = 60;
-  //  const point2d resolution(1920, 1080);
-  //  angle_radian fov = factory::fov(fov_x_degree,
-  //  factory::y_x_ratio(resolution)); viewport_geometry vpg =
-  //  factory::default_geometry(fov, resolution);
-  //  encoder.defaultEncode(m_parameters.viewportPadding, vpg);
-
-#warning FIXME
-#pragma message("FIXME")
-  throw "FIXME";
+  // #warning FIXME
+  // #pragma message("FIXME")
+  //   throw "FIXME";
 }
