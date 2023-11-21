@@ -1,13 +1,14 @@
 #include "IcovMediaEncoder.h"
+
 #include "encoder/BinaryOutputIcov.h"
 #include "encoder/FakeFrameEncoder.h"
 #include "encoder/FrameEncoder.h"
 #include "encoder/InputMedia.h"
 #include "encoder/TextOutputIcov.h"
-
 #include "icov_log.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
+
 #include <exception>
 #include <memory>
 
@@ -80,7 +81,8 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
         (b.getIdSelf() >= m_params.StartBlock &&
          b.getIdSelf() < (m_params.StartBlock + m_params.BlockCount))) {
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(false);
-      m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] = block_counter;
+      m_output->contentParameterSet().encoded_blocks[b.getIdSelf()] =
+          block_counter;
       ++block_counter;
     } else {
       icov_visualization.Picture->getById(b.getIdSelf())->setHidden(true);
@@ -90,6 +92,12 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   icov_visualization.AccessBlockManager->buildAccessBlocks(
       *icov_visualization.Picture, *icov_visualization.ViewportManager);
 
+  m_output->stream() << "Input: " << input->getPath() << std::endl;
+  m_output->stream() << "Output: " << m_output->getPath() << std::endl;
+  m_output->stream() << "Encoded: "
+                     << boost::posix_time::second_clock::local_time()
+                     << std::endl;
+
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
   m_output->contentParameterSet().content_height =
@@ -97,7 +105,8 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().viewport_width =
       static_cast<uint16_t>(vpg.resolution.x());
-  m_output->contentParameterSet().viewport_height = static_cast<uint16_t>(vpg.resolution.y());
+  m_output->contentParameterSet().viewport_height =
+      static_cast<uint16_t>(vpg.resolution.y());
 
   m_output->contentParameterSet().qp = m_params.FrameEncoderParams.QP;
 
@@ -110,11 +119,14 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().content_framecount = 0;
 
-  m_output->contentParameterSet().is_block_fixed_size = (m_params.FrameEncoderParams.ICU_Size.aspectRatio() == 1);
+  m_output->contentParameterSet().is_block_fixed_size =
+      (m_params.FrameEncoderParams.ICU_Size.aspectRatio() == 1);
 
-  m_output->contentParameterSet().block_fixed_size = static_cast<byte>(m_params.FrameEncoderParams.ICU_Size.width);
+  m_output->contentParameterSet().block_fixed_size =
+      static_cast<byte>(m_params.FrameEncoderParams.ICU_Size.width);
 
-  m_output->contentParameterSet().content_chroma_format = static_cast<byte>(m_params.FrameEncoderParams.ChFormat);
+  m_output->contentParameterSet().content_chroma_format =
+      static_cast<byte>(m_params.FrameEncoderParams.ChFormat);
 
   if (m_params.AllBlocks) {
     ICOV_INFO << "All blocks will be encoded";
@@ -149,17 +161,17 @@ icov::encoder::IcovMediaEncoder::createFrameEncoder() const {
 }
 
 /*****************************************************************************/
-std::unique_ptr<icov::encoder::OutputIcovBase>
+std::shared_ptr<icov::encoder::OutputIcovBase>
 icov::encoder::IcovMediaEncoder::createOutputFile() const {
-  std::unique_ptr<encoder::OutputIcovBase> ptr;
+  std::shared_ptr<encoder::OutputIcovBase> ptr;
   switch (m_params.OutputType) {
   case BINARY:
     ICOV_INFO << "Icov output format is binary";
-    ptr = std::make_unique<encoder::BinaryOutputIcov>(m_params.OutputPath);
+    ptr = std::make_shared<encoder::BinaryOutputIcov>(m_params.OutputPath);
     break;
   case TEXT:
     ICOV_INFO << "Icov output format is text";
-    ptr = std::make_unique<encoder::TextOutputIcov>(m_params.OutputPath);
+    ptr = std::make_shared<encoder::TextOutputIcov>(m_params.OutputPath);
     break;
   default:
     ICOV_THROW_INVALID_ARGUMENT("Unknown encoder type");
@@ -186,4 +198,9 @@ icov::encoder::IcovMediaEncoder::ldpc_parameters() const {
 const encoder::OutputIcovBase &
 icov::encoder::IcovMediaEncoder::output_media() const {
   return *m_output;
+}
+
+/*****************************************************************************/
+std::shared_ptr<OutputIcovBase> IcovMediaEncoder::output_ptr() const {
+  return m_output;
 }

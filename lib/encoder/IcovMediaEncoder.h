@@ -87,6 +87,7 @@ public:
   const params &parameters() const;
   const LdpcCoderParameters &ldpc_parameters() const;
   const icov::encoder::OutputIcovBase &output_media() const;
+  std::shared_ptr<icov::encoder::OutputIcovBase> output_ptr() const;
 
 private:
   params m_params;
@@ -101,7 +102,7 @@ protected:
   std::unique_ptr<icov::encoder::IFrameEncoder<cv::Mat>>
   createFrameEncoder() const override;
 
-  std::unique_ptr<icov::encoder::OutputIcovBase> createOutputFile() const;
+  std::shared_ptr<icov::encoder::OutputIcovBase> createOutputFile() const;
 };
 } // namespace encoder
 } // namespace icov

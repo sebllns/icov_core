@@ -40,20 +40,19 @@ icov::video::init_video_lib(int argc, char* argv[])
 
 std::string icov::video::chromaSubsamplingToStr(int value)
 {
-  switch (static_cast<ChromaFormat>(value))
-  {
+  switch (static_cast<ChromaFormat>(value)) {
 
   case CHROMA_400:
-      return "4:0:0";
+    return "4:0:0";
   case CHROMA_420:
-      return "4:2:0";
+    return "4:2:0";
   case CHROMA_422:
-      return "4:2:2";
+    return "4:2:2";
   case CHROMA_444:
-      return "4:4:4";
+    return "4:4:4";
   case NUM_CHROMA_FORMAT:
   default:
-      return "unknown";
+    return "unknown";
   }
 }
 
@@ -65,3 +64,17 @@ std::string icov::video::chromaSubsamplingToStr(int value)
 //  Position pos(static_cast<float>(x_block) / static_cast<float>(m_params.icuSize_luma.width),
 //               static_cast<float>(y_block) / static_cast<float>(m_params.icuSize_luma.height));
 //}
+
+std::string icov::video::channelToStr(int value) {
+  switch (static_cast<ComponentID>(value)) {
+
+  case COMPONENT_Y:
+    return "Y";
+  case COMPONENT_Cb:
+    return "U";
+  case COMPONENT_Cr:
+    return "V";
+  default:
+    return "unknown";
+  }
+}

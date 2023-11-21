@@ -19,6 +19,7 @@
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
+#include "video_layer/video_common.h"
 #include "video_layer/vtm_opencv_utility.h"
 #include "video_layer/vtm_utility.h"
 
@@ -177,12 +178,19 @@ void FrameEncoder::encodeBlock(
     const icov::omnidirectional_layer::IBlockPredictionManager
         &block_prediction_mgr) {
 
-  ICOV_DEBUG << "start encode block "
-             << b.getId(omnidirectional_layer::Block::SELF);
+  if (access_block) {
+    fs::path ab_file = m_frame_dir;
+    ab_file.append(std::to_string(b.getIdSelf()) + ".jpg");
+    // ICOV_DEBUG << "JPGAB = " << ab_file;
+    cv::imwrite(ab_file.string(), m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
+  }
 
-  const auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
+  //  ICOV_DEBUG << "start encode block "
+  //             << b.getId(omnidirectional_layer::Block::SELF);
 
   m_channelCoder = std::vector<ChannelCoder>(m_numComp);
+
+  const auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
 
   for (int c = 0; c < (int)m_numComp; ++c) {
     block_comp = c;
@@ -786,15 +794,9 @@ void FrameEncoder::encodeBlockWithPrediction(
   omnidirectional_layer::BlockPrediction::ePredType pred =
       omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  ICOV_DEBUG << "Encode block with pred "
-             << omnidirectional_layer::BlockPrediction::toString(pred);
-
-  if (pred == omnidirectional_layer::BlockPrediction::ePredType::NONE) {
-    fs::path ab_file(std::to_string(b.getIdSelf()) + ".jpg");
-    ICOV_DEBUG << "JPGAB = " << ab_file;
-    cv::imwrite(m_frame_dir.append(ab_file).string(),
-                m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
-  }
+  ICOV_TRACE << "Encode block " << b.getIdSelf() << " with prediction "
+             << omnidirectional_layer::BlockPrediction::toString(pred)
+             << " on channel " << video::channelToStr(block_comp);
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());

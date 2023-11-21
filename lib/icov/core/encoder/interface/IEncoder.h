@@ -414,18 +414,27 @@ void IMediaEncoder<T>::encode(
   this->processInput(input);
   auto pFrameEnc = createFrameEncoder();
   frame_t i = 0;
-
-  while (i < input.getFrameCount() &&
-         (m_max_frame_count == 0 || i < m_max_frame_count)) {
-    frame_t f = i + m_start_frame;
+  frame_t imax = input.getFrameCount();
+  while (i < imax && (m_max_frame_count == 0 || i < m_max_frame_count)) {
+    frame_t f = i + m_start_frame + 1;
     try {
-      ICOV_TRACE << "Encode frame " << f;
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingFrameID(i);
+
+      // send bool
       input.setFrame(f);
-      pFrameEnc->setFrame(i);
-      pFrameEnc->encode(input, picture, block_prediction);
+
+      if (input.getFrameID() == f) {
+        ICOV_DEBUG << "Encode frame " << i << " / " << imax;
+
+        pFrameEnc->setFrame(i);
+        pFrameEnc->encode(input, picture, block_prediction);
+        imax = input.getFrameCount();
+      }
+
       ++i;
+
+      ICOV_DEBUG << "--> Encode frame " << i << " / " << imax;
     } catch (const std::exception &e) {
       ICOV_ERROR << "Catched error while encoding frame " << f;
       ICOV_ERROR << e.what();

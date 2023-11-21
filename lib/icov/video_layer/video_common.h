@@ -52,6 +52,8 @@ namespace icov
 namespace video {
 void init_video_lib(int argc, char *argv[]);
 std::string chromaSubsamplingToStr(int value);
+std::string channelToStr(int value);
+
 // uint getIcuIdx(const icov::video::EncodingStructure &es, const omnidirectional_layer::Block &b);
 
 } // namespace video

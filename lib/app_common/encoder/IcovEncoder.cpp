@@ -35,6 +35,8 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params,
           .BlockCount = 23,
           .DummyViewport = m_params.DummyViewport},
       this->ldpc_params());
+
+  // m_encoder->output_ptr()->stream() <<
 }
 
 icov::encoder::IcovEncoder::~IcovEncoder() {}

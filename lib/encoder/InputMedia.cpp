@@ -55,6 +55,7 @@ void InputVideo::setFrame(frame_t i) {
   if (m_videoCV.isOpened() && m_videoCV.read(m_frameData)) {
     m_frameID = i;
     m_frameCount = i + 1;
+    std::cout << "FRAME " << m_frameID << "/" << m_frameCount << std::endl;
   }
 }
 
