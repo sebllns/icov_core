@@ -9,6 +9,8 @@
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <exception>
 #include <memory>
 
