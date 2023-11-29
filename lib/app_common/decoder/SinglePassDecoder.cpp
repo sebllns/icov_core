@@ -20,6 +20,7 @@
 #include <boost/format.hpp>
 
 #include <algorithm>
+#include <cstdio>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -59,10 +60,10 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
   openIcovFile(p.IcovFile);
 
   const auto &cps = m_contentParams;
+  const auto &media_type = static_cast<eMediaType>(cps.content_type);
 
   ICOV_INFO << boost::format("%-30s %-s") % "Icov version:" % cps.icov_version;
-  ICOV_INFO << boost::format("%-30s %-s") % "Type:" %
-                   mediaTypeStr(static_cast<eMediaType>(cps.content_type));
+  ICOV_INFO << boost::format("%-30s %-s") % "Type:" % mediaTypeStr(media_type);
   ICOV_INFO << boost::format("%-30s %-s") % "Chroma subsampling:" %
                    video::chromaSubsamplingToStr(
                        (int)cps.content_chroma_format);
@@ -85,6 +86,17 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
   ICOV_INFO << boost::format("%-30s %-d") % "Block size:" %
                    (int)cps.block_fixed_size;
   ICOV_INFO << boost::format("%-30s %-d") % "QP:" % (int)cps.qp;
+
+  if (media_type == eMediaType::VIDEO) {
+    ICOV_INFO << boost::format("%-30s %-d") % "Framecount:" %
+                     (int)cps.content_framecount;
+    ICOV_INFO << boost::format("%-30s %-.3f") % "Framerate:" %
+                     (int)cps.content_framerate;
+    ICOV_INFO << boost::format("%-30s %-.3f") % "Duration:" %
+                     (int)cps.content_duration;
+    ICOV_INFO << boost::format("%-30s %-.3f") % "Duration:" %
+                     (float)(cps.content_framecount * cps.content_framerate);
+  }
 
   auto coder_params = parseLdpcParams(cps);
   coder_params->database = p.LdpcDatabase.string();
@@ -219,10 +231,14 @@ void decoder::SinglePassDecoder::start() {
   if (m_blockDecoder)
     m_blockDecoder->getDecodingOutput().fill(0);
   m_navigation->Request->start();
-  this->request(0, 0, 0);
+
+  frame = 0;
+  // this->request(0, 0, 0);
 }
 
 bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
+  std::cout << i << "," << frame << std::endl;
+
   bool decoded = false;
   icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
   icov::assert::not_null(m_navigation->Request.get(),
@@ -232,14 +248,15 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
 
   if (x != pov_x || y != pov_y || i != frame) {
     m_navigation->Request->update(
-        {.viewpoint = {.angleX = x, .angleY = y}, .frameID = i});
+        {.viewpoint = {.angleX = x, .angleY = y}, .frameID = frame});
     decoded = true;
   }
 
   pov_x = x;
   pov_y = y;
-  frame = i;
-
+  // frame = i;
+  ++frame;
+  frame %= m_contentParams.content_framecount;
   return decoded;
 }
 

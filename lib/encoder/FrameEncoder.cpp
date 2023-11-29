@@ -600,7 +600,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     si_dbg.mode = bitstream::flag_t::AccessBlock;
     si_dbg.pz = ldpc_codec_layer::QaryDistribution();
     si_dbg.pz.setBitplane_count(m_channelCoder[comp].access_block.size());
-    ICOV_DEBUG << "ACCESS BLOCK BP COUNT "
+    ICOV_TRACE << "ACCESS BLOCK BP COUNT "
                << m_channelCoder[comp].access_block.size();
     for (const auto &s : m_channelCoder[comp].access_block) {
       bitstream::BitplaneStream bpstr;
@@ -815,5 +815,10 @@ void FrameEncoder::encodeBlockWithPrediction(
   if (si_map.count(pred) > 0)
     encode_icu(b, icu_enc, pred);
 }
+
+void icov::encoder::FrameEncoder::endEncoding() {
+  this->m_icov_file->writeFrameSize();
+}
+
 } // namespace encoder
 } // namespace icov

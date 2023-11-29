@@ -139,6 +139,7 @@ void icov::extractor::BlockExtractor::_processBlock(
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .visible_blocks.clear();
+  m_icovFile->setFrame(r.frameID);
 }
 
 void icov::extractor::BlockExtractor::_afterOrderingLoop(const request_t &r) {}

@@ -351,8 +351,6 @@ public:
   }
 
   void assertBitplaneEqual(int bp, const BitVec &s) const {
-    std::cout << __func__ << std::endl;
-
     if (predictionAvailable() && !checkBitplane(bp, s)) {
       std::stringstream sstr = header();
       sstr << "Bitplane = " << std::to_string(bp) << std::endl
@@ -366,19 +364,15 @@ public:
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
-
-    std::cout << "END " << __func__ << std::endl;
   }
 
   const SymboleVec &getSymboles() const {
-    std::cout << __func__ << std::endl;
     return getDebuggingChannel().srcSymboles;
   }
 
   bool checkSymboles(const SymboleVec &s) const { return getSymboles() == s; }
 
   void assertSymbolesEqual(const SymboleVec &s) const {
-    std::cout << __func__ << std::endl;
 
     if (predictionAvailable() && !checkSymboles(s)) {
       std::stringstream sstr = header();
@@ -391,8 +385,6 @@ public:
       const auto str = sstr.str();
       ICOV_THROW_LOGICAL_EXCEPTION(str);
     }
-
-    std::cout << "END " << __func__ << std::endl;
   }
 
   NumcodeIdx getStoredNumcodeIdx(int bp) const {

@@ -93,6 +93,7 @@ protected:
    * @param input The input media data to process.
    */
   virtual void processInput(const IInputMedia<T> &input) = 0;
+  virtual void endEncoding() = 0;
 };
 
 class IBitplaneEncoder {
@@ -318,7 +319,13 @@ protected:
 
 private:
   IFrameEncoder(const IFrameEncoder &) = default;
+
+  // IEncoder interface
+protected:
+  virtual void endEncoding() override;
 };
+
+template <typename T> void IFrameEncoder<T>::endEncoding() {}
 
 template <typename T>
 void IFrameEncoder<T>::encode(
@@ -350,6 +357,8 @@ void IFrameEncoder<T>::encode(
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     }
   }
+
+  this->endEncoding();
 }
 
 template <typename T>
@@ -405,7 +414,13 @@ protected:
 private:
   frame_t m_max_frame_count;
   frame_t m_start_frame;
+
+  // IEncoder interface
+protected:
+  virtual void endEncoding() override;
 };
+
+template <typename T> void IMediaEncoder<T>::endEncoding() {}
 
 template <typename T>
 void IMediaEncoder<T>::encode(
@@ -435,6 +450,8 @@ void IMediaEncoder<T>::encode(
       ++i;
 
       ICOV_DEBUG << "--> Encode frame " << i << " / " << imax;
+      this->endEncoding();
+
     } catch (const std::exception &e) {
       ICOV_ERROR << "Catched error while encoding frame " << f;
       ICOV_ERROR << e.what();

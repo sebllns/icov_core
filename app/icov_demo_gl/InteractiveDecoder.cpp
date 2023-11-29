@@ -215,7 +215,7 @@ bool InteractiveDecoder::processKey(char key)
     {
         pov_x = m_requests.front().viewpoint.angleX;
         pov_y = m_requests.front().viewpoint.angleY;
-        frame = m_requests.front().frameID;
+        // frame = m_requests.front().frameID;
         m_requests.pop();
 
         setPOV_DEG(pov_x, pov_y);

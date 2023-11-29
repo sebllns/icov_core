@@ -222,7 +222,10 @@ protected:
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;
-};
 
+  // IEncoder interface
+protected:
+  void endEncoding() override;
+};
 } // namespace encoder
 } // namespace icov

@@ -29,6 +29,7 @@ option(ICOV_BUILD_APPS "Build ICOV apps" ON)
 option(ICOV_WITH_CPPCHECK "ENABLE CPPCHECK" OFF)
 option(ICOV_WITH_CLANG_TIDY "ENABLE CLANG TIDY ANALYSE" OFF)
 option(ICOV_USE_ADDRESS_SANITIZER "Use Sanitizer" ON)
+option(ICOV_ONLINE_MODE "Disable this option is you work offline" ON)
 option(
   ICOV_BYPASS_SETUP
   "In case you REALLY want to bypass the default setup. May cause severe issues."
@@ -72,6 +73,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if(ICOV_LOG_BOOST)
   add_compile_definitions(ICOV_LOG_BOOST)
+endif()
+
+if(NOT ICOV_ONLINE_MODE)
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+               PROPERTY EP_UPDATE_DISCONNECTED 1)
 endif()
 
 # Include functions

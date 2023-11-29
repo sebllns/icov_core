@@ -138,19 +138,20 @@ void RequestManager::update(const request_t &r) {
                          "Predictions manager manager cannot be null");
 #endif
 
-      m_ordering->reset();
-      m_viewport->viewportGeometry().setPov(
-          angle_radian(r.viewpoint.angleX, r.viewpoint.angleY));
+  m_request = r;
 
-      if (m_blockProcessor)
+  m_ordering->reset();
+  m_viewport->viewportGeometry().setPov(
+      angle_radian(r.viewpoint.angleX, r.viewpoint.angleY));
+
+  if (m_blockProcessor)
       m_blockProcessor->beforeOrderingLoop(request());
 
-      processViewport(use_previous_ordering);
+  processViewport(use_previous_ordering);
 
-      if (m_blockProcessor)
+  if (m_blockProcessor)
       m_blockProcessor->afterOrderingLoop(request());
 
-  m_request = r;
 }
 
 const std::shared_ptr<IAccessBlockManager> &

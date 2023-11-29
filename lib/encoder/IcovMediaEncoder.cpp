@@ -100,6 +100,9 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
                      << boost::posix_time::second_clock::local_time()
                      << std::endl;
 
+  m_output->contentParameterSet().content_type =
+      static_cast<byte>(input->getType());
+
   m_output->contentParameterSet().content_width =
       static_cast<uint16_t>(input->getWidth());
   m_output->contentParameterSet().content_height =
