@@ -239,6 +239,9 @@ void decoder::SinglePassDecoder::start() {
 bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
   std::cout << i << "," << frame << std::endl;
 
+  //  if (m_blockDecoder)
+  //    m_blockDecoder->getDecodingOutput().fill(0);
+
   bool decoded = false;
   icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
   icov::assert::not_null(m_navigation->Request.get(),

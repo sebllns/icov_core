@@ -139,10 +139,12 @@ private:
   std::vector<std::streampos>
       m_rates_pos; ///< The vector of stream positions that indicates where SI
                    ///< rates data start for each block in the input stream
+                   /// < 0 index is for frame start
 
   std::vector<std::streampos>
       m_synd_pos; ///< The vector of stream positions that indicates where
                   ///< syndrome data start for each block in the input stream
+                  /// < 0 index is for frame start
 
   bitstream::QaryParams m_qaryParams;
 };

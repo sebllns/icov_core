@@ -84,8 +84,8 @@ void icov::extractor::InputIcov::readBlockPos() {
   m_rates_pos.resize(m_blockCount + 1, 0);
   m_synd_pos.resize(m_blockCount + 1, 0);
 
-  std::streampos rate_pos = 0;
-  std::streampos synd_pos = 0;
+  std::streampos rate_pos = m_rates_pos[0];
+  std::streampos synd_pos = m_synd_pos[0];
 
   for (size_t i = 1; i < m_rates_pos.size(); ++i) {
     uint32_t rate_size = 0;
@@ -265,11 +265,17 @@ void icov::extractor::InputIcov::setFrame(frame_t frame) {
   IInputIcov<pstream>::setFrame(frame);
 
   getStream(bitstream::eIcovStream::BLOCKS_SIZE)
-      .seekg(m_frameID * m_blockCount, std::ios_base::beg);
+      .seekg(m_frameID * m_blockCount * 2 * sizeof(uint32_t),
+             std::ios_base::beg);
   getStream(bitstream::eIcovStream::ENCODE_PARAMS)
       .seekg(m_rates_pos[0], std::ios_base::beg);
   getStream(bitstream::eIcovStream::SYNDROME).seekg(m_synd_pos[0], std::ios_base::beg);
-  getStream(bitstream::eIcovStream::METRICS).seekg(m_frameID * m_blockCount * sizeof(float), std::ios_base::beg);
+  getStream(bitstream::eIcovStream::METRICS)
+      .seekg(m_frameID * m_blockCount * sizeof(float), std::ios_base::beg);
+
+  std::cout << m_rates_pos[0] << ", " << m_synd_pos[0] << std::endl;
+
+  this->readBlockPos();
 }
 
 icov::omnidirectional_layer::Block::id_t

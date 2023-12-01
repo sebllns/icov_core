@@ -49,10 +49,9 @@ void icov::omnidirectional_layer::RequestManager::processBlock(bool is_access_bl
   IBlockPredictionManager::prediction_t prediction = 0;
 
   try {
-    prediction =
-        (is_access_block
-             ? 0
-             : m_blockPrediction->getPrediction(current_block, *m_ordering));
+
+    if (!is_access_block)
+      prediction = m_blockPrediction->getPrediction(current_block, *m_ordering);
 
     if (m_blockProcessor) {
       m_blockProcessor->processBlock(
@@ -122,6 +121,8 @@ void RequestManager::update(const request_t &r) {
       return;
 
   bool use_previous_ordering = (r.viewpoint == m_request.viewpoint);
+
+  use_previous_ordering = false;
 
   if (!use_previous_ordering)
       m_previousOrdering = std::queue<Block::id_t>();
