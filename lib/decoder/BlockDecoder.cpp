@@ -144,14 +144,14 @@ void icov::decoder::BlockDecoder::_processBlock(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(pred);
 
-  if (previouslyDecoded != r.frameID) {
+  if (true || previouslyDecoded != r.frameID) {
     for (auto &dec : m_channelDecoder) {
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
 
       dec->decode_icu(icuIndex, pred);
 
-      //@todo TODO: copy only necessary pixels
+      //@todo TODO: copy only necessary pixels i.e pixels of the block
       VTM_Utility::copyBordersFor360(m_decodingOutput,
                                      dec->get_params().CompID);
 

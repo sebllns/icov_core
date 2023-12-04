@@ -86,7 +86,7 @@ void icov::extractor::BlockExtractor::_processBlock(
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf());
 
-  if (previouslyDecoded != r.frameID) {
+  if (true || previouslyDecoded != r.frameID) {
     // get stored syndrome size per bitplane
     std::cout << "extract_syndrome_sizes" << std::endl;
     for (auto &ch : m_channelExtractor) {
