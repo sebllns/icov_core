@@ -70,9 +70,13 @@ public:
   enum ePredType {
     UNKNOWN = -1,
     NONE = 0,
+    /*000000001*/
     RIGHT = (1 << (Block::RIGHT - 1)),
+    /*000000010*/
     LEFT = (1 << (Block::LEFT - 1)),
+    /*000000100*/
     TOP = (1 << (Block::UP - 1)),
+    /*000001000*/
     BOTTOM = (1 << (Block::DOWN - 1)),
     TOP_RIGHT = TOP | RIGHT,
     TOP_LEFT = TOP | LEFT,

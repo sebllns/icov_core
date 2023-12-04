@@ -49,102 +49,60 @@
 #include "ICOV_BufGroups.h"
 #include "IcuEncoder.h"
 #include "omnidirectional_layer/Block.h"
-namespace icov::video
-{
+namespace icov::video {
 
-struct EncodingStructure
-{
-  public:
-    EncodingStructure();
-    EncodingStructure(const std::vector<IcuEncoder> &icus, const UInt icusPerRow, const UInt icusPerColumn);
-    ~EncodingStructure();
-    void set(const std::vector<IcuEncoder> &icus, const UInt icusPerRow, const UInt icusPerColumn);
-    void setCheckPoints(const std::vector<Position> &checkPoints);
-    void setCheckPoint(const Position &checkPoint);
-    bool isAccessBlock(const Position &accessBlockPoint);
+struct EncodingStructure {
+public:
+  EncodingStructure();
+  EncodingStructure(const std::vector<IcuEncoder> &icus, const UInt icusPerRow,
+                    const UInt icusPerColumn);
+  ~EncodingStructure();
+  void set(const std::vector<IcuEncoder> &icus, const UInt icusPerRow,
+           const UInt icusPerColumn);
 
-    IcuEncoder &getICU(const UInt icu_index);
-    const IcuEncoder &getICU(const UInt icu_index) const;
+  IcuEncoder &getICU(const UInt icu_index);
+  const IcuEncoder &getICU(const UInt icu_index) const;
 
-    IcuEncoder &getICU(const UInt x_index, const UInt y_index);
+  IcuEncoder &getICU(const UInt x_index, const UInt y_index);
 
-    bool isLeftVerticalBorder(const UInt icu_index) const;
-    bool isRightVerticalBorder(const UInt icu_index) const;
+  bool isLeftVerticalBorder(const UInt icu_index) const;
+  bool isRightVerticalBorder(const UInt icu_index) const;
 
-    UInt get_icuIndex(const Position &pos) const;
-    Position get_icuPosition(const UInt icu_index) const;
-    UInt get_icuIndex(const omnidirectional_layer::Block &b) const;
+  UInt get_icuIndex(const Position &pos) const;
+  Position get_icuPosition(const UInt icu_index) const;
+  UInt get_icuIndex(const omnidirectional_layer::Block &b) const;
 
-    void resetDecodedICUs();
+  void create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
+      ChromaFormat chFmt, const UInt sourceWidth_luma,
+      const UInt sourceHeight_luma, const UInt sourceMargin_x_luma,
+      const UInt icuWidth_luma, const UInt icuHeight_luma,
+      const UInt tuWidth_luma, const UInt tuHeight_luma);
 
-    void updateRequestedICUs(const cv::Mat &maskRequestedPixels,
-                             std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
-                             std::vector<std::vector<Position>> &requestedICUs_closeTocheckPoints,
-                             std::vector<Position> &neighborcheckPointInTheComponent,
-                             double *usefulness_percent = nullptr);
+  void applyPredictionBasedOnEntropy(icov::video::BufGroups &encpic,
+                                     const ComponentID compID,
+                                     const int bitDepths[MAX_NUM_CHANNEL_TYPE],
+                                     const UInt tuWidth_luma,
+                                     const UInt tuHeight_luma,
+                                     bool encodeFrequencyTableInBitStream,
+                                     const int qp, int maxLog2TrDynamicRange);
 
-    void updateRequestedICUs(const cv::Mat &maskRequestedPixels,
-                             std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
-                             std::vector<std::vector<Position>> &requestedICUs_closeTocheckPoints,
-                             std::vector<Position> &neighborcheckPointInTheComponent,
-                             std::vector<Position> &closestCheckPointToTheRemainingICUs,
-                             std::vector<std::vector<Position>> &remainingICUS_afterClosestCheckPointToBeDecoded,
-                             std::vector<std::vector<Position>> &remainingICUS_afterAlreadyProcessedICUsToBeDecoded);
+  const std::vector<IcuEncoder> &vec_icus() const;
+  UInt n_icusPerRow() const;
+  UInt n_icusPerCol() const;
+  size_t n_icus() const;
 
-    void reorderBlockDecodingBasedOnStartingAccessBlock(
-        std::vector<std::vector<Position>> &in_out_requested_icus,
-        const std::vector<Position> &accessBlockInsideAsStartingPosition);
-    void get_decodedICUsInRequestedICUs(const cv::Mat &maskRequestedPixels,
-                                        std::vector<std::vector<Position>> &requestedICUs_closeToDecodedICUs,
-                                        std::vector<std::vector<Position>> &decodedICUs_inRequestedICUs);
-    void updateDecodedICU(const Position &ICU_position);
-    void updateDecodedICUs(const std::vector<std::vector<Position>> &connectedComponents);
-    bool isICUAlreadyDecoded(const Position &ICU_position) const;
-    const std::vector<Position> &get_vecDecodedICUs() const;
+protected:
+  std::vector<IcuEncoder> _vec_icus;
+  std::vector<Position> _vec_checkPoints;
+  UInt _n_icusPerRow, _n_icusPerCol;
 
-    const std::vector<Position> &get_vecCheckpoints() const;
-    /** returns an integer which its last 4 least significant bits show which
-     * sides are available. For more information refer to enum
-     * REFERENCE_SAMPLE_SIDE Also the bit levels [5-8] (zero-based index) is 1 if
-     * the corner point is also available: bit level 4 = (not used) to avoid
-     * conflict of corner usage in REFERENCE_SAMPLE_SIDE. bit level 5 = top-left
-     * corner bit level 6 = top-right corner bit level 7 = bottom-left corner bit
-     * level 8 = bottom-right corner
-     */
-    int getAvailableDecodedSides_regularImage(const Position &icuPos) const;
-    int getAvailableDecodedSides_360Image(const Position &icuPos) const;
-
-    void create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
-        ChromaFormat chFmt, const UInt sourceWidth_luma, const UInt sourceHeight_luma, const UInt sourceMargin_x_luma,
-        const UInt icuWidth_luma, const UInt icuHeight_luma, const UInt tuWidth_luma, const UInt tuHeight_luma);
-
-    void applyPredictionBasedOnEntropy(icov::video::BufGroups &encpic, const ComponentID compID,
-                                       const int bitDepths[MAX_NUM_CHANNEL_TYPE], const UInt tuWidth_luma,
-                                       const UInt tuHeight_luma, bool encodeFrequencyTableInBitStream, const int qp,
-                                       int maxLog2TrDynamicRange);
-
-    const std::vector<IcuEncoder> &vec_icus() const;
-    UInt n_icusPerRow() const;
-    UInt n_icusPerCol() const;
-    size_t n_icus() const;
-
-  protected:
-    void resetAlreadyProcessedICUs();
-    void updateAlreadyProccessedICU(const Position &ICU_position);
-    void copyProccessedICUsFromDecodedICUs();
-    bool isICUAlreadyProcessed(const Position &ICU_position);
-
-    std::vector<IcuEncoder> _vec_icus;
-    std::vector<Position> _vec_checkPoints;
-    UInt _n_icusPerRow, _n_icusPerCol;
-
-    cv::Mat _integralImageMask;
-    cv::Mat _maskThresholded;
-    std::vector<int> _vec_pixelsRequestedPerICU;
-    std::vector<Position> _vec_decodedICUs;
-    AreaBuf<bool> _requestedICUs, _decodedICUs;
-    std::vector<Position> _vec_tmp_alreadyProcessedICUs;
-    AreaBuf<bool> _tmp_alreadyProcessedICUs;
-    void deallocate();
+  cv::Mat _integralImageMask;
+  cv::Mat _maskThresholded;
+  std::vector<int> _vec_pixelsRequestedPerICU;
+  std::vector<Position> _vec_decodedICUs;
+  AreaBuf<bool> _requestedICUs, _decodedICUs;
+  std::vector<Position> _vec_tmp_alreadyProcessedICUs;
+  AreaBuf<bool> _tmp_alreadyProcessedICUs;
+  void deallocate();
 };
 } // namespace icov::video

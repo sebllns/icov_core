@@ -272,6 +272,8 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
         omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT, // 0b01010
         omnidirectional_layer::BlockPrediction::TOP_RIGHT};
 
+    // TODO : ADD TEMPORAL
+
     for (auto pk : predVec) {
       m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
     }
