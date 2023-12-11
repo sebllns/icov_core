@@ -3,8 +3,10 @@
 
 [requires]
 zlib/1.2.13
+xz_utils/5.4.4
+ffmpeg/4.4.4 
 boost/1.82.0
-opencv/4.5.5
+opencv/4.8.1
 #opengl is required for GUI
 opengl/system 
 freeglut/3.4.0
@@ -25,8 +27,8 @@ cmake_layout
 
 [options]
 opencv*:with_webp = False
-opencv*:with_ffmpeg = False
+opencv*:with_ffmpeg = True
 opencv*:with_qt = False
-opencv*:with_gtk = False
+opencv*:with_gtk = True
 opencv*:with_openexr = False
 
