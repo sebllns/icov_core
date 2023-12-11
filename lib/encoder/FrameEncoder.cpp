@@ -8,7 +8,6 @@
 #include "icov_assert.h"
 #include "icov_debug.h"
 #include "icov_exception.h"
-#include "icov_io.h"
 #include "icov_log.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
@@ -116,32 +115,28 @@ void icov::encoder::FrameEncoder::serializeParameters() {
       if (m_channelCoder[c].si.count(p)) {
         m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
-        if (m_channelCoder[c].si[p].stored_pz.codingflag())
-        {
-            for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp)
-            {
-                if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p))
-                {
+        if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
+          for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
+            if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
 
-                    if (m_channelCoder[c].bitplanes[bp].sourceFlag)
-                    {
+              if (m_channelCoder[c].bitplanes[bp].sourceFlag) {
 
-                        if (icov::debug::debug_trace_enabled)
-                        {
-                            ICOV_WARNING << "SOURCE IS STORED FOR CHANNEL " << c << " BITPLANE " << bp;
-                        }
-
-                        m_icov_file->writeSIRate(bitstream::enum_t::SyndromeType::SyndromeType_SOURCE, 1.0,
-                                                 m_channelCoder[c].n);
-                    }
-                    else
-                    {
-                        m_icov_file->writeSIRate(m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).c,
-                                                 m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).r,
-                                                 m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m);
-                    }
+                if (icov::debug::debug_trace_enabled) {
+                  ICOV_WARNING << "SOURCE IS STORED FOR CHANNEL " << c
+                               << " BITPLANE " << bp;
                 }
+
+                m_icov_file->writeSIRate(
+                    bitstream::enum_t::SyndromeType::SyndromeType_SOURCE, 1.0,
+                    m_channelCoder[c].n);
+              } else {
+                m_icov_file->writeSIRate(
+                    m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).c,
+                    m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).r,
+                    m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m);
+              }
             }
+          }
         }
       } else if (p != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
         m_icov_file->writeSIMode(bitstream::flag_t::UnavailableSI);
@@ -180,7 +175,7 @@ void FrameEncoder::encodeBlock(
 
   if (access_block) {
     fs::path ab_file = m_frame_dir;
-    ab_file.append(std::to_string(b.getIdSelf()) + ".jpg");
+    ab_file.append(std::to_string(b.getIdSelf()) + ".tiff");
     // ICOV_DEBUG << "JPGAB = " << ab_file;
     cv::imwrite(ab_file.string(), m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
   }
@@ -190,7 +185,8 @@ void FrameEncoder::encodeBlock(
 
   m_channelCoder = std::vector<ChannelCoder>(m_numComp);
 
-  const auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
+  auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
+  v.push_back(icov::omnidirectional_layer::BlockPrediction::ePredType::INTER);
 
   for (int c = 0; c < (int)m_numComp; ++c) {
     block_comp = c;
@@ -207,6 +203,9 @@ void FrameEncoder::encodeBlock(
 
 /*****************************************************************************/
 void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
+
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(
+      frame());
 
   m_frame_dir =
       m_icov_file->getPath().parent_path() / std::to_string(this->frame());
@@ -254,9 +253,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
       m_params.ChFormat,
       Area(m_params.MarginX360Luma, 0, sourceWidth, sourceHeight));
 
-  //  PelStorage picTemp;
-  //  picTemp.create(extendedFrameArea);
-
   if (m_init) {
     m_vvc_bufs.create(PIC_ORIGINAL, extendedFrameArea);
     m_vvc_bufs.create(PIC_RECONSTRUCTION, extendedFrameArea);
@@ -272,11 +268,13 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
         omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT, // 0b01010
         omnidirectional_layer::BlockPrediction::TOP_RIGHT};
 
-    // TODO : ADD TEMPORAL
-
     for (auto pk : predVec) {
       m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
     }
+
+    m_vvc_bufs.create(PIC_PREDICTION +
+                          omnidirectional_layer::BlockPrediction::INTER,
+                      extendedFrameArea);
 
     m_enc_struc
         .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
@@ -287,6 +285,9 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
     m_init = false;
   }
 
+  // save previous frame
+  m_vvc_bufs.get(PIC_PREDICTION + omnidirectional_layer::BlockPrediction::INTER)
+      .copyFrom(m_vvc_bufs.get(PIC_RECONSTRUCTION));
   m_vvc_bufs.get(PIC_ORIGINAL).fill(0);
   m_vvc_bufs.get(PIC_RECONSTRUCTION).fill(0);
   m_vvc_bufs.get(PIC_PREDICTION).fill(0);
@@ -312,7 +313,8 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   // icues_enc is based on extended frames
 
   // INTRA PRED
-  PelUnitBuf mainFrameReco = m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
+  PelUnitBuf mainFrameReco =
+      m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 
   ICOV_DEBUG << "Start computing intra predictions";
   for (UInt ch = 0; ch < m_numComp; ch++) {
@@ -336,15 +338,17 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   // compute access block
   VTM_OPENCV_Utility::toBGRMat(mainFrameReco, m_reco);
 
-  for (const auto &icu : m_enc_struc.vec_icus())
-  {
+  for (const auto &icu : m_enc_struc.vec_icus()) {
     double mse = 0., psnr = 0.;
     uint max_val = 0;
 
-    const CPelUnitBuf b_orig = m_vvc_bufs.get(PIC_ORIGINAL).getBuf(icu.get_sourceX());
-    const CPelUnitBuf b_reco = m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(icu.get_sourceX());
+    const CPelUnitBuf b_orig =
+        m_vvc_bufs.get(PIC_ORIGINAL).getBuf(icu.get_sourceX());
+    const CPelUnitBuf b_reco =
+        m_vvc_bufs.get(PIC_RECONSTRUCTION).getBuf(icu.get_sourceX());
 
-    psnr = VTM_Utility::calculatePSNR(b_orig, b_reco, m_params.InternalBitDepth, &mse, &max_val);
+    psnr = VTM_Utility::calculatePSNR(b_orig, b_reco, m_params.InternalBitDepth,
+                                      &mse, &max_val);
 
     // write mse into file
     m_icov_file->writeMse(mse);
@@ -399,30 +403,33 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
     icov::omnidirectional_layer::BlockPrediction::ePredType pred,
     ComponentID comp) {
 
+  // Get the number of bitplanes to be saved
   int bitplaneCount = bsp_enc.bitplane_count();
+
   const auto pred_id =
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
           pred);
 
-  ICOV_TRACE << bitplaneCount << " bitplanes to save";
-
+  // Store information related to the current prediction in the channel coder
   m_channelCoder[comp].si[pred_id].stored_pz = bsp_enc.distribution();
   m_channelCoder[comp].si[pred_id].dirmode = mode;
   m_channelCoder[comp].n = encoder.get_n();
 
-  // first SI stored (no bitplanes stored for comparison yet)
+  // First SI stored (no bitplanes stored for comparison yet)
   if (m_channelCoder[comp].bitplanes.size() == 0) {
 
+    // If access_block is true, store source bits for access block
     if (access_block)
       m_channelCoder[comp].access_block = bsp_enc.src_bits();
 
+    // Initialize bitplanes vector with default values
     m_channelCoder[comp].bitplanes = std::vector<BitplaneCoder>(
-        bitplaneCount, BitplaneCoder{
-                                     .stored_synd = icov::Syndrome(),
+        bitplaneCount, BitplaneCoder{.stored_synd = icov::Syndrome(),
                                      .stored_synd_rate = 0,
                                      .noSourceThreshold = 0.0,
                                      .sourceFlag = false});
 
+    // Populate bitplanes information with syndromes and rates
     for (size_t i = 0; i < si_synd.size(); ++i) {
       m_channelCoder[comp].bitplanes[i].stored_synd_rate = si_numcodes[i];
       m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
@@ -431,9 +438,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
     }
   }
 
-  // if coding flag is true for this SI
+  // If coding flag is true for this SI
   if (bsp_enc.distribution().codingflag()) {
 
+// Assert bitplane count consistency and SI sizes
 #ifdef ICOV_ASSERTION_ENABLED
     icov::assert::check(
         (int)m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
@@ -441,6 +449,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
         "Bitplane count does not match between SI of same block");
 #endif
 
+    // Loop through each bitplane
     for (int i = 0; i < bitplaneCount; ++i) {
 
       // if NO coding flag is TRUE for this BITPLANE
@@ -567,7 +576,6 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
           pred);
 
-  ICOV_TRACE << "save data info in debug memory";
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
       b.getIdSelf() - 1);
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
@@ -581,14 +589,11 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     channelDbg.srcBits = bsp_enc.src_bits();
   }
 
-
   channelDbg.storedSyndromeSize.resize(m_channelCoder[comp].bitplanes.size());
   std::transform(m_channelCoder[comp].bitplanes.cbegin(),
                  m_channelCoder[comp].bitplanes.cend(),
-                 channelDbg.storedSyndromeSize.begin(), [](const auto &x) {
-                   return x.stored_synd_rate;
-                 });
-
+                 channelDbg.storedSyndromeSize.begin(),
+                 [](const auto &x) { return x.stored_synd_rate; });
 
   // Checks if the block is an access block and there is no saved data
   if (b.isAccessBlock() &&
@@ -602,8 +607,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     si_dbg.mode = bitstream::flag_t::AccessBlock;
     si_dbg.pz = ldpc_codec_layer::QaryDistribution();
     si_dbg.pz.setBitplane_count(m_channelCoder[comp].access_block.size());
-    ICOV_TRACE << "ACCESS BLOCK BP COUNT "
-               << m_channelCoder[comp].access_block.size();
+
     for (const auto &s : m_channelCoder[comp].access_block) {
       bitstream::BitplaneStream bpstr;
       bpstr.numcode = bitstream::enum_t::SyndromeType_SOURCE;
@@ -682,20 +686,20 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
 void icov::encoder::FrameEncoder::encode_tu(
     const icov::omnidirectional_layer::Block &b,
     const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si,
+    const icov::video::SideInformationUnit *si,
     icov::omnidirectional_layer::BlockPrediction::ePredType pred,
-    ComponentID comp, int tu_index) {
+    ComponentID comp) {
 
+  // Initialize TU index and prediction identifier
+  int tu_index = 0;
   const auto pred_id =
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
           pred);
 
+  // Get the TU and its quantized transform coefficients
   const auto &tu = icu_enc.get_sourceX().TUs[tu_index];
-  const auto &si_tu = si.TUs[tu_index];
-
   auto tu_coeff = tu.getQuantizedTransformCoeffs(comp);
   size_t tu_size = tu_coeff.area();
-
   auto &encoder = m_pred_encoder.get_coder(pred_id, tu_size);
 
   // encode outputs for the current SI: vector of rates and vector of syndrome
@@ -703,44 +707,41 @@ void icov::encoder::FrameEncoder::encode_tu(
   icov::NumcodeIdxVec si_numcodes;
   icov::SyndromesVec si_synd;
 
+  // Extract the quantized transform coefficients side info for encoding
+  const CCoeffBuf &si_tu = si == nullptr
+                               ? tu.getPreviousQT(comp) /* inter prediction*/
+                               : si->TUs[tu_index].getQuantizedTransformCoeffs(
+                                     comp) /* intra prediction */;
+
+  // Instantiate Bit Symbol Provider for encoding
   ldpc_codec_layer::BitSymbolProvider bsp_enc =
       tu.instantiateBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
+  // If coding flag is false, no encoding is performed
   if (!bsp_enc.distribution().codingflag()) { /* CODING FLAG IS FALSE */
     ICOV_TRACE << "SI symbole identical... no coding...";
-    std::stringstream sstr;
-    sstr << "\nsrc = ";
-    io::write_vector(sstr, bsp_enc.src_symboles(), ' ');
-    sstr << "\n si = ";
-    io::write_vector(sstr, bsp_enc.si_symboles(), ' ');
-    ICOV_TRACE << sstr.str().c_str();
   } else { /* CODING FLAG IS TRUE */
-
-    ///@todo TODO: ADD INFO FOR SOURCE BITPLANE (NO CODING)
+    // Coding flag is true, perform encoding
+    // Perform bitplane encoding
     encoder.encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
-    // CHECK DECODING
+    // Check that decoding works without error if the test is enabled in
+    // parameters
     if (m_params.CheckDecoding) {
       checkDecoding(encoder, bsp_enc, si_numcodes, si_synd, comp);
     }
     // END CHECK DECODING
   }
-// encoding and decoding check done, now save syndrome if longer than current
-// saved
+// encoding and decoding check done, now save syndrome if longer than the
+// current one saved
 #pragma omp critical
   {
     // Save syndrome if longer than current saved
-    // void icov::encoder::FrameEncoder::saveDataToEncode(
-    //    bool access_block, uint mode,
-    //    ldpc_codec_layer::AffInteractiveCoder &encoder,
-    //    const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
-    //    const icov::NumcodeIdxVec &si_numcodes, const icov::SyndromesVec
-    //    &si_synd, icov::omnidirectional_layer::BlockPrediction::ePredType
-    //    pred, ComponentID comp)
     saveDataToEncode(b.isAccessBlock(),
                      icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp],
                      encoder, bsp_enc, si_numcodes, si_synd, pred, comp);
 
+    // Save data to debug if debugging is enabled
     if (debug_enabled()) {
       saveDataToDebug(b, encoder, bsp_enc, si_numcodes, si_synd, pred, comp);
     }
@@ -766,16 +767,14 @@ void FrameEncoder::setIcovFile(
 void icov::encoder::FrameEncoder::encode_si(
     const omnidirectional_layer::Block &b,
     const icov::video::IcuEncoder &icu_enc,
-    const icov::video::SideInformationUnit &si,
+    const icov::video::SideInformationUnit *si,
     omnidirectional_layer::BlockPrediction::ePredType pred, ComponentID comp) {
 
   icov::assert::equal(
-      (int)si.TUs.size(), 1,
+      (int)si->TUs.size(), 1,
       "This version of ICOV can only manage one transform unit per block");
 
-  for (int tu_index = 0; tu_index < (int)si.TUs.size(); tu_index++) {
-    encode_tu(b, icu_enc, si, pred, comp, tu_index);
-  }
+  encode_tu(b, icu_enc, si, pred, comp);
 }
 
 void icov::encoder::FrameEncoder::encode_icu(
@@ -784,8 +783,12 @@ void icov::encoder::FrameEncoder::encode_icu(
     omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   auto si = icu_enc.get_sideInformation(pred);
-  icov::assert::not_null(si);
-  encode_si(b, icu_enc, *si, pred, static_cast<ComponentID>(block_comp));
+
+  if (pred != icov::omnidirectional_layer::BlockPrediction::ePredType::INTER) {
+    icov::assert::not_null(si);
+  }
+
+  encode_si(b, icu_enc, si, pred, static_cast<ComponentID>(block_comp));
 }
 
 /*****************************************************************************/
@@ -814,7 +817,9 @@ void FrameEncoder::encodeBlockWithPrediction(
   const auto &icu_enc = es.getICU(icuIndex);
   const auto &si_map = icu_enc.get_intraSIsMap();
 
-  if (si_map.count(pred) > 0)
+  if (si_map.count(pred) > 0 ||
+      (frame() > 0 &&
+       pred == icov::omnidirectional_layer::BlockPrediction::ePredType::INTER))
     encode_icu(b, icu_enc, pred);
 }
 

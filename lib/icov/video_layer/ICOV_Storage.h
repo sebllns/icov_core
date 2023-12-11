@@ -212,7 +212,8 @@ public:
   }
 
   void create(const UnitArea &_UnitArea) {
-    create(_UnitArea.chromaFormat, _UnitArea.blocks[0]);
+    this->create(_UnitArea.chromaFormat, _UnitArea.blocks[0]);
+    this->fill(0);
   }
 
   //    void createFromBuf( UnitBuf<      T> buf )

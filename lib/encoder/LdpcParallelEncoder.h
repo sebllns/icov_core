@@ -8,7 +8,7 @@
  *  @ingroup ICOV
  */
 
-/** @file PredictionsEncoder.h
+/** @file LdpcParallelEncoder.h
  *  @brief Defines a container to encode predictions in parallel
  *  @ingroup SourceMedia
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
@@ -57,13 +57,13 @@
 namespace icov {
 namespace encoder {
 
-class PredictionsEncoder {
+class LdpcParallelEncoder {
 public:
-  PredictionsEncoder(
+  LdpcParallelEncoder(
       const LdpcCoderParameters &LDPC_Params,
       std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
           predictions);
-  ~PredictionsEncoder() = default;
+  ~LdpcParallelEncoder() = default;
 
   ldpc_codec_layer::AffInteractiveCoder &get_coder(
       omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,

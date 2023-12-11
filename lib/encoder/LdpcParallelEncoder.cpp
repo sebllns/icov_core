@@ -1,10 +1,10 @@
-#include "PredictionsEncoder.h"
+#include "LdpcParallelEncoder.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 
 #include <vector>
 
-icov::encoder::PredictionsEncoder::PredictionsEncoder(
+icov::encoder::LdpcParallelEncoder::LdpcParallelEncoder(
     const LdpcCoderParameters &LDPC_Params,
     std::vector<omnidirectional_layer::IBlockPredictionManager::prediction_t>
         predictions) {
@@ -26,7 +26,7 @@ icov::encoder::PredictionsEncoder::PredictionsEncoder(
 }
 
 icov::ldpc_codec_layer::AffInteractiveCoder &
-icov::encoder::PredictionsEncoder::get_coder(
+icov::encoder::LdpcParallelEncoder::get_coder(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
         prediction,
     size_t code_size) {
@@ -42,7 +42,7 @@ icov::encoder::PredictionsEncoder::get_coder(
   return *(m_coders.at(prediction).at(code_size).get());
 }
 
-std::vector<size_t> icov::encoder::PredictionsEncoder::getCoderSizes() const {
+std::vector<size_t> icov::encoder::LdpcParallelEncoder::getCoderSizes() const {
   std::vector<size_t> sizes;
   for (const auto &p : m_coders.begin()->second)
     sizes.push_back(p.first);

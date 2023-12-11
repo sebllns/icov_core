@@ -82,6 +82,7 @@ public:
     TOP_LEFT = TOP | LEFT,
     BOTTOM_RIGHT = BOTTOM | RIGHT,
     BOTTOM_LEFT = BOTTOM | LEFT,
+    /* */
     INTER = BOTTOM_LEFT + 10,
     MAX,
     ERROR_PRED

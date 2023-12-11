@@ -110,6 +110,8 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
     for (UInt j = 0; j < curr_icu.TUs.size(); j++) {
       icov::video::TransformUnit &curr_tu = curr_icu.TUs[j];
 
+      curr_tu.save();
+
       // DCT
       transform2D.transformNxN(curr_tu.getTransformCoeffs(compID),
                                originalImage, curr_tu.block(compID), bit_depth,
@@ -256,3 +258,24 @@ void VTM_Utility::copyBordersFor360(PelUnitBuf &mainFrame_roi,
     *dst2 = *src2;
   }
 }
+
+// ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
+//     const ComponentID id, const CCoeffBuf &si_tuCoeff,
+//     const ldpc_codec_layer::QaryDistribution::quantization_params
+//     &bsp_params) const {
+//   auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
+//   size_t tu_size = x_tuCoeff.area();
+
+//  ldpc_codec_layer::BitSymbolProvider bsp(
+//      SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
+
+//  ICOV_ASSERT_MSG(
+//      (size_t)si_tuCoeff.area() == tu_size,
+//      "Transform units from Source and its SI must be the same size: " +
+//          std::to_string(tu_size));
+
+//  bsp.set_si_and_compute_pz_params(
+//      SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), bsp_params);
+
+//  return bsp;
+//}

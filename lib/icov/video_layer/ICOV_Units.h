@@ -44,6 +44,7 @@
  *
  *****************************************************************************/
 #pragma once
+#include "Buffer.h"
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
@@ -82,6 +83,10 @@ public:
     return _quantizedTcoeffs.getBuf(id);
   }
 
+  const CCoeffBuf getPreviousQT(const ComponentID id) const {
+    return _previousQTcoeffs.getBuf(id);
+  }
+
   CoeffBuf &getInverseQuantizedTransformCoeffs(const ComponentID id) {
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
@@ -90,20 +95,18 @@ public:
   getInverseQuantizedTransformCoeffs(const ComponentID id) const {
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
-  
+
+  void save() { _previousQTcoeffs.copyFrom(_quantizedTcoeffs); }
+
   ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
-      const ComponentID id, const TransformUnit &si_tu,
+      const ComponentID id, const CCoeffBuf &si_tuCoeff,
       const ldpc_codec_layer::QaryDistribution::quantization_params &bsp_params)
       const {
     auto x_tuCoeff = this->getQuantizedTransformCoeffs(id);
     size_t tu_size = x_tuCoeff.area();
 
-    ICOV_TRACE << tu_size;
-
     ldpc_codec_layer::BitSymbolProvider bsp(
         SymboleVec(x_tuCoeff.buf, x_tuCoeff.buf + tu_size));
-
-    auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(id);
 
     ICOV_ASSERT_MSG(
         (size_t)si_tuCoeff.area() == tu_size,
@@ -114,6 +117,14 @@ public:
         SIVec(si_tuCoeff.buf, si_tuCoeff.buf + tu_size), bsp_params);
 
     return bsp;
+  }
+
+  ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
+      const ComponentID id, const TransformUnit &si_tu,
+      const ldpc_codec_layer::QaryDistribution::quantization_params &bsp_params)
+      const {
+    auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(id);
+    return instantiateBitSymbolProvider(id, si_tuCoeff, bsp_params);
   }
 
   const IQTCoeffStorage getInverseQuantizedTcoeffs() const {
@@ -127,6 +138,7 @@ public:
 protected:
   TCoeffStorage _Tcoeffs;
   QTCoeffStorage _quantizedTcoeffs;
+  QTCoeffStorage _previousQTcoeffs;
   IQTCoeffStorage _inverseQuantizedTcoeffs;
 };
 

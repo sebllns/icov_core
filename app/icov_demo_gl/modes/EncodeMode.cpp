@@ -97,11 +97,11 @@ void EncodeMode::run() {
                   .BSP_Params =
                       icov::ldpc_codec_layer::QaryDistribution::
                           quantization_params{enable_z_quantization, q_values},
-                  .CheckDecoding = true,
+                  .CheckDecoding = false,
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
 
-  // #warning FIXME
-  // #pragma message("FIXME")
-  //   throw "FIXME";
+#warning TODO
+#pragma message("TODO")
+  throw "TODO";
 }

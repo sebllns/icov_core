@@ -14,8 +14,10 @@ icov::video::TransformUnit::TransformUnit(
   if (createTransformBuffer)
     _Tcoeffs.create(*this);
 
-  if (createQuantizedTransformBuffer)
+  if (createQuantizedTransformBuffer) {
     _quantizedTcoeffs.create(*this);
+    _previousQTcoeffs.create(*this);
+  }
 
   if (createInversetQuantizedTransformBuffer)
     _inverseQuantizedTcoeffs.create(*this);

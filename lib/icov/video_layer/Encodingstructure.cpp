@@ -129,6 +129,7 @@ void icov::video::EncodingStructure::
              icuYPosTopLeft * icuHeight_luma, icuWidth_luma, icuHeight_luma) &
         extendedFrameArea_luma;
 
+    //@todo use icov assert
     try {
       CHECK(static_cast<UInt>(icuLumaArea.width) != icuWidth_luma ||
                 static_cast<UInt>(icuLumaArea.height) != icuHeight_luma,
@@ -185,9 +186,13 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
   const ChannelType chType = toChannelType(compID);
 
   int processed = 0;
-  int max_count = _vec_icus.size();
+  const UInt max_count = _vec_icus.size();
+
+  // Loop through each ICU (Interactive Coding Unit) in parallel
 #pragma omp parallel for
-  for (UInt i = 0; i < max_count; i++) {
+  /*LOOP ICU*/ for (UInt i = 0; i < max_count; ++i) {
+
+    // Initialization of IntraPrediction and other variables
 
     icov::video::IntraPrediction intraPred;
     intraPred.init(chromaFormatIDC);
@@ -208,12 +213,17 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     } else
       availableDirModes = {DM_CHROMA_IDX, PLANAR_IDX, DC_IDX, HOR_IDX, VER_IDX};
 
+    // END variable initializations
+
+    // Display progress information
     int progress = (processed * 100) / (max_count - 1);
 
 #pragma omp atomic
     processed++;
 
     std::cout << "    " << progress << "%                \r" << std::flush;
+
+    // Access the current ICU
     IcuEncoder &icu_enc = _vec_icus[i];
     std::map<omnidirectional_layer::BlockPrediction::ePredType,
              SideInformationUnit> &currICUintraMap = icu_enc.get_intraSIsMap();
@@ -221,14 +231,16 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
     const CompArea &compArea = icu_enc.get_sourceX().block(compID);
 
     // Iterate through all elements in std::map
-    for (auto it = currICUintraMap.begin(); it != currICUintraMap.end();
-         ++it) // loop over all intra side information
+    /*LOOP INTRA*/ for (auto it = currICUintraMap.begin();
+                        it != currICUintraMap.end();
+                        ++it) // loop over all intra side information
     {
       auto &si = it->second;
       const auto &refSampSide = it->first;
 
+      // Identify the prediction picture based on the reference sample side
       uint picId = PIC_PREDICTION + refSampSide;
-      std::cout << "---- pred pic is " << refSampSide << std::endl;
+
       const PelUnitBuf predictionUnitBuf = encpic.get(picId);
 
       //      uint picId = refSampSide;
@@ -251,11 +263,13 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
       double entropy = std::numeric_limits<double>::max();
 
       // SEARCH BEST DIRMODE FOR INTRA PRED
+      // Iterate through available directional modes for prediction
       for (const UInt &dirMode : availableDirModes) // access by const reference
       {
-
+        // Apply the current tested directional mode for prediction
         intraPred.predIntraAng(roiComp_predictionFrameBuff, dirMode);
-        for (UInt j = 0; j < n_tus; j++) {
+
+        for (UInt j = 0; j < n_tus; ++j) {
           TransformUnit &curr_tu_si = si_TUs[j];
 
           transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
@@ -266,53 +280,24 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
                       curr_tu_si.getTransformCoeffs(compID), uiAbsSum, cQP,
                       SliceType::I_SLICE, bitDepths[chType],
                       maxLog2TrDynamicRange);
-          //                    quant.dequant(curr_tu_si.getInverseQuantizedTransformCoeffs(compID),
-          //                    curr_tu_si.getQuantizedTransformCoeffs(compID),
-          //                    cQP, bitDepths[chType], maxLog2TrDynamicRange);
-
-          //                    cout << "icu " << i << ", comID " << compID <<
-          //                    ", refSampl " << refSamplToStr(refSampSide) <<
-          //                    ", [x, y, w, h] = [ "<<
-          //                    curr_tu_si.block(compID).x << ", " <<
-          //                    curr_tu_si.block(compID).y << ", " <<
-          //                    curr_tu_si.block(compID).width << ", " <<
-          //                    curr_tu_si.block(compID).height << "]" << ",
-          //                    dirMode= " << dirMode << endl;
         }
+
+        // Calculate entropy for the current directional mode
         double currEntropy =
             static_cast<double>(si.estimateSIRequiredBitsToCodeIntraMode(
                 compID, dirMode, refSampSide));
-        residual.clear();
 
-        for (UInt b = 0; b < nBands; b++) {
+        // Calculate and add entropy for the residual of each band
+        residual.clear();
+        for (UInt b = 0; b < nBands; ++b) {
           icu_enc.getTransformSequences(
               compID, refSampSide, b, tuWidth_component, tuHeight_component,
               transformSequence_sourceX, transformSequence_sourceY);
 
-          //                    if(i==0 && dirMode==67)currEntropy
-          //                    {
-          //                        cout << "transformSequence_sourceY[j]= ";
-          //                        for(unsigned int j=0; j <
-          //                        transformSequence_sourceY.size(); j++)
-          //                            cout << transformSequence_sourceY[j] <<
-          //                            ", ";
-          //                        cout << endl;
-          //                    }
-
-          //                    if(i==0 && dirMode==67)
-          //                    {
-          //                        cout << "transformSequence_sourceX[j]= ";
-          //                        for(unsigned int j=0; j <
-          //                        transformSequence_sourceX.size(); j++)
-          //                            cout << transformSequence_sourceX[j] <<
-          //                            ", ";
-          //                        cout << endl;
-          //                    }
-
           CHECK(transformSequence_sourceX.size() !=
                     transformSequence_sourceY.size(),
                 "transform sequence vector size do not match");
-          for (unsigned int j = 0; j < transformSequence_sourceX.size(); j++) {
+          for (unsigned int j = 0; j < transformSequence_sourceX.size(); ++j) {
             residual.push_back(transformSequence_sourceX[j] -
                                transformSequence_sourceY[j]);
           }
@@ -323,24 +308,18 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
                   maxLog2TrDynamicRange + 1);
         }
 
-        // IF CURRENT DIRMODE IS BETTER
+        // Update best directional mode if the current one is better
         if (currEntropy < entropy) {
           entropy = currEntropy;
           si.intraDir[compID] = dirMode;
         }
-      }
-      //            if(i < 3)
-      //            {
-      //                cout << "icu " << i << ", comID " << compID << ",
-      //                refSampl " << refSamplToStr(refSampSide) << ", best
-      //                intra mode " << UInt(si.intraDir[compID]) << ", entropy
-      //                " << entropy << endl;
-      //            }
+      } /* END SEARCH BEST DIRMODE FOR INTRA PRED */
 
-      //            if(i==0)
-      //                cout << "entropy= " << entropy << endl;
+      // Apply the selected directional mode for prediction
       intraPred.predIntraAng(roiComp_predictionFrameBuff, si.intraDir[compID]);
-      for (UInt j = 0; j < n_tus; j++) {
+
+      // Apply DCT-Q on each Transform Unit (TU) in the side information
+      for (UInt j = 0; j < n_tus; ++j) {
         TransformUnit &curr_tu_si = si_TUs[j];
         transform2D.transformNxN(curr_tu_si.getTransformCoeffs(compID),
                                  predictionUnitBuf, curr_tu_si.block(compID),
@@ -350,14 +329,8 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
                     SliceType::I_SLICE, bitDepths[chType],
                     maxLog2TrDynamicRange);
       }
-
-      //      if (oSiResult != nullptr) {
-      //        cv::Mat predMat;
-      //        VTM_OPENCV_Utility::toBGRMat(predictionUnitBuf, predMat);
-      //        oSiResult->insert_or_assign(refSampSide, predMat);
-      //      }
-    }
-  }
+    } /*LOOP INTRA*/
+  }   /*LOOP ICU*/
 }
 
 void icov::video::EncodingStructure::deallocate() {

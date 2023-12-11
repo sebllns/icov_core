@@ -49,10 +49,11 @@
 
 #pragma once
 
+#include "LdpcParallelEncoder.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
-#include "PredictionsEncoder.h"
 #include "encoder/interface/IEncoder.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -95,10 +96,6 @@ public:
     const Int InternalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
   };
 
-  const static int PredViewID;
-  const static int RecoViewID;
-  const static int DecodedDebugViewID;
-
   FrameEncoder(const params &p, const LdpcCoderParameters &LDPC_Params);
   ~FrameEncoder();
 
@@ -124,15 +121,15 @@ private:
                   const icov::video::IcuEncoder &icu_enc,
                   omnidirectional_layer::BlockPrediction::ePredType pred);
   void encode_si(const omnidirectional_layer::Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
-                 const icov::video::SideInformationUnit &si,
+                 const video::IcuEncoder &icu_enc,
+                 const icov::video::SideInformationUnit *si,
                  omnidirectional_layer::BlockPrediction::ePredType pred,
                  ComponentID comp);
   void encode_tu(const omnidirectional_layer::Block &b,
                  const icov::video::IcuEncoder &icu_enc,
-                 const icov::video::SideInformationUnit &si,
+                 const icov::video::SideInformationUnit *si,
                  omnidirectional_layer::BlockPrediction::ePredType pred,
-                 ComponentID comp, int tu_index);
+                 ComponentID comp);
 
   bool debug_enabled() const;
 
@@ -166,14 +163,15 @@ protected:
   uint m_numComp;
   icov::video::EncodingStructure m_enc_struc;
   icov::video::BufGroups m_vvc_bufs;
-  PredictionsEncoder m_pred_encoder;
+  LdpcParallelEncoder m_pred_encoder;
   bool m_init;
 
   std::shared_ptr<OutputIcovBase> m_icov_file;
 
   int block_comp;
 
-  std::map<size_t, std::vector<uint64_t>> m_rates_histogram;
+  std::map<omnidirectional_layer::BlockPrediction::ePredType, icov::Rate>
+      m_rates_histogram;
 
   cv::Mat m_reco;
   fs::path m_frame_dir;
@@ -207,7 +205,7 @@ protected:
 
   typedef struct {
     ldpc_codec_layer::QaryDistribution stored_pz;
-    // mode
+    // mode if used
     uint dirmode;
   } SiCoder;
 
