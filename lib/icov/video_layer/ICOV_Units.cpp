@@ -5,6 +5,7 @@
 **   Inria research institute
 **************************************************************************/
 #include "ICOV_Units.h"
+#include "icov_log.h"
 
 icov::video::TransformUnit::TransformUnit(
     const UnitArea &unit, bool createTransformBuffer,
@@ -15,6 +16,7 @@ icov::video::TransformUnit::TransformUnit(
     _Tcoeffs.create(*this);
 
   if (createQuantizedTransformBuffer) {
+    ICOV_DEBUG << "instantiate TU";
     _quantizedTcoeffs.create(*this);
     _previousQTcoeffs.create(*this);
   }
@@ -96,42 +98,10 @@ icov::video::InteractiveCodingUnit::addTU(const UnitArea &unit) {
   previousTU.next = &currTU;
 
   return &currTU;
-  /*
-
-    if(!firstTU)
-    {
-        firstTU = std::make_shared<TransformUnit>(unit);
-        lastTU = firstTU;
-//        _previousTU = firstTU;
-        return firstTU;
-    }
-
-    std::shared_ptr<TransformUnit> tu(new TransformUnit(unit));
-//    TransformUnit* tu = new TransformUnit(unit);
-
-    tu->previous = lastTU.get();
-    lastTU->next = tu.get();
-
-    lastTU = tu;
-
-    return lastTU;
-    */
 }
 
 icov::video::TransformUnit *
 icov::video::InteractiveCodingUnit::getTU(const UnitArea &unit) {
-  //    if(!firstTU)
-  //        return nullptr;
-
-  //    for(std::shared_ptr<TransformUnit> tu = firstTU; tu;
-  //    tu=std::shared_ptr<TransformUnit> (tu->next))
-  //    {
-  //        if(*tu==unit)
-  //            return tu;
-  //    }
-
-  //    return nullptr;
-
   for (unsigned int i = 0; i < TUs.size(); i++) {
     if (TUs[i] == unit)
       return &TUs[i];

@@ -52,6 +52,7 @@
 #include "LdpcParallelEncoder.h"
 #include "Media.h"
 #include "OutputIcovBase.h"
+#include "encoder/EncoderStatistics.h"
 #include "encoder/interface/IEncoder.h"
 #include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
@@ -177,6 +178,8 @@ protected:
   fs::path m_frame_dir;
 
   struct StoredRate {
+    StoredRate() : c(0), r(0), m(0) {}
+
     NumcodeIdx c; // rate quantized
     Rate r;       // actual rate value
     uint m;       // code length
@@ -192,7 +195,7 @@ protected:
 
     //    icov::Syndrome accessBlock;
     icov::Syndrome stored_synd;
-    NumcodeIdx stored_synd_rate;
+    StoredRate stored_synd_rate;
     icov::Rate noSourceThreshold;
     bool sourceFlag;
 
@@ -220,6 +223,7 @@ protected:
   } ChannelCoder;
 
   std::vector<ChannelCoder> m_channelCoder;
+  EncoderStatistics m_stats;
 
   // IEncoder interface
 protected:

@@ -166,6 +166,10 @@ namespace logging {
 
 inline std::ostream &get_log_str() { return std::cout; }
 inline std::ostream &print(int lvl) {
+
+  if (lvl < ICOV_LOG_LEVEL)
+    return;
+
   auto &str = get_log_str();
 
   switch (static_cast<severity_level>(lvl)) {

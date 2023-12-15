@@ -48,6 +48,7 @@
 #include "CommonLib/Unit.h"
 #include "ICOV_IntraPrediction.h"
 #include "ICOV_Storage.h"
+#include "icov_log.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 
 #include <memory>
@@ -96,7 +97,10 @@ public:
     return _inverseQuantizedTcoeffs.getBuf(id);
   }
 
-  void save() { _previousQTcoeffs.copyFrom(_quantizedTcoeffs); }
+  void save() {
+    ICOV_DEBUG << "save TU";
+    _previousQTcoeffs.copyFrom(_quantizedTcoeffs);
+  }
 
   ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
       const ComponentID id, const CCoeffBuf &si_tuCoeff,
