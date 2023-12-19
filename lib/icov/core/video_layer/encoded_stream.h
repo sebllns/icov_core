@@ -82,6 +82,7 @@ typedef enum {
 
 static const omnidirectional_layer::IBlockPredictionManager::prediction_t
     PredictionID[PREDICTION_COUNT] = {
+        omnidirectional_layer::BlockPrediction::INTER,
         omnidirectional_layer::BlockPrediction::TOP_RIGHT,
         omnidirectional_layer::BlockPrediction::TOP_LEFT,
         omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
@@ -90,7 +91,6 @@ static const omnidirectional_layer::IBlockPredictionManager::prediction_t
         omnidirectional_layer::BlockPrediction::LEFT,
         omnidirectional_layer::BlockPrediction::TOP,
         omnidirectional_layer::BlockPrediction::BOTTOM,
-        omnidirectional_layer::BlockPrediction::INTER,
 };
 
 inline int
@@ -98,33 +98,32 @@ getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   switch (pred) {
 
-  case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
+  case omnidirectional_layer::BlockPrediction::INTER:
     return 0;
 
-  case omnidirectional_layer::BlockPrediction::TOP_LEFT:
+  case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
     return 1;
 
-  case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
+  case omnidirectional_layer::BlockPrediction::TOP_LEFT:
     return 2;
 
-  case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
     return 3;
 
-  case omnidirectional_layer::BlockPrediction::RIGHT:
+  case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
     return 4;
 
-  case omnidirectional_layer::BlockPrediction::LEFT:
+  case omnidirectional_layer::BlockPrediction::RIGHT:
     return 5;
 
-  case omnidirectional_layer::BlockPrediction::TOP:
+  case omnidirectional_layer::BlockPrediction::LEFT:
     return 6;
 
-  case omnidirectional_layer::BlockPrediction::BOTTOM:
+  case omnidirectional_layer::BlockPrediction::TOP:
     return 7;
 
-    //@todo TODO
-    //  case omnidirectional_layer::BlockPrediction::INTER:
-    //    return 8;
+  case omnidirectional_layer::BlockPrediction::BOTTOM:
+    return 8;
 
   default:
     ICOV_THROW_INVALID_ARGUMENT("Unrecognized prediction value");

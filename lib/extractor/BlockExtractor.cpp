@@ -1,5 +1,7 @@
 #include "BlockExtractor.h"
 #include "extractor/ChannelExtractor.h"
+#include "icov_log.h"
+#include "icov_types.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/VideoMetrics.h"
@@ -67,17 +69,16 @@ void icov::extractor::BlockExtractor::_processBlock(
         prediction,
     frame_t previouslyDecoded) {
 
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
+      b.parent()->getBlockIndexPos(b.getIdSelf()));
+
   icov::omnidirectional_layer::BlockPrediction::ePredType block_prediction =
       icov::omnidirectional_layer::BlockPrediction::toPredType(prediction);
 
-  ICOV_DEBUG << "START EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
+  ICOV_DEBUG << "START EXTRACT BLOCK " << b.getIdSelf()
+             << " WITH INTRA PREDICTION "
              << omnidirectional_layer::BlockPrediction::toString(
                     block_prediction);
-
-  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingBlockID(
-      b.getIdSelf() - 1);
-  bitstream::VideoStreamDebugger::get_mutable_instance()
-      .setDebuggingPredictionID(block_prediction);
 
   bool is_access_block =
       (block_prediction ==
@@ -103,14 +104,45 @@ void icov::extractor::BlockExtractor::_processBlock(
         }
       }
 
-      // select prediction
-      ICOV_TRACE << "SELECT PREDICTION";
-      int pred_idx = bitstream::getPredictionOrder(block_prediction);
-      for (int i = 0; i < pred_idx; ++i) {
-        for (auto &ch : m_channelExtractor)
-          ch->pass_prediction();
+      if (r.frameID == (previouslyDecoded + 1)) {
+        // extract inter-prediction paramaters and calcultate its bitrate
+        BitLength inter_length = 0;
+        for (auto &ch : m_channelExtractor) {
+          ch->extractPredParams(S_INTER);
+          inter_length += ch->predParams().at(S_INTER).getSyndromeLength();
+        }
+
+        // jump to selected intra prediction parameters
+        int pred_idx = bitstream::getPredictionOrder(block_prediction);
+        for (int i = 0; i < pred_idx; ++i) {
+          for (auto &ch : m_channelExtractor)
+            ch->pass_prediction();
+        }
+
+        // extract intra-prediction bitrate and calcultate its bitrate
+        BitLength intra_length = 0;
+        for (auto &ch : m_channelExtractor) {
+          ch->extractPredParams(S_INTRA);
+          intra_length += ch->predParams().at(S_INTRA).getSyndromeLength();
+        }
+
+        // select prediction with minimal bitrate
+        ICOV_DEBUG << "INTRA LENGTH " << intra_length;
+        ICOV_DEBUG << "INTER LENGTH " << inter_length;
+        if (inter_length < intra_length) {
+          block_prediction =
+              icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
+        }
+
+        ICOV_DEBUG << "SELECT PREDICTION"
+                   << omnidirectional_layer::BlockPrediction::toString(
+                          block_prediction);
       }
     }
+
+    // send informations to the debugger
+    bitstream::VideoStreamDebugger::get_mutable_instance()
+        .setDebuggingPredictionID(block_prediction);
 
     ChannelExtractor::resetSyndromePadding();
     int c = 0;
@@ -119,14 +151,6 @@ void icov::extractor::BlockExtractor::_processBlock(
       ch->extract_block_syndrome(b, block_prediction);
       ICOV_TRACE << "END EXTRACT CHANNEL " << c;
     }
-
-    //  if (is_access_block && ChannelExtractor::getSyndromePadding() > 0)
-    //    m_extractionBitstream->back() = ((m_extractionBitstream->back() >>
-    //                                      ChannelExtractor::getSyndromePadding())
-    //                                     <<
-    //                                     ChannelExtractor::getSyndromePadding());
-    // m_icovFile
-    // BlockPrediction::predType::NONE
   }
 
   ICOV_DEBUG << "END EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "

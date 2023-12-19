@@ -48,17 +48,20 @@
 #pragma once
 
 #include "icov_assert.h"
-#include "icov_stream.h"
 #include "icov_types.h"
-#include "ldpc_codec_layer/factory/LdpcCoderParameters.h"
-#include "video_layer/ContentParameterSet.h"
-#include <algorithm>
+#include "ldpc_codec_layer/QaryDistribution.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
+#include "video_layer/icov_stream.h"
+
+#include <array>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/queue.hpp>
 #include <boost/serialization/vector.hpp>
+
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstddef>
@@ -74,30 +77,74 @@ namespace icov {
 namespace bitstream
 {
 
+struct RateStream {
+  RateStream()
+      : mSyndromeQuantizedSize(0), mSyndromeBitSize(0), mSyndromeByteSize(0) {}
 
-template <typename T> struct RawByteArray : boost::noncopyable {
-  T Length;
-  icov::byte *Data;
-  void release() {
-    Length = 0;
-    if (Data != nullptr)
-      delete[] Data;
-    Data = nullptr;
+  void reset() {
+    mSyndromeQuantizedSize = 0;
+    mSyndromeBitSize = 0;
+    mSyndromeByteSize = 0;
   }
-  void reset(T l) {
-    release();
-    Length = l;
-    Data = new icov::byte[l];
+
+  void set(byte pSyndromeQuantizedSize,
+           const ldpc_codec_layer::IInteractiveCoder &coder, ushort &padding) {
+
+    mSyndromeQuantizedSize = pSyndromeQuantizedSize;
+
+    mSyndromeBitSize =
+        bitstream::inverseQuantizedSize(mSyndromeQuantizedSize, coder);
+
+    bitstream::getByteCount(mSyndromeBitSize, mSyndromeByteSize, padding);
   }
-  explicit RawByteArray(T l) : Length(l), Data(new icov::byte[l]) {}
-  RawByteArray() : Length(0), Data(nullptr) {}
-  ~RawByteArray() {}
+
+  byte syndromeQuantizedSize() const { return mSyndromeQuantizedSize; }
+  ushort syndromeBitSize() const { return mSyndromeBitSize; }
+  ushort syndromeByteSize() const { return mSyndromeByteSize; }
+
+private:
+  byte mSyndromeQuantizedSize;
+  ushort mSyndromeBitSize;
+  ushort mSyndromeByteSize;
 };
 
 struct BitplaneStream {
   NumcodeIdx numcode;
   Syndrome syndrome;
   BitplaneStream() : numcode(0), syndrome(0) {}
+};
+
+struct SIEncodedParams {
+  void setMode(byte val) { params[0] = val; }
+  byte getMode() const { return params[0]; }
+
+  void setPredictionHeader(byte val) { params[1] = val; }
+  byte getPredictionHeader() const { return params[1]; }
+
+  void setZmin(byte val) { params[2] = val; }
+  byte getZmin() const { return params[2]; }
+
+  void setZmax(byte val) { params[3] = val; }
+  byte getZmax() const { return params[3]; }
+
+  BitLength getSyndromeLength() const { return syndromeLength; }
+  void setSyndromeLength(BitLength newSyndromeLength) {
+    syndromeLength = newSyndromeLength;
+  }
+
+  bool getCodingFlag() const { return codingFlag; }
+  void setCodingFlag(bool newCodingFlag) { codingFlag = newCodingFlag; }
+
+  void reset() {
+    params.fill(0);
+    syndromeLength = 0;
+    codingFlag = false;
+  }
+
+private:
+  std::array<byte, 4> params;
+  BitLength syndromeLength;
+  bool codingFlag;
 };
 
 struct SIStream {
@@ -279,90 +326,5 @@ inline const byte *IcovExtractedBitstream::readableData() const {
   return m_Buffer.data() + getReadPosition();
 }
 
-class SyndromeSizeConversion
-{
-public:
-  SyndromeSizeConversion(byte QuantizedSize, const ldpc_codec_layer::IInteractiveCoder &coder)
-      : m_QuantizedSize(QuantizedSize), m_BitSize(bitstream::inverseQuantizedSize(QuantizedSize, coder))
-  {
-    bitstream::getByteCount(m_BitSize, m_ByteSize, m_Padding);
-  }
-
-  byte QuantizedSize() const;
-  ushort BitSize() const;
-  ushort ByteSize() const;
-  ushort Padding() const;
-
-private:
-  byte m_QuantizedSize;
-  ushort m_BitSize;
-  ushort m_ByteSize;
-  ushort m_Padding;
-};
-
-inline byte SyndromeSizeConversion::QuantizedSize() const
-{
-  return m_QuantizedSize;
-}
-
-inline ushort SyndromeSizeConversion::BitSize() const
-{
-  return m_BitSize;
-}
-
-inline ushort SyndromeSizeConversion::ByteSize() const
-{
-  return m_ByteSize;
-}
-
-inline ushort SyndromeSizeConversion::Padding() const
-{
-  return m_Padding;
-}
-
 } // namespace bitstream
 } // namespace icov
-
-namespace boost {
-namespace serialization {
-
-template <class Archive, typename T>
-void serialize(Archive &ar, icov::bitstream::RawByteArray<T> &io,
-               const unsigned int /*version*/) {
-  ar &io.Length;
-  if (Archive::is_loading::value) {
-    io.release();
-    io.Data = new icov::byte[io.Length];
-  }
-  ar &make_array<icov::byte>(io.Data, io.Length);
-}
-
-template <class Archive>
-void serialize(Archive &ar, icov::bitstream::BlockChannelDecoderParams &io,
-               const unsigned int /*version*/) {
-
-  ar &io.DirMode;
-
-  if (io.DirMode == 0) {
-    // ACCESS BLOCK
-    ar &io.Bitplanes;
-    ICOV_ASSERT_MSG(io.Bitplanes.size() > 0, "No access block data");
-  } else {
-    // NON ACCESS BLOCK
-    ar &io.QIdx;
-    if (io.QIdx > 0) {
-      ar &io.Bitplanes;
-      if (io.Bitplanes.size() > 0) {
-        ar &io.Zmin;
-        ar &io.Zmax;
-        // ar &io.SyndromeBuf;
-      } // ELSE NO BITPLANE => 0
-    }   // else CLONE SI
-  }
-  //  size_t byte_count = bitToByteCount(io.size());
-  //  icov::byte *data = new icov::byte[byte_count];
-  //  ar &make_array<icov::byte>(data, byte_count);
-}
-
-} // namespace serialization
-} // namespace boost

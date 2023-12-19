@@ -2,6 +2,7 @@
 
 #include "Buffer.h"
 #include "CodingStructure.h"
+#include "CommonDef.h"
 #include "FastArray.h"
 #include "enc_helpers.h"
 #include "encoder/interface/IEncoder.h"
@@ -14,7 +15,6 @@
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
-#include "opencv2/imgproc.hpp"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -783,6 +783,8 @@ void icov::encoder::FrameEncoder::encode_tu(
 
     if (pred != omnidirectional_layer::BlockPrediction::INTER) {
       mode = icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp];
+    } else {
+      mode = NUM_LUMA_MODE;
     }
 
     // Save syndrome if longer than current saved

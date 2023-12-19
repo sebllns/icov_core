@@ -1,8 +1,7 @@
 #include "ChannelExtractor.h"
 
-#include "FastArray.h"
-
 #include "icov_assert.h"
+#include "icov_exception.h"
 #include "icov_log.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
@@ -13,10 +12,11 @@
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
 
-#include <algorithm>
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+
+#include <algorithm>
 #include <string>
 #include <sys/types.h>
 
@@ -67,40 +67,17 @@ void ChannelExtractor::extract_block_syndrome(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(block_prediction);
 
-  bool is_access_block =
-      (block_prediction ==
-       omnidirectional_layer::BlockPrediction::ePredType::NONE);
   bool is_inter_prediction =
       (block_prediction ==
        omnidirectional_layer::BlockPrediction::ePredType::INTER);
-  bool is_intra_prediction = !is_access_block && !is_inter_prediction;
+
+  int pred_type = is_inter_prediction ? S_INTER : S_INTRA;
 
   m_bitstream->push(m_bitplaneCount);
 
-  m_codingFlag = true;
-
-  if (is_access_block) {
-    ushort syndrome_size = 0, syndrome_padding = 0;
-    //    bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount -
-    //                                SyndromePadding,
-    //                            syndrome_size, syndrome_padding);
-
-    //    m_icovFile->readSyndrome(m_readingBuffer, syndrome_size,
-    //    syndrome_size); SyndromePadding =
-    //        ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
-
-    m_codingFlag = true;
-  } else if (is_intra_prediction) {
-    _extractIntraParams();
-  } else if (is_inter_prediction) {
-    // TODO IMPLEMENT
-  }
-
-  // if (m_codingFlag) {
   for (auto &bp : m_bitplanes) {
-    _extractBitplaneSyndrome(bp);
+    _extractBitplaneSyndrome(bp, pred_type);
   }
-  // }
 
   std::cout << "END extract_block_syndrome " << std::endl;
 }
@@ -124,41 +101,35 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
 
   m_bitplanes.resize(m_bitplaneCount);
 
-  int i = 0;
   // for each bitplane read stored syndrome size
+  int i = 0;
   for (auto &bp : m_bitplanes) {
     bp.Index = i++;
-    bp.StoredSyndromeQuantizedSize = 0;
-    bp.StoredSyndromeBitSize = 0;
-    bp.StoredSyndromeByteSize = 0;
 
-    bp.ReadSyndromeQuantizedSize = 0;
-    bp.ReadSyndromeBitSize = 0;
-    bp.ReadSyndromeByteSize = 0;
-    bp.ReadSyndromePadding = 0;
-
-    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
-                     bp.StoredSyndromeQuantizedSize);
-
-    bitstream::VideoStreamDebugger::get_const_instance()
-        .assertStoredNumcodeIdxEqual(bp.Index, bp.StoredSyndromeQuantizedSize);
-
-    if (is_access_block) {
-      bp.StoredSyndromeQuantizedSize =
-          bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+    if (bp.Index == 0) {
+      for (int k = 0; k < PRED_COUNT; ++k) {
+        bp.BitRates[k].reset();
+        m_predParams[k].reset();
+      }
     }
 
-    bp.StoredSyndromeBitSize = bitstream::inverseQuantizedSize(
-        bp.StoredSyndromeQuantizedSize, *m_ldpc_coder);
+    byte qSize = 0;
 
-    bitstream::getByteCount(bp.StoredSyndromeBitSize, bp.StoredSyndromeByteSize,
-                            bp.ReadSyndromePadding);
-    bp.ReadSyndromeQuantizedSize = bp.StoredSyndromeQuantizedSize;
-    bp.ReadSyndromeBitSize = bp.StoredSyndromeBitSize;
-    bp.ReadSyndromeByteSize = bp.StoredSyndromeByteSize;
-    // std::cout << " " << output[c][bp];
+    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, qSize);
+
+    bitstream::VideoStreamDebugger::get_const_instance()
+        .assertStoredNumcodeIdxEqual(bp.Index, qSize);
+
+    if (is_access_block) {
+      qSize = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+    }
+
+    bp.BitRates[S_STORED].set(qSize, *m_ldpc_coder, bp.ReadSyndromePadding);
+
+    m_predParams[S_STORED].setSyndromeLength(
+        m_predParams[S_STORED].getSyndromeLength() +
+        bp.BitRates[S_STORED].syndromeBitSize());
   }
-
   std::cout << "END extract_stored_syndrome_size " << std::endl;
 }
 
@@ -190,130 +161,154 @@ void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
 
 int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
-void ChannelExtractor::_extractIntraParams() {
-  std::cout << "CH " << std::to_string(m_params.CompID)
-            << ": _extractIntraParams " << std::endl;
+void ChannelExtractor::extractPredParams(int type) {
+  _extractPredParams(m_predParams[type]);
+
+  if (m_predParams[type].getCodingFlag()) {
+    for (auto &bp : m_bitplanes) {
+      _extractBitplaneNumcode(bp, type);
+    }
+  }
+}
+
+void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
+  ICOV_DEBUG << "CH " << std::to_string(m_params.CompID)
+             << ": _extractPredParams " << std::endl;
+
+  si.reset();
 
   byte dirmode = 0;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
-
   bitstream::assertPredictionAvailable(dirmode);
-
   bitstream::VideoStreamDebugger::get_const_instance().assertDirModeEqual(
       dirmode);
 
-  ICOV_TRACE << "EXTRACTOR DM ";
-  m_bitstream->push(dirmode);
+  ICOV_DEBUG << "EXTRACTOR DM ";
   byte pred_hdr = bitstream::flag_t::NoCodingSI;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
-  ICOV_TRACE << "EXTRACTOR QZ ";
-  m_bitstream->push(pred_hdr);
+  ICOV_DEBUG << "EXTRACTOR QZ ";
 
-  m_codingFlag = bitstream::getCodingFlag(pred_hdr);
+  si.setCodingFlag(bitstream::getCodingFlag(pred_hdr));
+
   bitstream::VideoStreamDebugger::get_const_instance().assertcodingSIEqual(
-      m_codingFlag);
+      si.getCodingFlag());
 
-  if (m_codingFlag) {
-    byte zmin = 0, zmax = 0;
+  if (si.getCodingFlag()) {
 
     byte q0 = bitstream::getQaryQParam(pred_hdr);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
 
+    byte zmin = 0, zmax = 0;
+
     m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
-
-    ICOV_TRACE << "EXTRACTOR ZMIN ";
-    m_bitstream->push(zmin);
 
     m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
 
-    ICOV_TRACE << "EXTRACTOR ZMAX ";
-    m_bitstream->push(zmax);
+    si.setZmin(zmin);
+    si.setZmax(zmax);
   }
 
-  for (auto &bp : m_bitplanes) {
-    _extractBitplaneNumcode(bp);
-  }
-
-  std::cout << "END _extractIntraParams" << std::endl;
+  ICOV_DEBUG << "END _extractPredParams" << std::endl;
 }
 
-void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp)
-{
+void ChannelExtractor::_pushPredParams(const bitstream::SIEncodedParams &si) {
+  m_bitstream->push(si.getMode());
+  m_bitstream->push(si.getPredictionHeader());
+
+  if (si.getCodingFlag()) {
+    m_bitstream->push(si.getZmin());
+    m_bitstream->push(si.getZmax());
+  }
+}
+
+void ChannelExtractor::_pushPredParams(int type) {
+  ICOV_DEBUG << "CH " << std::to_string(m_params.CompID) << ": _pushPredParams "
+             << std::endl;
+
+  _pushPredParams(m_predParams[type]);
+
+  if (m_predParams[type].getCodingFlag()) {
+    for (auto &bp : m_bitplanes) {
+      m_bitstream->push(bp.BitRates[type].syndromeQuantizedSize());
+    }
+  }
+
+  ICOV_DEBUG << "END _pushPredParams" << std::endl;
+}
+
+void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
+                                               int pred_type) {
   std::cout << "CH " << std::to_string(m_params.CompID)
             << ": _extractBitplaneNumcode" << std::endl;
 
-  if (m_codingFlag) {
-    m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS,
-                     bp.ReadSyndromeQuantizedSize);
+  byte qsize = 0;
+  m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, qsize);
+  bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, bp.ReadSyndromePadding);
 
-    bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
-        bp.Index, (NumcodeIdx)bp.ReadSyndromeQuantizedSize);
-
-    ICOV_TRACE << "EXTRACTOR NUMCODE BP " << bp.Index << " ";
-    m_bitstream->push(bp.ReadSyndromeQuantizedSize);
-  } else {
-    bp.ReadSyndromeQuantizedSize = 0;
-  }
-
-  bp.ReadSyndromeBitSize = bitstream::inverseQuantizedSize(
-      bp.ReadSyndromeQuantizedSize, *m_ldpc_coder);
-
-  bitstream::getByteCount(bp.ReadSyndromeBitSize, bp.ReadSyndromeByteSize,
-                          bp.ReadSyndromePadding);
-
-  ICOV_TRACE << "STORED " << (int)bp.StoredSyndromeQuantizedSize << " Qbits -> "
-             << bp.StoredSyndromeByteSize << " Bytes";
-  ICOV_TRACE << "READ " << (int)bp.ReadSyndromeQuantizedSize << " Qbits -> "
-             << bp.ReadSyndromeByteSize << " Bytes";
+  bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
+      bp.Index, (NumcodeIdx)bp.BitRates[pred_type].syndromeQuantizedSize());
 
   std::cout << "END _extractBitplaneNumcode" << std::endl;
 }
 
-void ChannelExtractor::_extractBitplaneSyndrome(const BitplaneSyndromeExtractor &bp)
-{
+void ChannelExtractor::_extractBitplaneSyndrome(
+    const BitplaneSyndromeExtractor &bp, int pred_type) {
 
-  ICOV_TRACE << "CH " << std::to_string(m_params.CompID)
-             << ": _extractBitplaneSyndrome";
-  ICOV_TRACE << bp.ReadSyndromeByteSize << "/" << bp.StoredSyndromeByteSize
-             << " bytes to read";
+  ushort bytes_count_to_read = bp.BitRates[pred_type].syndromeByteSize();
 
-  ICOV_TRACE
-      << "SYNDROME POS IN ENCODED FILE START FROM "
-      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
+  if (bytes_count_to_read > 0) {
+    ushort bytes_count_stored = bp.BitRates[S_STORED].syndromeByteSize();
+    ushort offset = bytes_count_stored - bytes_count_to_read;
+    icov::assert::check_not(offset < 0, "Offset can't be negative");
 
-  ICOV_TRACE << "BITSTREAM POS BEFORE READ " << m_bitstream->getWritePosition();
+    ICOV_TRACE << "CH " << std::to_string(m_params.CompID)
+               << ": _extractBitplaneSyndrome";
+    ICOV_TRACE << bytes_count_to_read << "/" << bytes_count_stored
+               << " bytes to read";
 
-  int total_read = 0;
+    ICOV_TRACE << "SYNDROME POS IN ENCODED FILE START FROM "
+               << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME)
+                      .tellg();
 
-  while (total_read < bp.ReadSyndromeByteSize) {
-    int read = std::min((int)(bp.ReadSyndromeByteSize - total_read),
-                        (int)((m_bitstream->getBufferSize() -
-                               m_bitstream->getWritePosition())));
+    ICOV_TRACE << "BITSTREAM POS BEFORE READ "
+               << m_bitstream->getWritePosition();
 
-    m_icovFile->readSyndrome(m_bitstream->writableData(), read, read);
-    m_bitstream->shiftWritePosition(read);
+    int total_read = 0;
 
-    total_read += read;
+    while (total_read < bytes_count_to_read) {
+      int read = std::min((int)(bytes_count_to_read - total_read),
+                          (int)((m_bitstream->getBufferSize() -
+                                 m_bitstream->getWritePosition())));
+
+      m_icovFile->readSyndrome(m_bitstream->writableData(), read, read);
+      m_bitstream->shiftWritePosition(read);
+
+      total_read += read;
+    }
+
+    icov::assert::equal(total_read, (int)bytes_count_stored,
+                        "Syndrome read size bad value");
+
+    m_icovFile->offsetSyndrome(offset);
+
+    ICOV_TRACE << "SYNDROME POS NOW IS "
+               << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME)
+                      .tellg();
+
+    ICOV_TRACE << "BITSTREAM POS AFTER READ "
+               << m_bitstream->getWritePosition();
   }
-
-  icov::assert::equal(total_read, (int)bp.ReadSyndromeByteSize,
-                      "Syndrome read size bad value");
-  int offset = bp.StoredSyndromeByteSize - bp.ReadSyndromeByteSize;
-  icov::assert::check_not(offset < 0, "Offset can't be negative");
-  m_icovFile->offsetSyndrome(offset);
-
-  ICOV_TRACE
-      << "SYNDROME POS NOW IS "
-      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
-
-  ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
-
   std::cout << "END _extractBitplaneSyndrome" << std::endl;
+}
+
+const std::array<icov::bitstream::SIEncodedParams, PRED_COUNT> &
+ChannelExtractor::predParams() const {
+  return m_predParams;
 }
 
 int ChannelExtractor::getCoderSize() const { return m_ldpc_coder->get_n(); }
