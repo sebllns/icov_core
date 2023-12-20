@@ -116,7 +116,7 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
              IBlockPredictionManager::prediction_t) {
         assert::check(
             m_extractionBitstream->empty(),
-            ICOV_ASSERT_MSG("Bitstream must be empty after block decoding"));
+            ICOV_DEBUG_HEADER("Bitstream must be empty after block decoding"));
       };
   m_blockDecoder->setAfter(check_empty_bitsteam);
 }
@@ -225,7 +225,7 @@ void decoder::SinglePassDecoder::addDefaultDecoder() {
 
 const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const {
   icov::assert::not_null(m_blockDecoder.get(),
-                         ICOV_ASSERT_MSG("Decoder cannot be null"));
+                         ICOV_DEBUG_HEADER("Decoder cannot be null"));
   return m_blockDecoder->decodingOutput();
 }
 
@@ -246,9 +246,9 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
 
   bool decoded = false;
   icov::assert::not_null(m_navigation.get(),
-                         ICOV_ASSERT_MSG("Navigation cannot be null"));
+                         ICOV_DEBUG_HEADER("Navigation cannot be null"));
   icov::assert::not_null(m_navigation->Request.get(),
-                         ICOV_ASSERT_MSG("Request manager cannot be null"));
+                         ICOV_DEBUG_HEADER("Request manager cannot be null"));
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
@@ -267,7 +267,7 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
 
 const LdpcCoderParameters &decoder::SinglePassDecoder::ldpcParams() const {
   assert::not_null(m_ldpcParams.get(),
-                   ICOV_ASSERT_MSG("LDPC parameters cannot be null"));
+                   ICOV_DEBUG_HEADER("LDPC parameters cannot be null"));
   return *m_ldpcParams;
 }
 
