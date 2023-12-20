@@ -288,9 +288,9 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
       m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
     }
 
-    m_vvc_bufs.create(PIC_PREDICTION +
-                          omnidirectional_layer::BlockPrediction::INTER,
-                      extendedFrameArea);
+    //    m_vvc_bufs.create(PIC_PREDICTION +
+    //                          omnidirectional_layer::BlockPrediction::INTER,
+    //                      extendedFrameArea);
 
     m_enc_struc
         .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
@@ -302,8 +302,9 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   }
 
   // save previous frame
-  m_vvc_bufs.get(PIC_PREDICTION + omnidirectional_layer::BlockPrediction::INTER)
-      .copyFrom(m_vvc_bufs.get(PIC_RECONSTRUCTION));
+  //  m_vvc_bufs.get(PIC_PREDICTION +
+  //  omnidirectional_layer::BlockPrediction::INTER)
+  //      .copyFrom(m_vvc_bufs.get(PIC_RECONSTRUCTION));
   m_vvc_bufs.get(PIC_ORIGINAL).fill(0);
   m_vvc_bufs.get(PIC_RECONSTRUCTION).fill(0);
   m_vvc_bufs.get(PIC_PREDICTION).fill(0);

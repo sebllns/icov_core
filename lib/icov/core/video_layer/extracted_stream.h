@@ -322,7 +322,6 @@ inline size_t IcovExtractedBitstream::getBufferSize() const {
 }
 
 inline byte *IcovExtractedBitstream::writableData() {
-  ICOV_TRACE << __func__;
   return m_Buffer.data() + getWritePosition();
 }
 
