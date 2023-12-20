@@ -16,7 +16,6 @@ icov::video::TransformUnit::TransformUnit(
     _Tcoeffs.create(*this);
 
   if (createQuantizedTransformBuffer) {
-    ICOV_DEBUG << "instantiate TU";
     _quantizedTcoeffs.create(*this);
     _previousQTcoeffs.create(*this);
   }

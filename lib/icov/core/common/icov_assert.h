@@ -34,6 +34,9 @@ inline void assertion_failed(char const *expr, char const *function,
 namespace icov {
 namespace assert {
 
+// #define ICOV_Assert( expr ) do { if(!!(expr)) ; else cv::error(
+// cv::Error::StsAssert, #expr, CV_Func, __FILE__, __LINE__ ); } while(0)
+
 #ifndef NDEBUG
 #define ICOV_ASSERT_MSG(cond, msg)                                                                                     \
   {                                                                                                                    \

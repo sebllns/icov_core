@@ -114,8 +114,9 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
   IBlockProcessor::func_t check_empty_bitsteam =
       [this](const request_t &, const Block &,
              IBlockPredictionManager::prediction_t) {
-        assert::check(m_extractionBitstream->empty(),
-                      "Bitstream must be empty after block decoding");
+        assert::check(
+            m_extractionBitstream->empty(),
+            ICOV_ASSERT_MSG("Bitstream must be empty after block decoding"));
       };
   m_blockDecoder->setAfter(check_empty_bitsteam);
 }
@@ -223,7 +224,8 @@ void decoder::SinglePassDecoder::addDefaultDecoder() {
 }
 
 const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const {
-  icov::assert::not_null(m_blockDecoder.get(), "Decoder cannot be null");
+  icov::assert::not_null(m_blockDecoder.get(),
+                         ICOV_ASSERT_MSG("Decoder cannot be null"));
   return m_blockDecoder->decodingOutput();
 }
 
@@ -243,9 +245,10 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
   //    m_blockDecoder->getDecodingOutput().fill(0);
 
   bool decoded = false;
-  icov::assert::not_null(m_navigation.get(), "Navigation cannot be null");
+  icov::assert::not_null(m_navigation.get(),
+                         ICOV_ASSERT_MSG("Navigation cannot be null"));
   icov::assert::not_null(m_navigation->Request.get(),
-                         "Request manager cannot be null");
+                         ICOV_ASSERT_MSG("Request manager cannot be null"));
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
@@ -254,7 +257,6 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
         {.viewpoint = {.angleX = x, .angleY = y}, .frameID = frame});
     decoded = true;
   }
-
   pov_x = x;
   pov_y = y;
   // frame = i;
@@ -264,7 +266,8 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
 }
 
 const LdpcCoderParameters &decoder::SinglePassDecoder::ldpcParams() const {
-  assert::not_null(m_ldpcParams.get(), "LDPC parameters cannot be null");
+  assert::not_null(m_ldpcParams.get(),
+                   ICOV_ASSERT_MSG("LDPC parameters cannot be null"));
   return *m_ldpcParams;
 }
 

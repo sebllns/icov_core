@@ -48,6 +48,7 @@
 #pragma once
 
 #include "icov_assert.h"
+#include "icov_exception.h"
 #include "icov_types.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
@@ -185,7 +186,8 @@ struct IcovExtractedBitstream {
 
   void push(const icov::byte &val) {
     auto pos = m_WritePosition;
-    icov::assert::check(availableSpace() > 0, "Buffer cannot overflow");
+    icov::assert::check(availableSpace() > 0,
+                        ICOV_DEBUG_HEADER("Buffer cannot overflow"));
     shiftWritePosition(1);
     ICOV_TRACE << ">>> EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
                << m_ActualSize;
@@ -193,7 +195,8 @@ struct IcovExtractedBitstream {
   }
 
   icov::byte get() {
-    icov::assert::check(!empty(), "Buffer is not empty");
+    icov::assert::check(!empty(),
+                        ICOV_DEBUG_HEADER("Cannot read in empty buffer"));
     ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
                << m_ReadPosition;
     return m_Buffer[m_ReadPosition];
@@ -207,7 +210,7 @@ struct IcovExtractedBitstream {
 
   void get(std::vector<icov::byte> &output) {
     icov::assert::check(m_ActualSize >= output.size(),
-                        "Buffer cannot overflow");
+                        ICOV_DEBUG_HEADER("Buffer cannot overflow"));
     std::copy(m_Buffer.cbegin() + m_ReadPosition,
               m_Buffer.cbegin() + m_ReadPosition + output.size(),
               output.begin());
@@ -224,7 +227,8 @@ struct IcovExtractedBitstream {
     m_ActualSize += offset;
     // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
 
-    icov::assert::check_not(overflows(), "Buffer write overflow is forbidden");
+    icov::assert::check_not(
+        overflows(), ICOV_DEBUG_HEADER("Buffer write overflow is forbidden"));
     m_ActualSize = std::clamp(m_ActualSize, (size_t)0, m_Buffer.size());
   }
 
@@ -237,7 +241,7 @@ struct IcovExtractedBitstream {
     m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
 
     icov::assert::check(getActualSize() >= offset,
-                        "Buffer read overflow is forbidden");
+                        ICOV_DEBUG_HEADER("Buffer read overflow is forbidden"));
     m_ActualSize = m_ActualSize > offset ? m_ActualSize - offset : 0;
   }
 
