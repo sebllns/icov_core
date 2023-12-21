@@ -285,20 +285,19 @@ void ChannelExtractor::_extractBitplaneSyndrome(
   ICOV_TRACE << bytes_count_to_read << "/" << bytes_count_stored
              << " bytes to read";
 
+  ushort offset = bytes_count_stored - bytes_count_to_read;
+  icov::assert::check_not(offset < 0,
+                          ICOV_DEBUG_HEADER("Offset can't be negative"));
+
+  ICOV_TRACE
+      << "SYNDROME POS IN ENCODED FILE START FROM "
+      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
+
+  ICOV_TRACE << "BITSTREAM POS BEFORE READ " << m_bitstream->getWritePosition();
+
+  int total_read = 0;
+
   if (bytes_count_to_read > 0) {
-    ushort offset = bytes_count_stored - bytes_count_to_read;
-    icov::assert::check_not(offset < 0,
-                            ICOV_DEBUG_HEADER("Offset can't be negative"));
-
-    ICOV_TRACE << "SYNDROME POS IN ENCODED FILE START FROM "
-               << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME)
-                      .tellg();
-
-    ICOV_TRACE << "BITSTREAM POS BEFORE READ "
-               << m_bitstream->getWritePosition();
-
-    int total_read = 0;
-
     while (total_read < bytes_count_to_read) {
       int read = std::min((int)(bytes_count_to_read - total_read),
                           (int)((m_bitstream->getBufferSize() -
@@ -309,20 +308,20 @@ void ChannelExtractor::_extractBitplaneSyndrome(
 
       total_read += read;
     }
-
-    icov::assert::equal(
-        total_read, (int)bytes_count_to_read,
-        ICOV_DEBUG_HEADER("Check syndrome read size consistency"));
-
-    m_icovFile->offsetSyndrome(offset);
-
-    ICOV_TRACE << "SYNDROME POS NOW IS "
-               << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME)
-                      .tellg();
-
-    ICOV_TRACE << "BITSTREAM POS AFTER READ "
-               << m_bitstream->getWritePosition();
   }
+
+  icov::assert::equal(
+      total_read, (int)bytes_count_to_read,
+      ICOV_DEBUG_HEADER("Check syndrome read size consistency"));
+
+  m_icovFile->offsetSyndrome(offset);
+
+  ICOV_TRACE
+      << "SYNDROME POS NOW IS "
+      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
+
+  ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
+
   ICOV_DEBUG << "END _extractBitplaneSyndrome";
 }
 

@@ -102,25 +102,22 @@ void ChannelDecoder::decode_icu(
     int icu_enc,
     omnidirectional_layer::BlockPrediction::ePredType block_prediction) {
 
-  ICOV_ASSERT_MSG(
-      block_prediction !=
-          omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
-      ICOV_DEBUG_HEADER("Prediction unknown"))
+  m_block_prediction = block_prediction;
+
+  icov::assert::not_equal(
+      m_block_prediction,
+      omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN,
+      ICOV_DEBUG_HEADER("Prediction unknown"));
 
   bool is_access_block =
-      (block_prediction ==
+      (m_block_prediction ==
        omnidirectional_layer::BlockPrediction::ePredType::NONE);
-  bool is_inter_prediction =
-      (block_prediction ==
-       omnidirectional_layer::BlockPrediction::ePredType::INTER);
-  bool is_intra_prediction = !is_access_block && !is_inter_prediction;
 
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
       m_params.CompID);
 
   m_icuIndex = icu_enc;
 
-  m_block_prediction = block_prediction;
   std::fill(m_blockSI.begin(), m_blockSI.end(), 0);
   std::fill(m_blockBitplane.begin(), m_blockBitplane.end(), 0);
 
@@ -147,83 +144,111 @@ void ChannelDecoder::decode_icu(
   m_bsp.reset_src();
   m_bsp.set_si(m_blockSI);
 
-  bool coding_flag = false;
+  coding_flag = true;
 
-  if (is_intra_prediction) {
-    _extract_si_dir_mode();
-    _extract_qary_params(coding_flag);
-    _set_si(coding_flag);
-  } else if (is_access_block) {
-    coding_flag = true;
-  } else if (is_inter_prediction) {
-    ICOV_THROW_STD_EXCEPTION("TODO INTER");
+  if (!is_access_block) {
+    _set_pred_mode(_extract_pred_mode());
   }
 
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .metrics[m_icuIndex]
       .decodedBitlength += bitplaneCount * m_ldpc_coder->get_n();
 
+  // USE LDPC
   if (coding_flag)
   {
-    _extract_numcodes(block_prediction, bitplaneCount);
-    _decode_bitplanes(block_prediction, bitplaneCount);
+    _extract_numcodes(m_block_prediction, bitplaneCount);
+    _decode_bitplanes(m_block_prediction, bitplaneCount);
   }
 
-  end_decode_icu();
+  inverse_QDCT();
+
+  m_block_prediction =
+      icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN;
+  m_icuIndex = -1;
 }
 
-void ChannelDecoder::_extract_si_dir_mode() {
+ushort ChannelDecoder::_extract_pred_mode() {
   byte dirmode = m_bitstream->pop();
-
   bitstream::assertPredictionAvailable(dirmode);
+  return bitstream::getPredDirMode(dirmode);
+}
 
+void ChannelDecoder::_set_pred_mode(ushort dirmode) {
+  // this special mode value is a flag to activate the temporal prediction
+  // instead of the intra prediction
+  if (dirmode == NUM_LUMA_MODE) {
+    // replace current prediction by inter mode
+    m_block_prediction =
+        omnidirectional_layer::BlockPrediction::ePredType::INTER;
+  }
+
+  bitstream::VideoStreamDebugger::get_mutable_instance()
+      .setDebuggingPredictionID(m_block_prediction);
   bitstream::VideoStreamDebugger::get_const_instance().assertDirModeEqual(
       dirmode);
 
-  dirmode = bitstream::getPredDirMode(dirmode);
+  auto si_cat =
+      omnidirectional_layer::BlockPrediction::getCategory(m_block_prediction);
 
-  // TODO : if dirmode == NUM_LUMA_MODE => prediction is temporal
-
-  if (dirmode == NUM_LUMA_MODE) {
+  if (si_cat ==
+      omnidirectional_layer::BlockPrediction::eSICategory::SI_CAT_TEMPORAL) {
+    ICOV_TRACE << "DECODE INTER";
     // Mode INTER: use the same block data (decode from previous frame)
-    ICOV_THROW_STD_EXCEPTION("TODO INTER");
-  } else {
+
+    _extract_qary_params(coding_flag);
+    _inter_to_bsp(coding_flag);
+
+  } else if (si_cat == omnidirectional_layer::BlockPrediction::eSICategory::
+                           SI_CAT_SINGLE ||
+             si_cat == omnidirectional_layer::BlockPrediction::eSICategory::
+                           SI_CAT_DOUBLE) {
+    ICOV_TRACE << "DECODE INTRA";
     // Mode INTRA: use the neighbor block(s) (decode from current frame)
-
-    auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
-    auto m_blockArea = mp_icu_enc.get_sourceX().block(m_params.CompID);
-
-    auto roiComp_predictionFrameBuff =
-        VTM_Utility::getAreaBuf(m_vvc_bufs->get(PIC_PREDICTION), m_blockArea);
-
-    m_intraPred.initIntraPatternChType(m_vvc_bufs->getBuf(PIC_RECONSTRUCTION),
-                                       m_block_prediction, m_blockArea,
-                                       m_params.bit_depth, false);
-
-    auto currICUintraMap = mp_icu_enc.get_intraSIsMap();
-    auto &si = currICUintraMap.at(m_block_prediction);
-
-    si.intraDir[m_params.CompID] = dirmode;
-    m_intraPred.predIntraAng(roiComp_predictionFrameBuff, dirmode);
-
-    ICOV_ASSERT_MSG(
-        si.TUs.size() == 1,
-        ICOV_DEBUG_HEADER("This version of ICOV only supports one TU per ICU"));
-
-    auto &curr_tu_si = si.TUs[0];
-
-    const auto &predictionUnitBuf = m_vvc_bufs->get(PIC_PREDICTION);
-
-    m_transform2D.transformNxN(
-        curr_tu_si.getTransformCoeffs(m_params.CompID), predictionUnitBuf,
-        curr_tu_si.block(m_params.CompID), m_params.bit_depth,
-        m_params.maxLog2TrDynamicRange);
-
-    m_quant.quant(curr_tu_si.getQuantizedTransformCoeffs(m_params.CompID),
-                  curr_tu_si.getTransformCoeffs(m_params.CompID), m_uiAbsSum,
-                  m_params.QpParam, SliceType::I_SLICE, m_params.bit_depth,
-                  m_params.maxLog2TrDynamicRange);
+    _apply_intra_dir_mode(dirmode);
+    _extract_qary_params(coding_flag);
+    _intra_to_bsp(coding_flag);
+  } else {
+    ICOV_THROW_LOGICAL_EXCEPTION(
+        "Prediction is not valid side info value: " +
+        omnidirectional_layer::BlockPrediction::toString(m_block_prediction));
   }
+}
+
+void ChannelDecoder::_apply_intra_dir_mode(ushort dirmode) {
+  auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
+  auto m_blockArea = mp_icu_enc.get_sourceX().block(m_params.CompID);
+
+  auto roiComp_predictionFrameBuff =
+      VTM_Utility::getAreaBuf(m_vvc_bufs->get(PIC_PREDICTION), m_blockArea);
+
+  m_intraPred.initIntraPatternChType(m_vvc_bufs->getBuf(PIC_RECONSTRUCTION),
+                                     m_block_prediction, m_blockArea,
+                                     m_params.bit_depth, false);
+
+  auto currICUintraMap = mp_icu_enc.get_intraSIsMap();
+  auto &si = currICUintraMap.at(m_block_prediction);
+
+  si.intraDir[m_params.CompID] = dirmode;
+  m_intraPred.predIntraAng(roiComp_predictionFrameBuff, dirmode);
+
+  ICOV_ASSERT_MSG(
+      si.TUs.size() == 1,
+      ICOV_DEBUG_HEADER("This version of ICOV only supports one TU per ICU"));
+
+  auto &curr_tu_si = si.TUs[0];
+
+  const auto &predictionUnitBuf = m_vvc_bufs->get(PIC_PREDICTION);
+
+  m_transform2D.transformNxN(
+      curr_tu_si.getTransformCoeffs(m_params.CompID), predictionUnitBuf,
+      curr_tu_si.block(m_params.CompID), m_params.bit_depth,
+      m_params.maxLog2TrDynamicRange);
+
+  m_quant.quant(curr_tu_si.getQuantizedTransformCoeffs(m_params.CompID),
+                curr_tu_si.getTransformCoeffs(m_params.CompID), m_uiAbsSum,
+                m_params.QpParam, SliceType::I_SLICE, m_params.bit_depth,
+                m_params.maxLog2TrDynamicRange);
 }
 
 void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
@@ -260,7 +285,22 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
   }
 }
 
-void ChannelDecoder::_set_si(bool coding_flag) {
+void ChannelDecoder::_inter_to_bsp(bool coding_flag) {
+  if (coding_flag) {
+    ICOV_TRACE << "INTER SI -> BSP";
+
+    auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
+    const auto &si_tu = mp_icu_enc.sourceX_TU(0);
+    auto si_tuCoeff = si_tu.getQuantizedTransformCoeffs(m_params.CompID);
+
+    m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
+    m_bsp.set_si(m_blockSI);
+    bitstream::VideoStreamDebugger::get_const_instance().assertSiVec(
+        m_bsp.si_symboles());
+  }
+}
+
+void ChannelDecoder::_intra_to_bsp(bool coding_flag) {
   auto icu_enc = m_encodingStruct->getICU(m_icuIndex);
   auto currICUintraMap = icu_enc.get_intraSIsMap();
   const auto &si = currICUintraMap.at(m_block_prediction);
@@ -270,12 +310,12 @@ void ChannelDecoder::_set_si(bool coding_flag) {
 
   // SI is perfect => clone it into dec_tu
   if (!coding_flag) {
-    ICOV_TRACE << "SI is PERFECT --> CLONE";
+    ICOV_TRACE << "INTRA SI is PERFECT --> CLONE";
     icov::video::TransformUnit &dec_tu = icu_enc.sourceX_TU(0);
     std::copy(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n(),
               dec_tu.getQuantizedTransformCoeffs(m_params.CompID).buf);
   } else { /* else assign it in bitsymbolprovider */
-    ICOV_TRACE << "SI -> BSP";
+    ICOV_TRACE << "INTRA SI -> BSP";
     m_blockSI.assign(si_tuCoeff.buf, si_tuCoeff.buf + m_ldpc_coder->get_n());
     m_bsp.set_si(m_blockSI);
     bitstream::VideoStreamDebugger::get_const_instance().assertSiVec(
@@ -326,7 +366,12 @@ void ChannelDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const
   }
 }
 
-void ChannelDecoder::end_decode_icu() {
+void ChannelDecoder::inverse_QDCT() {
+  // do nothing if block is exaclty the same as in the previous frame
+  if (!coding_flag &&
+      m_block_prediction !=
+          omnidirectional_layer::BlockPrediction::ePredType::INTER)
+    return;
 
   auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
 
@@ -352,10 +397,6 @@ void ChannelDecoder::end_decode_icu() {
       m_vvc_bufs->get(PIC_RECONSTRUCTION), dec_tu.block(m_params.CompID),
       dec_tu.getInverseQuantizedTransformCoeffs(m_params.CompID),
       m_params.bit_depth, m_params.maxLog2TrDynamicRange);
-
-  m_block_prediction =
-      icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN;
-  m_icuIndex = -1;
 }
 
 icov::Syndrome &ChannelDecoder::syndrome() { return m_syndrome; }

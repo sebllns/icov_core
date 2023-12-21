@@ -107,8 +107,8 @@ void icov::extractor::BlockExtractor::_processBlock(
         }
       }
 
-      bool check_inter = false; //
-      // r.frameID > 0 && (r.frameID == (previouslyDecoded + 1));
+      bool check_inter =
+          r.frameID > 0 && (r.frameID == (previouslyDecoded + 1));
       BitLength inter_length = std::numeric_limits<BitLength>::infinity();
       BitLength intra_length = 0;
 
@@ -140,9 +140,15 @@ void icov::extractor::BlockExtractor::_processBlock(
       ICOV_DEBUG << "INTRA LENGTH " << intra_length;
 
       // select prediction with minimal bitrate
-      if (check_inter && (inter_length < intra_length)) {
+      if (check_inter && (inter_length <= intra_length)) {
         block_prediction =
             icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
+
+        ICOV_DEBUG << "BLOCK " << b.getIdSelf() << " ON FRAME " << r.frameID
+                   << " SELECT INTER PREDICTION TO SAVE "
+                   << (intra_length - inter_length) << " BITS (SAVE "
+                   << (100.0 * (intra_length - inter_length)) / intra_length
+                   << "% OVER INTRA)";
       }
 
       ICOV_DEBUG << "SELECT PREDICTION "

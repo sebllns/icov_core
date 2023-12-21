@@ -125,7 +125,7 @@ public:
 
   void decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const Syndrome &synd);
 
-  void end_decode_icu();
+  void inverse_QDCT();
 
   Syndrome &syndrome();
 
@@ -158,6 +158,7 @@ private:
   int m_icuIndex;
   std::queue<byte> m_numcodes;
   SymboleVec m_blockSymbols;
+  bool coding_flag;
   // omnidirectional_layer::BlockVector::const_iterator m_blockIt;
 
   void _decode_bitplanes(omnidirectional_layer::BlockPrediction::ePredType block_prediction, int bitplaneCount);
@@ -171,13 +172,17 @@ private:
   void _extract_numcode(
       int bp,
       omnidirectional_layer::BlockPrediction::ePredType block_prediction);
-  void _set_si(bool coding_flag);
+
+  void _inter_to_bsp(bool coding_flag);
+  void _intra_to_bsp(bool coding_flag);
+  ushort _extract_pred_mode();
+  void _set_pred_mode(ushort dirmode);
 
   /**
    * @brief Set the SI (Side Information) direction mode.
    * @param dir_mode The direction mode to be set.
    */
-  void _extract_si_dir_mode();
+  void _apply_intra_dir_mode(ushort dirmode);
 };
 } // namespace decoder
 } // namespace icov

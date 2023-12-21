@@ -114,6 +114,8 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
   IBlockProcessor::func_t check_empty_bitsteam =
       [this](const request_t &, const Block &,
              IBlockPredictionManager::prediction_t) {
+        ICOV_DEBUG << "BUFFER SIZE = "
+                   << m_extractionBitstream->getActualSize();
         assert::check(
             m_extractionBitstream->empty(),
             ICOV_DEBUG_HEADER("Bitstream must be empty after block decoding"));
