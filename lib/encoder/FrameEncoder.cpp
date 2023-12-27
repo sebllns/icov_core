@@ -67,6 +67,7 @@ FrameEncoder::FrameEncoder(const params &p,
 FrameEncoder::~FrameEncoder() {
   ICOV_TRACE << "Destroy FrameEncoder";
   m_stats.write(m_icov_file->stream());
+  m_icov_file->endIcov();
 }
 
 /*****************************************************************************/

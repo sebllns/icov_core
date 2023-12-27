@@ -98,6 +98,7 @@ public:
       omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
       override;
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
+  void endIcov() override;
 
 private:
   struct _blockNode {

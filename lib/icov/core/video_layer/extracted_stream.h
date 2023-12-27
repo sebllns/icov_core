@@ -178,10 +178,11 @@ struct IcovExtractedBitstream {
     m_Buffer.fill(0);
   }
 
-  void reset() {
+  void empty() {
     m_WritePosition = 0;
     m_ReadPosition = 0;
     m_ActualSize = 0;
+    m_Buffer.fill(0);
   }
 
   void push(const icov::byte &val) {
@@ -195,7 +196,7 @@ struct IcovExtractedBitstream {
   }
 
   icov::byte get() {
-    icov::assert::check(!empty(),
+    icov::assert::check(!isEmpty(),
                         ICOV_DEBUG_HEADER("Cannot read in empty buffer"));
     ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
                << m_ReadPosition;
@@ -285,7 +286,7 @@ struct IcovExtractedBitstream {
    * @brief Checks if the bitstream is empty.
    * @return True if the bitstream is empty, false otherwise.
    */
-  bool empty() const { return m_ActualSize == 0; }
+  bool isEmpty() const { return m_ActualSize == 0; }
 
   /**
    * @brief Retrieves the number of remaining elements in the bitstream.

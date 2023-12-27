@@ -1,6 +1,6 @@
 #include "InputMedia.h"
-#include "Media.h"
 
+#include "Media.h"
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_path.h"
@@ -8,7 +8,10 @@
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
+
+#include <boost/filesystem/path.hpp>
 #include <boost/serialization/array_wrapper.hpp>
+
 #include <cstdint>
 #include <fstream>
 #include <ios>
@@ -21,21 +24,12 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
     : icov::IInputIcov<pstream>(path), m_blockCount(0) {
   for (int i = bitstream::eIcovStream::MEDIA_HEADER;
        i < bitstream::eIcovStream::COUNT; ++i) {
-    std::string part_file = path.string() + "." + std::to_string(i);
-    icov::path::assert_file_exists(part_file);
+    fs::path part_file = path / bitstream::getIcovPartName(i);
+    path::assert_file_exists(part_file.string());
     ICOV_TRACE << "Open file part " << part_file << std::endl;
     m_fileParts[i] = std::make_unique<std::ifstream>(
         part_file, std::ios_base::binary | std::ios_base::in);
   }
-
-  //  byte val = 0;
-  //  getStream(eIcovStream::RATES).seekg(11, std::ios_base::beg);
-  //    icov::io::read_value(getStream(eIcovStream::RATES), &val);
-
-  //  getStream(eIcovStream::RATES)
-  //      .read(reinterpret_cast<char *>(&val), sizeof(val));
-  //  std::cout << val << std::endl;
-  //  std::cout << static_cast<int>(val) << std::endl;
 }
 
 icov::extractor::InputIcov::~InputIcov() {}
@@ -55,6 +49,13 @@ void icov::extractor::InputIcov::readContentParameterSet() {
       *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
       boost::archive::no_header);
   archive &m_contentParameterSet;
+  m_frameCount = m_contentParameterSet.content_framecount;
+
+  if (m_contentParameterSet.icov_version != ICOV_CORE_VERSION) {
+    ICOV_WARNING << "Decoder version " << ICOV_CORE_VERSION
+                 << " differs from encoder version "
+                 << m_contentParameterSet.icov_version;
+  }
 }
 
 void icov::extractor::InputIcov::offsetSyndrome(uint offset) {
@@ -231,6 +232,8 @@ void icov::extractor::InputIcov::setFrame(frame_t frame) {
   uint32_t frameRateSize = 0;
   uint32_t frameSyndromeSize = 0;
 
+  getStream(bitstream::eIcovStream::FRAMES_SIZE).clear();
+
   while (frame > m_frameID) {
     icov::io::read_value(getStream(bitstream::eIcovStream::FRAMES_SIZE),
                          &frameRateSize);
@@ -289,6 +292,22 @@ icov::extractor::InputIcov::getBlockIndexInStream(
                   "Block not encoded: " + std::to_string(id));
 #endif
   return m_contentParameterSet.encoded_blocks.at(id);
+}
+
+void icov::extractor::InputIcov::resetStreams() {
+  //  for (auto &p : m_fileParts) {
+  //    p.second->clear();
+  //    p.second->seekg(0, std::ios_base::beg);
+  //    ICOV_DEBUG << "AFTER CLEAR READ POS " << p.second->tellg();
+  //  }
+
+  // m_frameID = 0;
+
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS).clear();
+  getStream(bitstream::eIcovStream::SYNDROME).clear();
+
+  getStream(bitstream::eIcovStream::ENCODE_PARAMS).seekg(0, std::ios_base::beg);
+  getStream(bitstream::eIcovStream::SYNDROME).seekg(0, std::ios_base::beg);
 }
 
 std::istream &icov::extractor::InputIcov::getStream(int id) {

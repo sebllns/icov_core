@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <exception>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -41,8 +42,9 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder()
     : m_extractionBitstream(
           std::make_shared<bitstream::IcovExtractedBitstream>()),
       m_blockProcessor(std::make_shared<IBlockProcessor>()),
-      pov_x(std::numeric_limits<float>::max()), pov_y(pov_x),
-      frame(std::numeric_limits<unsigned long>::max()) {
+      m_request(viewpoint_t(std::numeric_limits<angle_t>::max(),
+                            std::numeric_limits<angle_t>::max()),
+                std::numeric_limits<frame_t>::max()) {
   m_blockProcessor->setName("Root");
   m_blockProcessor->setEnabled(true);
 }
@@ -117,7 +119,7 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
         ICOV_DEBUG << "BUFFER SIZE = "
                    << m_extractionBitstream->getActualSize();
         assert::check(
-            m_extractionBitstream->empty(),
+            m_extractionBitstream->isEmpty(),
             ICOV_DEBUG_HEADER("Bitstream must be empty after block decoding"));
       };
   m_blockDecoder->setAfter(check_empty_bitsteam);
@@ -236,13 +238,17 @@ void decoder::SinglePassDecoder::start() {
     m_blockDecoder->getDecodingOutput().fill(0);
   m_navigation->Request->start();
 
-  frame = 0;
+  //  frame = 0;
   // this->request(0, 0, 0);
 }
 
-bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
-  std::cout << i << "," << frame << std::endl;
+void icov::decoder::SinglePassDecoder::catchError() {
+  ICOV_ERROR << "Error decoding the frame " << m_request.frameID;
+  m_icovFile->resetStreams();
+  m_extractionBitstream->empty();
+}
 
+bool decoder::SinglePassDecoder::request(const request_t &r) {
   //  if (m_blockDecoder)
   //    m_blockDecoder->getDecodingOutput().fill(0);
 
@@ -254,16 +260,20 @@ bool decoder::SinglePassDecoder::request(angle_t x, angle_t y, frame_t i) {
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
-  if (x != pov_x || y != pov_y || i != frame) {
-    m_navigation->Request->update(
-        {.viewpoint = {.angleX = x, .angleY = y}, .frameID = frame});
-    decoded = true;
+  if (m_request != r) {
+    try {
+      m_request = r;
+      m_navigation->Request->update(m_request);
+      decoded = true;
+    } catch (const std::exception &e) {
+      ICOV_ERROR << e.what();
+      catchError();
+    } catch (...) {
+      catchError();
+    }
   }
-  pov_x = x;
-  pov_y = y;
-  // frame = i;
-  ++frame;
-  frame %= m_contentParams.content_framecount;
+
+  //  frame %= m_contentParams.content_framecount;
   return decoded;
 }
 

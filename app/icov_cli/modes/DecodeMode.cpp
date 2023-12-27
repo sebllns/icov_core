@@ -23,19 +23,4 @@ void DecodeMode::run() {
   decode();
 }
 
-void DecodeMode::decode()
-{
-
-  while (!m_requests.empty())
-  {
-      float pov_x = m_requests.front().viewpoint.angleX;
-      float pov_y = m_requests.front().viewpoint.angleY;
-      int frame = m_requests.front().frameID;
-
-      m_requests.pop();
-      std::cout << "POV " << pov_x << ", " << pov_y << std::endl;
-
-      // decode
-      m_decoderCtrl.getDecoder()->request(pov_x, pov_y, frame);
-  }
-}
+void DecodeMode::decode() { m_decoderCtrl.decodePositions(m_requests); }

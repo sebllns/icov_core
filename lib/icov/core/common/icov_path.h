@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icov_assert.h"
+#include "icov_exception.h"
 #include "icov_log.h"
 #include <boost/filesystem.hpp>
 #include <string>
@@ -18,9 +19,8 @@ inline bool try_create_directories(const std::string &path) {
     created = fs::create_directories(path);
   } catch (...) {
     created = false;
-    ICOV_ERROR << "Error: could not create directory " << path << std::endl;
-    ICOV_ERROR << boost::current_exception_diagnostic_information()
-               << std::endl;
+    ICOV_ERROR << "Error: could not create directory " << path;
+    ICOV_ERROR << boost::current_exception_diagnostic_information();
   }
   return created;
 }
@@ -38,7 +38,9 @@ inline bool directory_exists(const std::string &path) {
 }
 
 inline void assert_file_exists(const std::string &path) {
-  icov::assert::check(file_exists(path), "Path is a valid file: '" + path + "'");
+  icov::assert::check(
+      file_exists(path),
+      ICOV_DEBUG_HEADER("Path is a valid file: '" + path + "'"));
 }
 
 inline void assert_directory_exists(const std::string &path) {

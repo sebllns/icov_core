@@ -113,11 +113,11 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
   for (auto &bp : m_bitplanes) {
     bp.Index = i++;
 
-    if (bp.Index == 0) {
-      for (int k = 0; k < PRED_COUNT; ++k) {
-        bp.BitRates[k].reset();
+    for (int k = 0; k < PRED_COUNT; ++k) {
+      bp.BitRates[k].reset();
+
+      if (bp.Index == 0)
         m_predParams[k].reset();
-      }
     }
 
     byte qSize = 0;
@@ -278,6 +278,17 @@ void ChannelExtractor::_extractBitplaneSyndrome(
 
   ushort bytes_count_to_read = bp.BitRates[pred_type].syndromeByteSize();
   ushort bytes_count_stored = bp.BitRates[S_STORED].syndromeByteSize();
+
+  if (bytes_count_stored < bytes_count_to_read) {
+    ICOV_ERROR
+        << "Trying to read " << bytes_count_to_read << " bytes while "
+        << bytes_count_stored
+        << " bytes are stored in prediction" /*<<
+                                                omnidirectional_layer::BlockPrediction::toString(m_block_prediction)*/
+        ;
+
+    ICOV_THROW_OUT_OF_RANGE("Syndrome overflow");
+  }
 
   ICOV_DEBUG << "CH " << std::to_string(m_params.CompID)
              << ": _extractBitplaneSyndrome";

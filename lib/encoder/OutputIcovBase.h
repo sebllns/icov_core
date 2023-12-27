@@ -107,7 +107,7 @@ public:
                            const uint &m) = 0;
   virtual void writeSIMode(const uint &v) = 0;
   virtual void writeMse(const float &mse) = 0;
-
+  virtual void endIcov() = 0;
   void flush(int id);
   std::ostream &getStream(int id);
 

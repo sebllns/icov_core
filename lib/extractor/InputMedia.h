@@ -114,6 +114,8 @@ public:
   omnidirectional_layer::Block::id_t
   getBlockIndexInStream(const omnidirectional_layer::Block::id_t &id) const;
 
+  void resetStreams();
+
   /**
    * @brief Get the input stream for a given ID
    * @param id The ID of the input stream

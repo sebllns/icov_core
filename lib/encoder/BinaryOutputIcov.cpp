@@ -170,3 +170,12 @@ void icov::encoder::BinaryOutputIcov::writeMse(const float &mse)
   icov::io::write_value<float>(*m_fileParts[bitstream::eIcovStream::METRICS],
                                mse, false);
 }
+
+void icov::encoder::BinaryOutputIcov::endIcov() {
+  for (const auto &p : m_fileParts) {
+        if (p.first != bitstream::eIcovStream::MEDIA_HEADER)
+          for (int i = 0; i < 3; ++i)
+            icov::io::write_value<byte>(*m_fileParts[p.first], 255, false);
+        this->flush(p.first);
+  }
+}

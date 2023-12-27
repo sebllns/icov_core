@@ -184,6 +184,8 @@ void icov::encoder::TextOutputIcov::endWriteBlock(
   getStream(bitstream::eIcovStream::SYNDROME) << m_syndromeNodeJSON.nodeJSON;
 }
 
+void icov::encoder::TextOutputIcov::endIcov() {}
+
 // boost::json::object &icov::encoder::TextOutputIcov::getChannelNodeJSON() {
 
 //  if (!m_blockNodeJSON["channels"]

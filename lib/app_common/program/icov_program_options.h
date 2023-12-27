@@ -77,8 +77,8 @@ typedef po::options_description desc_t;
 const std::string help = "help";
 const std::string mode = "mode";
 const std::string log_lvl = "log-level";
-const std::string input_file = "input-file";
-const std::string output_file = "output-file";
+const std::string input_file = "input";
+const std::string output_file = "output";
 
 // LDPC OPTIONS
 const std::string code_length = "ldpc-code-length";

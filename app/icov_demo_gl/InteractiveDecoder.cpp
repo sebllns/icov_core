@@ -41,6 +41,7 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   m_erp_rate_sum = 0;
   m_erp_psnr_sum = 0;
   m_req_count = 0;
+  frame = 0;
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &
@@ -202,14 +203,14 @@ void InteractiveDecoder::updateF5() { drawBlocks(drawType::PREDICTION_CAT); }
 
 bool InteractiveDecoder::processKey(char key)
 {
-    if (!InteractiveModeBase::processKey(key))
-        return false;
+    InteractiveModeBase::processKey(key);
+    //    if (!InteractiveModeBase::processKey(key))
+    //        return false;
 
     angle_t pov_x = 0;
     angle_t pov_y = 0;
-    frame_t frame = 0;
 
-    setWait_delay(0);
+    setWait_delay(30);
 
     if (!m_requests.empty())
     {
@@ -237,8 +238,8 @@ bool InteractiveDecoder::processKey(char key)
     ICOV_DEBUG << "POV = " << pov_x << ", " << pov_y;
 
     // decode
-    bool updated =
-        getDecoder()->request(DEG2RAD * pov_x, DEG2RAD * pov_y, frame);
+    bool updated = getDecoder()->request(
+        request_t(DEG2RAD * pov_x, DEG2RAD * pov_y, frame));
 
     m_viewportMse = -1;
 
@@ -297,6 +298,9 @@ bool InteractiveDecoder::processKey(char key)
 
     if (key == (char)config().custom_keys.at("show_source"))
         m_showSource = !m_showSource;
+
+    frame =
+        (frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
 
     return true;
 }

@@ -48,6 +48,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_exception.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/ContentParameterSet.h"
@@ -92,6 +93,26 @@ static const omnidirectional_layer::IBlockPredictionManager::prediction_t
         omnidirectional_layer::BlockPrediction::TOP,
         omnidirectional_layer::BlockPrediction::BOTTOM,
 };
+
+inline std::string getIcovPartName(int id) {
+  switch (static_cast<eIcovStream>(id)) {
+  case MEDIA_HEADER:
+    return "header";
+  case FRAMES_SIZE:
+    return "fsize";
+  case BLOCKS_SIZE:
+    return "bsize";
+  case ENCODE_PARAMS:
+    return "prediction";
+  case SYNDROME:
+    return "syndrome";
+  case METRICS:
+    return "metric";
+  default:
+    ICOV_THROW_INVALID_ARGUMENT("getIcovPartName");
+  }
+  return "";
+}
 
 inline int
 getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {

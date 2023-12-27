@@ -1,5 +1,6 @@
 #include "RequestManager.h"
 #include "icov_assert.h"
+#include "icov_exception.h"
 #include "icov_log.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/icov_geometry.h"
@@ -32,10 +33,12 @@ const request_t &RequestManager::request() const
 void RequestManager::start()
 {
   icov::assert::not_null(m_blockProcessor.get(),
-                         "Block processor is not allocated");
-  icov::assert::not_null(m_accessBlocks.get(),
-                         "Access block manager is not allocated");
-  icov::assert::not_null(m_picture.get(), "Picture is not allocated");
+                         ICOV_DEBUG_HEADER("Block processor is not allocated"));
+  icov::assert::not_null(
+      m_accessBlocks.get(),
+      ICOV_DEBUG_HEADER("Access block manager is not allocated"));
+  icov::assert::not_null(m_picture.get(),
+                         ICOV_DEBUG_HEADER("Picture is not allocated"));
   m_accessBlocks->buildAccessBlocks(*m_picture, *m_viewport);
   m_request.viewpoint.angleX = std::numeric_limits<float>::max();
   m_request.viewpoint.angleY = std::numeric_limits<float>::max();
@@ -70,6 +73,10 @@ void icov::omnidirectional_layer::RequestManager::processBlock(bool is_access_bl
   } catch (...) {
     ICOV_ERROR << "Error while processing block " << current_block.getIdSelf()
                << " with prediction id " << prediction;
+
+    m_previousDecoded[m_picture->getBlockIndexPos(current_block.getIdSelf())] =
+        0;
+
     throw;
   }
 }
@@ -85,20 +92,17 @@ void icov::omnidirectional_layer::RequestManager::processViewport(
 
   bool is_access_block = current_block->isAccessBlock();
 
-#ifdef ICOV_ASSERTION_ENABLED
-  icov::assert::check(is_access_block, "Access block flag not set");
-  icov::assert::check(m_picture->isValidBlock(current_block),
-                      "No access block was found in the viewport");
-#endif
+  icov::assert::check(is_access_block,
+                      ICOV_DEBUG_HEADER("Access block flag not set"));
+  icov::assert::check(
+      m_picture->isValidBlock(current_block),
+      ICOV_DEBUG_HEADER("No access block was found in the viewport"));
 
   while (m_picture->isValidBlock(current_block)) {
 
       m_previousOrdering.push(current_block->getIdSelf());
 
       processBlock(is_access_block, *current_block);
-
-      m_previousDecoded[m_picture->getBlockIndexPos(
-          current_block->getIdSelf())] = true;
 
       // if same position as previous, take next in previous ordering
       // else find next block
@@ -122,7 +126,7 @@ void RequestManager::update(const request_t &r) {
 
   bool use_previous_ordering = (r.viewpoint == m_request.viewpoint);
 
-  use_previous_ordering = false;
+  use_previous_ordering = false; // deactivated due to a bug
 
   if (!use_previous_ordering)
       m_previousOrdering = std::queue<Block::id_t>();
@@ -130,13 +134,17 @@ void RequestManager::update(const request_t &r) {
   m_currentFrame = r.frameID;
 
 #if ICOV_ASSERTION_ENABLED
-  icov::assert::not_null(m_ordering.get(), "Ordering manager cannot be null");
-  icov::assert::not_null(m_viewport.get(), "Viewport manager cannot be null");
-  icov::assert::not_null(m_accessBlocks.get(),
-                         "Access blocks manager manager cannot be null");
+  icov::assert::not_null(m_ordering.get(),
+                         ICOV_DEBUG_HEADER("Ordering manager cannot be null"));
+  icov::assert::not_null(m_viewport.get(),
+                         ICOV_DEBUG_HEADER("Viewport manager cannot be null"));
+  icov::assert::not_null(
+      m_accessBlocks.get(),
+      ICOV_DEBUG_HEADER("Access blocks manager manager cannot be null"));
 
-  icov::assert::not_null(m_blockPrediction.get(),
-                         "Predictions manager manager cannot be null");
+  icov::assert::not_null(
+      m_blockPrediction.get(),
+      ICOV_DEBUG_HEADER("Predictions manager manager cannot be null"));
 #endif
 
   m_request = r;

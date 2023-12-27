@@ -1,6 +1,6 @@
 /* This file is auto-generated from Cmake. You should not modify it directly*/
 #pragma once
 #define ICOV_CORE_VERSION_MAJOR 1
-#define ICOV_CORE_VERSION_MINOR 3
+#define ICOV_CORE_VERSION_MINOR 5
 #define ICOV_CORE_VERSION_PATCH 0
-#define ICOV_CORE_VERSION "1.3.0"
+#define ICOV_CORE_VERSION "1.5.0"

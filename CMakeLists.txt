@@ -1,6 +1,14 @@
 # Specify the minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
+# Define the ICOV core version number
+set(ICOV_CORE_VERSION_MAJOR "1")
+set(ICOV_CORE_VERSION_MINOR "5")
+set(ICOV_CORE_VERSION_PATCH "0")
+set(ICOV_CORE_VERSION
+    "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}"
+)
+
 # ##############################################################################
 # INIT PROJECT              #
 # ##############################################################################
@@ -324,14 +332,6 @@ message(
 # ##############################################################################
 # ICOV                   #
 # ##############################################################################
-
-# Define the ICOV core version number
-set(ICOV_CORE_VERSION_MAJOR "1")
-set(ICOV_CORE_VERSION_MINOR "3")
-set(ICOV_CORE_VERSION_PATCH "0")
-set(ICOV_CORE_VERSION
-    "${ICOV_CORE_VERSION_MAJOR}.${ICOV_CORE_VERSION_MINOR}.${ICOV_CORE_VERSION_PATCH}"
-)
 
 # Set compile definitions based on the configuration options
 add_compile_definitions("ICOV_LOG_LEVEL=${ICOV_LOG_LEVEL}")

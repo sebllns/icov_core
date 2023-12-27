@@ -95,6 +95,7 @@ public:
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
   void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r, const uint &m) override;
   void writeMse(const float &mse) override;
+  void endIcov() override;
 };
 
 } // namespace encoder

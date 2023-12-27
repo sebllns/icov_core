@@ -82,7 +82,7 @@ boost::filesystem::path icov::encoder::IcovEncoder::outputfile() const {
 icov::encoder::IcovEncoder::params::params(
     const boost::program_options::variables_map &args) {
 
-  m_debugframecount = 100;
+  m_debugframecount = 100; //@todo TODO put this at parameter
   DummyViewport = options::parseDummyViewportOption(args);
   QP = options::parseQP(args);
   m_icuSize = options::parseEncodeIcuSizeOption(args);
@@ -102,5 +102,7 @@ icov::encoder::IcovEncoder::params::params(
   Inputfile = options::parseInputFile(args);
   Outputfile = options::parseOutputFile(args);
   if (Outputfile.empty())
-    Outputfile = fs::path(Inputfile).replace_extension(".icov").string();
+    Outputfile = (fs::path(Inputfile).parent_path() / "info.txt").string();
+  else
+    Outputfile = (fs::path(Outputfile) / "info.txt").string();
 }

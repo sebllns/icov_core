@@ -228,8 +228,7 @@ public:
           frame_t frame = 0;
           angle_t pov_x = values[2];
           angle_t pov_y = values[1];
-          requests.push({.viewpoint = {.angleX = pov_x, .angleY = pov_y},
-                         .frameID = frame});
+          requests.push(request_t(pov_x, pov_y, frame));
         }
       }
       inputFile.close();
@@ -242,15 +241,9 @@ public:
     std::queue<request_t> pos(p);
 
     while (!pos.empty()) {
-      angle_t pov_x = pos.front().viewpoint.angleX;
-      angle_t pov_y = pos.front().viewpoint.angleY;
-      frame_t frame = pos.front().frameID;
-
-      pos.pop();
-      std::cout << "POV " << pov_x << ", " << pov_y << std::endl;
-
       // decode
-      getDecoder()->request(pov_x, pov_y, frame);
+      getDecoder()->request(pos.front());
+      pos.pop();
     }
   }
 

@@ -6,6 +6,7 @@
 #include "encoder/InputMedia.h"
 #include "encoder/TextOutputIcov.h"
 #include "icov_log.h"
+#include "icov_path.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 
@@ -120,7 +121,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().viewport_padding = viewportPadding;
 
-  m_output->contentParameterSet().icov_version = "icov_" ICOV_CORE_VERSION;
+  m_output->contentParameterSet().icov_version = ICOV_CORE_VERSION;
 
   m_output->contentParameterSet().content_framecount = 0;
 
@@ -168,6 +169,10 @@ icov::encoder::IcovMediaEncoder::createFrameEncoder() const {
 /*****************************************************************************/
 std::shared_ptr<icov::encoder::OutputIcovBase>
 icov::encoder::IcovMediaEncoder::createOutputFile() const {
+
+  path::try_create_directories(
+      fs::path(m_params.OutputPath).parent_path().string());
+
   std::shared_ptr<encoder::OutputIcovBase> ptr;
   switch (m_params.OutputType) {
   case BINARY:

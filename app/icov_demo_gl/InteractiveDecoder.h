@@ -81,6 +81,8 @@ class InteractiveDecoder : public InteractiveModeBase
     float m_erp_psnr_sum;
     int m_req_count;
 
+    frame_t frame;
+
     enum class drawType {
       BLOCK_RATE,
       VIEWPORT_RATE,

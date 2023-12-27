@@ -1,9 +1,15 @@
 #include "OutputIcovBase.h"
+
+#include "icov_path.h"
 #include "version.h"
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/encoded_stream.h"
-#include <algorithm>
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/serialization/array_wrapper.hpp>
+
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
@@ -14,11 +20,15 @@ OutputIcovBase::OutputIcovBase(const boost::filesystem::path &path,
                                int openflag)
     : icov::IOutputIcov(path) {
 
-  (*m_outputStream) << "ICOV " << ICOV_CORE_VERSION << std::endl;
+  (*m_outputStream)
+      << "NOTE: This file contains no data used by the decoder, only "
+         "human-readable information about the encoded ICOV file.\n"
+      << "Encoder version: " << ICOV_CORE_VERSION << std::endl;
   int flags = std::ios_base::out | openflag;
+
   for (int i = bitstream::eIcovStream::MEDIA_HEADER;
        i < bitstream::eIcovStream::COUNT; ++i) {
-    std::string part_file = path.string() + "." + std::to_string(i);
+    fs::path part_file = path.parent_path() / bitstream::getIcovPartName(i);
     m_fileParts[i] = std::make_unique<std::ofstream>(
         part_file, static_cast<std::ios_base::openmode>(flags));
   }
