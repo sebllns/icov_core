@@ -146,7 +146,7 @@ public:
 
   IInputMedia(const fs::path &path, int media_type = (int)eMediaType::UNKNOWN)
       : IMedia(path, media_type), m_frameID(0) {
-    icov::path::assert_file_exists(path.string());
+    // icov::path::assert_file_exists(path.string());
   }
 
   virtual void setFrame(frame_t frame) { m_frameID = frame; }
@@ -188,6 +188,7 @@ public:
       : IInputMedia<T>(path, (int)eMediaType::IMAGE) {
     /*image = 1 frame only*/
     this->m_frameCount = 1;
+    icov::path::assert_file_exists(path.string());
   }
 
   // IMedia interface
@@ -200,13 +201,17 @@ public:
 template <typename T> class IVideo : public IInputMedia<T> {
 public:
   explicit IVideo(const fs::path &path)
-      : IInputMedia<T>(path, (int)eMediaType::VIDEO) {}
+      : IInputMedia<T>(path, (int)eMediaType::VIDEO) {
+    icov::path::assert_file_exists(path.string());
+  }
 };
 
 template <typename T> class IModel3D : public IInputMedia<T> {
 public:
   explicit IModel3D(const fs::path &path)
-      : IInputMedia<T>(path, (int)eMediaType::MODEL_3D) {}
+      : IInputMedia<T>(path, (int)eMediaType::MODEL_3D) {
+    icov::path::assert_file_exists(path.string());
+  }
   virtual ~IModel3D() = default;
 };
 

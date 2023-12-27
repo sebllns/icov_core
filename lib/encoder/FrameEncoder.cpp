@@ -187,13 +187,6 @@ void FrameEncoder::encodeBlock(
 
   m_stats.addBlock();
 
-  if (access_block) {
-    m_stats.addAccessBlock();
-    fs::path ab_file = m_frame_dir;
-    ab_file.append(std::to_string(b.getIdSelf()) + ".tiff");
-    cv::imwrite(ab_file.string(), m_reco(VTM_OPENCV_Utility::getBlockRoi(b)));
-  }
-
   //  ICOV_DEBUG << "start encode block "
   //             << b.getId(omnidirectional_layer::Block::SELF);
 
@@ -221,13 +214,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingFrameID(
       frame());
-
-  m_frame_dir =
-      m_icov_file->getPath().parent_path() / std::to_string(this->frame());
-
-  if (!fs::is_directory(m_frame_dir)) {
-    fs::create_directories(m_frame_dir);
-  }
 
   //  ICOV_ASSERT_MSG(!ec.failed(), "Error create directory");
 

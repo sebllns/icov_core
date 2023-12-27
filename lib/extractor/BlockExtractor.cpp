@@ -1,6 +1,7 @@
 #include "BlockExtractor.h"
 
 #include "extractor/ChannelExtractor.h"
+#include "icov_io.h"
 #include "icov_log.h"
 #include "icov_types.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
@@ -11,6 +12,8 @@
 #include "video_layer/icov_stream.h"
 
 #include <algorithm>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <iterator>
 #include <memory>
 
@@ -95,6 +98,20 @@ void icov::extractor::BlockExtractor::_processBlock(
     for (auto &ch : m_channelExtractor) {
       ch->extract_stored_syndrome_size(is_access_block);
     }
+
+    //    if (is_access_block) {
+    //      fs::path ab_path = m_icovFile->getPath() / std::to_string(r.frameID)
+    //      /
+    //                         (std::to_string(b.getIdSelf()) + ".tiff");
+    //      ICOV_DEBUG << "extract access block " << ab_path;
+    //      ushort filesize = fs::file_size(ab_path);
+    //      std::ifstream fin(ab_path, std::ios::binary);
+    //      char buf[filesize];
+    //      fin.read(buf, filesize);
+    //      // ICOV_DEBUG << icov::io::make_hex_string(buf, buf + filesize,
+    //      true,
+    //      // true);
+    //    }
 
     if (!is_access_block) {
 

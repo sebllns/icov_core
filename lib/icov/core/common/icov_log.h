@@ -167,13 +167,11 @@ namespace logging {
 inline std::ostream &get_log_str() { return std::cout; }
 inline std::ostream &print(int lvl) {
 
-  if (lvl < ICOV_LOG_LEVEL)
-    return;
-
   auto &str = get_log_str();
 
-  switch (static_cast<severity_level>(lvl)) {
-  case severity_level::trace:
+  if (lvl >= ICOV_LOG_LEVEL) {
+    switch (static_cast<severity_level>(lvl)) {
+    case severity_level::trace:
       str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM) << "\n[trace]   ";
       break;
   case severity_level::debug:
@@ -194,6 +192,7 @@ inline std::ostream &print(int lvl) {
     str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_RED)
         << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[fatal]   ";
     break;
+  }
   }
 
   return str;

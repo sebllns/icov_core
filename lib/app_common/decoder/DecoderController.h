@@ -134,7 +134,7 @@ struct decoder_factory_t {
   decoder_factory_t(const path::path_t &icov_file, const options::args_t &args)
       : Params(icov_file, args),
         Decoder(std::make_unique<decoder::SinglePassDecoder>()) {
-    path::assert_file_exists(icov_file.string());
+    path::assert_directory_exists(icov_file.string());
     Decoder->initLocal(decoder::SinglePassDecoder::params{
         .DummyViewport = Params.enable_dummyViewport,
         .IcovFile = Params.input_icov_file,

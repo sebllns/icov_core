@@ -175,7 +175,6 @@ protected:
       m_rates_histogram;
 
   cv::Mat m_reco;
-  fs::path m_frame_dir;
 
   struct StoredRate {
     StoredRate() : c(0), r(0), m(0) {}
