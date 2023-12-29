@@ -124,7 +124,7 @@ message(
 )
 
 # executable
-set(EXE_NAME icov_demo_gl)
+set(EXE_NAME icov_viewer)
 
 # get source files
 file(GLOB_RECURSE SRC_FILES "*.cpp")

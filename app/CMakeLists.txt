@@ -32,7 +32,7 @@ if(ICOV_BUILD_CLI)
 endif()
 
 if(ICOV_BUILD_GL_VIEWER)
-  add_subdirectory(icov_demo_gl)
+  add_subdirectory(icov_viewer)
 endif()
 
 if(ICOV_BUILD_GUI_DEMO)

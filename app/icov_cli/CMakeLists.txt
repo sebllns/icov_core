@@ -26,3 +26,5 @@ set_source_files_properties("*.c" PROPERTIES LANGUAGE "CXX")
 # IcovOmnidirectionalLayer IcovEncoderLib IcovExtractorLib IcovDecoderLib
 # IcovGlViewer) set the folder where to place the projects
 set_target_properties(${EXE_NAME} PROPERTIES FOLDER "public/app")
+
+install(TARGETS ${EXE_NAME})
