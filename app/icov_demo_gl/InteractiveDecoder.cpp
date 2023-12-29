@@ -210,6 +210,7 @@ bool InteractiveDecoder::processKey(char key)
     angle_t pov_x = 0;
     angle_t pov_y = 0;
 
+    // TODO set actual delay based on video framerate
     setWait_delay(30);
 
     if (!m_requests.empty())

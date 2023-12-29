@@ -169,11 +169,11 @@ inline std::ostream &print(int lvl) {
 
   auto &str = get_log_str();
 
-  if (lvl >= ICOV_LOG_LEVEL) {
-    switch (static_cast<severity_level>(lvl)) {
-    case severity_level::trace:
-      str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM) << "\n[trace]   ";
-      break;
+  switch (static_cast<severity_level>(lvl)) {
+  case severity_level::trace:
+    str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_DIM)
+        << "\n[trace]   ";
+    break;
   case severity_level::debug:
       str << CONSOLE_FORMAT(CONSOLE_DEFAULT) << CONSOLE_FORMAT(CONSOLE_FG_DEFAULT) << "\n[debug]   ";
       break;
@@ -193,7 +193,6 @@ inline std::ostream &print(int lvl) {
         << CONSOLE_FORMAT(CONSOLE_BOLD) << "\n[fatal]   ";
     break;
   }
-  }
 
   return str;
 }
@@ -202,7 +201,9 @@ inline void init_log(bool log_to_file) {}
 } // namespace logging
 } // namespace icov
 
-#define ICOV_LOG(lvl) icov::logging::print(lvl)
+#define ICOV_LOG(lvl)                                                          \
+  if (lvl >= ICOV_LOG_LEVEL)                                                   \
+  icov::logging::print(lvl)
 #define ICOV_TRACE ICOV_LOG(0)
 #define ICOV_DEBUG ICOV_LOG(1)
 #define ICOV_INFO ICOV_LOG(2)
