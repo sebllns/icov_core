@@ -102,7 +102,7 @@ void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
 /*****************************************************************************/
 void icov::encoder::FrameEncoder::serializeParameters() {
 
-  // Loop over each component
+  // Loop over each channel
   for (int c = 0; c < (int)m_numComp; ++c) {
     m_icov_file->setChannel(c);
     // Store syndrome per bitplane

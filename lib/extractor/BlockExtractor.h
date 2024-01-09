@@ -106,6 +106,8 @@ protected:
 private:
   void fill_metrics(icov::omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
                     const omnidirectional_layer::Block &b);
+
+  int block_count;
 };
 } // namespace extractor
 } // namespace icov

@@ -6,7 +6,10 @@
 #include "icov_math.h"
 #include "icov_path.h"
 #include "icov_request.h"
+#include "opencv2/core/persistence.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/imgproc.hpp"
 #include "video_layer/VideoMetrics.h"
 #include "video_layer/vtm_opencv_utility.h"
 
@@ -62,8 +65,9 @@ void InteractiveDecoder::drawBlocks(drawType type) {
       const auto &i =
           icov::video_layer::VideoMetrics::get_const_instance().getBlock(*b);
       assert::check(pic->isValidBlock(b), "Block not valid");
-      std::cout << b->center_u() << ", " << b->center_v() << " = " << i.rate()
-                << std::endl;
+      //      std::cout << b->center_u() << ", " << b->center_v() << " = " <<
+      //      i.rate()
+      //                << std::endl;
 
       auto rect_block = VTM_OPENCV_Utility::getBlockRoi(*b);
       auto roi = this->m_erpImage(rect_block);
@@ -79,16 +83,28 @@ void InteractiveDecoder::drawBlock(
     switch (type) {
       /////////////////////////////////////////
     case drawType::BLOCK_RATE: {
-      cv::Scalar color = i.rate() * ((i.prediction > 0 && i.rate() >= 0.5)
-                                         ? bgrColor().RED()
-                                         : bgrColor().WHITE());
+      cv::Scalar color = bgrColor().BLACK();
+
+      if (i.rate() > 1) {
+        color = bgrColor().RED();
+      } else if (i.rate() == 1) {
+        color = bgrColor().GREEN();
+      } else {
+        color = (0.1 + 0.9 * i.rate()) * bgrColor().BLUE();
+      }
+
       output.setTo(color);
+      cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
+                  cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
     } break;
 
       /////////////////////////////////////////
     case drawType::VIEWPORT_RATE: {
-      cv::Scalar color = m_viewportRate * bgrColor().WHITE();
+      cv::Scalar color = m_viewportRate * bgrColor().BLUE();
       output.setTo(color);
+      cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
+                  cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
+
     } break;
 
       /////////////////////////////////////////
@@ -143,7 +159,8 @@ void InteractiveDecoder::drawBlock(
         break;
       }
       output.setTo(color);
-
+      cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
+                  cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0, 0, 0), 1);
     } break;
 
       /////////////////////////////////////////
@@ -170,7 +187,8 @@ void InteractiveDecoder::drawBlock(
         break;
       }
       output.setTo(color);
-
+      cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
+                  cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
     } break;
 
     case drawType::SOURCE: {
@@ -300,8 +318,11 @@ bool InteractiveDecoder::processKey(char key)
     if (key == (char)config().custom_keys.at("show_source"))
         m_showSource = !m_showSource;
 
-    frame =
-        (frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
+    if (key == 'f')
+        frame = (frame + 1) %
+                m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
+
+    cv::imwrite("./decode.jpg", this->m_erpImage);
 
     return true;
 }

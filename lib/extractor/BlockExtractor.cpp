@@ -58,6 +58,9 @@ void icov::extractor::BlockExtractor::fill_metrics(
       b.getIdSelf();
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .getBlock(b)
+      .decodingOrder = block_count++;
+  icov::video_layer::VideoMetrics::get_mutable_instance()
+      .getBlock(b)
       .prediction = prediction;
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .visible_blocks.push_back(b.getIdSelf());
@@ -157,16 +160,18 @@ void icov::extractor::BlockExtractor::_processBlock(
       ICOV_DEBUG << "INTRA LENGTH " << intra_length;
 
       // select prediction with minimal bitrate
-      if (check_inter && (inter_length <= intra_length)) {
-        block_prediction =
-            icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
+      //      if (check_inter && (inter_length <= intra_length)) {
+      //        block_prediction =
+      //            icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
 
-        ICOV_DEBUG << "BLOCK " << b.getIdSelf() << " ON FRAME " << r.frameID
-                   << " SELECT INTER PREDICTION TO SAVE "
-                   << (intra_length - inter_length) << " BITS (SAVE "
-                   << (100.0 * (intra_length - inter_length)) / intra_length
-                   << "% OVER INTRA)";
-      }
+      //        ICOV_DEBUG << "BLOCK " << b.getIdSelf() << " ON FRAME " <<
+      //        r.frameID
+      //                   << " SELECT INTER PREDICTION TO SAVE "
+      //                   << (intra_length - inter_length) << " BITS (SAVE "
+      //                   << (100.0 * (intra_length - inter_length)) /
+      //                   intra_length
+      //                   << "% OVER INTRA)";
+      //      }
 
       ICOV_DEBUG << "SELECT PREDICTION "
                  << omnidirectional_layer::BlockPrediction::toString(
@@ -197,6 +202,7 @@ void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .visible_blocks.clear();
   m_icovFile->setFrame(r.frameID);
+  block_count = 0;
 }
 
 void icov::extractor::BlockExtractor::_afterOrderingLoop(const request_t &r) {}
