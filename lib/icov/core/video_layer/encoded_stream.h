@@ -119,32 +119,32 @@ getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
 
   switch (pred) {
 
-  case omnidirectional_layer::BlockPrediction::INTER:
-    return 0;
+    //  case omnidirectional_layer::BlockPrediction::INTER:
+    //    return 0;
 
   case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
-    return 1;
+    return 0;
 
   case omnidirectional_layer::BlockPrediction::TOP_LEFT:
-    return 2;
+    return 1;
 
   case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
-    return 3;
+    return 2;
 
   case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
-    return 4;
+    return 3;
 
   case omnidirectional_layer::BlockPrediction::RIGHT:
-    return 5;
+    return 4;
 
   case omnidirectional_layer::BlockPrediction::LEFT:
-    return 6;
+    return 5;
 
   case omnidirectional_layer::BlockPrediction::TOP:
-    return 7;
+    return 6;
 
   case omnidirectional_layer::BlockPrediction::BOTTOM:
-    return 8;
+    return 7;
 
   default:
     ICOV_THROW_INVALID_ARGUMENT("Unrecognized prediction value");

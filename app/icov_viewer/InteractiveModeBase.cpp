@@ -66,7 +66,8 @@ void InteractiveModeBase::run() {
     draw();
     cv::imshow(const_window_name, m_displayImage);
     key = cv::waitKey(m_wait_delay);
-    ICOV_DEBUG << "pressed key code = " << (int)key;
+    if (key != -1)
+      ICOV_DEBUG << "pressed key code = " << (int)key;
   }
 }
 

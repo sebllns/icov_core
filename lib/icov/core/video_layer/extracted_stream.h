@@ -69,6 +69,7 @@
 #include <cstdint>
 #include <iostream>
 #include <queue>
+#include <sstream>
 #include <sys/types.h>
 #include <vector>
 
@@ -102,6 +103,13 @@ struct RateStream {
   byte syndromeQuantizedSize() const { return mSyndromeQuantizedSize; }
   ushort syndromeBitSize() const { return mSyndromeBitSize; }
   ushort syndromeByteSize() const { return mSyndromeByteSize; }
+
+  std::string toString() {
+    std::stringstream ss;
+    ss << "qsize=" << (ushort)mSyndromeQuantizedSize
+       << ", bsize=" << mSyndromeBitSize << ", Bsize=" << mSyndromeByteSize;
+    return ss.str();
+  }
 
 private:
   byte mSyndromeQuantizedSize;

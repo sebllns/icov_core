@@ -256,21 +256,26 @@ void ChannelExtractor::_pushPredParams(int type) {
 
 void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
                                                int pred_type) {
-  std::cout << "CH " << std::to_string(m_params.CompID)
-            << ": _extractBitplaneNumcode" << std::endl;
 
   byte qsize = 0;
+
+  // read syndrome quantized size value
   m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, qsize);
+
+  // inverse size quantization and store the value
   bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, bp.ReadSyndromePadding);
 
+  ICOV_DEBUG << "CH " << std::to_string(m_params.CompID) << " BP " << bp.Index
+             << " BP_NUMCODE " << bp.BitRates[pred_type].toString();
+
+  // debug check if enabled
   bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
       bp.Index, (NumcodeIdx)bp.BitRates[pred_type].syndromeQuantizedSize());
 
+  // accumulate syndrome total length for the prediction type
   m_predParams[pred_type].setSyndromeLength(
       m_predParams[pred_type].getSyndromeLength() +
       bp.BitRates[pred_type].syndromeBitSize());
-
-  std::cout << "END _extractBitplaneNumcode" << std::endl;
 }
 
 void ChannelExtractor::_extractBitplaneSyndrome(
@@ -293,7 +298,7 @@ void ChannelExtractor::_extractBitplaneSyndrome(
   ICOV_DEBUG << "CH " << std::to_string(m_params.CompID)
              << ": _extractBitplaneSyndrome";
 
-  ICOV_TRACE << bytes_count_to_read << "/" << bytes_count_stored
+  ICOV_DEBUG << bytes_count_to_read << "/" << bytes_count_stored
              << " bytes to read";
 
   ushort offset = bytes_count_stored - bytes_count_to_read;
@@ -327,11 +332,11 @@ void ChannelExtractor::_extractBitplaneSyndrome(
 
   m_icovFile->offsetSyndrome(offset);
 
-  ICOV_TRACE
+  ICOV_DEBUG
       << "SYNDROME POS NOW IS "
       << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
 
-  ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
+  ICOV_DEBUG << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
 
   ICOV_DEBUG << "END _extractBitplaneSyndrome";
 }
