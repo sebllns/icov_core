@@ -10,11 +10,13 @@
 #include "icov_debug.h"
 #include "icov_exception.h"
 #include "icov_log.h"
+#include "icov_path.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
+#include "opencv2/imgcodecs.hpp"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
@@ -61,7 +63,13 @@ FrameEncoder::FrameEncoder(const params &p,
               omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
               omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
               omnidirectional_layer::BlockPrediction::INTER}),
-      m_init(true), block_comp(0) {}
+      m_init(true), block_comp(0) {
+
+  if (m_params.ExportRecoFrames) {
+    fs::create_directories(
+        path::combine(m_icov_file->getPath().string(), "frames"));
+  }
+}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
@@ -359,8 +367,14 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   }
 
   m_icov_file->contentParameterSet().content_framecount++;
+
+  if (m_params.ExportRecoFrames) {
+
+    // cv::imwrite()
+  }
 }
 
+/*****************************************************************************/
 void icov::encoder::FrameEncoder::checkDecoding(
     ldpc_codec_layer::AffInteractiveCoder &encoder,
     const ldpc_codec_layer::BitSymbolProvider &bsp_enc,

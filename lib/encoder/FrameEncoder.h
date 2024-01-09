@@ -99,6 +99,7 @@ public:
     const Int InternalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
 
     bool ExportDebugTextFormat = true;
+    bool ExportRecoFrames = true;
   };
 
   FrameEncoder(const params &p, const LdpcCoderParameters &LDPC_Params);

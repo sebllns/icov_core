@@ -1,7 +1,6 @@
 #include "ProgramController.h"
 #include "Tools/version.h"
 #include "mipp.h"
-#include "opencv2/videoio.hpp"
 #include "video_layer/video_common.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include <cstdio>
@@ -135,22 +134,18 @@ void print_version() {
   std::cout << "  - MPI:               " << mpi << std::endl;
   std::cout << "  - GSL:               " << gsl << std::endl;
   std::cout << "  - MKL:               " << mkl << std::endl;
-  std::cout << "Copyright (c) 2016-2022 - MIT license." << std::endl;
-  std::cout << "This is free software; see the source for copying conditions.  "
-               "There is NO"
-            << std::endl;
-  std::cout << "warranty; not even for MERCHANTABILITY or FITNESS FOR A "
-               "PARTICULAR PURPOSE."
-            << std::endl;
-  exit(EXIT_SUCCESS);
+  //  std::cout << "Copyright (c) 2016-2022 - MIT license." << std::endl;
+  //  std::cout << "This is free software; see the source for copying
+  //  conditions.  "
+  //               "There is NO"
+  //            << std::endl;
+  //  std::cout << "warranty; not even for MERCHANTABILITY or FITNESS FOR A "
+  //               "PARTICULAR PURPOSE."
+  //            << std::endl;
 }
 
 int main(int argc, char *argv[]) {
-
   print_version();
-
-  getchar();
-
   try {
     icov::video::init_video_lib(argc, argv);
   } catch (...) {
