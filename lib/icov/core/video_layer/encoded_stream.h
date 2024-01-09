@@ -83,7 +83,7 @@ typedef enum {
 
 static const omnidirectional_layer::IBlockPredictionManager::prediction_t
     PredictionID[PREDICTION_COUNT] = {
-        omnidirectional_layer::BlockPrediction::INTER,
+        // omnidirectional_layer::BlockPrediction::INTER,
         omnidirectional_layer::BlockPrediction::TOP_RIGHT,
         omnidirectional_layer::BlockPrediction::TOP_LEFT,
         omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,

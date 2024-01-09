@@ -49,6 +49,11 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
 
   bitstream::write_bits(s, darr, 0);
 
+  for (int i = 0; i < byte_size; ++i) {
+        stream() << (ushort)darr[i] << " ";
+  }
+  stream() << std::endl;
+
   int lost = bitstream::byteToBitCount(byte_size) - s.size();
 
   m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] += byte_size;
