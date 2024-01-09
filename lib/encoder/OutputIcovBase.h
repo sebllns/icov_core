@@ -114,6 +114,8 @@ public:
   int channel() const;
   void setChannel(int newChannel);
 
+  fs::path getDir() const;
+
 protected:
   bitstream::ContentParameterSet m_contentParameterSet;
   std::map<int, std::unique_ptr<std::ostream>> m_fileParts;

@@ -64,5 +64,7 @@ void OutputIcovBase::setChannel(int newChannel)
 {
   m_channel = newChannel;
 }
+
+fs::path OutputIcovBase::getDir() const { return getPath().parent_path(); }
 } // namespace encoder
 } // namespace icov

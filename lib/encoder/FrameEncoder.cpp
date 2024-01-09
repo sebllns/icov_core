@@ -30,6 +30,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/file_status.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/format.hpp>
 
 #include <algorithm>
@@ -63,13 +64,7 @@ FrameEncoder::FrameEncoder(const params &p,
               omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
               omnidirectional_layer::BlockPrediction::BOTTOM_LEFT,
               omnidirectional_layer::BlockPrediction::INTER}),
-      m_init(true), block_comp(0) {
-
-  if (m_params.ExportRecoFrames) {
-    fs::create_directories(
-        path::combine(m_icov_file->getPath().string(), "frames"));
-  }
-}
+      m_init(true), block_comp(0) {}
 
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
@@ -115,21 +110,69 @@ void icov::encoder::FrameEncoder::serializeParameters() {
     m_icov_file->setChannel(c);
     // Store syndrome per bitplane
     m_icov_file->writeBitplaneCount(m_channelCoder[c].bitplanes.size());
+
+    if (m_params.ExportDebugTextFormat) {
+      m_icov_file->stream() << "channel " << c << std::endl;
+      m_icov_file->stream() << "bitplane_count "
+                            << m_channelCoder[c].bitplanes.size() << std::endl;
+      m_icov_file->stream() << "stored_syndrome_rates";
+    }
+
     for (const auto &s : m_channelCoder[c].bitplanes) {
       m_icov_file->writeStoredSyndromeSize(s.stored_synd_rate.c, 0, 0);
       m_stats.addEncodedRate(s.stored_synd_rate.m);
+      if (m_params.ExportDebugTextFormat) {
+        m_icov_file->stream() << " " << s.stored_synd_rate.c;
+      }
+    }
+
+    if (m_params.ExportDebugTextFormat) {
+      m_icov_file->stream() << std::endl;
     }
   }
 
   for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
        bitstream::PredictionID) {
+
+    if (m_params.ExportDebugTextFormat) {
+      m_icov_file->stream()
+          << "prediction "
+          << omnidirectional_layer::BlockPrediction::toString(
+                 omnidirectional_layer::BlockPrediction::toPredType(p))
+          << std::endl;
+    }
+
     for (int c = 0; c < (int)m_numComp; ++c) {
+
+      if (m_params.ExportDebugTextFormat) {
+        m_icov_file->stream() << "channel " << c << std::endl;
+      }
+
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(p);
       if (m_channelCoder[c].si.count(p)) {
         m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
+
+        if (m_params.ExportDebugTextFormat) {
+          m_icov_file->stream()
+              << "mode " << 1 + m_channelCoder[c].si[p].dirmode << std::endl;
+          m_icov_file->stream()
+              << "q " << m_channelCoder[c].si[p].stored_pz.getRawQ0()
+              << std::endl;
+          m_icov_file->stream()
+              << "zmin " << m_channelCoder[c].si[p].stored_pz.getRawZmin()
+              << std::endl;
+          m_icov_file->stream()
+              << "zmax " << m_channelCoder[c].si[p].stored_pz.getRawZmax()
+              << std::endl;
+        }
+
         if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
+          if (m_params.ExportDebugTextFormat) {
+            m_icov_file->stream() << "stored_syndrome_rates";
+          }
+
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
             if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
 
@@ -146,6 +189,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
 
                 m_stats.addSIRate(m_channelCoder[c].n);
 
+                if (m_params.ExportDebugTextFormat) {
+                  m_icov_file->stream()
+                      << " "
+                      << bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+                }
+
               } else {
                 m_stats.addSIRate(
                     m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m);
@@ -154,12 +203,27 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                     m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).c,
                     m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).r,
                     m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m);
+
+                if (m_params.ExportDebugTextFormat) {
+                  m_icov_file->stream() << " "
+                                        << m_channelCoder[c]
+                                               .bitplanes[bp]
+                                               .stored_numcodes.at(p)
+                                               .c;
+                }
               }
             }
+          }
+          if (m_params.ExportDebugTextFormat) {
+            m_icov_file->stream() << std::endl;
           }
         }
       } else if (p != omnidirectional_layer::BlockPrediction::ePredType::NONE) {
         m_icov_file->writeSIMode(bitstream::flag_t::UnavailableSI);
+        if (m_params.ExportDebugTextFormat) {
+          m_icov_file->stream()
+              << "mode " << (int)bitstream::flag_t::UnavailableSI << std::endl;
+        }
       }
       m_icov_file->endWritePrediction(p);
     }
@@ -171,6 +235,10 @@ void icov::encoder::FrameEncoder::serializeBlockData(
     bool access_block, const omnidirectional_layer::Block &b) {
 
   ICOV_DEBUG << "Serialize block " << b.getIdSelf();
+
+  if (m_params.ExportDebugTextFormat) {
+    m_icov_file->stream() << "block " << b.getIdSelf() << std::endl;
+  }
 
   // Start writing block data
   m_icov_file->startWriteBlock(b);
@@ -369,8 +437,17 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   m_icov_file->contentParameterSet().content_framecount++;
 
   if (m_params.ExportRecoFrames) {
+    cv::imwrite(path::combine(m_framesPath.string(),
+                              "x" + std::to_string(frame()) + ".tif"),
+                m_reco);
 
-    // cv::imwrite()
+    cv::imwrite(path::combine(m_framesPath.string(),
+                              "v" + std::to_string(frame()) + ".tif"),
+                img_src);
+  }
+
+  if (m_params.ExportDebugTextFormat) {
+    m_icov_file->stream() << "frame " << frame() << std::endl;
   }
 }
 
@@ -811,6 +888,15 @@ const std::shared_ptr<OutputIcovBase> &FrameEncoder::icovFile() const {
 void FrameEncoder::setIcovFile(
     const std::shared_ptr<OutputIcovBase> &newIcov_file) {
   m_icov_file = newIcov_file;
+
+  icov::assert::not_null(m_icov_file.get(),
+                         ICOV_DEBUG_HEADER("Cannot encode into NULL file"));
+
+  if (m_params.ExportRecoFrames) {
+    m_framesPath =
+        path::combine(m_icov_file->getDir().string(), "source_frames");
+    fs::create_directories(m_framesPath);
+  }
 }
 
 void icov::encoder::FrameEncoder::encode_si(

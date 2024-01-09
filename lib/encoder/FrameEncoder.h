@@ -234,6 +234,8 @@ private:
   std::vector<ChannelCoder> m_channelCoder;
   EncoderStatistics m_stats;
 
+  fs::path m_framesPath;
+
   // END PRIVATE MEMBERS //
 };
 } // namespace encoder
