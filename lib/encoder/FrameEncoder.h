@@ -12,7 +12,7 @@
  *  @brief Defines an actual ICOV FrameEncoder.
  *  @ingroup FrameEncoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 1.0.3
+ *  @version 1.5.0
  *  @date 2023
  *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under
@@ -70,6 +70,8 @@
 namespace icov {
 namespace encoder {
 class FrameEncoder : public IFrameEncoder<cv::Mat> {
+
+  // PUBLIC MEMBERS//
 public:
   struct params {
     int QP = 42;
@@ -95,6 +97,8 @@ public:
     /// MSBExtendedBitDepth). If different to MSBExtendedBitDepth, source data
     /// will be converted
     const Int InternalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
+
+    bool ExportDebugTextFormat = true;
   };
 
   FrameEncoder(const params &p, const LdpcCoderParameters &LDPC_Params);
@@ -105,7 +109,9 @@ public:
 
   void serializeBlockData(bool access_block,
                           const omnidirectional_layer::Block &b);
+  // END PUBLIC MEMBERS //
 
+  // PROTECTED MEMBERS//
 protected:
   void encodeBlock(const omnidirectional_layer::Block &b, bool access_block,
                    const omnidirectional_layer::IBlockPredictionManager
@@ -117,65 +123,11 @@ protected:
       override;
   void processInput(const IInputMedia<cv::Mat> &input) override;
 
+  void endEncoding() override;
+  // END PROTECTED MEMBERS //
+
+  // PRIVATE MEMBERS //
 private:
-  void encode_icu(const omnidirectional_layer::Block &b,
-                  const icov::video::IcuEncoder &icu_enc,
-                  omnidirectional_layer::BlockPrediction::ePredType pred);
-  void encode_si(const omnidirectional_layer::Block &b,
-                 const video::IcuEncoder &icu_enc,
-                 const icov::video::SideInformationUnit *si,
-                 omnidirectional_layer::BlockPrediction::ePredType pred,
-                 ComponentID comp);
-  void encode_tu(const omnidirectional_layer::Block &b,
-                 const icov::video::IcuEncoder &icu_enc,
-                 const icov::video::SideInformationUnit *si,
-                 omnidirectional_layer::BlockPrediction::ePredType pred,
-                 ComponentID comp);
-
-  bool debug_enabled() const;
-
-  void serializeSyndrome(bool access_block);
-
-  void serializeParameters();
-
-  void checkDecoding(ldpc_codec_layer::AffInteractiveCoder &encoder,
-                     const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
-                     const icov::NumcodeIdxVec &si_numcodes,
-                     const icov::SyndromesVec &si_synd, ComponentID comp);
-
-  void saveDataToEncode(bool access_block, uint mode,
-                        ldpc_codec_layer::AffInteractiveCoder &encoder,
-                        const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
-                        const icov::NumcodeIdxVec &si_numcodes,
-                        const icov::SyndromesVec &si_synd,
-                        omnidirectional_layer::BlockPrediction::ePredType pred,
-                        ComponentID comp);
-  void
-  saveDataToDebug(omnidirectional_layer::Block b,
-                  ldpc_codec_layer::AffInteractiveCoder &encoder,
-                  const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
-                  const icov::NumcodeIdxVec &si_numcodes,
-                  const icov::SyndromesVec &si_synd,
-                  icov::omnidirectional_layer::BlockPrediction::ePredType pred,
-                  ComponentID comp);
-
-protected:
-  params m_params;
-  uint m_numComp;
-  icov::video::EncodingStructure m_enc_struc;
-  icov::video::BufGroups m_vvc_bufs;
-  LdpcParallelEncoder m_pred_encoder;
-  bool m_init;
-
-  std::shared_ptr<OutputIcovBase> m_icov_file;
-
-  int block_comp;
-
-  std::map<omnidirectional_layer::BlockPrediction::ePredType, icov::Rate>
-      m_rates_histogram;
-
-  cv::Mat m_reco;
-
   struct StoredRate {
     StoredRate() : c(0), r(0), m(0) {}
 
@@ -221,12 +173,67 @@ protected:
         si;
   } ChannelCoder;
 
+  void encode_icu(const omnidirectional_layer::Block &b,
+                  const icov::video::IcuEncoder &icu_enc,
+                  omnidirectional_layer::BlockPrediction::ePredType pred);
+  void encode_si(const omnidirectional_layer::Block &b,
+                 const video::IcuEncoder &icu_enc,
+                 const icov::video::SideInformationUnit *si,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
+                 ComponentID comp);
+  void encode_tu(const omnidirectional_layer::Block &b,
+                 const icov::video::IcuEncoder &icu_enc,
+                 const icov::video::SideInformationUnit *si,
+                 omnidirectional_layer::BlockPrediction::ePredType pred,
+                 ComponentID comp);
+
+  bool debug_enabled() const;
+
+  void serializeSyndrome(bool access_block);
+
+  void serializeParameters();
+
+  void checkDecoding(ldpc_codec_layer::AffInteractiveCoder &encoder,
+                     const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                     const icov::NumcodeIdxVec &si_numcodes,
+                     const icov::SyndromesVec &si_synd, ComponentID comp);
+
+  void saveDataToEncode(bool access_block, uint mode,
+                        ldpc_codec_layer::AffInteractiveCoder &encoder,
+                        const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                        const icov::NumcodeIdxVec &si_numcodes,
+                        const icov::SyndromesVec &si_synd,
+                        omnidirectional_layer::BlockPrediction::ePredType pred,
+                        ComponentID comp);
+  void
+  saveDataToDebug(omnidirectional_layer::Block b,
+                  ldpc_codec_layer::AffInteractiveCoder &encoder,
+                  const ldpc_codec_layer::BitSymbolProvider &bsp_enc,
+                  const icov::NumcodeIdxVec &si_numcodes,
+                  const icov::SyndromesVec &si_synd,
+                  icov::omnidirectional_layer::BlockPrediction::ePredType pred,
+                  ComponentID comp);
+
+  params m_params;
+  uint m_numComp;
+  icov::video::EncodingStructure m_enc_struc;
+  icov::video::BufGroups m_vvc_bufs;
+  LdpcParallelEncoder m_pred_encoder;
+  bool m_init;
+
+  std::shared_ptr<OutputIcovBase> m_icov_file;
+
+  int block_comp;
+
+  std::map<omnidirectional_layer::BlockPrediction::ePredType, icov::Rate>
+      m_rates_histogram;
+
+  cv::Mat m_reco;
+
   std::vector<ChannelCoder> m_channelCoder;
   EncoderStatistics m_stats;
 
-  // IEncoder interface
-protected:
-  void endEncoding() override;
+  // END PRIVATE MEMBERS //
 };
 } // namespace encoder
 } // namespace icov

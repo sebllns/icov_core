@@ -11,7 +11,7 @@
  *  @brief Metrics for ICOV coder
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
- *  @version 1.0.3
+ *  @version 1.5.0
  *  @date 2023
  *  @copyright Copyright (C) 2023 by Inria. All rights reserved.
  * The copyright in this software is being made available under

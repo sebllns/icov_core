@@ -736,14 +736,12 @@ void icov::encoder::FrameEncoder::encode_tu(
   icov::SyndromesVec si_synd;
 
   // Extract the quantized transform coefficients side info for encoding
-  ICOV_DEBUG << "EXTRACT_SI";
   const CCoeffBuf &si_tu = (si == nullptr)
                                ? tu.getPreviousQT(comp) /* inter prediction*/
                                : si->TUs[tu_index].getQuantizedTransformCoeffs(
                                      comp) /* intra prediction */;
 
   // Instantiate Bit Symbol Provider for encoding
-  ICOV_DEBUG << "instantiateBitSymbolProvider";
   ldpc_codec_layer::BitSymbolProvider bsp_enc =
       tu.instantiateBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
@@ -753,7 +751,6 @@ void icov::encoder::FrameEncoder::encode_tu(
   } else { /* CODING FLAG IS TRUE */
     // Coding flag is true, perform encoding
     // Perform bitplane encoding
-    ICOV_DEBUG << "encode_bitplanes";
     encoder.encode_bitplanes(bsp_enc, si_numcodes, si_synd);
 
     // Check that decoding works without error if the test is enabled in
@@ -808,9 +805,9 @@ void icov::encoder::FrameEncoder::encode_si(
     const icov::video::SideInformationUnit *si,
     omnidirectional_layer::BlockPrediction::ePredType pred, ComponentID comp) {
 
-  icov::assert::equal(
-      (int)icu_enc.sourceX_TUs().size(), 1,
-      "This version of ICOV can only manage one transform unit per block");
+  icov::assert::equal((int)icu_enc.sourceX_TUs().size(), 1,
+                      "This version of ICOV can only manage one transform unit "
+                      "(TU) per block (ICU)");
 
   if (pred == omnidirectional_layer::BlockPrediction::ePredType::INTER) {
     ICOV_ASSERT_MSG(si == nullptr, "Inter prediction must not carry SI unit");
