@@ -202,10 +202,10 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                 m_stats.addSIRate(m_channelCoder[c].n);
 
                 if (m_params.ExportDebugTextFormat) {
-                  m_icov_file->stream()
-                      << " "
-                      << ldpc_codec_layer::IInteractiveCoder::SyndromeType::
-                             SyndromeType_SOURCE;
+                  m_icov_file->stream() << " "
+                                        << ldpc_codec_layer::IInteractiveCoder::
+                                               SyndromeType::SyndromeType_SOURCE
+                                        << "(" << m_channelCoder[c].n << ")";
                 }
 
               } else {
