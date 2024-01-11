@@ -45,6 +45,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_types.h"
 #include "ldpc_codec_layer/factory/aff3ct_coder_types.h"
 #include <boost/program_options.hpp>
 
@@ -76,7 +77,7 @@ private:
   icov::BitVec m_dec_bits;
   std::vector<double> m_pcrossover;
   icov::Syndrome m_stored_syndrome;
-  uint32_t m_numcodeIdx;
+  NumcodeIdx m_numcodeIdx;
   uint32_t m_error_count;
   int m_nite;
 

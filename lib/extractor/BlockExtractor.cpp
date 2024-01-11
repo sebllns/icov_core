@@ -121,7 +121,6 @@ void icov::extractor::BlockExtractor::_processBlock(
       // pass access block syndrome  per bitplane
       if (b.isAccessBlock()) {
         ICOV_TRACE << "PASS ACCESS BLOCK";
-        ChannelExtractor::resetSyndromePadding();
         for (auto &ch : m_channelExtractor) {
           ch->pass_access_block();
         }
@@ -182,7 +181,6 @@ void icov::extractor::BlockExtractor::_processBlock(
     bitstream::VideoStreamDebugger::get_mutable_instance()
         .setDebuggingPredictionID(block_prediction);
 
-    ChannelExtractor::resetSyndromePadding();
     int c = 0;
     for (auto &ch : m_channelExtractor) {
       ICOV_TRACE << "START EXTRACT CHANNEL " << c;

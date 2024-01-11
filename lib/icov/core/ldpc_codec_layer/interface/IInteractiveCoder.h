@@ -48,8 +48,9 @@
 
 #pragma once
 
-#include "icov_common.h"
 #include "icov_assert.h"
+#include "icov_exception.h"
+#include "icov_types.h"
 #include <algorithm>
 #include <cstddef>
 #include <sys/types.h>
@@ -60,8 +61,8 @@ namespace ldpc_codec_layer {
 class IInteractiveCoder {
 public:
   enum SyndromeType {
-    SyndromeType_NO_CODING = 0,
-    SyndromeType_SOURCE = 1,
+    SyndromeType_SOURCE = 0,
+    SyndromeType_NO_CODING = 1,
     SyndromeType_NORMAL = 2,
     SyndromeType_COUNT
   };
@@ -75,18 +76,38 @@ public:
 
   static SyndromeType getSyndromeType(uint syndromeNumcode) {
     return static_cast<SyndromeType>(
-        std::max(syndromeNumcode, (uint)SyndromeType_NORMAL));
+        std::min(syndromeNumcode, (uint)SyndromeType_NORMAL));
   }
 
   static NumcodeIdx getNumcodeIdx(uint syndromeNumcode) {
-    ICOV_ASSERT_MSG(getSyndromeType(syndromeNumcode) == SyndromeType_NORMAL,
-                    "Bad syndrome type");
+    icov::assert::equal(getSyndromeType(syndromeNumcode), SyndromeType_NORMAL,
+                        ICOV_DEBUG_HEADER("Bad syndrome type"));
     return static_cast<NumcodeIdx>(syndromeNumcode -
                                    getSyndromeNumcodeOffset());
   }
 
   static unsigned char getSyndromeNumcodeOffset() {
     return (uint)SyndromeType_NORMAL;
+  }
+
+  // Function for calculating inverse quantized size based on SyndromeType
+  int inverseQuantizedSize(uint input) const {
+
+    SyndromeType s_type = getSyndromeType(input);
+
+    switch (s_type) {
+    case SyndromeType_SOURCE:
+      return (int)this->get_n();
+    case SyndromeType_NO_CODING:
+      return 0;
+    case SyndromeType_NORMAL:
+      return (int)this->get_m(input - ldpc_codec_layer::IInteractiveCoder::
+                                          SyndromeType::SyndromeType_NORMAL);
+    default:
+      ICOV_THROW_INVALID_ARGUMENT(__func__);
+      break;
+    }
+    return -1;
   }
 };
 } // namespace ldpc_codec_layer

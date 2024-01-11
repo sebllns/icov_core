@@ -3,8 +3,10 @@
 #include "InteractiveCoder.h"
 
 #include "FastArray.h"
-#include "icov_common.h"
+#include "icov_assert.h"
+#include "icov_exception.h"
 #include "icov_log.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 
 #include <algorithm>
@@ -133,7 +135,7 @@ int InteractiveCoder<Matrix>::encode(uint32_t &io_numcode,
 }
 
 template <class Matrix>
-void InteractiveCoder<Matrix>::decode(BitVec &o_decoded, uint32_t i,
+void InteractiveCoder<Matrix>::decode(BitVec &o_decoded, NumcodeIdx i,
                                       const Syndrome &stored_syndrome) {
   m_psyndromeMgr->compute_deacc(*m_decodage_syndrome.get(), stored_syndrome,
                                 m_matrix_provider->getNumcode(i),
@@ -179,32 +181,39 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
 
   ICOV_TRACE << "DECODE BP " << bp_idx;
 
+  // retrieve the type of given syndrome
+  SyndromeType s_type = this->getSyndromeType(numcode);
+
   if (output.size() != get_n())
     output.resize(get_n());
 
-  if (numcode != 1)
-    init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
+  if (s_type != SyndromeType::SyndromeType_SOURCE) {
+    icov::assert::equal(output.size(), m_pllrProvider->llr().size(),
+                        ICOV_DEBUG_HEADER("Size does not match"));
 
-  if (numcode > 1) {
-    this->decode(output, numcode - 2, stored_synd);
-  } else if (numcode == 1) {
+    init_LLR_bitplane(bsp, bp_idx, bsp.src_bits()[0], bsp.src_symboles());
+  }
+
+  switch (s_type) {
+  case IInteractiveCoder::SyndromeType_SOURCE:
+    // Syndrome is directly equal to the source information
     ICOV_TRACE << "DECODE: SOURCE";
-#if ICOV_ASSERTION_ENABLED
-    icov::assert::equal(stored_synd.size(), get_n(), "Size does not match");
-#endif
+    icov::assert::equal(stored_synd.size(), get_n(),
+                        ICOV_DEBUG_HEADER("Size does not match"));
 
     output.assign(stored_synd.data(), stored_synd.data() + get_n());
 
     //    for (size_t i = 0; i < get_n(); ++i) {
     //      output[i] = stored_synd[i];
     //    }
-  } else if (numcode == 0) {
+    break;
+
+  case IInteractiveCoder::SyndromeType_NO_CODING:
+    // No syndrome is needed, the LLR gives all the information to retrieve the
+    // source
     ICOV_TRACE << "DECODE: NO CODING";
 
-#if ICOV_ASSERTION_ENABLED
-    icov::assert::equal(output.size(), m_pllrProvider->llr().size(),
-                        "Size does not match");
-#endif
+    ICOV_WARNING_MSG(stored_synd.size() == 0, "Syndrome should be empty");
 
     //    for (size_t i = 0; i < get_n(); ++i) {
     //      output[i] = m_pllrProvider->llr()[i] < 0 ? 1 : 0;
@@ -212,10 +221,20 @@ void InteractiveCoder<Matrix>::decode_bitplane(BitVec &output, int bp_idx,
 
     std::transform(m_pllrProvider->llr().cbegin(), m_pllrProvider->llr().cend(),
                    output.begin(), [](icov::LLRVal l) -> icov::BitVal {
-                     return l < 0 ? 1 : 0;
+                     return l < 0 ? icov::bit_t::one : icov::bit_t::zero;
                    });
+    break;
+
+  case IInteractiveCoder::SyndromeType_NORMAL:
+    this->decode(output, this->getNumcodeIdx(numcode), stored_synd);
+    break;
+
+  default:
+    ICOV_THROW_LOGICAL_EXCEPTION("Unmanaged case");
+    break;
   }
 
+  // inject the bitplane into the output symbole vector
   bsp.injectBitplane(bp_idx, output);
 }
 
@@ -362,21 +381,22 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
 
   init_LLR_bitplane(bsp, bitplane_idx, sign_bits, predec);
 
-  const NumcodeIdx no_coding_flag = 0;
-  const NumcodeIdx coding_flag = 1;
-  const NumcodeIdx coding_offset = coding_flag + 1;
+  const NumcodeIdx no_coding_flag = SyndromeType_NO_CODING;
+  const NumcodeIdx coding_flag = SyndromeType_NORMAL;
+  NumcodeIdx coding_offset = SyndromeType_SOURCE;
+  numcodeIdx = 0;
 
   // TO CODE OR NOT TO CODE ???
-  numcodeIdx = std::equal(m_pllrProvider->llr().begin(),
-                          m_pllrProvider->llr().end(), bitplane_bits.begin(),
-                          [](LLRVal llr, BitVal srcBit) {
-                            return (llr > 0 && srcBit == bit_t::zero) ||
-                                   (llr < 0 && srcBit == bit_t::one);
-                          })
-                   ? no_coding_flag
-                   : coding_flag;
+  coding_offset = std::equal(m_pllrProvider->llr().begin(),
+                             m_pllrProvider->llr().end(), bitplane_bits.begin(),
+                             [](LLRVal llr, BitVal srcBit) {
+                               return (llr > 0 && srcBit == bit_t::zero) ||
+                                      (llr < 0 && srcBit == bit_t::one);
+                             })
+                      ? no_coding_flag
+                      : coding_flag;
 
-  if (numcodeIdx == coding_flag) {
+  if (coding_offset == coding_flag) {
     try {
       int numerrors = this->encode(numcodeIdx, stored_synd, bitplane_bits);
       icov::assert::check(numerrors == 0, "No convergence for bitplane " +
@@ -391,9 +411,10 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                                 std::to_string(bitplane_idx));
       }
 
-      numcodeIdx += coding_offset;
     } catch (const std::exception &e) {
-      numcodeIdx = 1;
+      numcodeIdx = 0;
+      coding_offset = SyndromeType_SOURCE;
+
       stored_synd.fillFrom(bitplane_bits);
       ICOV_WARNING << "Bitplane " << bitplane_idx;
       ICOV_WARNING << "Encoding bitplane as source as we catched exception in "
@@ -401,7 +422,9 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                    << e.what();
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     } catch (...) {
-      numcodeIdx = 1;
+      numcodeIdx = 0;
+      coding_offset = SyndromeType_SOURCE;
+
       stored_synd.fillFrom(bitplane_bits);
       ICOV_WARNING << "Bitplane " << bitplane_idx;
       ICOV_WARNING
@@ -425,6 +448,8 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
                      return srcSymbol;
                    return std::abs(srcSymbol) >> shift;
                  });
+
+  numcodeIdx += coding_offset;
 }
 } // namespace ldpc_codec_layer
 } // namespace icov

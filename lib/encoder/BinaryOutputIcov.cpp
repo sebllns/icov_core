@@ -1,5 +1,6 @@
 #include "BinaryOutputIcov.h"
 
+#include "icov_exception.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
@@ -128,18 +129,18 @@ void BinaryOutputIcov::writeBitplaneCount(const uint &v) {
 
 void BinaryOutputIcov::writeSIRate(const NumcodeIdx &v, const Rate &r,
                                    const uint &n) {
-#ifdef ICOV_ASSERTION_ENABLED
-  icov::assert::check(r < std::numeric_limits<rate_t>::max(),
-                      "Value " + std::to_string(r) +
-                          " overflows the max possible value " +
-                          std::to_string(std::numeric_limits<rate_t>::max()));
-#endif
+
+  if (v > std::numeric_limits<rate_t>::max()) {
+        ICOV_THROW_OUT_OF_RANGE(
+            "Value " + std::to_string(v) +
+            " overflows the max possible value " +
+            std::to_string(std::numeric_limits<rate_t>::max()));
+  }
 
   icov::io::write_value<rate_t>(
       *m_fileParts[bitstream::eIcovStream::ENCODE_PARAMS],
       static_cast<rate_t>(v), true);
 
-  // std::cout << " " << v;
   m_total_write_byte[eWriteCounter::ENC_BLOCK_RATE_SIZE] += sizeof(rate_t);
 }
 
@@ -167,7 +168,7 @@ void icov::encoder::BinaryOutputIcov::endWriteBlock(
 
 void icov::encoder::BinaryOutputIcov::writeStoredSyndromeSize(
     const NumcodeIdx &v, const Rate &r, const uint &m) {
-  writeSIRate(v, 0, 0);
+  writeSIRate(v, r, m);
 }
 
 void icov::encoder::BinaryOutputIcov::writeMse(const float &mse)
@@ -177,6 +178,7 @@ void icov::encoder::BinaryOutputIcov::writeMse(const float &mse)
 }
 
 void icov::encoder::BinaryOutputIcov::endIcov() {
+  // ADD 0xFFFFFF at the end of the stream
   for (const auto &p : m_fileParts) {
         if (p.first != bitstream::eIcovStream::MEDIA_HEADER)
           for (int i = 0; i < 3; ++i)

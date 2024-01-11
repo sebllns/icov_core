@@ -107,7 +107,7 @@ using Bitplanes = std::vector<BitVec>;
 using Rate = float;
 using Mse = float;
 using Psnr = float;
-using NumcodeIdx = uint32_t;
+using NumcodeIdx = unsigned short;
 
 /**
  * @typedef BitLength

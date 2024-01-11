@@ -75,7 +75,6 @@ namespace extractor {
 struct BitplaneSyndromeExtractor {
   ushort Index;
   bitstream::RateStream BitRates[PRED_COUNT];
-  ushort ReadSyndromePadding;
 };
 
 /**
@@ -157,8 +156,6 @@ private:
   int m_maxSyndromeBufferLength;
   // bool m_codingFlag;
   std::array<bitstream::SIEncodedParams, PRED_COUNT> m_predParams;
-
-  static byte SyndromePadding;
 };
 } // namespace extractor
 } // namespace icov

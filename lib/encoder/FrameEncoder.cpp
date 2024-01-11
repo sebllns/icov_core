@@ -76,14 +76,19 @@ FrameEncoder::~FrameEncoder() {
 /*****************************************************************************/
 void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
   if (access_block) {
+    m_icov_file->stream() << "access block data" << std::endl;
     for (int c = 0; c < (int)m_numComp; ++c) {
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(
           omnidirectional_layer::BlockPrediction::ePredType::NONE);
       // store access block syndrome per bitplane
       Syndrome access_block_syndrome(m_channelCoder[c].access_block[0].size());
+
+      int k = 0;
       for (const auto &s : m_channelCoder[c].access_block) {
         access_block_syndrome.fillFrom(s);
+        m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
+                              << access_block_syndrome.size() << std::endl;
         m_icov_file->writeSyndrome(access_block_syndrome);
       }
       m_icov_file->endWritePrediction(
@@ -91,10 +96,15 @@ void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
     }
   }
 
+  m_icov_file->stream() << "syndromes" << std::endl;
+
   for (int c = 0; c < (int)m_numComp; ++c) {
     m_icov_file->setChannel(c);
     // store normal syndrome per bitplane
+    int k = 0;
     for (const auto &s : m_channelCoder[c].bitplanes) {
+      m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
+                            << s.stored_synd.size() << std::endl;
       if (s.stored_synd.size() > 0) {
         m_icov_file->writeSyndrome(s.stored_synd);
       }
@@ -119,10 +129,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
     }
 
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      m_icov_file->writeStoredSyndromeSize(s.stored_synd_rate.c, 0, 0);
+      m_icov_file->writeStoredSyndromeSize(
+          s.stored_synd_rate.c, s.stored_synd_rate.r, s.stored_synd_rate.m);
       m_stats.addEncodedRate(s.stored_synd_rate.m);
       if (m_params.ExportDebugTextFormat) {
-        m_icov_file->stream() << " " << s.stored_synd_rate.c;
+        m_icov_file->stream() << " " << s.stored_synd_rate.c << "("
+                              << s.stored_synd_rate.m << ")";
       }
     }
 
@@ -170,7 +182,7 @@ void icov::encoder::FrameEncoder::serializeParameters() {
 
         if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
           if (m_params.ExportDebugTextFormat) {
-            m_icov_file->stream() << "stored_syndrome_rates";
+            m_icov_file->stream() << "rates";
           }
 
           for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size(); ++bp) {
@@ -184,15 +196,16 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                 }
 
                 m_icov_file->writeSIRate(
-                    bitstream::enum_t::SyndromeType::SyndromeType_SOURCE, 1.0,
-                    m_channelCoder[c].n);
+                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE,
+                    1.0, m_channelCoder[c].n);
 
                 m_stats.addSIRate(m_channelCoder[c].n);
 
                 if (m_params.ExportDebugTextFormat) {
                   m_icov_file->stream()
                       << " "
-                      << bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+                      << ldpc_codec_layer::IInteractiveCoder::SyndromeType::
+                             SyndromeType_SOURCE;
                 }
 
               } else {
@@ -205,11 +218,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                     m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m);
 
                 if (m_params.ExportDebugTextFormat) {
-                  m_icov_file->stream() << " "
-                                        << m_channelCoder[c]
-                                               .bitplanes[bp]
-                                               .stored_numcodes.at(p)
-                                               .c;
+                  m_icov_file->stream()
+                      << " "
+                      << m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).c
+                      << "("
+                      << m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m
+                      << ")";
                 }
               }
             }
@@ -243,11 +257,11 @@ void icov::encoder::FrameEncoder::serializeBlockData(
   // Start writing block data
   m_icov_file->startWriteBlock(b);
 
-  // Store bitplanes rates per SI and per channel
-  serializeParameters();
-
   // WRITE SYNDROMES
   serializeSyndrome(access_block);
+
+  // Store bitplanes rates per SI and per channel
+  serializeParameters();
 
   m_icov_file->writeBlockSize();
 
@@ -266,6 +280,7 @@ void FrameEncoder::encodeBlock(
   //  ICOV_DEBUG << "start encode block "
   //             << b.getId(omnidirectional_layer::Block::SELF);
 
+  // RESET encoded data for the block
   m_channelCoder = std::vector<ChannelCoder>(m_numComp);
 
   auto v = getAvailablePredictions(b, access_block, block_prediction_mgr);
@@ -351,10 +366,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
       m_vvc_bufs.create_link(PIC_PREDICTION + pk, PIC_PREDICTION);
     }
 
-    //    m_vvc_bufs.create(PIC_PREDICTION +
-    //                          omnidirectional_layer::BlockPrediction::INTER,
-    //                      extendedFrameArea);
-
     m_enc_struc
         .create360VideoInteractiveCodingUnits_withoutAccessBlockComputation(
             m_params.ChFormat, sourceWidth, sourceHeight,
@@ -364,10 +375,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
     m_init = false;
   }
 
-  // save previous frame
-  //  m_vvc_bufs.get(PIC_PREDICTION +
-  //  omnidirectional_layer::BlockPrediction::INTER)
-  //      .copyFrom(m_vvc_bufs.get(PIC_RECONSTRUCTION));
   m_vvc_bufs.get(PIC_ORIGINAL).fill(0);
   m_vvc_bufs.get(PIC_RECONSTRUCTION).fill(0);
   m_vvc_bufs.get(PIC_PREDICTION).fill(0);
@@ -413,7 +420,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   // END INTRA PRED
 
-  // compute mse
 
   // compute access block
   VTM_OPENCV_Utility::toBGRMat(mainFrameReco, m_reco);
@@ -508,6 +514,11 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
   bool is_inter =
       (pred == icov::omnidirectional_layer::BlockPrediction::ePredType::INTER);
 
+  if (is_inter && frame() == 0) {
+    ICOV_THROW_LOGICAL_EXCEPTION(
+        "Cannot encoder inter prediction on the first frame");
+  }
+
   // Store information related to the current prediction in the channel coder
   m_channelCoder[comp].si[pred_id].stored_pz = bsp_enc.distribution();
   m_channelCoder[comp].si[pred_id].dirmode = mode;
@@ -550,19 +561,17 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
   if (bsp_enc.distribution().codingflag()) {
 
 // Assert bitplane count consistency and SI sizes
-#ifdef ICOV_ASSERTION_ENABLED
     icov::assert::check(
         (int)m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
             si_synd.size() == si_numcodes.size(),
         "Bitplane count does not match between SI of same block");
-#endif
 
     // Loop through each bitplane
     for (int i = 0; i < bitplaneCount; ++i) {
 
       // if NO coding flag is TRUE for this BITPLANE
-      if (si_numcodes[i] ==
-          bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
+      if (si_numcodes[i] == ldpc_codec_layer::IInteractiveCoder::SyndromeType::
+                                SyndromeType_NO_CODING) {
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 0.0f;
@@ -576,7 +585,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
       // IF SOURCE FLAG is TRUE for the BITPLANE
       else if (!is_inter &&
                (si_numcodes[i] ==
-                    bitstream::enum_t::SyndromeType::SyndromeType_SOURCE ||
+                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE ||
                 m_channelCoder[comp].bitplanes[i].sourceFlag)) {
 
         if (!m_channelCoder[comp].bitplanes[i].sourceFlag) {
@@ -586,7 +595,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
               bsp_enc.src_bits()[i]);
 
           m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
-              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 
           m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
               encoder.get_n();
@@ -595,7 +604,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
         }
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-            bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+            ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
             encoder.get_n();
@@ -609,7 +618,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
       }
       // NORMAL CASE : bitplane was normally encoded
       else if (si_numcodes[i] >
-               bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+               ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];
@@ -646,13 +655,13 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
                 bsp_enc.src_bits()[i]);
 
             m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
-                bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
             m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
                 encoder.get_n();
             m_channelCoder[comp].bitplanes[i].stored_synd_rate.r = 1.0;
 
             m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-                bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
             m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
                 encoder.get_n();
             m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
@@ -729,7 +738,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
 
     for (const auto &s : m_channelCoder[comp].access_block) {
       bitstream::BitplaneStream bpstr;
-      bpstr.numcode = bitstream::enum_t::SyndromeType_SOURCE;
+      bpstr.numcode = ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
       bpstr.syndrome.fillFrom(s);
       si_dbg.bitplanes.push_back(bpstr);
     }
@@ -760,13 +769,14 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
 
       // if source coding set it to all SI
       if (m_channelCoder[comp].bitplanes[i].sourceFlag) {
-        bpstr.numcode = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+        bpstr.numcode =
+            ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
         bpstr.syndrome = m_channelCoder[comp].bitplanes[i].stored_synd;
 
         for (auto &s : channelDbg.si_map) {
           s.second.bitplanes.resize(bitplaneCount);
           if (s.second.bitplanes[i].numcode !=
-              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
             s.second.bitplanes[i] = bpstr;
           }
         }
@@ -776,10 +786,10 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
 
         // set syndrome
         if (bpstr.numcode ==
-            bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
+            ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING) {
           bpstr.syndrome = Syndrome();
         } else if (bpstr.numcode ==
-                   bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+                   ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
           ICOV_THROW_LOGICAL_EXCEPTION(
               "The case where bitplane is source coding as it "
               "should have been treated before");
@@ -860,7 +870,7 @@ void icov::encoder::FrameEncoder::encode_tu(
     if (pred != omnidirectional_layer::BlockPrediction::INTER) {
       mode = icu_enc.get_intraSIsMap().at(pred).intraDir[block_comp];
     } else {
-      mode = NUM_LUMA_MODE;
+      mode = NUM_LUMA_MODE; // special value for INTER prediction
     }
 
     // Save syndrome if longer than current saved

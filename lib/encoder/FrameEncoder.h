@@ -56,6 +56,7 @@
 #include "encoder/interface/IEncoder.h"
 #include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
@@ -130,7 +131,9 @@ protected:
   // PRIVATE MEMBERS //
 private:
   struct StoredRate {
-    StoredRate() : c(0), r(0), m(0) {}
+    StoredRate()
+        : c(ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING), r(0),
+          m(0) {}
 
     NumcodeIdx c; // rate quantized
     Rate r;       // actual rate value
@@ -216,24 +219,32 @@ private:
                   ComponentID comp);
 
   params m_params;
+  // number of channels
   uint m_numComp;
   icov::video::EncodingStructure m_enc_struc;
   icov::video::BufGroups m_vvc_bufs;
   LdpcParallelEncoder m_pred_encoder;
+
+  // Flag to check if we need and initialisation (only once)
   bool m_init;
 
+  // output encoded ICOV path
   std::shared_ptr<OutputIcovBase> m_icov_file;
 
+  // current encoding channel
   int block_comp;
 
-  std::map<omnidirectional_layer::BlockPrediction::ePredType, icov::Rate>
-      m_rates_histogram;
-
+  // Reconstructed frame after quantisation (which is actually our ground truth
+  // data for the zero error encoder)
   cv::Mat m_reco;
 
+  // We are going to store the encoded data here
   std::vector<ChannelCoder> m_channelCoder;
+
+  // Gather statistics about the encodding
   EncoderStatistics m_stats;
 
+  // Folder where we are going to save the source frames if enabled
   fs::path m_framesPath;
 
   // END PRIVATE MEMBERS //

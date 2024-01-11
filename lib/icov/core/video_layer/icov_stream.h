@@ -50,6 +50,8 @@
 
 #include "icov_assert.h"
 #include "icov_exception.h"
+#include "icov_log.h"
+#include "icov_types.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
@@ -58,6 +60,7 @@
 #include <boost/serialization/access.hpp>
 #include <cmath>
 #include <cstdint>
+#include <string>
 #include <sys/types.h>
 #include <vector>
 
@@ -72,6 +75,8 @@ namespace bitstream {
 
 #define BYTE_SIZE CHAR_BIT * sizeof(icov::byte)
 
+typedef icov::byte QuantizedNumcode;
+
 namespace flag_t {
 const byte UnavailableSI = 0;
 const byte NoCodingSI = 0;
@@ -84,12 +89,6 @@ const byte CodingSI = 1;
 } // namespace offset_t
 
 namespace enum_t {
-
-enum SyndromeType {
-  SyndromeType_NO_CODING = 0,
-  SyndromeType_SOURCE = 1,
-  SyndromeType_COUNT
-};
 
 enum NalUnitType {
   NAL_UNIT_CODED_VPU = 0, // 0
@@ -143,74 +142,34 @@ inline byte getPredDirModeByteValue(bool available, ushort x) {
   return x + offset_t::AvailableSI;
 }
 
-// typedef std::basic_streambuf<icov::byte> bitstreambuf;
-
-/// Base class for @c icov::byte output streams.
-typedef std::basic_ostream<icov::byte> obitstream;
-
-class bitstreambuf
-    : public std::basic_streambuf<icov::byte,
-                                  std::char_traits<icov::byte>> {
-
-public:
-  typedef icov::byte char_type; // 1
-  typedef std::char_traits<icov::byte> traits_type;
-  typedef typename traits_type::int_type int_type;
-  typedef typename traits_type::off_type off_type;
-  typedef typename traits_type::pos_type pos_type;
-  typedef std::vector<char_type>::size_type size_type;
-  using Base = std::basic_streambuf<icov::byte>;
-
-  bitstreambuf() : m_buffer(), read_pos(0) {
-    // Base::setp(&(*m_buffer.begin()), &(*(m_buffer.end() - 1))); // set
-    // std::basic_streambuf
-    // put area pointers to work with 'buffer_'
-  }
-
-  void seekg(size_type pos) { read_pos = pos; }
-
-  int_type overflow(int_type ch) {
-    if (ch != (int_type)EOF)
-      m_buffer.push_back(traits_type::to_char_type(ch));
-    return ch;
-  }
-
-  std::streamsize xsputn(const char_type *s, std::streamsize num) {
-    m_buffer.insert(m_buffer.end(), s, s + num);
-    return num;
-  }
-
-  std::streamsize xsgetn(char_type *s, std::streamsize n) {
-    if (read_pos < m_buffer.size()) {
-      const size_type num = std::min<size_type>(n, m_buffer.size() - read_pos);
-      std::memcpy(s, &m_buffer[read_pos], num);
-      read_pos += num;
-      return num;
-    }
-    return 0;
-  }
-
-  int size() { return (int)m_buffer.size(); }
-
-private:
-  std::vector<char_type> m_buffer;
-  size_type read_pos;
-};
-
+// Function for calculating inverse quantized size based on SyndromeType
 inline ushort
 inverseQuantizedSize(icov::byte input,
                      const ldpc_codec_layer::IInteractiveCoder &coder) {
-  return (input == enum_t::SyndromeType::SyndromeType_NO_CODING)
-             ? (0)
-             : ((input == enum_t::SyndromeType::SyndromeType_SOURCE)
-                    ? (static_cast<ushort>(coder.get_n()))
-                    : (static_cast<ushort>(coder.get_m(input - 2))));
+  return static_cast<ushort>(coder.inverseQuantizedSize((uint)input));
 }
 
 inline void getByteCount(int bit_size, ushort &byte_count,
                          ushort &byte_padding) {
+
+  if (bit_size < 0) {
+    ICOV_THROW_LOGICAL_EXCEPTION("Negative bit size: " +
+                                 std::to_string(bit_size));
+  }
+
   byte_count = icov::bitstream::bitToByteCount(bit_size);
+  if (byte_count > bit_size) {
+    ICOV_THROW_LOGICAL_EXCEPTION("Bit count to byte count conversion error: " +
+                                 std::to_string(bit_size) + " -> " +
+                                 std::to_string(byte_count));
+  }
+
   byte_padding = bit_size % BYTE_SIZE;
+
+  if (byte_padding > 0) {
+
+    ICOV_DEBUG << "Positive byte padding: " + std::to_string(byte_padding);
+  }
 }
 
 using rate_t =
@@ -222,6 +181,7 @@ using rate_t =
     uint32_t;
 #endif
 
+// Tools for handling Qary parameters
 typedef icov::byte QaryParams[QARY_PARAMS_SIZE];
 
 inline void readQaryParams(const QaryParams input, int &q_idx, int &z_min,
@@ -247,6 +207,24 @@ inline void writeQaryParams(QaryParams output, int q_idx, int z_min,
   //            << (uint)output[2] << std::endl;
 }
 
+// Template function for converting array of boolean values to byte
+template <typename T> icov::byte boolToByte(const std::array<T, 8> in) {
+  icov::byte result = 0;
+  int i = 0;
+
+  for (auto &v : in) {
+    result = (result << 1);
+    if (static_cast<bool>(in[i++]))
+      result++;
+  }
+  return result;
+}
+
+// Functions for working with individual bits in byte value
+inline bool getBit(int bit_pos, byte b) { return (b >> bit_pos) & 1; }
+inline void setBit(int bit_pos, byte &b) { b |= 1 << bit_pos; }
+
+// Class representing a bit vector
 class BitVector {
   typedef icov::byte _byte_t;
   typedef bool _bit_t;
@@ -337,22 +315,59 @@ protected:
   std::vector<_byte_t> m_data;
 };
 
-template <typename T>
-icov::byte boolToByte(const std::array<T, 8> in) {
-  icov::byte result = 0;
-  int i = 0;
+// typedef std::basic_streambuf<icov::byte> bitstreambuf;
 
-  for (auto &v : in) {
-    result = (result << 1);
-    if (static_cast<bool>(in[i++]))
-      result++;
+// Class representing a bitstream buffer
+/// Base class for icov::byte output streams.
+typedef std::basic_ostream<icov::byte> obitstream;
+
+class bitstreambuf
+    : public std::basic_streambuf<icov::byte, std::char_traits<icov::byte>> {
+
+public:
+  typedef icov::byte char_type; // 1
+  typedef std::char_traits<icov::byte> traits_type;
+  typedef typename traits_type::int_type int_type;
+  typedef typename traits_type::off_type off_type;
+  typedef typename traits_type::pos_type pos_type;
+  typedef std::vector<char_type>::size_type size_type;
+  using Base = std::basic_streambuf<icov::byte>;
+
+  bitstreambuf() : m_buffer(), read_pos(0) {
+    // Base::setp(&(*m_buffer.begin()), &(*(m_buffer.end() - 1))); // set
+    // std::basic_streambuf
+    // put area pointers to work with 'buffer_'
   }
-  return result;
-}
 
-inline bool getBit(int bit_pos, byte b) { return (b >> bit_pos) & 1; }
+  void seekg(size_type pos) { read_pos = pos; }
 
-inline void setBit(int bit_pos, byte &b) { b |= 1 << bit_pos; }
+  int_type overflow(int_type ch) {
+    if (ch != (int_type)EOF)
+      m_buffer.push_back(traits_type::to_char_type(ch));
+    return ch;
+  }
+
+  std::streamsize xsputn(const char_type *s, std::streamsize num) {
+    m_buffer.insert(m_buffer.end(), s, s + num);
+    return num;
+  }
+
+  std::streamsize xsgetn(char_type *s, std::streamsize n) {
+    if (read_pos < m_buffer.size()) {
+      const size_type num = std::min<size_type>(n, m_buffer.size() - read_pos);
+      std::memcpy(s, &m_buffer[read_pos], num);
+      read_pos += num;
+      return num;
+    }
+    return 0;
+  }
+
+  int size() { return (int)m_buffer.size(); }
+
+private:
+  std::vector<char_type> m_buffer;
+  size_type read_pos;
+};
 
 } // namespace bitstream
 } // namespace icov

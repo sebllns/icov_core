@@ -98,7 +98,7 @@ public:
   }
 
   void save() {
-    ICOV_DEBUG << "save TU";
+    ICOV_TRACE << "save TU";
     _previousQTcoeffs.copyFrom(_quantizedTcoeffs);
   }
 

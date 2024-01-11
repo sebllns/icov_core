@@ -83,7 +83,7 @@ typedef enum {
 
 static const omnidirectional_layer::IBlockPredictionManager::prediction_t
     PredictionID[PREDICTION_COUNT] = {
-        // omnidirectional_layer::BlockPrediction::INTER,
+        omnidirectional_layer::BlockPrediction::INTER,
         omnidirectional_layer::BlockPrediction::TOP_RIGHT,
         omnidirectional_layer::BlockPrediction::TOP_LEFT,
         omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT,
@@ -117,39 +117,15 @@ inline std::string getIcovPartName(int id) {
 inline int
 getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {
 
-  switch (pred) {
+  for (int i = 0; i < PREDICTION_COUNT; ++i)
+    if (pred == PredictionID[i])
+      return i;
 
-    //  case omnidirectional_layer::BlockPrediction::INTER:
-    //    return 0;
+  ICOV_THROW_INVALID_ARGUMENT(
+      "Prediction not managed: " +
+      omnidirectional_layer::BlockPrediction::toString(pred));
 
-  case omnidirectional_layer::BlockPrediction::TOP_RIGHT:
-    return 0;
-
-  case omnidirectional_layer::BlockPrediction::TOP_LEFT:
-    return 1;
-
-  case omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
-    return 2;
-
-  case omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
-    return 3;
-
-  case omnidirectional_layer::BlockPrediction::RIGHT:
-    return 4;
-
-  case omnidirectional_layer::BlockPrediction::LEFT:
-    return 5;
-
-  case omnidirectional_layer::BlockPrediction::TOP:
-    return 6;
-
-  case omnidirectional_layer::BlockPrediction::BOTTOM:
-    return 7;
-
-  default:
-    ICOV_THROW_INVALID_ARGUMENT("Unrecognized prediction value");
-  }
-  return -1;
+  return PREDICTION_COUNT;
 }
 
 template <typename T>

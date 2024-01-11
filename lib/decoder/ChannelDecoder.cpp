@@ -52,16 +52,17 @@ void icov::decoder::ChannelDecoder::_decode_bitplane(
   byte quantizedNumcode = m_numcodes.front();
   m_numcodes.pop();
 
-  int syndrome_size = bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
+  int syndrome_size =
+      bitstream::inverseQuantizedSize(quantizedNumcode, *m_ldpc_coder);
+
   read_syndrome(syndrome_size);
 
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .metrics[m_icuIndex]
       .encodedBitlength += syndrome_size;
 
-  // if flag
-  decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode), m_syndrome);
-
+  decode_bitplane_with_ldpc(i, static_cast<icov::NumcodeIdx>(quantizedNumcode),
+                            m_syndrome);
 }
 
 void icov::decoder::ChannelDecoder::_extract_numcodes(
@@ -79,7 +80,8 @@ void icov::decoder::ChannelDecoder::_extract_numcode(
   byte quantizedNumcode =
       (block_prediction ==
        omnidirectional_layer::BlockPrediction::ePredType::NONE)
-          ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
+          ? ldpc_codec_layer::IInteractiveCoder::SyndromeType::
+                SyndromeType_SOURCE
           : m_bitstream->pop();
 
   bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
@@ -331,7 +333,7 @@ void ChannelDecoder::read_syndrome(int syndrome_size)
   for (int i = 0; i < syndrome_size; ++i) {
     if ((i % BYTE_SIZE) == 0) {
       bitstream_value = m_bitstream->pop();
-      // std::cout << " " << (int)bitstream_value;
+      ICOV_TRACE << (int)bitstream_value;
     }
     m_syndrome[i] =
         ((bitstream_value & (1 << (BYTE_SIZE - 1 - i % BYTE_SIZE))) > 0);
@@ -343,7 +345,7 @@ void ChannelDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, const
   if (m_block_prediction ==
       icov::omnidirectional_layer::BlockPrediction::ePredType::NONE) {
     ICOV_ASSERT_MSG(
-        numcode == bitstream::enum_t::SyndromeType::SyndromeType_SOURCE,
+        numcode == ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE,
         ICOV_DEBUG_HEADER("Numcode value must be set to 1 for access block"));
   }
 

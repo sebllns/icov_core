@@ -65,10 +65,11 @@ void icov::decoder::BitplaneDecoder::_decode_bitplane(
 void icov::decoder::BitplaneDecoder::_extract_numcode(
     int bp, omnidirectional_layer::BlockPrediction::ePredType block_prediction)
 {
-
-    byte quantizedNumcode = (block_prediction == omnidirectional_layer::BlockPrediction::ePredType::NONE)
-                                ? bitstream::enum_t::SyndromeType::SyndromeType_SOURCE
-                                : m_bitstream->pop();
+    byte quantizedNumcode =
+        (block_prediction ==
+         omnidirectional_layer::BlockPrediction::ePredType::NONE)
+            ? ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE
+            : m_bitstream->pop();
 
     bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(bp, quantizedNumcode);
 
@@ -94,9 +95,9 @@ void BitplaneDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode, cons
 {
   if (m_block_prediction ==
       icov::omnidirectional_layer::BlockPrediction::ePredType::NONE) {
-    ICOV_ASSERT_MSG(numcode ==
-                        bitstream::enum_t::SyndromeType::SyndromeType_SOURCE,
-                    "Numcode value must be set to 1 for access block");
+    ICOV_ASSERT_MSG(
+        numcode == ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE,
+        "Numcode value must be set to 1 for access block");
   }
 
   bitstream::VideoStreamDebugger::get_const_instance().assertSyndromeEqual(

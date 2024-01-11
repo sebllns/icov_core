@@ -254,7 +254,7 @@ bool InteractiveDecoder::processKey(char key)
     pov_x = getPov_x_DEG();
     pov_y = getPov_y_DEG();
 
-    ICOV_TRACE << "POV = " << pov_x << ", " << pov_y;
+    // ICOV_TRACE << "POV = " << pov_x << ", " << pov_y;
 
     // decode
     bool updated = getDecoder()->request(

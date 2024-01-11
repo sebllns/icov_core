@@ -5,6 +5,7 @@
 #include "icov_log.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/factory/CoderFactory.h"
+#include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "video_layer/ExtractedStreamDebugger.h"
@@ -23,8 +24,6 @@
 namespace fs = boost::filesystem;
 using namespace icov::extractor;
 using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
-
-icov::byte ChannelExtractor::SyndromePadding = 0;
 
 ChannelExtractor::ChannelExtractor(
     const params &p, std::shared_ptr<InputIcov> &icovFile,
@@ -121,6 +120,7 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
     }
 
     byte qSize = 0;
+    ushort padding = 0;
 
     m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, qSize);
 
@@ -128,10 +128,10 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
         .assertStoredNumcodeIdxEqual(bp.Index, qSize);
 
     if (is_access_block) {
-      qSize = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+      qSize = ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
     }
 
-    bp.BitRates[S_STORED].set(qSize, *m_ldpc_coder, bp.ReadSyndromePadding);
+    bp.BitRates[S_STORED].set(qSize, *m_ldpc_coder, padding);
 
     m_predParams[S_STORED].setSyndromeLength(
         m_predParams[S_STORED].getSyndromeLength() +
@@ -147,12 +147,9 @@ void ChannelExtractor::pass_access_block() {
   ICOV_DEBUG << std::to_string(m_params.CompID) << ": pass_access_block ";
 
   ushort syndrome_size = 0, syndrome_padding = 0;
-  bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount -
-                              SyndromePadding,
+  bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount,
                           syndrome_size, syndrome_padding);
   m_icovFile->offsetSyndrome(syndrome_size);
-  SyndromePadding =
-      ((syndrome_padding == 0) ? (0) : (BYTE_SIZE - syndrome_padding));
 
   ICOV_DEBUG << "END pass_access_block ";
 }
@@ -162,10 +159,6 @@ void ChannelExtractor::pass_prediction() {
       m_params.CompID);
   m_icovFile->jumpPrediction(m_bitplaneCount);
 }
-
-void ChannelExtractor::resetSyndromePadding() { SyndromePadding = 0; }
-
-int ChannelExtractor::getSyndromePadding() { return SyndromePadding; }
 
 void ChannelExtractor::extractPredParams(int type) {
   _extractPredParams(m_predParams[type]);
@@ -258,12 +251,13 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
                                                int pred_type) {
 
   byte qsize = 0;
+  ushort padding = 0;
 
   // read syndrome quantized size value
   m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, qsize);
 
   // inverse size quantization and store the value
-  bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, bp.ReadSyndromePadding);
+  bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, padding);
 
   ICOV_DEBUG << "CH " << std::to_string(m_params.CompID) << " BP " << bp.Index
              << " BP_NUMCODE " << bp.BitRates[pred_type].toString();

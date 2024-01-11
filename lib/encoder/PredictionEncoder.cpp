@@ -131,7 +131,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 //                }
 
 //                m_icov_file->writeSIRate(
-//                    bitstream::enum_t::SyndromeType::SyndromeType_SOURCE, 1.0,
+//                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE, 1.0,
 //                    m_channelCoder[c].n);
 //              } else {
 //                m_icov_file->writeSIRate(
@@ -298,7 +298,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 //      // if NO coding flag is TRUE for this BITPLANE
 //      if (si_numcodes[i] ==
-//          bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
+//          ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING) {
 //        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
 //            si_numcodes[i];
 //        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 0.0f;
@@ -311,7 +311,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 //      }
 //      // IF SOURCE FLAG is TRUE for the BITPLANE
 //      else if (si_numcodes[i] ==
-//                   bitstream::enum_t::SyndromeType::SyndromeType_SOURCE ||
+//                   ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE ||
 //               m_channelCoder[comp].bitplanes[i].sourceFlag) {
 
 //        if (!m_channelCoder[comp].bitplanes[i].sourceFlag) {
@@ -320,11 +320,11 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 //          m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
 //              bsp_enc.src_bits()[i]);
 //          m_channelCoder[comp].bitplanes[i].stored_synd_rate =
-//              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+//              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 //        }
 
 //        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-//            bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+//            ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 
 //        m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
 //            encoder.get_n();
@@ -338,7 +338,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 //      }
 //      // NORMAL CASE : bitplane was normally encoded
 //      else if (si_numcodes[i] >
-//               bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+//               ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
 
 //        m_channelCoder[comp].bitplanes[i].noSourceThreshold += encoder.get_r(
 //            bitstream::inverseQuantizedSize(si_numcodes[i], encoder),
@@ -374,10 +374,10 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 //          m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
 //              bsp_enc.src_bits()[i]);
 //          m_channelCoder[comp].bitplanes[i].stored_synd_rate =
-//              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+//              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 
 //          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-//              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+//              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 
 //          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
 //              encoder.get_n();
@@ -454,7 +454,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 //    for (const auto &s : m_channelCoder[comp].access_block) {
 //      bitstream::BitplaneStream bpstr;
-//      bpstr.numcode = bitstream::enum_t::SyndromeType_SOURCE;
+//      bpstr.numcode = ldpc_codec_layer::IInteractiveCoder_SOURCE;
 //      bpstr.syndrome.fillFrom(s);
 //      si_dbg.bitplanes.push_back(bpstr);
 //    }
@@ -485,13 +485,13 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 //      // if source coding set it to all SI
 //      if (m_channelCoder[comp].bitplanes[i].sourceFlag) {
-//        bpstr.numcode = bitstream::enum_t::SyndromeType::SyndromeType_SOURCE;
+//        bpstr.numcode = ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
 //        bpstr.syndrome = m_channelCoder[comp].bitplanes[i].stored_synd;
 
 //        for (auto &s : channelDbg.si_map) {
 //          s.second.bitplanes.resize(bitplaneCount);
 //          if (s.second.bitplanes[i].numcode !=
-//              bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+//              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
 //            s.second.bitplanes[i] = bpstr;
 //          }
 //        }
@@ -501,10 +501,10 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 
 //        // set syndrome
 //        if (bpstr.numcode ==
-//            bitstream::enum_t::SyndromeType::SyndromeType_NO_CODING) {
+//            ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING) {
 //          bpstr.syndrome = Syndrome();
 //        } else if (bpstr.numcode ==
-//                   bitstream::enum_t::SyndromeType::SyndromeType_SOURCE) {
+//                   ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
 //          ICOV_THROW_LOGICAL_EXCEPTION(
 //              "The case where bitplane is source coding as it "
 //              "should have been treated before");
