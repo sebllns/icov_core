@@ -856,7 +856,7 @@ void icov::encoder::FrameEncoder::encode_tu(
 
     // Check that decoding works without error if the test is enabled in
     // parameters
-    if (m_params.CheckDecoding) {
+    if (ldpc_codec_layer::IInteractiveCoder::params.CheckBitplaneEncoding) {
       checkDecoding(encoder, bsp_enc, si_numcodes, si_synd, comp);
     }
     // END CHECK DECODING
