@@ -47,6 +47,7 @@
 
 #include "app_common/program/icov_program_options.h"
 #include "icov_request.h"
+#include "opencv2/core/mat.hpp"
 #include <boost/filesystem/path.hpp>
 #include <string>
 
@@ -68,4 +69,6 @@ private:
   unsigned long m_gop_count;
 
   icov::frame_t m_max_frame_count;
+
+  cv::Mat m_current_frame;
 };

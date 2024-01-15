@@ -17,7 +17,7 @@ GenerateGOPMode::GenerateGOPMode(const options::args_t &args) {
   m_video_path = options::parseInputFile(args);
   m_gop_path = options::parseOutputFile(args);
   m_start_frame = 100;
-  m_gop_count = 2;
+  m_gop_count = 10;
   m_gop_size = 16;
 }
 
@@ -52,7 +52,8 @@ void GenerateGOPMode::run() {
 
         gop_path /= std::to_string(i % m_gop_size) + ".tif";
 
-        cv::imwrite(gop_path.string(), video->getCurrentFrame());
+        m_current_frame = video->getCurrentFrame();
+        cv::imwrite(gop_path.string(), m_current_frame);
         imax = video->getFrameCount();
       }
 

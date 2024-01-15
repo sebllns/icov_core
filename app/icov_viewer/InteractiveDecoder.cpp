@@ -198,11 +198,15 @@ void InteractiveDecoder::drawBlock(
 }
 
 void InteractiveDecoder::updateF1() {
-    m_decoderCtrl.loadGroundTruthFrame();
+    if (m_showSource) {
+      m_decoderCtrl.loadGroundTruthFrame();
 
-    if (m_showSource && decoderCtrl().analyzer().hasGroundTruth()) {
-      m_erpImage = decoderCtrl().analyzer().GroundTruth->getCurrentFrame() / 2;
-      drawBlocks(drawType::SOURCE);
+      if (decoderCtrl().analyzer().hasGroundTruth()) {
+        m_erpImage =
+            decoderCtrl().analyzer().GroundTruth->getCurrentFrame() / 2;
+        drawBlocks(drawType::SOURCE);
+      }
+
     } else {
       VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_erpImage);
     }

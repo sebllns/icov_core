@@ -89,13 +89,14 @@ void instantiateInputMedia(const boost::filesystem::path &path,
     media = new InputImage(path);
   }
 
-  if (ext == "avi" || ext == "mp4" || ext == "mkv" || ext == "mov") {
+  if (ext == "avi" || ext == "mp4" || ext == "mkv" || ext == "mov" ||
+      ext == "webm") {
     media = new InputVideo(path);
   }
 
   output.reset(media);
 
-  assert::not_null(media, "Format is not supported: " + ext);
+  assert::not_null(media, ICOV_DEBUG_HEADER("Format is not supported: " + ext));
 }
 
 } // namespace encoder
