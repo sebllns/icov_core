@@ -189,7 +189,7 @@ void icov::video::EncodingStructure::applyPredictionBasedOnEntropy(
   const UInt max_count = _vec_icus.size();
 
   // Loop through each ICU (Interactive Coding Unit) in parallel
-  // #pragma omp parallel for
+#pragma omp parallel for
   /*LOOP ICU*/ for (UInt i = 0; i < max_count; ++i) {
 
     // Initialization of IntraPrediction and other variables
