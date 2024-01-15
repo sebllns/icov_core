@@ -778,15 +778,11 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
         bpstr.numcode =
             ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
         bpstr.syndrome = m_channelCoder[comp].bitplanes[i].stored_synd;
-
-        ICOV_INFO << ">>>>>>> " << bpstr.syndrome.size();
-
         for (auto &s : channelDbg.si_map) {
           s.second.bitplanes.resize(bitplaneCount);
           if (s.second.bitplanes[i].numcode !=
               ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
             s.second.bitplanes[i] = bpstr;
-            ICOV_INFO << ">>>>>>> " << s.second.bitplanes[i].syndrome.size();
           }
         }
       } else {
