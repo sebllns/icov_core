@@ -418,10 +418,10 @@ void ChannelDecoder::inverse_QDCT() {
     ICOV_DEBUG << ICOV_DEBUG_HEADER("inverse_QDCT");
 
     // do nothing if block is exaclty the same as in the previous frame
-    if (!coding_flag &&
-        m_block_prediction !=
-            omnidirectional_layer::BlockPrediction::ePredType::INTER)
-      return;
+    //    if (!coding_flag &&
+    //        m_block_prediction !=
+    //            omnidirectional_layer::BlockPrediction::ePredType::INTER)
+    //      return;
 
     auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
 
