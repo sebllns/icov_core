@@ -58,8 +58,10 @@
 #include "icov_request.h"
 #include "icov_types.h"
 
+#include <boost/filesystem/directory.hpp>
 #include <boost/format.hpp>
 #include <memory>
+#include <string>
 
 namespace icov {
 namespace decoder {
@@ -164,6 +166,20 @@ public:
     return m_factory.Decoder;
   }
 
+  bool loadGroundTruthFrame() {
+    frame_t f = getDecoder()->getRequest().frameID;
+    std::string frame_name = "x" + std::to_string(f) + ".tif";
+    fs::path frame_path =
+        getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
+
+    if (fs::is_regular_file(frame_path)) {
+      encoder::instantiateInputMedia(frame_path, m_analyzer.GroundTruth);
+      m_analyzer.GroundTruth->setFrame(0);
+    }
+
+    return false;
+  }
+
   void initAnalyzer() {
     if (getDecoderParams().enable_export_csv) {
       m_analyzer.CsvOutput = std::make_shared<decoder::CsvOutput>(
@@ -242,7 +258,7 @@ public:
 
     while (!pos.empty()) {
       // decode
-      getDecoder()->request(pos.front());
+      getDecoder()->setRequest(pos.front());
       pos.pop();
     }
   }

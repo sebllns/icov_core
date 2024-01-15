@@ -436,7 +436,6 @@ void IMediaEncoder<T>::encode(
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingFrameID(i);
 
-      // send bool
       input.setFrame(f);
 
       if (input.getFrameID() == f) {

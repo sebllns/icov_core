@@ -221,7 +221,8 @@ void decoder::SinglePassDecoder::addDefaultDecoder() {
 
                   (int)cps.block_fixed_size
 
-              }
+              },
+          .bypass_decoding = false
 
       },
       ldpcParams(), m_extractionBitstream));
@@ -248,7 +249,7 @@ void icov::decoder::SinglePassDecoder::catchError() {
   m_extractionBitstream->empty();
 }
 
-bool decoder::SinglePassDecoder::request(const request_t &r) {
+bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
   //  if (m_blockDecoder)
   //    m_blockDecoder->getDecodingOutput().fill(0);
 
@@ -263,6 +264,7 @@ bool decoder::SinglePassDecoder::request(const request_t &r) {
   if (m_request != r) {
     try {
       m_request = r;
+      m_extractionBitstream->empty();
       m_navigation->Request->update(m_request);
       decoded = true;
     } catch (const std::exception &e) {
@@ -275,6 +277,10 @@ bool decoder::SinglePassDecoder::request(const request_t &r) {
 
   //  frame %= m_contentParams.content_framecount;
   return decoded;
+}
+
+const request_t &decoder::SinglePassDecoder::getRequest() const {
+  return m_request;
 }
 
 const LdpcCoderParameters &decoder::SinglePassDecoder::ldpcParams() const {

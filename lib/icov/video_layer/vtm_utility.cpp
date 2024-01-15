@@ -8,6 +8,8 @@
 #include "ICOV_DistorsionCost.h"
 #include "ICOV_Quant.h"
 #include "ICOV_Transform2d.h"
+#include "icov_exception.h"
+#include "icov_log.h"
 #include <algorithm>
 #include <limits>
 
@@ -94,6 +96,10 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
   ChromaFormat chFrmt = encStruct.getICU(0).get_sourceX().chromaFormat;
 
   icov::video::QpParam cQP(qp, channelType, chFrmt, bit_depth, 0, 0);
+
+  ICOV_DEBUG << ICOV_DEBUG_HEADER("quantizeFrame ") << " ch=" << (int)compID
+             << " format " << (int)chFrmt << ", qp=" << cQP.Qp
+             << ", bd=" << bit_depth << ", ml=" << maxLog2TrDynamicRange;
 
   icov::video::Transform2D transform2D;
   icov::video::Quant quant;

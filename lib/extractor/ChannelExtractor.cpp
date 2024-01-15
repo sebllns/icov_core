@@ -161,6 +161,8 @@ void ChannelExtractor::pass_prediction() {
 }
 
 void ChannelExtractor::extractPredParams(int type) {
+  bitstream::VideoStreamDebugger::get_mutable_instance().setDebuggingChannelID(
+      m_params.CompID);
   _extractPredParams(m_predParams[type]);
   if (m_predParams[type].getCodingFlag()) {
     for (auto &bp : m_bitplanes) {
@@ -177,11 +179,13 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
 
   byte dirmode = 0;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
+
+  ICOV_DEBUG << "EXTRACTOR DM " << (int)dirmode;
+
   bitstream::assertPredictionAvailable(dirmode);
   bitstream::VideoStreamDebugger::get_const_instance().assertDirModeEqual(
       dirmode);
 
-  ICOV_DEBUG << "EXTRACTOR DM ";
   byte pred_hdr = bitstream::flag_t::NoCodingSI;
   m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
   ICOV_DEBUG << "EXTRACTOR QZ ";

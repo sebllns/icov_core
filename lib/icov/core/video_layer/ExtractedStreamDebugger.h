@@ -49,6 +49,7 @@
 
 #include "icov_common.h"
 #include "icov_io.h"
+#include "icov_log.h"
 #include "icov_stacktrace.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -460,9 +461,7 @@ public:
     }
   }
 
-  int getDirMode() const {
-    return getPredDirModeByteValue(true, getDebuggingSI().mode);
-  }
+  int getDirMode() const { return getDebuggingSI().mode; }
 
   bool checkDirMode(int value) const { return getDirMode() == value; }
 

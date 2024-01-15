@@ -7,11 +7,12 @@
 #include "modes/DecodeMode.h"
 #include "modes/EncodeMode.h"
 #include "modes/ExportMode.h"
+#include "modes/GenerateGOPMode.h"
 #include "modes/SymboleMode.h"
 
 ProgramController::ProgramController()
     : IcovProgramBase("binary, symbole, export, check, encode-demo, "
-                      "ordering-demo, encode, decode") {
+                      "ordering-demo, encode, decode, extract-gop") {
   BinaryMode::AddProgramOptions(m_options_desc);
   SymboleMode::AddProgramOptions(m_options_desc);
   ExportMode::AddProgramOptions(m_options_desc);
@@ -51,9 +52,12 @@ void ProgramController::launchMode(const std::string &mode_id) {
     DecodeMode mode(parseInputFile(args()), args());
     mode.run();
     ICOV_DEBUG << "end decode\n";
-  }
-  else
-  {
+  } else if (mode_id == GenerateGOPMode::modeID()) {
+    ICOV_DEBUG << "GenerateGOPMode mode started";
+    GenerateGOPMode mode(args());
+    mode.run();
+    ICOV_DEBUG << "end GenerateGOPMode\n";
+  } else {
     ICOV_THROW_INVALID_ARGUMENT("Unknown program mode: " + mode_id);
   }
 

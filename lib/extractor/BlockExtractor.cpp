@@ -4,6 +4,7 @@
 #include "icov_io.h"
 #include "icov_log.h"
 #include "icov_types.h"
+#include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/VideoMetrics.h"
@@ -92,6 +93,9 @@ void icov::extractor::BlockExtractor::_processBlock(
       (block_prediction ==
        icov::omnidirectional_layer::BlockPrediction::ePredType::NONE);
 
+  bitstream::VideoStreamDebugger::get_mutable_instance()
+      .setDebuggingPredictionID(block_prediction);
+
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf());
 
@@ -132,6 +136,8 @@ void icov::extractor::BlockExtractor::_processBlock(
       BitLength intra_length = 0;
 
       if (check_inter) {
+        bitstream::VideoStreamDebugger::get_mutable_instance()
+            .setDebuggingPredictionID(BlockPrediction::INTER);
         // extract inter-prediction paramaters and calcultate its bitrate
         for (auto &ch : m_channelExtractor) {
           ch->extractPredParams(S_INTER);
@@ -181,11 +187,8 @@ void icov::extractor::BlockExtractor::_processBlock(
     bitstream::VideoStreamDebugger::get_mutable_instance()
         .setDebuggingPredictionID(block_prediction);
 
-    int c = 0;
     for (auto &ch : m_channelExtractor) {
-      ICOV_TRACE << "START EXTRACT CHANNEL " << c;
       ch->extract_block_syndrome(b, block_prediction);
-      ICOV_TRACE << "END EXTRACT CHANNEL " << c;
     }
   }
 

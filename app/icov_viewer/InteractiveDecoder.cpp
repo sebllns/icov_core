@@ -198,6 +198,8 @@ void InteractiveDecoder::drawBlock(
 }
 
 void InteractiveDecoder::updateF1() {
+    m_decoderCtrl.loadGroundTruthFrame();
+
     if (m_showSource && decoderCtrl().analyzer().hasGroundTruth()) {
       m_erpImage = decoderCtrl().analyzer().GroundTruth->getCurrentFrame() / 2;
       drawBlocks(drawType::SOURCE);
@@ -257,7 +259,7 @@ bool InteractiveDecoder::processKey(char key)
     // ICOV_TRACE << "POV = " << pov_x << ", " << pov_y;
 
     // decode
-    bool updated = getDecoder()->request(
+    bool updated = getDecoder()->setRequest(
         request_t(DEG2RAD * pov_x, DEG2RAD * pov_y, frame));
 
     m_viewportMse = -1;

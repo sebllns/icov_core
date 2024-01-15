@@ -78,6 +78,8 @@ public:
 
     ldpc_codec_layer::QaryDistribution::quantization_params bsp_params;
 
+    bool bypass_decoding;
+
     //    const Size tuSizeAfterRegrouping_luma = Size(1, 1);
     const int maxLog2TrDynamicRange = 15;
     const int margin_x_360luma = 2; // in fact we need 1 margin for each color
@@ -104,6 +106,7 @@ protected:
   PelUnitBuf m_decodingOutput;
   params m_params;
   UnitArea mainFrameArea;
+  bitstream::sp_IcovExtractedBitstream m_bitstream;
 
   // IBlockProcessor interface
 protected:

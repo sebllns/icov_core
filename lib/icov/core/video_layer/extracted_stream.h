@@ -120,7 +120,7 @@ private:
 struct BitplaneStream {
   NumcodeIdx numcode;
   Syndrome syndrome;
-  BitplaneStream() : numcode(0), syndrome(0) {}
+  BitplaneStream() : numcode(255), syndrome(0) {}
 };
 
 struct SIEncodedParams {

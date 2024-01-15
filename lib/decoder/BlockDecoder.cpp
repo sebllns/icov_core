@@ -28,7 +28,7 @@ using SI_SIDE = icov::omnidirectional_layer::BlockPrediction::ePredType;
 BlockDecoder::BlockDecoder(
     const params &p, const LdpcCoderParameters &coder_params,
     const bitstream::sp_IcovExtractedBitstream &extraction)
-    : IBlockDecoder(), m_params(p) {
+    : IBlockDecoder(), m_params(p), m_bitstream(extraction) {
   // CONSTANTS
   const Size icuSize_luma =
       Size(m_params.icuSize_luma.width, m_params.icuSize_luma.height);
@@ -144,7 +144,7 @@ void icov::decoder::BlockDecoder::_processBlock(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(pred);
 
-  if (true || previouslyDecoded != r.frameID) {
+  if (!m_params.bypass_decoding && (true || previouslyDecoded != r.frameID)) {
     for (auto &dec : m_channelDecoder) {
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
@@ -158,6 +158,8 @@ void icov::decoder::BlockDecoder::_processBlock(
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
     }
+  } else {
+    m_bitstream->empty();
   }
 
   ICOV_DEBUG << "END DECODE BLOCK " << b.getIdSelf() << " WITH PREDICTION "

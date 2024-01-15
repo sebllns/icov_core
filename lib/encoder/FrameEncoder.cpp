@@ -163,12 +163,12 @@ void icov::encoder::FrameEncoder::serializeParameters() {
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(p);
       if (m_channelCoder[c].si.count(p)) {
-        m_icov_file->writeSIMode(1 + m_channelCoder[c].si[p].dirmode);
+        m_icov_file->writeSIMode(m_channelCoder[c].si[p].dirmode);
         m_icov_file->writeQaryParams(m_channelCoder[c].si[p].stored_pz);
 
         if (m_params.ExportDebugTextFormat) {
           m_icov_file->stream()
-              << "mode " << 1 + m_channelCoder[c].si[p].dirmode << std::endl;
+              << "mode " << m_channelCoder[c].si[p].dirmode << std::endl;
           m_icov_file->stream()
               << "q " << m_channelCoder[c].si[p].stored_pz.getRawQ0()
               << std::endl;
@@ -699,6 +699,10 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
     icov::omnidirectional_layer::BlockPrediction::ePredType pred,
     ComponentID comp) {
 
+  ICOV_DEBUG << "Save debug for " << b.getIdSelf() << ", "
+             << icov::omnidirectional_layer::BlockPrediction::toString(pred)
+             << ", " << (int)comp;
+
   int bitplaneCount = bsp_enc.bitplane_count();
   const auto pred_id =
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
@@ -751,13 +755,15 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
   // error if there is
   icov::assert::check(!bitstream::VideoStreamDebugger::get_const_instance()
                            .predictionAvailable(),
-                      "Prediction debug already exists");
+                      ICOV_DEBUG_HEADER("Prediction debug already exists"));
 
   auto &si_dbg = channelDbg.si_map[pred];
 
   si_dbg.values = bsp_enc.si_symboles();
   si_dbg.mode = m_channelCoder[comp].si[pred_id].dirmode;
   si_dbg.pz = m_channelCoder[comp].si[pred_id].stored_pz;
+
+  ICOV_DEBUG << "Mode is " << (int)si_dbg.mode;
 
   if (si_dbg.pz.codingflag()) {
     // adds each bitplane for the given prediction to the debugging
@@ -773,11 +779,14 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
             ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
         bpstr.syndrome = m_channelCoder[comp].bitplanes[i].stored_synd;
 
+        ICOV_INFO << ">>>>>>> " << bpstr.syndrome.size();
+
         for (auto &s : channelDbg.si_map) {
           s.second.bitplanes.resize(bitplaneCount);
           if (s.second.bitplanes[i].numcode !=
               ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
             s.second.bitplanes[i] = bpstr;
+            ICOV_INFO << ">>>>>>> " << s.second.bitplanes[i].syndrome.size();
           }
         }
       } else {
@@ -791,7 +800,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
         } else if (bpstr.numcode ==
                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
           ICOV_THROW_LOGICAL_EXCEPTION(
-              "The case where bitplane is source coding as it "
+              "The case where bitplane is source coding "
               "should have been treated before");
         } else {
           bpstr.syndrome = si_synd[i];
@@ -801,7 +810,7 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
         si_dbg.bitplanes[i] = bpstr;
       }
 
-      ICOV_TRACE << "Save in debug bp " << i << " for prediction "
+      ICOV_DEBUG << "Save in debug bp " << i << " for prediction "
                  << icov::omnidirectional_layer::BlockPrediction::toString(pred)
                  << " for channel " << comp << " numcode " << bpstr.numcode;
     }
@@ -872,6 +881,8 @@ void icov::encoder::FrameEncoder::encode_tu(
     } else {
       mode = NUM_LUMA_MODE; // special value for INTER prediction
     }
+
+    mode += bitstream::offset_t::AvailableSI;
 
     // Save syndrome if longer than current saved
     saveDataToEncode(b.isAccessBlock(), mode, encoder, bsp_enc, si_numcodes,

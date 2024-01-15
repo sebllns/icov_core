@@ -74,11 +74,10 @@ namespace decoder {
 class SinglePassDecoder
 {
   public:
-    struct params
-    {
-        bool DummyViewport = false;
-        fs::path IcovFile;
-        fs::path LdpcDatabase;
+    struct params {
+      bool DummyViewport = false;
+      fs::path IcovFile;
+      fs::path LdpcDatabase;
     };
 
     SinglePassDecoder();
@@ -102,7 +101,8 @@ class SinglePassDecoder
     void setBlockDecoder(const std::shared_ptr<BlockDecoder> &newBlockDecoder);
 
     void start();
-    bool request(const request_t &r);
+    bool setRequest(const request_t &r);
+    const request_t &getRequest() const;
 
     const LdpcCoderParameters &ldpcParams() const;
     void setLdpcParams(const LdpcCoderParameters &newLdpcParams);
