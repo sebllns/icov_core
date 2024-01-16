@@ -261,6 +261,8 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
+  m_request.frameID %= m_contentParams.content_framecount;
+
   if (m_request != r) {
     try {
       m_request = r;
@@ -275,7 +277,6 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
     }
   }
 
-  //  frame %= m_contentParams.content_framecount;
   return decoded;
 }
 

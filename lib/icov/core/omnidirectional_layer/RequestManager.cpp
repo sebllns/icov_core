@@ -2,6 +2,7 @@
 #include "icov_assert.h"
 #include "icov_exception.h"
 #include "icov_log.h"
+#include "icov_request.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/icov_geometry.h"
 #include "omnidirectional_layer/interface/IAccessBlockManager.h"
@@ -123,6 +124,8 @@ void icov::omnidirectional_layer::RequestManager::processViewport(
 void RequestManager::update(const request_t &r) {
   if (r == m_request)
       return;
+
+  ICOV_DEBUG << "Set request " << to_string(r);
 
   bool use_previous_ordering = (r.viewpoint == m_request.viewpoint);
 

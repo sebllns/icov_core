@@ -420,7 +420,6 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   // END INTRA PRED
 
-
   // compute access block
   VTM_OPENCV_Utility::toBGRMat(mainFrameReco, m_reco);
 
@@ -537,30 +536,28 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
                                      .noSourceThreshold = 0.0,
                                      .sourceFlag = false});
 
-    if (!is_inter) {
-      // Populate bitplanes information with syndromes and rates
-      for (size_t i = 0; i < si_synd.size(); ++i) {
+    // Populate bitplanes information with syndromes and rates
+    for (size_t i = 0; i < si_synd.size(); ++i) {
 
-        m_channelCoder[comp].bitplanes[i].stored_synd_rate.c = si_numcodes[i];
+      m_channelCoder[comp].bitplanes[i].stored_synd_rate.c = si_numcodes[i];
 
-        m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
-            bitstream::inverseQuantizedSize(si_numcodes[i], encoder);
+      m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
+          bitstream::inverseQuantizedSize(si_numcodes[i], encoder);
 
-        m_channelCoder[comp].bitplanes[i].stored_synd_rate.r =
-            encoder.get_r(m_channelCoder[comp].bitplanes[i].stored_synd_rate.m,
-                          encoder.get_n());
+      m_channelCoder[comp].bitplanes[i].stored_synd_rate.r =
+          encoder.get_r(m_channelCoder[comp].bitplanes[i].stored_synd_rate.m,
+                        encoder.get_n());
 
-        m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
-        m_channelCoder[comp].bitplanes[i].noSourceThreshold = 0.0;
-        m_channelCoder[comp].bitplanes[i].sourceFlag = false;
-      }
+      m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
+      m_channelCoder[comp].bitplanes[i].noSourceThreshold = 0.0;
+      m_channelCoder[comp].bitplanes[i].sourceFlag = false;
     }
   }
 
   // If coding flag is true for this SI
   if (bsp_enc.distribution().codingflag()) {
 
-// Assert bitplane count consistency and SI sizes
+    // Assert bitplane count consistency and SI sizes
     icov::assert::check(
         (int)m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
             si_synd.size() == si_numcodes.size(),
@@ -648,38 +645,39 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
           m_channelCoder[comp].bitplanes[i].noSourceThreshold += encoder.get_r(
               bitstream::inverseQuantizedSize(si_numcodes[i], encoder),
               encoder.get_n());
+        }
 
-          if (m_channelCoder[comp].bitplanes[i].noSourceThreshold >
-                  m_params.MaxRateNoCoding &&
-              !m_channelCoder[comp].bitplanes[i].sourceFlag) {
-            m_channelCoder[comp].bitplanes[i].sourceFlag = true;
-            m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
-                bsp_enc.src_bits()[i]);
+        if (!is_inter &&
+            m_channelCoder[comp].bitplanes[i].noSourceThreshold >
+                m_params.MaxRateNoCoding &&
+            !m_channelCoder[comp].bitplanes[i].sourceFlag) {
+          m_channelCoder[comp].bitplanes[i].sourceFlag = true;
+          m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
+              bsp_enc.src_bits()[i]);
 
-            m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
-                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
-            m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
-                encoder.get_n();
-            m_channelCoder[comp].bitplanes[i].stored_synd_rate.r = 1.0;
+          m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
+              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
+          m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
+              encoder.get_n();
+          m_channelCoder[comp].bitplanes[i].stored_synd_rate.r = 1.0;
 
-            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
-            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
-                encoder.get_n();
-            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
+          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
+              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
+          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
+              encoder.get_n();
+          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
 
-            ICOV_WARNING
-                << "Too many predictions have a very long syndrome, so we take "
-                   "decision to store the source instead for bitplane "
-                << i << " at channel " << comp; /*STORED SOURCE*/
+          ICOV_WARNING
+              << "Too many predictions have a very long syndrome, so we take "
+                 "decision to store the source instead for bitplane "
+              << i << " at channel " << comp; /*STORED SOURCE*/
 
-          } else if (si_synd[i].size() >
-                     m_channelCoder[comp].bitplanes[i].stored_synd.size())
-          /*STORED SYNDROME IF LONGER*/ {
-            m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
-            m_channelCoder[comp].bitplanes[i].stored_synd_rate =
-                m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id];
-          }
+        } else if (si_synd[i].size() >
+                   m_channelCoder[comp].bitplanes[i].stored_synd.size())
+        /*STORED SYNDROME IF LONGER*/ {
+          m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
+          m_channelCoder[comp].bitplanes[i].stored_synd_rate =
+              m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id];
         }
       }
       // ABNORMAL CASE : send ERROR

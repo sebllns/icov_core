@@ -2,6 +2,7 @@
 
 #include "decoder/ChannelDecoder.h"
 #include "icov_debug.h"
+#include "icov_exception.h"
 #include "icov_log.h"
 #include "omnidirectional_layer/Block.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
@@ -119,7 +120,7 @@ void icov::decoder::BlockDecoder::_processBlock(
 
   icov::assert::check(
       omnidirectional_layer::BlockPrediction::isValidPrediction(pred),
-      "Bad prediction value");
+      ICOV_DEBUG_HEADER("Bad prediction value"));
 
   int x_block = b.parent()->col(b.u());
   int y_block = b.parent()->row(b.v());
@@ -129,13 +130,8 @@ void icov::decoder::BlockDecoder::_processBlock(
                static_cast<float>(y_block) /
                    static_cast<float>(m_params.icuSize_luma.height));
 
-  std::cout << pos.x << std::endl;
-  std::cout << pos.y << std::endl;
-
   const auto &es = *this->m_dec_struc;
   uint icuIndex = es.get_icuIndex(pos);
-
-  std::cout << icuIndex << std::endl;
 
   bitstream::VideoStreamDebugger::get_mutable_instance().reset();
 
@@ -144,7 +140,8 @@ void icov::decoder::BlockDecoder::_processBlock(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(pred);
 
-  if (!m_params.bypass_decoding && (true || previouslyDecoded != r.frameID)) {
+  if (!m_params.bypass_decoding && !m_bitstream->isEmpty() &&
+      (true || previouslyDecoded != r.frameID)) {
     for (auto &dec : m_channelDecoder) {
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;

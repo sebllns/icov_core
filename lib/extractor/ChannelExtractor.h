@@ -123,11 +123,6 @@ public:
   void pass_prediction();
   void extractPredParams(int type);
 
-  // const BlockChannelDecoderParams &extractedParams() const;
-
-  static void resetSyndromePadding();
-  static int getSyndromePadding();
-
   const std::array<bitstream::SIEncodedParams, PRED_COUNT> &predParams() const;
 
 private:
@@ -154,7 +149,6 @@ private:
   std::vector<BitplaneSyndromeExtractor> m_bitplanes;
   byte m_bitplaneCount;
   int m_maxSyndromeBufferLength;
-  // bool m_codingFlag;
   std::array<bitstream::SIEncodedParams, PRED_COUNT> m_predParams;
 };
 } // namespace extractor

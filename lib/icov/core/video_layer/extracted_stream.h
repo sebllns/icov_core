@@ -144,16 +144,21 @@ struct SIEncodedParams {
   bool getCodingFlag() const { return codingFlag; }
   void setCodingFlag(bool newCodingFlag) { codingFlag = newCodingFlag; }
 
+  bool getEnabledFlag() const { return enabledFlag; }
+  void setEnabledFlag(bool newenabledFlag) { enabledFlag = newenabledFlag; }
+
   void reset() {
     params.fill(0);
     syndromeLength = 0;
     codingFlag = false;
+    enabledFlag = true;
   }
 
 private:
   std::array<byte, 4> params;
   BitLength syndromeLength;
   bool codingFlag;
+  bool enabledFlag;
 };
 
 struct SIStream {

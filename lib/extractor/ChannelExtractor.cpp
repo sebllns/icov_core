@@ -270,10 +270,17 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
   bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
       bp.Index, (NumcodeIdx)bp.BitRates[pred_type].syndromeQuantizedSize());
 
+  if (pred_type == S_INTER &&
+      qsize == ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE &&
+      bp.BitRates[S_STORED].syndromeQuantizedSize() != qsize) {
+    m_predParams[pred_type].setEnabledFlag(false);
+  }
+
+  ushort bitsize = bp.BitRates[pred_type].syndromeBitSize();
+
   // accumulate syndrome total length for the prediction type
   m_predParams[pred_type].setSyndromeLength(
-      m_predParams[pred_type].getSyndromeLength() +
-      bp.BitRates[pred_type].syndromeBitSize());
+      m_predParams[pred_type].getSyndromeLength() + bitsize);
 }
 
 void ChannelExtractor::_extractBitplaneSyndrome(
@@ -283,12 +290,13 @@ void ChannelExtractor::_extractBitplaneSyndrome(
   ushort bytes_count_stored = bp.BitRates[S_STORED].syndromeByteSize();
 
   if (bytes_count_stored < bytes_count_to_read) {
+    ICOV_ERROR << "Channel " << (int)m_params.CompID;
+    ICOV_ERROR << "Prediction " << (pred_type == S_INTER ? "INTER" : "INTRA");
     ICOV_ERROR
         << "Trying to read " << bytes_count_to_read << " bytes while "
         << bytes_count_stored
-        << " bytes are stored in prediction" /*<<
+        << " bytes are stored in prediction"; /*<<
                                                 omnidirectional_layer::BlockPrediction::toString(m_block_prediction)*/
-        ;
 
     ICOV_THROW_OUT_OF_RANGE("Syndrome overflow");
   }

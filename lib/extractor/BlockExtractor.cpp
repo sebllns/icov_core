@@ -135,15 +135,18 @@ void icov::extractor::BlockExtractor::_processBlock(
       BitLength inter_length = std::numeric_limits<BitLength>::infinity();
       BitLength intra_length = 0;
 
-      if (check_inter) {
-        bitstream::VideoStreamDebugger::get_mutable_instance()
-            .setDebuggingPredictionID(BlockPrediction::INTER);
-        // extract inter-prediction paramaters and calcultate its bitrate
-        for (auto &ch : m_channelExtractor) {
+      bitstream::VideoStreamDebugger::get_mutable_instance()
+          .setDebuggingPredictionID(BlockPrediction::INTER);
+      // extract inter-prediction paramaters and calcultate its bitrate
+      for (auto &ch : m_channelExtractor) {
+        if (check_inter) {
           ch->extractPredParams(S_INTER);
           inter_length += ch->predParams().at(S_INTER).getSyndromeLength();
+          check_inter = ch->predParams().at(S_INTER).getEnabledFlag();
         }
+      }
 
+      if (check_inter) {
         ICOV_DEBUG << "INTER LENGTH " << inter_length;
       }
 
@@ -157,6 +160,8 @@ void icov::extractor::BlockExtractor::_processBlock(
       }
 
       // extract intra-prediction bitrate and calcultate its bitrate
+      bitstream::VideoStreamDebugger::get_mutable_instance()
+          .setDebuggingPredictionID(block_prediction);
       for (auto &ch : m_channelExtractor) {
         ch->extractPredParams(S_INTRA);
         intra_length += ch->predParams().at(S_INTRA).getSyndromeLength();
@@ -165,18 +170,16 @@ void icov::extractor::BlockExtractor::_processBlock(
       ICOV_DEBUG << "INTRA LENGTH " << intra_length;
 
       // select prediction with minimal bitrate
-      //      if (check_inter && (inter_length <= intra_length)) {
-      //        block_prediction =
-      //            icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
+      if (check_inter && (inter_length <= intra_length)) {
+        block_prediction =
+            icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
 
-      //        ICOV_DEBUG << "BLOCK " << b.getIdSelf() << " ON FRAME " <<
-      //        r.frameID
-      //                   << " SELECT INTER PREDICTION TO SAVE "
-      //                   << (intra_length - inter_length) << " BITS (SAVE "
-      //                   << (100.0 * (intra_length - inter_length)) /
-      //                   intra_length
-      //                   << "% OVER INTRA)";
-      //      }
+        ICOV_DEBUG << "BLOCK " << b.getIdSelf() << " ON FRAME " << r.frameID
+                   << " SELECT INTER PREDICTION TO SAVE "
+                   << (intra_length - inter_length) << " BITS (SAVE "
+                   << (100.0 * (intra_length - inter_length)) / intra_length
+                   << "% OVER INTRA)";
+      }
 
       ICOV_DEBUG << "SELECT PREDICTION "
                  << omnidirectional_layer::BlockPrediction::toString(

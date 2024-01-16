@@ -177,7 +177,12 @@ void ChannelDecoder::decode_icu(
       _decode_bitplanes(m_block_prediction, bitplaneCount);
     }
 
-    inverse_QDCT();
+    // do nothing if block is exaclty the same as in the previous frame
+    if (coding_flag ||
+        m_block_prediction !=
+            omnidirectional_layer::BlockPrediction::ePredType::INTER) {
+      inverse_QDCT();
+    }
 
     m_block_prediction =
         icov::omnidirectional_layer::BlockPrediction::ePredType::UNKNOWN;
@@ -416,12 +421,6 @@ void ChannelDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode,
 
 void ChannelDecoder::inverse_QDCT() {
     ICOV_DEBUG << ICOV_DEBUG_HEADER("inverse_QDCT");
-
-    // do nothing if block is exaclty the same as in the previous frame
-    //    if (!coding_flag &&
-    //        m_block_prediction ==
-    //            omnidirectional_layer::BlockPrediction::ePredType::INTER)
-    //      return;
 
     auto mp_icu_enc = m_encodingStruct->getICU(m_icuIndex);
 

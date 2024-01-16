@@ -5,6 +5,8 @@
 #include "opencv2/videoio.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <memory>
 namespace fs = boost::filesystem;
 
 namespace icov {
@@ -77,6 +79,11 @@ void InputVideo::writeInfos(std::ofstream &output, int key, void *param) {
 void instantiateInputMedia(const boost::filesystem::path &path,
                            std::unique_ptr<InputMedia> &output) {
 
+  if (fs::is_directory(path)) {
+    output = std::make_unique<InputGop>(path);
+    return;
+  }
+
   path::assert_file_exists(path.string());
 
   InputMedia *media = nullptr;
@@ -97,6 +104,11 @@ void instantiateInputMedia(const boost::filesystem::path &path,
   output.reset(media);
 
   assert::not_null(media, ICOV_DEBUG_HEADER("Format is not supported: " + ext));
+}
+
+InputGop::InputGop(const boost::filesystem::path &path)
+    : icov::IVideo<cv::Mat>(path) {
+  ICOV_DEBUG << "Open GOP " << path;
 }
 
 void InputGop::setFrame(frame_t i) {}

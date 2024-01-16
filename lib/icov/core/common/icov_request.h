@@ -1,7 +1,8 @@
 #pragma once
 
-namespace icov
-{
+#include <sstream>
+#include <string>
+namespace icov {
 
 typedef float angle_t;
 typedef unsigned long frame_t;
@@ -47,6 +48,21 @@ inline bool operator!=(const viewpoint_t &a, const viewpoint_t &b)
 inline bool operator!=(const request_t &a, const request_t &b)
 {
     return !(a == b);
+}
+
+inline std::string to_string(const viewpoint_t v) {
+    std::stringstream sst;
+    sst << "{x=" << v.angleX << ", y=" << v.angleY << "}";
+    return sst.str();
+}
+
+inline std::string to_string(const request_t r) {
+    std::stringstream sst;
+
+    sst << "{viewpoint= " << to_string(r.viewpoint) << ", frame=" << r.frameID
+        << "}";
+
+    return sst.str();
 }
 
 } // namespace icov
