@@ -564,7 +564,8 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
     icov::assert::check(
         (int)m_channelCoder[comp].bitplanes.size() == bitplaneCount &&
             si_synd.size() == si_numcodes.size(),
-        "Bitplane count does not match between SI of same block");
+        ICOV_DEBUG_HEADER(
+            "Bitplane count does not match between SI of same block"));
 
     // Loop through each bitplane
     for (int i = 0; i < bitplaneCount; ++i) {
@@ -617,8 +618,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 
       }
       // NORMAL CASE : bitplane was normally encoded
-      else if (si_numcodes[i] >
-               ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
+      else if (is_inter ||
+               si_numcodes[i] >
+                   ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];

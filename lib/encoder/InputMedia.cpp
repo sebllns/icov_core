@@ -10,7 +10,7 @@ namespace fs = boost::filesystem;
 namespace icov {
 namespace encoder {
 InputImage::InputImage(const fs::path &path) : icov::IImage<cv::Mat>(path) {
-  ICOV_DEBUG << "open image " << m_path << std::endl;
+  ICOV_DEBUG << "Open image " << m_path << std::endl;
   m_frameData = cv::imread(m_path.string(), -1);
   ICOV_ASSERT_MSG(m_frameData.total() > 0, "Empty image");
   m_width = m_frameData.cols;
@@ -98,6 +98,10 @@ void instantiateInputMedia(const boost::filesystem::path &path,
 
   assert::not_null(media, ICOV_DEBUG_HEADER("Format is not supported: " + ext));
 }
+
+void InputGop::setFrame(frame_t i) {}
+
+void InputGop::writeInfos(std::ofstream &output, int key, void *param) {}
 
 } // namespace encoder
 } // namespace icov

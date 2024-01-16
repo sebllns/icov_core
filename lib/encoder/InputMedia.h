@@ -68,6 +68,17 @@ public:
                   void *param = nullptr) override;
 };
 
+class InputGop : public icov::IVideo<cv::Mat> {
+public:
+  InputGop(const fs::path &path);
+  ~InputGop() = default;
+
+  // IMedia interface
+  void setFrame(frame_t i) override;
+  void writeInfos(std::ofstream &output, int key,
+                  void *param = nullptr) override;
+};
+
 class InputVideo : public icov::IVideo<cv::Mat> {
 protected:
   cv::VideoCapture m_videoCV;

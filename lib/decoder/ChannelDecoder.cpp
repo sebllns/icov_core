@@ -419,7 +419,7 @@ void ChannelDecoder::inverse_QDCT() {
 
     // do nothing if block is exaclty the same as in the previous frame
     //    if (!coding_flag &&
-    //        m_block_prediction !=
+    //        m_block_prediction ==
     //            omnidirectional_layer::BlockPrediction::ePredType::INTER)
     //      return;
 
