@@ -791,7 +791,11 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
 
         // set syndrome
         if (bpstr.numcode ==
-            ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING) {
+                ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING
+
+            || (bpstr.numcode ==
+                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE &&
+                pred == omnidirectional_layer::BlockPrediction::INTER)) {
           bpstr.syndrome = Syndrome();
         } else if (bpstr.numcode ==
                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {

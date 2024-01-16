@@ -106,18 +106,6 @@ inline void init_log(bool log_to_file) {
       fmtTimeStamp % fmtThreadId % fmtSeverity % fmtScope %
       boost::log::expressions::smessage;
 
-  //  logging::add_file_log(
-  //      keywords::file_name = "icov_%N.log",
-  //      keywords::rotation_size = 200 * 1024 * 1024,
-  //      // This makes the sink to write log records that look like this:
-  //      // YYYY-MM-DD HH:MI:SS: <normal> A normal severity message
-  //      // YYYY-MM-DD HH:MI:SS: <error> An error severity message
-  //      keywords::format =
-  //          (expr::stream << expr::format_date_time<boost::posix_time::ptime>(
-  //                               "TimeStamp", "%Y-%m-%d %H:%M:%S")
-  //                        << ": <" << logging::trivial::severity << "> "
-  //                        << expr::smessage));
-
   /* console sink */
   auto consoleSink = boost::log::add_console_log(std::clog);
   consoleSink->set_formatter(&colored_formatter);
@@ -132,7 +120,7 @@ inline void init_log(bool log_to_file) {
         boost::log::keywords::min_free_space = 3 * rotation_size,
         boost::log::keywords::open_mode = std::ios_base::app);
     fsSink->set_formatter(logFmt);
-    fsSink->locked_backend()->auto_flush(true);
+    fsSink->locked_backend()->auto_flush(false);
   }
 
   set_filter(ICOV_LOG_LEVEL);
