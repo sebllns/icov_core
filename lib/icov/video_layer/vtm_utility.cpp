@@ -116,7 +116,7 @@ void VTM_Utility::quantizeFrame(const int qp, const PelUnitBuf &originalImage,
     for (UInt j = 0; j < curr_icu.TUs.size(); j++) {
       icov::video::TransformUnit &curr_tu = curr_icu.TUs[j];
 
-      curr_tu.save();
+      curr_tu.save(compID);
 
       // DCT
       transform2D.transformNxN(curr_tu.getTransformCoeffs(compID),

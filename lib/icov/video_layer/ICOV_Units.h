@@ -84,6 +84,10 @@ public:
     return _quantizedTcoeffs.getBuf(id);
   }
 
+  CoeffBuf &getPreviousQT(const ComponentID id) {
+    return _previousQTcoeffs.getBuf(id);
+  }
+
   const CCoeffBuf getPreviousQT(const ComponentID id) const {
     return _previousQTcoeffs.getBuf(id);
   }
@@ -100,6 +104,11 @@ public:
   void save() {
     ICOV_TRACE << "save TU";
     _previousQTcoeffs.copyFrom(_quantizedTcoeffs);
+  }
+
+  void save(const ComponentID id) {
+    ICOV_TRACE << "save TU " << (int)id;
+    _previousQTcoeffs.getBuf(id).copyFrom(_quantizedTcoeffs.getBuf(id));
   }
 
   ldpc_codec_layer::BitSymbolProvider instantiateBitSymbolProvider(
