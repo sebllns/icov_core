@@ -81,6 +81,7 @@ namespace flag_t {
 const byte UnavailableSI = 0;
 const byte NoCodingSI = 0;
 const byte AccessBlock = 0;
+const byte user_inter = 70;
 } // namespace flag_t
 
 namespace offset_t {

@@ -182,6 +182,9 @@ void ChannelDecoder::decode_icu(
         m_block_prediction !=
             omnidirectional_layer::BlockPrediction::ePredType::INTER) {
       inverse_QDCT();
+    } else {
+      ICOV_DEBUG << ICOV_DEBUG_HEADER(
+          "No inverse QDCT since temporal coding flag is false");
     }
 
     m_block_prediction =
@@ -218,7 +221,7 @@ void ChannelDecoder::_set_pred_mode(ushort dirmode) {
 
     if (si_cat ==
         omnidirectional_layer::BlockPrediction::eSICategory::SI_CAT_TEMPORAL) {
-      ICOV_TRACE << ICOV_DEBUG_HEADER("DECODE INTER");
+      ICOV_DEBUG << ICOV_DEBUG_HEADER("DECODE INTER");
       // Mode INTER: use the same block data (decode from previous frame)
 
       _extract_qary_params(coding_flag);
@@ -228,7 +231,7 @@ void ChannelDecoder::_set_pred_mode(ushort dirmode) {
                              SI_CAT_SINGLE ||
                si_cat == omnidirectional_layer::BlockPrediction::eSICategory::
                              SI_CAT_DOUBLE) {
-      ICOV_TRACE << ICOV_DEBUG_HEADER("DECODE INTRA");
+      ICOV_DEBUG << ICOV_DEBUG_HEADER("DECODE INTRA");
       // Mode INTRA: use the neighbor block(s) (decode from current frame)
       _apply_intra_dir_mode(dirmode);
       _extract_qary_params(coding_flag);
@@ -293,9 +296,9 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
     bitstream::VideoStreamDebugger::get_const_instance().assertcodingSIEqual(
         codingFlag);
 
-    if (codingFlag) {
+    ICOV_DEBUG << ICOV_DEBUG_HEADER("coding_flag=" << codingFlag);
 
-      ICOV_DEBUG << ICOV_DEBUG_HEADER("coding_flag=true");
+    if (codingFlag) {
 
       byte zmin = 0, zmax = 0;
 
@@ -314,9 +317,9 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
       m_bsp.distribution().setExtractedParams(m_bsp.bitplane_count(), q0, zmin,
                                               zmax);
 
-      ICOV_TRACE << "Q0 = " << m_bsp.distribution().getQ0();
-      ICOV_TRACE << "ZMIN = " << m_bsp.distribution().getZmin();
-      ICOV_TRACE << "ZMAX = " << m_bsp.distribution().getZmax();
+      ICOV_DEBUG << "Q0 = " << m_bsp.distribution().getQ0();
+      ICOV_DEBUG << "ZMIN = " << m_bsp.distribution().getZmin();
+      ICOV_DEBUG << "ZMAX = " << m_bsp.distribution().getZmax();
     }
 }
 

@@ -9,6 +9,7 @@
 #include "icov_assert.h"
 #include "icov_debug.h"
 #include "icov_exception.h"
+#include "icov_io.h"
 #include "icov_log.h"
 #include "icov_path.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
@@ -34,8 +35,10 @@
 #include <boost/format.hpp>
 
 #include <algorithm>
+#include <charconv>
 #include <cstdint>
 #include <cstdio>
+#include <fstream>
 #include <memory>
 #include <omp.h>
 #include <sstream>
@@ -854,6 +857,15 @@ void icov::encoder::FrameEncoder::encode_tu(
   // Instantiate Bit Symbol Provider for encoding
   ldpc_codec_layer::BitSymbolProvider bsp_enc =
       tu.instantiateBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
+
+  if (si == nullptr) {
+    m_icov_file->stream() << "INTER DIFF "
+                          << std::to_string(b.getIdSelf()) + "_" +
+                                 std::to_string(frame())
+                          << "_" << std::to_string((int)comp) << " = ";
+    icov::io::write_vector(m_icov_file->stream(), bsp_enc.getDiff(), ' ');
+    m_icov_file->stream() << std::endl;
+  }
 
   // If coding flag is false, no encoding is performed
   if (!bsp_enc.distribution().codingflag()) { /* CODING FLAG IS FALSE */

@@ -3,6 +3,7 @@
 #include "FastArray.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include <sys/types.h>
+#include <vector>
 
 #define Z_STEP 16
 #define Z_LIMIT 1024
@@ -119,6 +120,7 @@ public:
   const Bitplanes &src_bits() const { return m_src_bits; }
   const SymboleVec &src_symboles() const { return m_src_symboles; }
   const SIVec &si_symboles() const { return m_si_symboles; }
+  SymboleVec getDiff() const;
 
   void injectBitplane(uint i, BitVec x);
   void resetBitplanes(int count);

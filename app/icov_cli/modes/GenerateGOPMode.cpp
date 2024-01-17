@@ -8,6 +8,8 @@
 #include "opencv2/imgcodecs.hpp"
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <fstream>
+#include <ios>
 #include <memory>
 #include <string>
 
@@ -45,15 +47,21 @@ void GenerateGOPMode::run() {
 
         int gop_id = i / m_gop_size;
         fs::path gop_path = m_gop_path / std::to_string(gop_id);
+        std::string frame_file = std::to_string(i % m_gop_size) + ".tif";
 
         if (!fs::is_directory(gop_path)) {
           fs::create_directory(gop_path);
         }
 
-        gop_path /= std::to_string(i % m_gop_size) + ".tif";
+        std::ofstream frame_list(
+            gop_path / "frames.txt",
+            (i % m_gop_size) == 0 ? (std::ios_base::out)
+                                  : (std::ios_base::out | std::ios_base::app));
+
+        frame_list << frame_file << std::endl;
 
         m_current_frame = video->getCurrentFrame();
-        cv::imwrite(gop_path.string(), m_current_frame);
+        cv::imwrite((gop_path / frame_file).string(), m_current_frame);
         imax = video->getFrameCount();
       }
 

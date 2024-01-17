@@ -136,6 +136,15 @@ int BitSymbolProvider::bitplane_count() const {
 
 int BitSymbolProvider::code_length() const { return m_src_symboles.size(); }
 
+SymboleVec BitSymbolProvider::getDiff() const {
+  SymboleVec diff = m_src_symboles;
+
+  for (int i = 0; i < (int)diff.size(); ++i) {
+    diff[i] -= m_si_symboles[i];
+  }
+  return diff;
+}
+
 void BitSymbolProvider::injectBitplane(uint i, BitVec x) {
 
   if (i == 0) {
