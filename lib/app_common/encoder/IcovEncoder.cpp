@@ -8,7 +8,7 @@
 icov::encoder::IcovEncoder::IcovEncoder(const params &params,
                                         const LdpcCoderParameters &ldpc_params)
     : m_params(params), m_ldpc_params(ldpc_params.clone()) {
-  path::assert_file_exists(m_params.Inputfile);
+  // path::assert_file_exists(m_params.Inputfile);
 
   m_ldpc_params->codeLength = m_params.m_icuSize * m_params.m_icuSize;
 

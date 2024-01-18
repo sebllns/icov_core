@@ -138,8 +138,8 @@ void icov::extractor::BlockExtractor::_processBlock(
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingPredictionID(BlockPrediction::INTER);
       // extract inter-prediction paramaters and calcultate its bitrate
-      for (auto &ch : m_channelExtractor) {
-        if (check_inter) {
+      if (check_inter) {
+        for (auto &ch : m_channelExtractor) {
           ch->extractPredParams(S_INTER);
           inter_length += ch->predParams().at(S_INTER).getSyndromeLength();
           check_inter = ch->predParams().at(S_INTER).getEnabledFlag();
@@ -199,7 +199,7 @@ void icov::extractor::BlockExtractor::_processBlock(
              << omnidirectional_layer::BlockPrediction::toString(
                     block_prediction);
 
-  fill_metrics(prediction, b);
+  fill_metrics(block_prediction, b);
 }
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {

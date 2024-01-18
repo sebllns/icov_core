@@ -30,6 +30,7 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   this->m_config.f3 = -64;
   this->m_config.f4 = -63;
   this->m_config.f5 = -62;
+  this->m_config.f6 = -61;
   this->m_config.custom_keys.insert(std::pair("show_source", (int)'x'));
 
   this->init360Viewer(getDecoder()->contentParams().viewport_width,
@@ -224,6 +225,15 @@ void InteractiveDecoder::updateF3() {
 void InteractiveDecoder::updateF4() { drawBlocks(drawType::PREDICTION); }
 
 void InteractiveDecoder::updateF5() { drawBlocks(drawType::PREDICTION_CAT); }
+
+void InteractiveDecoder::updateF6() {
+    m_decoderCtrl.loadGroundTruthFrame();
+    if (decoderCtrl().analyzer().hasGroundTruth()) {
+      VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_erpImage);
+      m_erpImage =
+          decoderCtrl().analyzer().GroundTruth->getCurrentFrame() - m_erpImage;
+    }
+}
 
 bool InteractiveDecoder::processKey(char key)
 {

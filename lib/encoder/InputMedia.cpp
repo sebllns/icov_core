@@ -2,10 +2,14 @@
 #include "icov_assert.h"
 #include "icov_exception.h"
 #include "icov_path.h"
+#include "opencv2/imgcodecs.hpp"
 #include "opencv2/videoio.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/path.hpp>
+#include <fstream>
+#include <limits>
 #include <memory>
 namespace fs = boost::filesystem;
 
@@ -51,6 +55,8 @@ InputVideo::InputVideo(const fs::path &path) : icov::IVideo<cv::Mat>(path), m_vi
 }
 
 void InputVideo::setFrame(frame_t i) {
+  // doing this because sometimes the video does not return correct value of
+  // number of frames so we have to read frame by frame
   if (i != (getFrameID() + 1)) {
     m_videoCV.set(cv::CAP_PROP_POS_FRAMES, i);
   }
@@ -107,11 +113,43 @@ void instantiateInputMedia(const boost::filesystem::path &path,
 }
 
 InputGop::InputGop(const boost::filesystem::path &path)
-    : icov::IVideo<cv::Mat>(path) {
+    : IInputMedia<cv::Mat>(path, (int)eMediaType::VIDEO) {
   ICOV_DEBUG << "Open GOP " << path;
+  std::ifstream frame_txt((getPath() / "frames.txt").string());
+
+  for (std::string line; getline(frame_txt, line); m_frames.push_back(line)) {
+  }
+
+  m_frameCount = m_frames.size();
+
+  m_frameID = std::numeric_limits<frame_t>::max();
+  setFrame(0);
+  m_width = m_frameData.cols;
+  m_height = m_frameData.rows;
+  icov::assert::check(m_width > 0, ICOV_DEBUG_HEADER("Image width > 0"));
+  icov::assert::check(m_height > 0, ICOV_DEBUG_HEADER("Image height > 0"));
 }
 
-void InputGop::setFrame(frame_t i) {}
+void InputGop::setFrame(frame_t i) {
+  if (i == getFrameID())
+    return;
+
+  if (i >= m_frameCount)
+    ICOV_THROW_INVALID_ARGUMENT("Cannot read frame " + std::to_string(i));
+
+  m_frameID = i;
+
+  bool first = m_frameData.empty();
+
+  m_frameData = cv::imread((getPath() / m_frames[i]).string());
+
+  if (!first) {
+    icov::assert::check((int)m_width == m_frameData.cols,
+                        ICOV_DEBUG_HEADER("Bad frame width"));
+    icov::assert::check((int)m_height == m_frameData.rows,
+                        ICOV_DEBUG_HEADER("Bad frame height"));
+  }
+}
 
 void InputGop::writeInfos(std::ofstream &output, int key, void *param) {}
 

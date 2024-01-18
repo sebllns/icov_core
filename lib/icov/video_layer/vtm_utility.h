@@ -188,14 +188,6 @@ inline double calculatePSNR(const T &org, const T &cur, const Int internalBitDep
   return (mse_frame == 0) ? std::numeric_limits<double>::infinity() : 10.0 * log10((maxval * maxval) / mse_frame);
 }
 
-// template <>
-// double calculatePSNR(const CPelUnitBuf &, const CPelUnitBuf &, const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
-//                      double *, uint *);
-
-// template <>
-// double calculatePSNR(const CCoeffUnitBuf &, const CCoeffUnitBuf &, const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE],
-//                      double *, uint *);
-
 void positionRelativeTo(UnitArea &inputOutput, const Position &origin);
 
 void quantizeFrame(const int qp, const PelUnitBuf &originalImage,

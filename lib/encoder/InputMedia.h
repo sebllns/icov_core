@@ -52,6 +52,7 @@
 #include "Media.h"
 #include <boost/algorithm/string.hpp>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 namespace icov {
 namespace encoder {
@@ -68,7 +69,7 @@ public:
                   void *param = nullptr) override;
 };
 
-class InputGop : public icov::IVideo<cv::Mat> {
+class InputGop : public icov::IInputMedia<cv::Mat> {
 public:
   InputGop(const fs::path &path);
   ~InputGop() = default;
@@ -77,6 +78,9 @@ public:
   void setFrame(frame_t i) override;
   void writeInfos(std::ofstream &output, int key,
                   void *param = nullptr) override;
+
+private:
+  std::vector<std::string> m_frames;
 };
 
 class InputVideo : public icov::IVideo<cv::Mat> {

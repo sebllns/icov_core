@@ -172,15 +172,20 @@ void icov::encoder::FrameEncoder::serializeParameters() {
         if (m_params.ExportDebugTextFormat) {
           m_icov_file->stream()
               << "mode " << m_channelCoder[c].si[p].dirmode << std::endl;
-          m_icov_file->stream()
-              << "q " << m_channelCoder[c].si[p].stored_pz.getRawQ0()
-              << std::endl;
-          m_icov_file->stream()
-              << "zmin " << m_channelCoder[c].si[p].stored_pz.getRawZmin()
-              << std::endl;
-          m_icov_file->stream()
-              << "zmax " << m_channelCoder[c].si[p].stored_pz.getRawZmax()
-              << std::endl;
+
+          if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
+            m_icov_file->stream()
+                << "q " << m_channelCoder[c].si[p].stored_pz.getRawQ0()
+                << std::endl;
+            m_icov_file->stream()
+                << "zmin " << m_channelCoder[c].si[p].stored_pz.getRawZmin()
+                << std::endl;
+            m_icov_file->stream()
+                << "zmax " << m_channelCoder[c].si[p].stored_pz.getRawZmax()
+                << std::endl;
+          } else {
+            m_icov_file->stream() << "no coding" << std::endl;
+          }
         }
 
         if (m_channelCoder[c].si[p].stored_pz.codingflag()) {

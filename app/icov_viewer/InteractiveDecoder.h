@@ -89,6 +89,7 @@ class InteractiveDecoder : public InteractiveModeBase
       PREDICTION,
       PREDICTION_CAT,
       SOURCE,
+      SOURCE_DIFF,
     };
 
     void drawBlocks(drawType type);
@@ -103,5 +104,6 @@ class InteractiveDecoder : public InteractiveModeBase
     void updateF3() override;
     void updateF4() override;
     void updateF5() override;
+    void updateF6() override;
     bool processKey(char key) override;
 };
