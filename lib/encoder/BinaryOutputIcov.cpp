@@ -50,31 +50,14 @@ void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
 
   bitstream::write_bits(s, darr, 0);
 
-  for (int i = 0; i < byte_size; ++i) {
-        stream() << (ushort)darr[i] << " ";
-  }
-  stream() << std::endl;
+  //  for (int i = 0; i < byte_size; ++i) {
+  //        stream() << (ushort)darr[i] << " ";
+  //  }
+  //  stream() << std::endl;
 
   int lost = bitstream::byteToBitCount(byte_size) - s.size();
 
   m_total_write_byte[eWriteCounter::ENC_BLOCK_SYNDROME_SIZE] += byte_size;
-
-  //  std::cout << "WRITE BYTES " << byte_size << std::endl;
-  //  std::cout << "WRITE BITS " << s.size() << std::endl;
-  //  std::cout << "SHIFT BITS " << last_bit_shift << std::endl;
-  //  std::cout << "LOST BITS " << lost << std::endl;
-
-  //  std::cout << "TOTAL WRITE BITS " << total_write_bits << std::endl;
-  //  std::cout << "TOTAL SHIFT BITS " << total_shift << std::endl;
-  //  std::cout << "TOTAL LOST BITS " << total_lost << std::endl;
-
-  //  boost::archive::binary_oarchive
-  //  o_archive(*m_fileParts[eIcovStream::SYNDROME],
-  //                                            boost::archive::no_header);
-  //  o_archive &boost::serialization::make_array(darr, byte_size);
-
-  //  m_fileParts[eIcovStream::SYNDROME]->write((char *)darr, sizeof(darr));
-  //  m_fileParts[eIcovStream::SYNDROME]->flush();
 
   icov::io::write_array(*m_fileParts[bitstream::eIcovStream::SYNDROME], darr,
                         byte_size, false);

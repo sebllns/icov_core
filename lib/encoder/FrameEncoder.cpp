@@ -79,7 +79,8 @@ FrameEncoder::~FrameEncoder() {
 /*****************************************************************************/
 void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
   if (access_block) {
-    m_icov_file->stream() << "access block data" << std::endl;
+    if (m_params.ExportDebugTextFormat)
+      m_icov_file->stream() << "access block data" << std::endl;
     for (int c = 0; c < (int)m_numComp; ++c) {
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(
@@ -90,8 +91,10 @@ void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
       int k = 0;
       for (const auto &s : m_channelCoder[c].access_block) {
         access_block_syndrome.fillFrom(s);
-        m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
-                              << access_block_syndrome.size() << std::endl;
+        if (m_params.ExportDebugTextFormat) {
+          m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
+                                << access_block_syndrome.size() << std::endl;
+        }
         m_icov_file->writeSyndrome(access_block_syndrome);
       }
       m_icov_file->endWritePrediction(
@@ -99,15 +102,18 @@ void icov::encoder::FrameEncoder::serializeSyndrome(bool access_block) {
     }
   }
 
-  m_icov_file->stream() << "syndromes" << std::endl;
+  if (m_params.ExportDebugTextFormat)
+    m_icov_file->stream() << "syndromes" << std::endl;
 
   for (int c = 0; c < (int)m_numComp; ++c) {
     m_icov_file->setChannel(c);
     // store normal syndrome per bitplane
     int k = 0;
     for (const auto &s : m_channelCoder[c].bitplanes) {
-      m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
-                            << s.stored_synd.size() << std::endl;
+      if (m_params.ExportDebugTextFormat) {
+        m_icov_file->stream() << "ch " << c << " bp " << k++ << " size "
+                              << s.stored_synd.size() << std::endl;
+      }
       if (s.stored_synd.size() > 0) {
         m_icov_file->writeSyndrome(s.stored_synd);
       }
@@ -184,7 +190,8 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                 << "zmax " << m_channelCoder[c].si[p].stored_pz.getRawZmax()
                 << std::endl;
           } else {
-            m_icov_file->stream() << "no coding" << std::endl;
+            if (m_params.ExportDebugTextFormat)
+              m_icov_file->stream() << "no coding" << std::endl;
           }
         }
 
@@ -863,14 +870,14 @@ void icov::encoder::FrameEncoder::encode_tu(
   ldpc_codec_layer::BitSymbolProvider bsp_enc =
       tu.instantiateBitSymbolProvider(comp, si_tu, m_params.BSP_Params);
 
-  if (si == nullptr) {
-    m_icov_file->stream() << "INTER DIFF "
-                          << std::to_string(b.getIdSelf()) + "_" +
-                                 std::to_string(frame())
-                          << "_" << std::to_string((int)comp) << " = ";
-    icov::io::write_vector(m_icov_file->stream(), bsp_enc.getDiff(), ' ');
-    m_icov_file->stream() << std::endl;
-  }
+  //  if (si == nullptr) {
+  //    m_icov_file->stream() << "INTER DIFF "
+  //                          << std::to_string(b.getIdSelf()) + "_" +
+  //                                 std::to_string(frame())
+  //                          << "_" << std::to_string((int)comp) << " = ";
+  //    icov::io::write_vector(m_icov_file->stream(), bsp_enc.getDiff(), ' ');
+  //    m_icov_file->stream() << std::endl;
+  //  }
 
   // If coding flag is false, no encoding is performed
   if (!bsp_enc.distribution().codingflag()) { /* CODING FLAG IS FALSE */
