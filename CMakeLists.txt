@@ -286,6 +286,7 @@ message("\n")
 # ---------------------------------------------------------------------
 # Link with AFF3CT
 message(STATUS "[INFO] Checking AFF3CT support...")
+find_package(GSL REQUIRED QUIET)
 set(AFF3CT_BUILD_DIR
     third-party/aff3ct
     CACHE
