@@ -2,6 +2,7 @@
 
 #include "icov_assert.h"
 #include "icov_exception.h"
+#include "icov_log.h"
 #include "icov_string.h"
 #include <cstddef>
 #include <fstream>
@@ -53,10 +54,10 @@ static void read_value(std::istream &str, T *val, int size = 1) {
     ICOV_THROW_RUNTIME_EXCEPTION("Cannot read stream");
   }
 
-  std::cout << ">>>>>>> READ POS " << str.tellg() << " SIZE "
-            << size * sizeof(T);
+  ICOV_TRACE << ">>>>>>> READ POS " << str.tellg() << " SIZE "
+             << size * sizeof(T);
   str.read(reinterpret_cast<char *>(val), size * sizeof(T));
-  std::cout << " VALUE = " << std::to_string(*val) << std::endl;
+  ICOV_TRACE << " VALUE = " << std::to_string(*val);
 }
 
 template <typename T>

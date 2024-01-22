@@ -168,11 +168,13 @@ public:
 
   bool loadGroundTruthFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
-    std::string frame_name = "x" + std::to_string(f) + ".tif";
+    std::string frame_name = "v" + std::to_string(f) + ".tif";
     fs::path frame_path =
         getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
 
-    if (fs::is_regular_file(frame_path)) {
+    if (fs::is_regular_file(frame_path) &&
+        (!m_analyzer.GroundTruth ||
+         m_analyzer.GroundTruth->getPath() != frame_path)) {
       encoder::instantiateInputMedia(frame_path, m_analyzer.GroundTruth);
       m_analyzer.GroundTruth->setFrame(0);
     }

@@ -62,7 +62,7 @@ void GenerateGOPMode::run() {
         frame_list << frame_file << std::endl;
 
         m_current_frame = video->getCurrentFrame();
-        cv::resize(m_current_frame, m_current_frame, cv::Size(2080, 1040), 0, 0,
+        cv::resize(m_current_frame, m_current_frame, cv::Size(2048, 1024), 0, 0,
                    cv::INTER_LANCZOS4);
         cv::imwrite((gop_path / frame_file).string(), m_current_frame);
         imax = video->getFrameCount();

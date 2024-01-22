@@ -247,22 +247,27 @@ bool InteractiveDecoder::processKey(char key)
     // TODO set actual delay based on video framerate
     setWait_delay(30);
 
-    if (!m_requests.empty())
-    {
-        pov_x = m_requests.front().viewpoint.angleX;
-        pov_y = m_requests.front().viewpoint.angleY;
-        // frame = m_requests.front().frameID;
-        m_requests.pop();
+    m_decoderCtrl.loadGroundTruthFrame();
 
-        setPOV_DEG(pov_x, pov_y);
+    if (!m_requests.empty()) {
+      pov_x = m_requests.front().viewpoint.angleX;
+      pov_y = m_requests.front().viewpoint.angleY;
+      // frame = m_requests.front().frameID;
+      frame =
+          (frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
+      m_requests.pop();
 
-        if (m_requests.empty()) {
+      setPOV_DEG(pov_x, pov_y);
+
+      if (m_requests.empty()) {
         // write values for the RD curves
         ICOV_INFO << "ERP RD " << m_erp_rate_sum / m_req_count << ","
                   << m_erp_psnr_sum / m_req_count;
         ICOV_INFO << "DISP RD " << m_vp_rate_sum / m_req_count << ","
                   << m_vp_psnr_sum / m_req_count;
-        }
+
+        getchar();
+      }
 
         setWait_delay(1);
     }

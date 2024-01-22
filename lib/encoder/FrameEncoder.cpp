@@ -582,9 +582,26 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
     // Loop through each bitplane
     for (int i = 0; i < bitplaneCount; ++i) {
 
+      bool &source_flag = m_channelCoder[comp].bitplanes[i].sourceFlag;
+
+      auto synd_type =
+          ldpc_codec_layer::IInteractiveCoder::getSyndromeType(si_numcodes[i]);
+      bool no_coding =
+          (synd_type ==
+           ldpc_codec_layer::IInteractiveCoder::SyndromeType_NO_CODING);
+      bool source_coding =
+          (synd_type ==
+           ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) ||
+          source_flag;
+      bool bitplane_coding =
+          (synd_type ==
+           ldpc_codec_layer::IInteractiveCoder::SyndromeType_NORMAL);
+
+      bool intra_source = !is_inter && source_coding;
+      bool inter_source = is_inter && source_coding;
+
       // if NO coding flag is TRUE for this BITPLANE
-      if (si_numcodes[i] == ldpc_codec_layer::IInteractiveCoder::SyndromeType::
-                                SyndromeType_NO_CODING) {
+      if (no_coding) {
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 0.0f;
@@ -596,13 +613,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 
       }
       // IF SOURCE FLAG is TRUE for the BITPLANE
-      else if (!is_inter &&
-               (si_numcodes[i] ==
-                    ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE ||
-                m_channelCoder[comp].bitplanes[i].sourceFlag)) {
+      else if (intra_source) {
 
-        if (!m_channelCoder[comp].bitplanes[i].sourceFlag) {
-          m_channelCoder[comp].bitplanes[i].sourceFlag = true;
+        if (source_flag) {
+          source_flag = true;
 
           m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
               bsp_enc.src_bits()[i]);
@@ -630,9 +644,7 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 
       }
       // NORMAL CASE : bitplane was normally encoded
-      else if (is_inter ||
-               si_numcodes[i] >
-                   ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE) {
+      else if (is_inter || bitplane_coding) {
 
         m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
             si_numcodes[i];
@@ -665,8 +677,8 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
         if (!is_inter &&
             m_channelCoder[comp].bitplanes[i].noSourceThreshold >
                 m_params.MaxRateNoCoding &&
-            !m_channelCoder[comp].bitplanes[i].sourceFlag) {
-          m_channelCoder[comp].bitplanes[i].sourceFlag = true;
+            !source_flag) {
+          source_flag = true;
           m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
               bsp_enc.src_bits()[i]);
 
@@ -687,8 +699,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
                  "decision to store the source instead for bitplane "
               << i << " at channel " << comp; /*STORED SOURCE*/
 
-        } else if (si_synd[i].size() >
-                   m_channelCoder[comp].bitplanes[i].stored_synd.size())
+        } else if (bitplane_coding &&
+                   si_synd[i].size() >
+                       m_channelCoder[comp].bitplanes[i].stored_synd.size())
         /*STORED SYNDROME IF LONGER*/ {
           m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
           m_channelCoder[comp].bitplanes[i].stored_synd_rate =

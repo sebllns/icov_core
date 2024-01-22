@@ -135,16 +135,19 @@ void icov::extractor::BlockExtractor::_processBlock(
       BitLength inter_length = std::numeric_limits<BitLength>::infinity();
       BitLength intra_length = 0;
 
+      check_inter = false;
+
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingPredictionID(BlockPrediction::INTER);
       // extract inter-prediction paramaters and calcultate its bitrate
-      if (check_inter) {
-        for (auto &ch : m_channelExtractor) {
-          ch->extractPredParams(S_INTER);
-          inter_length += ch->predParams().at(S_INTER).getSyndromeLength();
-          check_inter = ch->predParams().at(S_INTER).getEnabledFlag();
-        }
-      }
+      //      if (check_inter) {
+      //        for (auto &ch : m_channelExtractor) {
+      //          ch->extractPredParams(S_INTER);
+      //          inter_length +=
+      //          ch->predParams().at(S_INTER).getSyndromeLength(); check_inter
+      //          = ch->predParams().at(S_INTER).getEnabledFlag();
+      //        }
+      //      }
 
       if (check_inter) {
         ICOV_DEBUG << "INTER LENGTH " << inter_length;
@@ -153,6 +156,10 @@ void icov::extractor::BlockExtractor::_processBlock(
       // jump to selected intra prediction parameters
       int pred_idx = bitstream::getPredictionOrder(block_prediction) -
                      (check_inter ? 1 : 0);
+
+      ICOV_DEBUG << "EXTRACT INTRA "
+                 << BlockPrediction::toString(
+                        BlockPrediction::toPredType(PredictionID[pred_idx]));
 
       for (int i = 0; i < pred_idx; ++i) {
         for (auto &ch : m_channelExtractor)
