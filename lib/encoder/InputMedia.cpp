@@ -117,7 +117,10 @@ InputGop::InputGop(const boost::filesystem::path &path)
   ICOV_DEBUG << "Open GOP " << path;
   std::ifstream frame_txt((getPath() / "frames.txt").string());
 
-  for (std::string line; getline(frame_txt, line); m_frames.push_back(line)) {
+  for (std::string line; getline(frame_txt, line);) {
+    if (fs::is_regular_file(getPath() / line)) {
+      m_frames.push_back(line);
+    }
   }
 
   m_frameCount = m_frames.size();
@@ -141,7 +144,13 @@ void InputGop::setFrame(frame_t i) {
 
   bool first = m_frameData.empty();
 
-  m_frameData = cv::imread((getPath() / m_frames[i]).string());
+  fs::path p(getPath() / m_frames[i]);
+
+  if (!fs::is_regular_file(p)) {
+    ICOV_THROW_LOGICAL_EXCEPTION("File not found " + p.string());
+  }
+
+  m_frameData = cv::imread(p.string());
 
   if (!first) {
     icov::assert::check((int)m_width == m_frameData.cols,

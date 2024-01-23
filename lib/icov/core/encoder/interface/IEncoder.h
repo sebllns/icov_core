@@ -432,6 +432,7 @@ void IMediaEncoder<T>::encode(
   frame_t imax = input.getFrameCount();
   while (i < imax && (m_max_frame_count == 0 || i < m_max_frame_count)) {
     frame_t f = i + m_start_frame + 1;
+
     try {
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingFrameID(i);
@@ -446,8 +447,6 @@ void IMediaEncoder<T>::encode(
         imax = input.getFrameCount();
       }
 
-      ++i;
-
       ICOV_DEBUG << "--> Encode frame " << i << " / " << imax;
       this->endEncoding();
 
@@ -459,6 +458,8 @@ void IMediaEncoder<T>::encode(
       ICOV_ERROR << "Unknown error while encoding frame " << f;
       ICOV_ERROR << boost::current_exception_diagnostic_information();
     }
+
+    ++i;
   }
 }
 

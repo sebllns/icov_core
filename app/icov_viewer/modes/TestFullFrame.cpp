@@ -109,7 +109,6 @@ void TestFullFrame::encode() {
                   .ICU_Size =
                       cv::Size(m_parameters.icu_size, m_parameters.icu_size),
                   .BSP_Params = m_parameters.bsp_params,
-                  .CheckDecoding = true,
                   .MaxRateNoCoding = 3},
           .AllBlocks = true,
           .StartBlock = 61,

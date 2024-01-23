@@ -1,6 +1,7 @@
 #include "InteractiveDecoder.h"
 
 #include "app_common/program/icov_program_options.h"
+#include "app_common/tools/icov_udp.h"
 #include "icov_assert.h"
 #include "icov_log.h"
 #include "icov_math.h"
@@ -46,6 +47,9 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   m_erp_psnr_sum = 0;
   m_req_count = 0;
   frame = 0;
+
+  icov::udp::send_udp_message("hello icov", "127.0.0.1", 5005);
+  icov::udp::send_udp_message("test 2 icov", "127.0.0.1", 5005);
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &

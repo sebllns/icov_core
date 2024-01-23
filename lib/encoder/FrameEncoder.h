@@ -79,9 +79,7 @@ public:
     ChromaFormat ChFormat = ChromaFormat::CHROMA_420;
     cv::Size ICU_Size = cv::Size(32, 32);
     ldpc_codec_layer::QaryDistribution::quantization_params BSP_Params;
-    bool CheckDecoding = true;
     float MaxRateNoCoding = 3;
-    // int maxCountSINoCoding;
 
     const Size TU_SizeAfterRegroupingLuma = Size(1, 1);
     const int MaxLog2TrDynamicRange = 15;
@@ -99,7 +97,13 @@ public:
     /// will be converted
     const Int InternalBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};
 
-    bool ExportDebugTextFormat = false;
+    bool ExportDebugTextFormat =
+#ifdef ICOV_ENCODER_EXPORT_TEXT
+        true;
+#else
+        false;
+#endif
+
     bool ExportRecoFrames = true;
   };
 

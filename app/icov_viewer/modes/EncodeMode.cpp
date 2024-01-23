@@ -97,7 +97,6 @@ void EncodeMode::run() {
                   .BSP_Params =
                       icov::ldpc_codec_layer::QaryDistribution::
                           quantization_params{enable_z_quantization, q_values},
-                  .CheckDecoding = false,
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
 

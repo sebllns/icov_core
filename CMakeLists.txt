@@ -65,6 +65,9 @@ option(
   "If set to OFF, some heavy assertions will be disabled to improve performances"
   ON)
 
+option(ICOV_ENCODER_EXPORT_TEXT_ENABLED
+       "If enabled, ICOV exports textual informations at encoding" OFF)
+
 # Set the ICOV_BUILD_TESTS variable to ON if it is not defined and the
 # CMAKE_BUILD_TYPE matches Debug
 if(NOT DEFINED ICOV_BUILD_TESTS AND CMAKE_BUILD_TYPE MATCHES Debug)
@@ -358,6 +361,12 @@ endif()
 if(ICOV_CHECK_BITPLANE_ENCODING_ENABLED)
   message(STATUS "[INFO] Encoded bitplane check is ENABLED")
   add_compile_definitions("ICOV_CHECK_BITPLANE_ENCODING_ENABLED")
+endif()
+
+# Enable textual debug for encoder if it is enabled in the configuration
+if(ICOV_ENCODER_EXPORT_TEXT_ENABLED)
+  message(STATUS "[INFO] ICOV encoder will ewport textual debug infos")
+  add_compile_definitions("ICOV_ENCODER_EXPORT_TEXT")
 endif()
 
 # Enable colored console output if it is enabled in the configuration
