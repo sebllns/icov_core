@@ -67,6 +67,7 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace icov {
@@ -143,44 +144,67 @@ private:
     NumcodeIdx c; // rate quantized
     Rate r;       // actual rate value
     uint m;       // code length
-
-    //    StoredRate(const ldpc_codec_layer::IInteractiveCoder &enc, NumcodeIdx
-    //    num) {
-
-    //    }
   };
 
   // bitplane coding
-  typedef struct {
-
-    //    icov::Syndrome accessBlock;
+  struct BitplaneCoder {
     icov::Syndrome stored_synd;
     StoredRate stored_synd_rate;
-    icov::Rate noSourceThreshold;
-    bool sourceFlag;
+    bool source_flag;
+
+    BitplaneCoder() : source_flag(false) {}
 
     // one numcode per SI and per bitplane
-    std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
-             StoredRate>
-        stored_numcodes;
+    //    std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
+    //             StoredRate>
+    //        stored_numcodes;
+  };
 
-  } BitplaneCoder;
-
-  typedef struct {
+  struct SiCoder {
     ldpc_codec_layer::QaryDistribution stored_pz;
     // mode if used
     uint dirmode;
-  } SiCoder;
+    std::vector<StoredRate> bitplanes;
+
+    SiCoder(int bp_count) : dirmode(0), bitplanes(bp_count) {}
+  };
 
   // channel coding
-  typedef struct {
+  struct ChannelCoder {
     int n;
+    int bitplane_count;
+
     std::vector<BitplaneCoder> bitplanes;
-    std::vector<BitVec> access_block;
+    std::vector<BitVec> source_block;
     std::map<omnidirectional_layer::IBlockPredictionManager::prediction_t,
              SiCoder>
         si;
-  } ChannelCoder;
+
+    icov::Rate averagePredRate(
+        omnidirectional_layer::IBlockPredictionManager::prediction_t p) const {
+      icov::Rate r = 0;
+      for (const auto &sr : si.at(p).bitplanes) {
+        r += sr.r;
+      }
+      return r / bitplane_count;
+    }
+
+    icov::Rate averageBitplaneRate(int bp) const {
+      icov::Rate r = 0;
+      for (const auto &sr : si) {
+        r += sr.second.bitplanes[bp].r;
+      }
+      return r / si.size();
+    }
+
+    SiCoder &
+    addSi(omnidirectional_layer::IBlockPredictionManager::prediction_t p) {
+      si.insert(std::pair<
+                omnidirectional_layer::IBlockPredictionManager::prediction_t,
+                SiCoder>(p, SiCoder(bitplane_count)));
+      return si.at(p);
+    }
+  };
 
   void encode_icu(const omnidirectional_layer::Block &b,
                   const icov::video::IcuEncoder &icu_enc,

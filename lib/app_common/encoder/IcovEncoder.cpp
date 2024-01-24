@@ -28,7 +28,7 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params,
                   .ChFormat = CHROMA_420,
                   .ICU_Size = cv::Size(m_params.m_icuSize, m_params.m_icuSize),
                   .BSP_Params = m_params.bsp_params,
-                  .MaxRateNoCoding = 5},
+                  .MaxRateNoCoding = 8},
           .AllBlocks = true, //@todo TODO !!!
           .StartBlock = 61,
           .BlockCount = 23,
