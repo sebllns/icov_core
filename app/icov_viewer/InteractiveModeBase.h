@@ -184,6 +184,9 @@ class InteractiveModeBase
     void fill(const cv::Scalar &color);
     void draw();
     void init360Viewer(int width, int height, float fov_y_DEG);
+    void switchView();
+    void showErp();
+    void showViewport();
 
     const Config &config() const;
 
@@ -211,15 +214,11 @@ class InteractiveModeBase
     void moveDown();
     void reset();
 
-    void switchView();
-    void showErp();
-    void showViewport();
-
   protected:
     const char *const_window_name = "icov";
     Config m_config;
-    cv::Mat m_erpImage;
-    cv::Mat m_viewportImage;
+    cv::Mat m_fullView;
+    cv::Mat m_viewportView;
     cv::Mat m_displayImage;
 
     virtual bool processKey(char key);

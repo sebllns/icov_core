@@ -73,7 +73,9 @@ class InteractiveDecoder : public InteractiveModeBase
     Rate m_viewportRate;
     float m_viewportMse;
     bool m_showSource;
+    cv::Mat m_decodedErp;
     cv::Mat m_sourceViewport;
+    cv::Mat m_groundTruthDiff;
 
     float m_vp_rate_sum;
     float m_vp_psnr_sum;
@@ -81,7 +83,7 @@ class InteractiveDecoder : public InteractiveModeBase
     float m_erp_psnr_sum;
     int m_req_count;
 
-    frame_t frame;
+    frame_t m_frame;
 
     enum class drawType {
       BLOCK_RATE,
@@ -95,7 +97,7 @@ class InteractiveDecoder : public InteractiveModeBase
     void drawBlocks(drawType type);
     void drawBlock(drawType type, const omnidirectional_layer::Block &b,
                    const video_layer::VideoMetrics::block_infos_t &i,
-                   cv::Mat &output);
+                   cv::Mat &output, const cv::Rect &roi);
 
     // InteractiveModeBase interface
   protected:

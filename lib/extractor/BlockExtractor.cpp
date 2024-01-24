@@ -3,6 +3,7 @@
 #include "extractor/ChannelExtractor.h"
 #include "icov_io.h"
 #include "icov_log.h"
+#include "icov_request.h"
 #include "icov_types.h"
 #include "omnidirectional_layer/BlockPredictionManager.h"
 #include "omnidirectional_layer/interface/IBlockProcessor.h"
@@ -51,7 +52,7 @@ icov::extractor::BlockExtractor::~BlockExtractor() {}
 void icov::extractor::BlockExtractor::fill_metrics(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
         prediction,
-    const Block &b) {
+    const Block &b, frame_t f) {
   icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(
       b.parent()->blockCount());
   icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
@@ -65,7 +66,7 @@ void icov::extractor::BlockExtractor::fill_metrics(
       .prediction = prediction;
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .visible_blocks.push_back(b.getIdSelf());
-
+  icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).frame = f;
   // extract mse
   float mse = 0.;
   m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
@@ -206,7 +207,7 @@ void icov::extractor::BlockExtractor::_processBlock(
              << omnidirectional_layer::BlockPrediction::toString(
                     block_prediction);
 
-  fill_metrics(block_prediction, b);
+  fill_metrics(block_prediction, b, r.frameID);
 }
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {

@@ -149,8 +149,15 @@ struct decoder_analyzer_t {
   icov_shared_ptr(icov::decoder::CsvOutput) CsvOutput;
   icov_unique_ptr(io::CsvFileWriter) RD_ERP;
   icov_unique_ptr(io::CsvFileWriter) RD_DISP;
+
+  // Source is the original video that was encoded
+  icov_unique_ptr(encoder::InputMedia) Source;
+
+  // GroundTruth is the video source after reconstruction (after we inverse
+  // DCT-Q) the decoder should retrieve exactly this one
   icov_unique_ptr(encoder::InputMedia) GroundTruth;
 
+  bool hasSource() const { return Source != nullptr; }
   bool hasGroundTruth() const { return GroundTruth != nullptr; }
   bool hasCSV() const { return CsvOutput != nullptr; }
 };
@@ -168,7 +175,7 @@ public:
 
   bool loadGroundTruthFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
-    std::string frame_name = "v" + std::to_string(f) + ".tif";
+    std::string frame_name = "x" + std::to_string(f) + ".tif";
     fs::path frame_path =
         getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
 
@@ -177,6 +184,23 @@ public:
          m_analyzer.GroundTruth->getPath() != frame_path)) {
       encoder::instantiateInputMedia(frame_path, m_analyzer.GroundTruth);
       m_analyzer.GroundTruth->setFrame(0);
+      return true;
+    }
+
+    return false;
+  }
+
+  bool loadSourceFrame() {
+    frame_t f = getDecoder()->getRequest().frameID;
+    std::string frame_name = "v" + std::to_string(f) + ".tif";
+    fs::path frame_path =
+        getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
+
+    if (fs::is_regular_file(frame_path) &&
+        (!m_analyzer.Source || m_analyzer.Source->getPath() != frame_path)) {
+      encoder::instantiateInputMedia(frame_path, m_analyzer.Source);
+      m_analyzer.Source->setFrame(0);
+      return true;
     }
 
     return false;

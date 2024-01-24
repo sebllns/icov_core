@@ -54,9 +54,9 @@ InteractiveModeBase::~InteractiveModeBase()
 void InteractiveModeBase::run() {
   m_special_key = m_config.f1;
   cv::namedWindow(const_window_name, cv::WINDOW_NORMAL);
-
-  m_erpImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
-  m_viewportImage = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
+  
+  m_fullView = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
+  m_viewportView = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
 
   showErp();
 
@@ -309,7 +309,7 @@ void InteractiveModeBase::clear()
 
 void InteractiveModeBase::fill(const cv::Scalar &color)
 {
-    m_erpImage.setTo(color);
+    m_fullView.setTo(color);
 }
 
 const InteractiveModeBase::Config &InteractiveModeBase::config() const
@@ -333,13 +333,13 @@ void InteractiveModeBase::switchView() {
 
 void InteractiveModeBase::showErp() {
     m_showViewport = false;
-    m_displayImage = m_erpImage;
+    m_displayImage = m_fullView;
 }
 
 void InteractiveModeBase::showViewport() {
-    m_360viewer->loadEquirectangularImage(m_erpImage);
-    m_360viewer->getImage_BGR(m_viewportImage);
+    m_360viewer->loadEquirectangularImage(m_fullView);
+    m_360viewer->getImage_BGR(m_viewportView);
 
     m_showViewport = true;
-    m_displayImage = m_viewportImage;
+    m_displayImage = m_viewportView;
 }

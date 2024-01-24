@@ -115,6 +115,7 @@ public:
   static eBorderType getBorder(const Block &b);
   static bool isValidPrediction(BlockPrediction::ePredType p);
   static eSICategory getCategory(ePredType p);
+  static std::string toString(BlockPrediction::prediction_t pred);
 
   BlockPrediction() = default;
   ~BlockPrediction() = default;
@@ -193,6 +194,11 @@ inline BlockPrediction::ePredType BlockPrediction::toPredType(uint num) {
   default:
     return ERROR_PRED;
   }
+}
+
+inline std::string
+BlockPrediction::toString(BlockPrediction::prediction_t pred) {
+  return toString(toPredType(pred));
 }
 
 inline std::vector<BlockPrediction::ePredType>

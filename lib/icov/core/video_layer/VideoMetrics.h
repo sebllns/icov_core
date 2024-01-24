@@ -47,6 +47,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "icov_math.h"
 #include "icov_request.h"
 #include "icov_types.h"
 #include "omnidirectional_layer/Block.h"
@@ -95,17 +96,13 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
 
         Rate rate() const
         {
-            if (decodedBitlength)
-            {
-                encodedBitlength == 0 ? std::numeric_limits<Rate>::infinity() : 0;
-            }
-            return static_cast<Rate>(encodedBitlength) / static_cast<Rate>(decodedBitlength);
+            if (decodedBitlength == 0)
+              encodedBitlength == 0 ? std::numeric_limits<Rate>::infinity() : 0;
+            return static_cast<Rate>(encodedBitlength) /
+                   static_cast<Rate>(decodedBitlength);
         }
 
-        float psnr() const {
-            return (mse == 0) ? std::numeric_limits<double>::infinity()
-                              : 10.0 * log10((255 * 255) / mse);
-        }
+        float psnr() const { return icov::maths::psnr(mse, 255); }
     };
 
     request_t request;

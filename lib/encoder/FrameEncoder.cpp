@@ -705,9 +705,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
 
       }
       // IF SOURCE FLAG is TRUE for the BITPLANE
-      else if (intra_source) {
+      else if (source_flag || intra_source) {
 
-        if (source_flag) {
+        if (!source_flag) {
           source_flag = true;
 
           m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
@@ -764,36 +764,36 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
           m_channelCoder[comp].bitplanes[i].noSourceThreshold += encoder.get_r(
               bitstream::inverseQuantizedSize(si_numcodes[i], encoder),
               encoder.get_n());
+
+          if (m_channelCoder[comp].bitplanes[i].noSourceThreshold >
+                  m_params.MaxRateNoCoding &&
+              !source_flag) {
+            source_flag = true;
+            m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
+                bsp_enc.src_bits()[i]);
+
+            m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
+                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
+            m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
+                encoder.get_n();
+            m_channelCoder[comp].bitplanes[i].stored_synd_rate.r = 1.0;
+
+            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
+                ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
+            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
+                encoder.get_n();
+            m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
+
+            ICOV_WARNING
+                << "Too many predictions have a very long syndrome, so we take "
+                   "decision to store the source instead for bitplane "
+                << i << " at channel " << comp; /*STORED SOURCE*/
+          }
         }
 
-        if (!is_inter &&
-            m_channelCoder[comp].bitplanes[i].noSourceThreshold >
-                m_params.MaxRateNoCoding &&
-            !source_flag) {
-          source_flag = true;
-          m_channelCoder[comp].bitplanes[i].stored_synd.fillFrom(
-              bsp_enc.src_bits()[i]);
-
-          m_channelCoder[comp].bitplanes[i].stored_synd_rate.c =
-              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
-          m_channelCoder[comp].bitplanes[i].stored_synd_rate.m =
-              encoder.get_n();
-          m_channelCoder[comp].bitplanes[i].stored_synd_rate.r = 1.0;
-
-          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].c =
-              ldpc_codec_layer::IInteractiveCoder::SyndromeType_SOURCE;
-          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].m =
-              encoder.get_n();
-          m_channelCoder[comp].bitplanes[i].stored_numcodes[pred_id].r = 1.0f;
-
-          ICOV_WARNING
-              << "Too many predictions have a very long syndrome, so we take "
-                 "decision to store the source instead for bitplane "
-              << i << " at channel " << comp; /*STORED SOURCE*/
-
-        } else if (bitplane_coding &&
-                   si_synd[i].size() >
-                       m_channelCoder[comp].bitplanes[i].stored_synd.size())
+        if (!source_flag && bitplane_coding &&
+            si_synd[i].size() >
+                m_channelCoder[comp].bitplanes[i].stored_synd.size())
         /*STORED SYNDROME IF LONGER*/ {
           m_channelCoder[comp].bitplanes[i].stored_synd = si_synd[i];
           m_channelCoder[comp].bitplanes[i].stored_synd_rate =
