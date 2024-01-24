@@ -282,6 +282,98 @@ void icov::encoder::FrameEncoder::serializeBlockData(
 
   // End writing block data
   m_icov_file->endWriteBlock(b);
+
+  if (m_params.ExportDebugTextFormat) {
+    fs::path block_data_dbg_path = m_icov_file->getPath().parent_path() /
+                                   "debug" / std::to_string(frame());
+    fs::create_directories(block_data_dbg_path);
+
+    block_data_dbg_path /= std::to_string(b.getIdSelf());
+    std::ofstream ofblock(block_data_dbg_path);
+
+    /*****************************************************************************/
+
+    // Loop over each channel
+    for (int c = 0; c < (int)m_numComp; ++c) {
+      ofblock << "channel: " << c << std::endl;
+
+      ofblock << "bitplane_count: " << m_channelCoder[c].bitplanes.size()
+              << std::endl;
+
+      ofblock << "stored_syndrome_rates: ";
+      for (const auto &s : m_channelCoder[c].bitplanes) {
+        ofblock << " " << s.stored_synd_rate.c << "(" << s.stored_synd_rate.m
+                << ")";
+      }
+
+      if (m_params.ExportDebugTextFormat) {
+        ofblock << std::endl;
+      }
+    }
+
+    for (omnidirectional_layer::IBlockPredictionManager::prediction_t p :
+         bitstream::PredictionID) {
+
+      ofblock << "prediction: "
+              << omnidirectional_layer::BlockPrediction::toString(
+                     omnidirectional_layer::BlockPrediction::toPredType(p))
+              << std::endl;
+
+      for (int c = 0; c < (int)m_numComp; ++c) {
+
+        ofblock << "channel: " << c << std::endl;
+
+        if (m_channelCoder[c].si.count(p)) {
+
+          ofblock << "mode: " << m_channelCoder[c].si[p].dirmode << std::endl;
+
+          if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
+            ofblock << "q " << m_channelCoder[c].si[p].stored_pz.getRawQ0()
+                    << std::endl;
+            ofblock << "zmin " << m_channelCoder[c].si[p].stored_pz.getRawZmin()
+                    << std::endl;
+            ofblock << "zmax " << m_channelCoder[c].si[p].stored_pz.getRawZmax()
+                    << std::endl;
+          } else {
+            if (m_params.ExportDebugTextFormat)
+              ofblock << "no coding" << std::endl;
+          }
+
+          if (m_channelCoder[c].si[p].stored_pz.codingflag()) {
+            ofblock << "rates";
+
+            for (int bp = 0; bp < (int)m_channelCoder[c].bitplanes.size();
+                 ++bp) {
+              if (m_channelCoder[c].bitplanes[bp].stored_numcodes.count(p)) {
+
+                if (m_channelCoder[c].bitplanes[bp].sourceFlag) {
+
+                  ofblock << " "
+                          << ldpc_codec_layer::IInteractiveCoder::SyndromeType::
+                                 SyndromeType_SOURCE
+                          << "(" << m_channelCoder[c].n << ")";
+
+                } else {
+
+                  ofblock
+                      << " "
+                      << m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).c
+                      << "("
+                      << m_channelCoder[c].bitplanes[bp].stored_numcodes.at(p).m
+                      << ")";
+                }
+              }
+            }
+            ofblock << std::endl;
+          }
+        } else if (p !=
+                   omnidirectional_layer::BlockPrediction::ePredType::NONE) {
+          ofblock << "mode " << (int)bitstream::flag_t::UnavailableSI
+                  << std::endl;
+        }
+      }
+    }
+  }
 }
 
 /*****************************************************************************/

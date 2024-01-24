@@ -182,6 +182,10 @@ public:
     return false;
   }
 
+  void setBypassDecodingFlag(bool flag) const {
+    m_factory.Decoder->blockDecoder()->setBypassDecodingFlag(flag);
+  }
+
   void initAnalyzer() {
     if (getDecoderParams().enable_export_csv) {
       m_analyzer.CsvOutput = std::make_shared<decoder::CsvOutput>(

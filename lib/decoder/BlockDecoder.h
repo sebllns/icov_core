@@ -99,6 +99,8 @@ public:
   const PelUnitBuf &decodingOutput() const;
   PelUnitBuf getDecodingOutput();
 
+  void setBypassDecodingFlag(bool flag);
+
 protected:
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;

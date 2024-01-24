@@ -12,11 +12,13 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/imgproc.hpp"
 #include "video_layer/VideoMetrics.h"
+#include "video_layer/icov_stream.h"
 #include "video_layer/vtm_opencv_utility.h"
 
 #include "opencv2/core/types.hpp"
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -47,9 +49,6 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   m_erp_psnr_sum = 0;
   m_req_count = 0;
   frame = 0;
-
-  icov::udp::send_udp_message("hello icov", "127.0.0.1", 5005);
-  icov::udp::send_udp_message("test 2 icov", "127.0.0.1", 5005);
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &
@@ -286,6 +285,24 @@ bool InteractiveDecoder::processKey(char key)
         request_t(DEG2RAD * pov_x, DEG2RAD * pov_y, frame));
 
     m_viewportMse = -1;
+
+    if (updated && m_decoderCtrl.analyzer().hasGroundTruth()) {
+        VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_erpImage);
+
+        this->get360viewer()->loadEquirectangularImage(
+            m_decoderCtrl.analyzer().GroundTruth->getCurrentFrame());
+        this->get360viewer()->getImage_BGR(m_sourceViewport);
+
+        this->get360viewer()->loadEquirectangularImage(m_erpImage);
+        this->get360viewer()->getImage_BGR(m_viewportImage);
+
+        m_viewportMse =
+            VTM_OPENCV_Utility::mse(m_sourceViewport, m_viewportImage);
+
+        float vp_psnr = icov::maths::psnr(m_viewportMse);
+
+        icov::udp::send_udp_message(std::to_string(vp_psnr), "127.0.0.1", 5005);
+    }
 
     if (updated && m_decoderCtrl.analyzer().hasCSV() &&
         m_decoderCtrl.analyzer().hasGroundTruth()) {

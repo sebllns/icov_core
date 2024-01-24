@@ -95,7 +95,6 @@ protected:
   params m_params; /**< BlockExtractor parameters */
 
   // IBlockProcessor interface
-protected:
   void _beforeOrderingLoop(const request_t &r) override;
   void _afterOrderingLoop(const request_t &r) override;
   void _processBlock(

@@ -64,6 +64,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <cstdint>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <vector>
@@ -250,6 +251,8 @@ private:
 
   // Folder where we are going to save the source frames if enabled
   fs::path m_framesPath;
+
+  icov_unique_ptr(std::ofstream) m_block_dbg;
 
   // END PRIVATE MEMBERS //
 };

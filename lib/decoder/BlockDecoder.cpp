@@ -104,6 +104,10 @@ PelUnitBuf BlockDecoder::getDecodingOutput() {
   return m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(mainFrameArea);
 }
 
+void BlockDecoder::setBypassDecodingFlag(bool flag) {
+  m_params.bypass_decoding = flag;
+}
+
 void icov::decoder::BlockDecoder::_beforeOrderingLoop(const request_t &r) {}
 
 void icov::decoder::BlockDecoder::_afterOrderingLoop(const request_t &r) {}
