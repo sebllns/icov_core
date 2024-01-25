@@ -173,7 +173,6 @@ void icov::encoder::FrameEncoder::serializeParameters() {
     for (int c = 0; c < (int)m_numComp; ++c) {
 
       auto &ch_coder = m_channelCoder[c];
-      auto &si_coder = ch_coder.si.at(p);
 
       if (m_params.ExportDebugTextFormat) {
         m_icov_file->stream() << "channel " << c << std::endl;
@@ -182,6 +181,8 @@ void icov::encoder::FrameEncoder::serializeParameters() {
       m_icov_file->setChannel(c);
       m_icov_file->startWritePrediction(p);
       if (ch_coder.si.count(p)) {
+        auto &si_coder = ch_coder.si.at(p);
+
         m_icov_file->writeSIMode(si_coder.dirmode);
         m_icov_file->writeQaryParams(si_coder.stored_pz);
 
@@ -321,11 +322,11 @@ void icov::encoder::FrameEncoder::serializeBlockData(
       for (int c = 0; c < (int)m_numComp; ++c) {
 
         auto &ch_coder = m_channelCoder[c];
-        auto &si_coder = ch_coder.si.at(p);
 
         ofblock << "channel: " << c << std::endl;
 
         if (ch_coder.si.count(p)) {
+          auto &si_coder = ch_coder.si.at(p);
 
           ofblock << "mode: " << si_coder.dirmode << std::endl;
 
@@ -620,20 +621,10 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
   // Store information related to the current prediction in the channel coder
   auto &ch_coder = m_channelCoder[comp];
 
-  if (ch_coder.si.count(pred_id)) {
-    ICOV_THROW_LOGICAL_EXCEPTION(
-        "Prediction has already been encoded: " +
-        omnidirectional_layer::BlockPrediction::toString(pred));
-  }
-
-  auto &si_coder = ch_coder.addSi(pred_id);
-
-  si_coder.stored_pz = bsp_enc.distribution();
-  si_coder.dirmode = mode;
-  ch_coder.n = encoder.get_n();
-
   // First SI stored (no bitplanes stored for comparison yet)
   if (ch_coder.bitplanes.size() == 0) {
+    ch_coder.n = encoder.get_n();
+
     // store source bits
     ch_coder.source_block = bsp_enc.src_bits();
 
@@ -658,6 +649,17 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
     }
   }
 
+  if (ch_coder.si.count(pred_id)) {
+    ICOV_THROW_LOGICAL_EXCEPTION(
+        "Prediction has already been encoded: " +
+        omnidirectional_layer::BlockPrediction::toString(pred));
+  }
+
+  auto &si_coder = ch_coder.addSi(pred_id);
+
+  si_coder.stored_pz = bsp_enc.distribution();
+  si_coder.dirmode = mode;
+
   if ((int)ch_coder.bitplane_count != bitplaneCount)
     ICOV_THROW_LOGICAL_EXCEPTION("Bad bitplane count");
 
@@ -679,6 +681,9 @@ void icov::encoder::FrameEncoder::saveDataToEncode(
             si_synd.size() == si_numcodes.size(),
         ICOV_DEBUG_HEADER(
             "Bitplane count does not match between SI of same block"));
+
+    if ((int)si_coder.bitplanes.size() != bitplaneCount)
+      ICOV_THROW_LOGICAL_EXCEPTION("Bad bitplane count");
 
     // Loop through each bitplane
     for (int i = 0; i < bitplaneCount; ++i) {
@@ -818,6 +823,9 @@ void icov::encoder::FrameEncoder::saveDataToDebug(
   const auto pred_id =
       static_cast<omnidirectional_layer::IBlockPredictionManager::prediction_t>(
           pred);
+
+  if (!ch_coder.si.count(pred_id))
+    return;
 
   auto &si_coder = ch_coder.si.at(pred_id);
 
