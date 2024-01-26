@@ -69,7 +69,7 @@ void icov::omnidirectional_layer::RequestManager::processBlock(bool is_access_bl
     }
 
     m_previousDecoded[m_picture->getBlockIndexPos(current_block.getIdSelf())] =
-        m_currentFrame + 1;
+        request().frameID + 1;
 
   } catch (...) {
     ICOV_ERROR << "Error while processing block " << current_block.getIdSelf()
@@ -82,14 +82,9 @@ void icov::omnidirectional_layer::RequestManager::processBlock(bool is_access_bl
   }
 }
 
-void icov::omnidirectional_layer::RequestManager::processViewport(
-    bool usePreviousOrdering) {
+void icov::omnidirectional_layer::RequestManager::processViewport() {
 
-  auto current_block = usePreviousOrdering
-                           ? m_picture->getById(m_previousOrdering.front())
-                           : m_accessBlocks->findAccessBlock(*m_viewport);
-  if (usePreviousOrdering)
-    m_previousOrdering.pop();
+  auto current_block = m_accessBlocks->findAccessBlock(*m_viewport);
 
   bool is_access_block = current_block->isAccessBlock();
 
@@ -101,24 +96,14 @@ void icov::omnidirectional_layer::RequestManager::processViewport(
 
   while (m_picture->isValidBlock(current_block)) {
 
-      m_previousOrdering.push(current_block->getIdSelf());
-
       processBlock(is_access_block, *current_block);
 
       // if same position as previous, take next in previous ordering
       // else find next block
-      current_block =
-          usePreviousOrdering
-              ? m_picture->getById(m_previousOrdering.front())
-              : m_ordering->getNextBlock(*current_block, *m_viewport);
-
-      if (usePreviousOrdering)
-        m_previousOrdering.pop();
+      current_block = m_ordering->getNextBlock(*current_block, *m_viewport);
 
       is_access_block = false;
   }
-
-  m_previousOrdering.push(m_picture->getInvalidBlockId());
 }
 
 void RequestManager::update(const request_t &r) {
@@ -127,16 +112,8 @@ void RequestManager::update(const request_t &r) {
 
   ICOV_DEBUG << "Set request " << to_string(r);
 
-  bool use_previous_ordering = (r.viewpoint == m_request.viewpoint);
+  m_request = r;
 
-  use_previous_ordering = false; // deactivated due to a bug
-
-  if (!use_previous_ordering)
-      m_previousOrdering = std::queue<Block::id_t>();
-
-  m_currentFrame = r.frameID;
-
-#if ICOV_ASSERTION_ENABLED
   icov::assert::not_null(m_ordering.get(),
                          ICOV_DEBUG_HEADER("Ordering manager cannot be null"));
   icov::assert::not_null(m_viewport.get(),
@@ -148,9 +125,7 @@ void RequestManager::update(const request_t &r) {
   icov::assert::not_null(
       m_blockPrediction.get(),
       ICOV_DEBUG_HEADER("Predictions manager manager cannot be null"));
-#endif
 
-  m_request = r;
 
   m_ordering->reset();
   m_viewport->viewportGeometry().setPov(
@@ -159,7 +134,7 @@ void RequestManager::update(const request_t &r) {
   if (m_blockProcessor)
       m_blockProcessor->beforeOrderingLoop(request());
 
-  processViewport(use_previous_ordering);
+  processViewport();
 
   if (m_blockProcessor)
       m_blockProcessor->afterOrderingLoop(request());

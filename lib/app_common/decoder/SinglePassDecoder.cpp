@@ -42,9 +42,7 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder()
     : m_extractionBitstream(
           std::make_shared<bitstream::IcovExtractedBitstream>()),
       m_blockProcessor(std::make_shared<IBlockProcessor>()),
-      m_request(viewpoint_t(std::numeric_limits<angle_t>::max(),
-                            std::numeric_limits<angle_t>::max()),
-                std::numeric_limits<frame_t>::max()) {
+      m_request(request_t::undefined()) {
   m_blockProcessor->setName("Root");
   m_blockProcessor->setEnabled(true);
 }
@@ -131,6 +129,7 @@ void decoder::SinglePassDecoder::openIcovFile(
   m_icovFile->readContentParameterSet();
   setContentParams(m_icovFile->contentParameterSet());
   m_icovFile->readBlockPos();
+  m_request = request_t::undefined();
 }
 
 void decoder::SinglePassDecoder::addDefaultNavigation() {

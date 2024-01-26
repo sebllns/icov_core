@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <sstream>
 #include <string>
 namespace icov {
@@ -28,6 +29,12 @@ struct request_t
 
     request_t(angle_t p_angleX, angle_t p_angleY, frame_t p_frameID)
         : viewpoint(p_angleX, p_angleY), frameID(p_frameID) {}
+
+    static request_t undefined() {
+      return request_t(viewpoint_t(std::numeric_limits<angle_t>::max(),
+                                   std::numeric_limits<angle_t>::max()),
+                       std::numeric_limits<frame_t>::max());
+    }
 };
 
 inline bool operator==(const viewpoint_t &a, const viewpoint_t &b)

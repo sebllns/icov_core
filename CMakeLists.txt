@@ -53,6 +53,7 @@ set(ICOV_LOG_LEVEL
 # ICOV_CONSOLE_COLOR_ENABLED: enable color formatting of the console -
 # ICOV_USE_OMP: enable parallelization with OMP - ICOV_ASSERTION_ENABLED: if set
 # to OFF, some heavy assertions will be disabled to improve performances
+option(ICOV_INTER_ENABLED "Enable inter (temporal) prediction in decoder" ON)
 option(ICOV_CORE_DEBUG_TRACE_ENABLED "Enable the trace debugger" OFF)
 option(ICOV_CORE_STACKTRACE_ENABLED "Enable the stacktrace" OFF)
 option(ICOV_CHECK_BITPLANE_ENCODING_ENABLED
@@ -379,6 +380,11 @@ endif()
 if(ICOV_ASSERTION_ENABLED)
   message(STATUS "[INFO] Assertions are ENABLED")
   add_compile_definitions("ICOV_ASSERTION_ENABLED")
+endif()
+
+if(NOT ICOV_INTER_ENABLED)
+  message(STATUS "[INFO] INTER prediction is DISABLED")
+  add_compile_definitions("ICOV_NO_INTER")
 endif()
 
 # Write the version number to a file

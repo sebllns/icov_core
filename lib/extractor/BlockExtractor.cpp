@@ -100,26 +100,12 @@ void icov::extractor::BlockExtractor::_processBlock(
   std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf());
 
-  if (true || previouslyDecoded != r.frameID) {
+  if (previouslyDecoded != r.frameID) {
     // get stored syndrome size per bitplane
     std::cout << "extract_syndrome_sizes" << std::endl;
     for (auto &ch : m_channelExtractor) {
       ch->extract_stored_syndrome_size(is_access_block);
     }
-
-    //    if (is_access_block) {
-    //      fs::path ab_path = m_icovFile->getPath() / std::to_string(r.frameID)
-    //      /
-    //                         (std::to_string(b.getIdSelf()) + ".tiff");
-    //      ICOV_DEBUG << "extract access block " << ab_path;
-    //      ushort filesize = fs::file_size(ab_path);
-    //      std::ifstream fin(ab_path, std::ios::binary);
-    //      char buf[filesize];
-    //      fin.read(buf, filesize);
-    //      // ICOV_DEBUG << icov::io::make_hex_string(buf, buf + filesize,
-    //      true,
-    //      // true);
-    //    }
 
     if (!is_access_block) {
 
@@ -136,22 +122,25 @@ void icov::extractor::BlockExtractor::_processBlock(
       BitLength inter_length = std::numeric_limits<BitLength>::infinity();
       BitLength intra_length = 0;
 
+#ifdef ICOV_NO_INTER
       check_inter = false;
+#endif
 
       bitstream::VideoStreamDebugger::get_mutable_instance()
           .setDebuggingPredictionID(BlockPrediction::INTER);
       // extract inter-prediction paramaters and calcultate its bitrate
-      //      if (check_inter) {
-      //        for (auto &ch : m_channelExtractor) {
-      //          ch->extractPredParams(S_INTER);
-      //          inter_length +=
-      //          ch->predParams().at(S_INTER).getSyndromeLength(); check_inter
-      //          = ch->predParams().at(S_INTER).getEnabledFlag();
-      //        }
-      //      }
-
       if (check_inter) {
-        ICOV_DEBUG << "INTER LENGTH " << inter_length;
+        for (auto &ch : m_channelExtractor) {
+          ch->extractPredParams(S_INTER);
+          inter_length += ch->predParams().at(S_INTER).getSyndromeLength();
+          check_inter = ch->predParams().at(S_INTER).getEnabledFlag();
+        }
+      }
+
+      ICOV_DEBUG << "EXTRACT REQUEST " << to_string(r) << " "
+                 << previouslyDecoded;
+      if (check_inter) {
+        ICOV_DEBUG << "Frame " << r.frameID << " INTER LENGTH " << inter_length;
       }
 
       // jump to selected intra prediction parameters

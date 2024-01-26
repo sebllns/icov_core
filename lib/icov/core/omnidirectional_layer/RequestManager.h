@@ -77,12 +77,10 @@ private:
   std::shared_ptr<IBlockPredictionManager> m_blockPrediction;
   request_t m_request;
 
-  std::queue<Block::id_t> m_previousOrdering;
   std::vector<frame_t> m_previousDecoded;
-  frame_t m_currentFrame;
 
   void processBlock(bool is_access_block, const Block &current_block);
-  void processViewport(bool usePreviousOrdering);
+  void processViewport();
 
 public:
   RequestManager() = default;

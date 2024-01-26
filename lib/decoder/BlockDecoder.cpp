@@ -145,7 +145,7 @@ void icov::decoder::BlockDecoder::_processBlock(
       .setDebuggingPredictionID(pred);
 
   if (!m_params.bypass_decoding && !m_bitstream->isEmpty() &&
-      (true || previouslyDecoded != r.frameID)) {
+      (previouslyDecoded != r.frameID)) {
     for (auto &dec : m_channelDecoder) {
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "START DECODE COMP " << dec->get_params().CompID;
