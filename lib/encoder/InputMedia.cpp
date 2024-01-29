@@ -52,6 +52,7 @@ InputVideo::InputVideo(const fs::path &path) : icov::IVideo<cv::Mat>(path), m_vi
   icov::assert::check(m_height > 0, ICOV_DEBUG_HEADER("Video height > 0"));
 
   m_frameCount = 1;
+  m_frameID = 0;
 }
 
 void InputVideo::setFrame(frame_t i) {
@@ -60,10 +61,10 @@ void InputVideo::setFrame(frame_t i) {
   if (i != (getFrameID() + 1)) {
     m_videoCV.set(cv::CAP_PROP_POS_FRAMES, i);
   }
-  if (m_videoCV.isOpened() && m_videoCV.read(m_frameData)) {
+  if (m_videoCV.isOpened() && m_videoCV.read(m_frameData) &&
+      !m_frameData.empty()) {
     m_frameID = i;
     m_frameCount = i + 1;
-    std::cout << "FRAME " << m_frameID << "/" << m_frameCount << std::endl;
   }
 }
 
