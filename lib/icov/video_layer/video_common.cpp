@@ -10,7 +10,7 @@
 void
 icov::video::init_video_lib(int argc, char* argv[])
 {
-  std::cout << "VVCSoftware: VTM Encoder Version " << NEXT_SOFTWARE_VERSION
+  ICOV_INFO << "Open VVCSoftware: VTM Encoder Version " << NEXT_SOFTWARE_VERSION
             << std::endl;
 
   fprintf(stdout, NVM_ONOS);

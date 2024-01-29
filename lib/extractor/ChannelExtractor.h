@@ -110,6 +110,7 @@ public:
    * @return The size of the coder
    */
   int getCoderSize() const;
+  int getBitplaneCount() const;
 
   // void extract_access_block(const omnidirectional_layer::Block &b,
   //                        byte *syndrome_buf);

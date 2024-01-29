@@ -78,9 +78,6 @@ void icov::extractor::InputIcov::readSyndrome(icov::byte *output,
 }
 
 void icov::extractor::InputIcov::readBlockPos() {
-
-  std::cout << "readBlockPos()" << std::endl;
-
   m_blockCount = m_contentParameterSet.icu_count;
   m_rates_pos.resize(m_blockCount + 1, 0);
   m_synd_pos.resize(m_blockCount + 1, 0);
@@ -227,8 +224,6 @@ void icov::extractor::InputIcov::writeInfos(std::ofstream &output, int key,
                                             void *param) {}
 
 void icov::extractor::InputIcov::setFrame(frame_t frame) {
-  std::cout << "setFrame " << frame << std::endl;
-
   uint32_t frameRateSize = 0;
   uint32_t frameSyndromeSize = 0;
 
@@ -276,7 +271,7 @@ void icov::extractor::InputIcov::setFrame(frame_t frame) {
   getStream(bitstream::eIcovStream::METRICS)
       .seekg(m_frameID * m_blockCount * sizeof(float), std::ios_base::beg);
 
-  std::cout << m_rates_pos[0] << ", " << m_synd_pos[0] << std::endl;
+  // std::cout << m_rates_pos[0] << ", " << m_synd_pos[0] << std::endl;
 
   this->readBlockPos();
 }

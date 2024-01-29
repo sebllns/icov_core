@@ -72,7 +72,8 @@ UInt icov::video::EncodingStructure::get_icuIndex(
   int w_block = b.parent()->col(b.w());
   int h_block = b.parent()->row(b.h());
 
-  std::cout << x_block << ", " << y_block << ", " << w_block << ", " << h_block;
+  // std::cout << x_block << ", " << y_block << ", " << w_block << ", " <<
+  // h_block;
 
   Position pos(static_cast<float>(x_block) / static_cast<float>(w_block),
                static_cast<float>(y_block) / static_cast<float>(h_block));

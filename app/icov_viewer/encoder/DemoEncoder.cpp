@@ -89,7 +89,7 @@ void DemoEncoder::onMouseEncode(int event, int x, int y, int flags) {
 void DemoEncoder::onEncodeBlock(int x, int y) {
   // select prediction from x, y
 
-  std::cout << x << ", " << y << std::endl;
+  // std::cout << x << ", " << y << std::endl;
 
   uint predid = omnidirectional_layer::BlockPrediction::NONE;
 

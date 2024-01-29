@@ -8,6 +8,8 @@
 #include "icov_path.h"
 #include "icov_request.h"
 #include "opencv2/core.hpp"
+#include "opencv2/core/base.hpp"
+#include "opencv2/core/hal/interface.h"
 #include "opencv2/core/persistence.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
@@ -22,13 +24,14 @@
 #include <cstdlib>
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <unistd.h>
 
 InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
                                        const options::args_t &args)
     : InteractiveModeBase(), m_decoderCtrl(icov_file, args),
-      m_showSource(false) {
+      m_showSource(false), is_playing(true) {
   this->m_config.f1 = -66;
   this->m_config.f2 = -65;
   this->m_config.f3 = -64;
@@ -50,8 +53,9 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   m_erp_psnr_sum = 0;
   m_req_count = 0;
   m_frame = 0;
+  is_decoding = true;
 
-  this->showViewport();
+  m_monitor = cv::Mat(cv::Size(400, 200), CV_8UC3, bgrColor::BLACK());
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &
@@ -100,15 +104,19 @@ void InteractiveDecoder::drawBlock(
 
     output.setTo(color);
     cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
-                cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
+                cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::WHITE(), 1);
+    cv::rectangle(output,
+                  cv::Rect(roi.x + 1, roi.y + 1, roi.width - 1, roi.height - 1),
+                  bgrColor::GREEN(), 1);
   } break;
 
     /////////////////////////////////////////
   case drawType::VIEWPORT_RATE: {
     cv::Scalar color = m_viewportRate * bgrColor().BLUE();
     output.setTo(color);
+    cv::rectangle(output, roi, bgrColor::GREEN(), 1);
     cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
-                cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
+                cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::WHITE(), 1);
 
   } break;
 
@@ -165,7 +173,7 @@ void InteractiveDecoder::drawBlock(
     }
     output.setTo(color);
     cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
-                cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(0, 0, 0), 1);
+                cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::BLACK(), 1);
   } break;
 
     /////////////////////////////////////////
@@ -193,7 +201,7 @@ void InteractiveDecoder::drawBlock(
     }
     output.setTo(color);
     cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
-                cv::FONT_HERSHEY_PLAIN, 0.8, cv::Scalar(255, 255, 255), 1);
+                cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::BLACK(), 1);
   } break;
 
     /////////////////////////////////////////
@@ -206,6 +214,8 @@ void InteractiveDecoder::drawBlock(
     auto s = cv::sum(m_groundTruthDiff(roi));
     bool is_good = (s == s.zeros());
     output.setTo(is_good ? bgrColor::GREEN() : bgrColor::RED());
+    cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
+                cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::BLACK(), 1);
     if (!is_good) {
       ICOV_ERROR << "Bad decoded block " << b.getIdSelf();
       ICOV_ERROR << "Frame: " << i.frame;
@@ -213,6 +223,12 @@ void InteractiveDecoder::drawBlock(
       ICOV_ERROR << "Prediction: " << BlockPrediction::toString(i.prediction);
       ICOV_ERROR << "Rate: " << i.rate();
     }
+  } break;
+
+    /////////////////////////////////////////
+  case drawType::DECODED: {
+    ICOV_DEBUG << roi;
+    m_decodedErp(roi).copyTo(output);
   } break;
   }
 }
@@ -225,7 +241,7 @@ void InteractiveDecoder::updateF1() {
       drawBlocks(drawType::SOURCE);
     }
   } else {
-    VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_fullView);
+    drawBlocks(drawType::DECODED);
   }
 }
 
@@ -243,11 +259,14 @@ void InteractiveDecoder::updateF4() { drawBlocks(drawType::PREDICTION); }
 void InteractiveDecoder::updateF5() { drawBlocks(drawType::PREDICTION_CAT); }
 
 void InteractiveDecoder::updateF6() {
-  m_decoderCtrl.loadGroundTruthFrame();
-  if (decoderCtrl().analyzer().hasGroundTruth()) {
-    m_groundTruthDiff =
-        decoderCtrl().analyzer().GroundTruth->getCurrentFrame() - m_decodedErp;
-    drawBlocks(drawType::SOURCE_DIFF);
+  if (is_decoding) {
+    m_decoderCtrl.loadGroundTruthFrame();
+    if (decoderCtrl().analyzer().hasGroundTruth()) {
+      m_groundTruthDiff =
+          decoderCtrl().analyzer().GroundTruth->getCurrentFrame() -
+          m_decodedErp;
+      drawBlocks(drawType::SOURCE_DIFF);
+    }
   }
 }
 
@@ -296,26 +315,51 @@ bool InteractiveDecoder::processKey(char key) {
       request_t(DEG2RAD * pov_x, DEG2RAD * pov_y, m_frame));
 
   if (updated) {
-    m_decoderCtrl.loadGroundTruthFrame();
-    VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_decodedErp);
-    this->get360viewer()->loadEquirectangularImage(m_decodedErp);
-    this->get360viewer()->getImage_BGR(m_viewportView);
 
-    cv::imshow("decoded", m_viewportView);
+    float vp_psnr = 0;
+    float vp_rate = 0;
+
+    m_decoderCtrl.loadGroundTruthFrame();
+    m_decoderCtrl.loadSourceFrame();
+
+    VTM_OPENCV_Utility::toBGRMat(getDecoder()->getDecodedBuf(), m_decodedErp);
+
+    if (m_fullView.size() != m_decodedErp.size()) {
+      m_fullView = m_decodedErp.clone();
+      m_fullView.setTo(bgrColor::BLACK());
+    }
+
+    if (is_decoding) {
+      this->get360viewer()->loadEquirectangularImage(m_decodedErp);
+      this->get360viewer()->getImage_BGR(m_viewportView);
+    }
+
+    vp_rate = (float)video_layer::VideoMetrics::get_const_instance()
+                  .viewportEncodedBitlength() /
+              m_viewportView.total();
+
+    //    cv::imshow("decoded", m_viewportView);
 
     if (m_decoderCtrl.analyzer().hasGroundTruth()) {
       this->get360viewer()->loadEquirectangularImage(
           m_decoderCtrl.analyzer().GroundTruth->getCurrentFrame());
       this->get360viewer()->getImage_BGR(m_sourceViewport);
 
-      m_viewportMse = VTM_OPENCV_Utility::mse(m_sourceViewport, m_viewportView);
-      cv::imshow("ground truth", m_sourceViewport);
+      if (is_decoding) {
+        m_viewportMse =
+            VTM_OPENCV_Utility::mse(m_sourceViewport, m_viewportView);
+        //      cv::imshow("ground truth", m_sourceViewport);
 
-      if (m_viewportMse != 0) {
-        ICOV_ERROR << "Request " << to_string(getDecoder()->getRequest());
-        ICOV_ERROR << "Decoding error detected! "
-                   << " MSE should be 0, but MSE=" << m_viewportMse;
-        ICOV_ERROR << "Press F6 to detect bad decoded blocks";
+        if (m_viewportMse != 0) {
+          ICOV_ERROR << "Request " << to_string(getDecoder()->getRequest());
+          ICOV_ERROR << "Decoding error detected! "
+                     << " MSE should be 0, but MSE=" << m_viewportMse;
+          ICOV_ERROR << "Press F6 to detect bad decoded blocks";
+        }
+      } else {
+        m_decoderCtrl.analyzer().GroundTruth->getCurrentFrame().copyTo(
+            m_decodedErp);
+        m_sourceViewport.copyTo(m_viewportView);
       }
     }
 
@@ -323,14 +367,16 @@ bool InteractiveDecoder::processKey(char key) {
       this->get360viewer()->loadEquirectangularImage(
           m_decoderCtrl.analyzer().Source->getCurrentFrame());
       this->get360viewer()->getImage_BGR(m_sourceViewport);
-
       m_viewportMse = VTM_OPENCV_Utility::mse(m_sourceViewport, m_viewportView);
+      vp_psnr = icov::maths::psnr(m_viewportMse);
+      //      cv::imshow("source", m_sourceViewport);
+    }
 
-      float vp_psnr = icov::maths::psnr(m_viewportMse);
-
-      icov::udp::send_udp_message(std::to_string(vp_psnr), "127.0.0.1", 5005);
-
-      cv::imshow("source", m_sourceViewport);
+    try {
+      icov::udp::send_udp_message(std::to_string(vp_rate) + " " +
+                                      std::to_string(vp_psnr),
+                                  "127.0.0.1", 5005);
+    } catch (...) {
     }
   }
 
@@ -392,11 +438,43 @@ bool InteractiveDecoder::processKey(char key) {
   if (key == (char)config().custom_keys.at("show_source"))
     m_showSource = !m_showSource;
 
-  if (key == 'f')
+  m_monitor.setTo(bgrColor::BLACK());
+
+  int hline = 15;
+  int yline = 10;
+  std::stringstream info_txt;
+  info_txt << "Video: ";
+  info_txt << (is_playing ? "playing" : "paused");
+  info_txt << " ; frame " << m_frame;
+  cv::putText(m_monitor, info_txt.str(), cv::Point(10, yline),
+              cv::FONT_HERSHEY_PLAIN, 1, bgrColor::PASTEL_GREEN(), 1);
+
+  yline += hline;
+  info_txt = std::stringstream();
+  info_txt << "Lon.: " << pov_x + 180 << ", Lat.: " << pov_y;
+  cv::putText(m_monitor, info_txt.str(), cv::Point(10, yline),
+              cv::FONT_HERSHEY_PLAIN, 1, bgrColor::PASTEL_GREEN(), 1);
+
+  yline += hline;
+  info_txt = std::stringstream();
+  info_txt << "ICOV Decoder: " << (is_decoding ? "ON" : "OFF");
+  cv::putText(m_monitor, info_txt.str(), cv::Point(10, yline),
+              cv::FONT_HERSHEY_PLAIN, 1, bgrColor::PASTEL_GREEN(), 1);
+
+  cv::imshow("ICOV Monitor", m_monitor);
+
+  if (key == 'p') {
+    is_playing = !is_playing;
+  }
+
+  if (is_playing || key == 'f')
     m_frame =
         (m_frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
 
-  cv::imwrite("./decode.jpg", this->m_fullView);
+  if (key == 'c') {
+    is_decoding = !is_decoding;
+    m_decoderCtrl.getDecoder()->blockDecoder()->switchBypassDecodingFlag();
+  }
 
   return true;
 }

@@ -71,6 +71,26 @@ void icov::extractor::BlockExtractor::fill_metrics(
   float mse = 0.;
   m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
   icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
+
+  for (auto &ch : m_channelExtractor) {
+    icov::video_layer::VideoMetrics::get_mutable_instance()
+        .getBlock(b)
+        .decodedBitlength += ch->getBitplaneCount() * ch->getCoderSize();
+
+    int si_idx = 0;
+    BlockPrediction::ePredType ept = BlockPrediction::toPredType(prediction);
+    if (ept == BlockPrediction::ePredType::NONE) {
+      si_idx = S_STORED;
+    } else if (ept == BlockPrediction::ePredType::INTER) {
+      si_idx = S_INTER;
+    } else {
+      si_idx = S_INTRA;
+    }
+
+    icov::video_layer::VideoMetrics::get_mutable_instance()
+        .getBlock(b)
+        .encodedBitlength += ch->predParams()[si_idx].getSyndromeLength();
+  }
 }
 
 void icov::extractor::BlockExtractor::_processBlock(
@@ -97,12 +117,10 @@ void icov::extractor::BlockExtractor::_processBlock(
   bitstream::VideoStreamDebugger::get_mutable_instance()
       .setDebuggingPredictionID(block_prediction);
 
-  std::cout << "SELECT BLOCK " << b.getIdSelf() << std::endl;
   m_icovFile->selectBlock(b.getIdSelf());
 
   if (previouslyDecoded != r.frameID) {
     // get stored syndrome size per bitplane
-    std::cout << "extract_syndrome_sizes" << std::endl;
     for (auto &ch : m_channelExtractor) {
       ch->extract_stored_syndrome_size(is_access_block);
     }
@@ -168,6 +186,7 @@ void icov::extractor::BlockExtractor::_processBlock(
 
       // select prediction with minimal bitrate
       if (check_inter && (inter_length <= intra_length)) {
+
         block_prediction =
             icov::omnidirectional_layer::BlockPrediction::ePredType::INTER;
 
@@ -202,6 +221,7 @@ void icov::extractor::BlockExtractor::_processBlock(
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {
   icov::video_layer::VideoMetrics::get_mutable_instance()
       .visible_blocks.clear();
+  icov::video_layer::VideoMetrics::get_mutable_instance().resetMetrics();
   m_icovFile->setFrame(r.frameID);
   block_count = 0;
 }

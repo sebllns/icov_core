@@ -3,6 +3,7 @@
 #include "icov_log.h"
 #include "icov_program_options.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
+#include "video_layer/video_common.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/program_options.hpp>
@@ -104,6 +105,7 @@ inline int icov_main(int argc, char *argv[], IIcovProgram &pg)
     icov::logging::init_log(true);
     pg.processCommandLine(argc, argv);
     icov::logging::set_filter(pg.logLevel());
+    icov::video::init_video_lib(argc, argv);
     pg.launchProgram();
   } catch (std::exception &e) {
     ICOV_INFO << std::endl << pg.optionsDesc() << std::endl;

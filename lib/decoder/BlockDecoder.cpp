@@ -108,6 +108,10 @@ void BlockDecoder::setBypassDecodingFlag(bool flag) {
   m_params.bypass_decoding = flag;
 }
 
+void BlockDecoder::switchBypassDecodingFlag() {
+  m_params.bypass_decoding = !m_params.bypass_decoding;
+}
+
 void icov::decoder::BlockDecoder::_beforeOrderingLoop(const request_t &r) {}
 
 void icov::decoder::BlockDecoder::_afterOrderingLoop(const request_t &r) {}

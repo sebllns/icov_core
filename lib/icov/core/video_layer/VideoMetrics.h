@@ -126,6 +126,11 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
         return metrics.size();
     }
 
+    void resetMetrics() {
+        for (auto &m : metrics)
+            m.reset();
+    }
+
     BitLength viewportEncodedBitlength() const
     {
         return std::accumulate(metrics.cbegin(), metrics.cend(), 0,

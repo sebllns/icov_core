@@ -45,6 +45,7 @@
  *****************************************************************************/
 #pragma once
 
+#include "app_common/tools/icov_udp.h"
 #include "gl_viewer/single360degreecamerahandler.h"
 
 #include "opencv2/core/mat.hpp"
@@ -198,6 +199,9 @@ class InteractiveModeBase
 
   private:
     std::unique_ptr<Single360degreeCameraHandler> m_360viewer;
+    icov::udp::UdpReceiver m_udp_rcv;
+    bool is_running;
+    char m_currentKeycode;
     float fovX_degree;
     int block_size;
     float pov_x;

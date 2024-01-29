@@ -3,6 +3,7 @@
 #include "gl_viewer/single360degreecamerahandler.h"
 #include "icov_log.h"
 
+#include <cstdlib>
 #include <opencv2/core/types.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -17,6 +18,7 @@
 #include <iostream>
 #include <memory>
 #include <stdio.h>
+#include <string>
 #include <time.h> /* time */
 
 enum KeyName
@@ -40,8 +42,9 @@ enum KeyName
 };
 
 InteractiveModeBase::InteractiveModeBase()
-    : m_360viewer(nullptr), fovX_degree(0.), block_size(0), pov_x(0.),
-      pov_y(0.), m_special_key(0), m_wait_delay(0) {
+    : m_360viewer(nullptr), m_udp_rcv("127.0.0.1", 5387, true),
+      is_running(false), m_currentKeycode(-1), fovX_degree(0.), block_size(0),
+      pov_x(0.), pov_y(0.), m_special_key(0), m_wait_delay(0) {
   // default
   init360Viewer(1920, 1080, 35);
 }
@@ -52,22 +55,39 @@ InteractiveModeBase::~InteractiveModeBase()
 }
 
 void InteractiveModeBase::run() {
+  is_running = true;
   m_special_key = m_config.f1;
   cv::namedWindow(const_window_name, cv::WINDOW_NORMAL);
   
   m_fullView = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
   m_viewportView = cv::Mat(128, 256, CV_8UC3, cv::Scalar(255, 0, 255));
 
-  showErp();
+  showViewport();
 
   char key = '\0';
   reset();
-  while (processKey(key)) {
+  while (is_running) {
+    if (key != -1) {
+      ICOV_DEBUG << "key code = " << (int)key;
+    }
+
+    m_currentKeycode = key;
+    processKey(key);
     draw();
     cv::imshow(const_window_name, m_displayImage);
-    key = cv::waitKey(m_wait_delay);
-    if (key != -1)
-      ICOV_DEBUG << "pressed key code = " << (int)key;
+    //}
+
+    key = cv::waitKey(30);
+
+    if (key == -1) {
+      std::string cmd = m_udp_rcv.receive();
+      if (!cmd.empty()) {
+        ICOV_DEBUG << "udp " << cmd;
+        key = (char)std::stoi(cmd);
+      } else {
+        key = -1;
+      }
+    }
   }
 }
 
@@ -129,8 +149,10 @@ void InteractiveModeBase::init360Viewer(int width, int height,
 
 bool InteractiveModeBase::processKey(char key)
 {
-    if (key == m_config.quit)
+    if (key == m_config.quit) {
+        is_running = false;
         return false;
+    }
 
     if (key == m_config.reset)
         reset();

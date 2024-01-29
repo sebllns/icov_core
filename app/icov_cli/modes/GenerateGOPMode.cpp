@@ -19,9 +19,9 @@ using namespace icov;
 GenerateGOPMode::GenerateGOPMode(const options::args_t &args) {
   m_video_path = options::parseInputFile(args);
   m_gop_path = options::parseOutputFile(args);
-  m_start_frame = 100;
+  m_start_frame = options::parseFrameStart(args);
   m_gop_count = 10;
-  m_gop_size = 16;
+  m_gop_size = 4;
 }
 
 void GenerateGOPMode::run() {
@@ -62,8 +62,9 @@ void GenerateGOPMode::run() {
         frame_list << frame_file << std::endl;
 
         m_current_frame = video->getCurrentFrame();
-        cv::resize(m_current_frame, m_current_frame, cv::Size(2048, 1024), 0, 0,
-                   cv::INTER_LANCZOS4);
+        //        cv::resize(m_current_frame, m_current_frame, cv::Size(2048,
+        //        1024), 0, 0,
+        //                   cv::INTER_LANCZOS4);
         cv::imwrite((gop_path / frame_file).string(), m_current_frame);
         imax = video->getFrameCount();
       }

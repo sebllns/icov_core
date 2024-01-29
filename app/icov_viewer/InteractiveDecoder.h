@@ -52,6 +52,7 @@
 #include "icov_path.h"
 #include "icov_types.h"
 #include "omnidirectional_layer/Block.h"
+#include "opencv2/core/mat.hpp"
 #include "video_layer/VideoMetrics.h"
 
 #include <fstream>
@@ -76,6 +77,7 @@ class InteractiveDecoder : public InteractiveModeBase
     cv::Mat m_decodedErp;
     cv::Mat m_sourceViewport;
     cv::Mat m_groundTruthDiff;
+    cv::Mat m_monitor;
 
     float m_vp_rate_sum;
     float m_vp_psnr_sum;
@@ -84,6 +86,8 @@ class InteractiveDecoder : public InteractiveModeBase
     int m_req_count;
 
     frame_t m_frame;
+    bool is_playing;
+    bool is_decoding;
 
     enum class drawType {
       BLOCK_RATE,
@@ -92,6 +96,7 @@ class InteractiveDecoder : public InteractiveModeBase
       PREDICTION_CAT,
       SOURCE,
       SOURCE_DIFF,
+      DECODED,
     };
 
     void drawBlocks(drawType type);
