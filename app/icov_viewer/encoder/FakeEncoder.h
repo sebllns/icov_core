@@ -10,6 +10,7 @@
 
 /** @file encoder.h
  *  @brief Defines an actual ICOV encoder.
+ *  @warning DEPRECATED
  *  @ingroup encoder
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.5.0

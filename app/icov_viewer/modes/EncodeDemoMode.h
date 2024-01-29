@@ -5,8 +5,7 @@
  */
 
 /** @file EncodeDemoMode.h
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
+ *  @warning DEPRECATED
  *  @ingroup CLI
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.5.0

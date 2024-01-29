@@ -3,6 +3,7 @@
 #include "encoder/IcovMediaEncoder.h"
 
 #include "app_common/program/icov_program_options.h"
+#include "icov_exception.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 #include "opencv2/core/hal/interface.h"
@@ -53,6 +54,9 @@ void TestFullFrame::AddProgramOptions(
 }
 
 TestFullFrame::TestFullFrame(const po::variables_map &args) {
+
+  ICOV_THROW_RUNTIME_EXCEPTION("TestFullFrame is deprecated");
+
   ICOV_DEBUG << "Parse program arguments";
 
   m_parameters.input_file =
@@ -122,10 +126,6 @@ void TestFullFrame::encode() {
   //  factory::y_x_ratio(resolution)); viewport_geometry vpg =
   //  factory::default_geometry(fov, resolution);
   //  m_encoder->defaultEncode(m_parameters.viewport_padding, vpg);
-
-#warning FIXME
-#pragma message("FIXME")
-  throw "FIXME";
 }
 
 void TestFullFrame::decode() {

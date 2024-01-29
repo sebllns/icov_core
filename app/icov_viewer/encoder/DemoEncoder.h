@@ -11,6 +11,7 @@
 /** @file DemoEncoder.h
  *  @brief Defines an actual ICOV DemoEncoder.
  *  @ingroup DemoEncoder
+ *  @warning DEPRECATED
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.5.0
  *  @date 2023

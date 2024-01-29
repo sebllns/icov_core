@@ -440,14 +440,12 @@ void IMediaEncoder<T>::encode(
       input.setFrame(f);
 
       if (input.getFrameID() == f) {
-        ICOV_DEBUG << "Encode frame " << i << " / " << imax;
-
+        ICOV_INFO << "Encode frame " << i;
         pFrameEnc->setFrame(i);
         pFrameEnc->encode(input, picture, block_prediction);
         imax = input.getFrameCount();
       }
 
-      ICOV_DEBUG << "--> Encode frame " << i << " / " << imax;
       this->endEncoding();
 
     } catch (const std::exception &e) {

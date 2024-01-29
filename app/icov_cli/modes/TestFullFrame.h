@@ -5,8 +5,8 @@
  */
 
 /** @file TestFullFrame.h
- *  @brief BRIEF_DESCRIPTION
- *  DESCRIPTION
+ *  @brief DEPRECATED CODE
+ *  @warning DEPRECATED
  *  @ingroup CLI
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.5.0

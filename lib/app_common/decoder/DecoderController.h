@@ -53,6 +53,8 @@
 #include "app_common/program/icov_program_options.h"
 #include "decoder/CsvOutput.h"
 #include "encoder/InputMedia.h"
+#include "extractor/InputMedia.h"
+#include "icov_exception.h"
 #include "icov_io.h"
 #include "icov_path.h"
 #include "icov_request.h"
@@ -60,6 +62,7 @@
 
 #include <boost/filesystem/directory.hpp>
 #include <boost/format.hpp>
+#include <cmath>
 #include <memory>
 #include <string>
 
@@ -239,6 +242,14 @@ public:
     }
   }
 
+  const InputIcov &getIcovFile() const {
+    if (m_factory.Decoder && m_factory.Decoder->icovFile()) {
+      return *m_factory.Decoder->icovFile();
+    }
+
+    ICOV_THROW_NULLPTR("No ICOV file");
+  }
+
   std::queue<request_t> readRequests() {
     std::queue<request_t> requests;
 
@@ -250,6 +261,14 @@ public:
     path::assert_file_exists(positions_file);
 
     std::ifstream inputFile(positions_file);
+
+    float framerate = 30;
+
+    try {
+      framerate = getIcovFile().contentParameterSet().content_framerate;
+    } catch (...) {
+      framerate = 30;
+    }
 
     if (!inputFile.is_open()) {
       ICOV_ERROR << "Failed to open file at:" << positions_file;
@@ -270,8 +289,7 @@ public:
         }
 
         if (values.size() == 3) {
-          ///@todo TODO: interpolate frame from timestamp
-          frame_t frame = 0;
+          frame_t frame = (frame_t)std::floor((float)(framerate * values[0]));
           angle_t pov_x = values[2];
           angle_t pov_y = values[1];
           requests.push(request_t(pov_x, pov_y, frame));

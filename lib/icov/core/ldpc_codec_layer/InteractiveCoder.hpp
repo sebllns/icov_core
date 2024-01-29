@@ -399,8 +399,9 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
   if (coding_offset == coding_flag) {
     try {
       int numerrors = this->encode(numcodeIdx, stored_synd, bitplane_bits);
-      icov::assert::check(numerrors == 0, "No convergence for bitplane " +
-                                              std::to_string(bitplane_idx));
+      if (numerrors != 0)
+        ICOV_THROW_LOGICAL_EXCEPTION("No convergence for bitplane " +
+                                     std::to_string(bitplane_idx));
 
       if (params.CheckBitplaneEncoding) {
         ICOV_TRACE << "CHECK SYNDROME BP " << bitplane_idx;
@@ -420,7 +421,6 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       ICOV_WARNING << "Encoding bitplane as source as we catched exception in "
                       "bitplane encoding: "
                    << e.what();
-      ICOV_ERROR << boost::current_exception_diagnostic_information();
     } catch (...) {
       numcodeIdx = 0;
       coding_offset = SyndromeType_SOURCE;
@@ -430,7 +430,6 @@ void InteractiveCoder<Matrix>::encode_bitplane(const BitSymbolProvider &bsp,
       ICOV_WARNING
           << "Encoding bitplane as source as we catched unknown exception in "
              "bitplane encoding";
-      ICOV_ERROR << boost::current_exception_diagnostic_information();
     }
 
   } else {

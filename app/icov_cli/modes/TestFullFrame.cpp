@@ -53,6 +53,8 @@ void TestFullFrame::AddProgramOptions(
 }
 
 TestFullFrame::TestFullFrame(const po::variables_map &args) {
+  ICOV_THROW_RUNTIME_EXCEPTION("TestFullFrame is deprecated");
+
   ICOV_DEBUG << "Parse program arguments";
 
   m_parameters.input_file =
@@ -121,10 +123,6 @@ void TestFullFrame::encode() {
   //  factory::y_x_ratio(resolution)); viewport_geometry vpg =
   //  factory::default_geometry(fov, resolution);
   // m_encoder->defaultEncode(60, m_parameters.viewport_padding, );
-
-#warning FIXME
-#pragma message("FIXME")
-  throw "FIXME";
 }
 
 void TestFullFrame::decode() {
