@@ -99,8 +99,4 @@ void EncodeMode::run() {
                           quantization_params{enable_z_quantization, q_values},
                   .MaxRateNoCoding = 3}},
       *m_parameters.ldpc_params);
-
-#warning TODO
-#pragma message("TODO")
-  throw "TODO";
 }
