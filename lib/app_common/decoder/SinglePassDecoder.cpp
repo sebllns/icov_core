@@ -126,9 +126,8 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
 void decoder::SinglePassDecoder::openIcovFile(
     const boost::filesystem::path &path) {
   m_icovFile = std::make_shared<InputIcov>(path);
-  m_icovFile->readContentParameterSet();
+
   setContentParams(m_icovFile->contentParameterSet());
-  m_icovFile->readBlockPos();
   m_request = request_t::undefined();
 }
 
@@ -260,14 +259,35 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
-  m_request.frameID %= m_contentParams.content_framecount;
-
   if (m_request != r) {
     try {
       m_request = r;
+
+      bool play = false;
+
+      if (getParams().GopMode) {
+        if ((int)m_request.frameID == m_contentParams.content_framecount &&
+            !m_gops.empty()) {
+          play = true;
+          int nextGop = m_gops.front();
+          m_gops.pop();
+
+          if (getParams().LoopMode) {
+            m_gops.push(nextGop);
+          }
+        }
+
+      } else if (getParams().LoopMode) {
+        play = true;
+        m_request.frameID %= m_contentParams.content_framecount;
+      }
+
       m_extractionBitstream->empty();
-      m_navigation->Request->update(m_request);
-      decoded = true;
+
+      if (play) {
+        m_navigation->Request->update(m_request);
+        decoded = true;
+      }
     } catch (const std::exception &e) {
       ICOV_ERROR << e.what();
       catchError();

@@ -78,6 +78,8 @@ class SinglePassDecoder
       bool DummyViewport = false;
       fs::path IcovFile;
       fs::path LdpcDatabase;
+      bool GopMode = false;
+      bool LoopMode = true;
     };
 
     SinglePassDecoder();
@@ -135,6 +137,8 @@ class SinglePassDecoder
     std::shared_ptr<BlockDecoder> m_blockDecoder;
 
     request_t m_request;
+    std::queue<int> m_gops;
+
     void catchError();
 };
 } // namespace decoder

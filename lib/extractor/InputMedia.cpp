@@ -30,6 +30,10 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
     m_fileParts[i] = std::make_unique<std::ifstream>(
         part_file, std::ios_base::binary | std::ios_base::in);
   }
+
+  this->readContentParameterSet();
+  this->readBlockPos();
+  this->m_frameID = 0;
 }
 
 icov::extractor::InputIcov::~InputIcov() {}
