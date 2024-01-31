@@ -86,6 +86,8 @@ void InputVideo::writeInfos(std::ofstream &output, int key, void *param) {
 void instantiateInputMedia(const boost::filesystem::path &path,
                            std::unique_ptr<InputMedia> &output) {
 
+  ICOV_INFO << "Open Media " << path;
+
   if (fs::is_directory(path)) {
     output = std::make_unique<InputGop>(path);
     return;

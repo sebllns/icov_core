@@ -285,8 +285,7 @@ bool InteractiveDecoder::processKey(char key) {
     pov_x = m_requests.front().viewpoint.angleX;
     pov_y = m_requests.front().viewpoint.angleY;
     // frame = m_requests.front().frameID;
-    m_frame =
-        (m_frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
+    m_frame = m_requests.front().frameID;
     m_requests.pop();
 
     setPOV_DEG(pov_x, pov_y);
@@ -464,13 +463,11 @@ bool InteractiveDecoder::processKey(char key) {
 
   cv::imshow("ICOV Monitor", m_monitor);
 
-  if (key == 'p') {
+  if (key == 'p')
     is_playing = !is_playing;
-  }
 
   if (is_playing || key == 'f')
-    m_frame =
-        (m_frame + 1) % m_decoderCtrl.getDecoder()->icovFile()->getFrameCount();
+    ++m_frame;
 
   if (key == 'c') {
     is_decoding = !is_decoding;

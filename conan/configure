@@ -4,7 +4,7 @@ read -p "Press enter to continue"
 
 
 # we add -c tools.system.package_manager:mode=install if we want to install openGL
-conan install . --output-folder=conan --build=missing -c tools.system.package_manager:mode=install --settings compiler.libcxx="libstdc++11" --profile default --profile ./icov_profile
+conan install . --output-folder=conan --build="*" -c tools.system.package_manager:mode=install --settings compiler.libcxx="libstdc++11" --profile default --profile ./icov_profile
 
 read -p "Press enter to continue"
 

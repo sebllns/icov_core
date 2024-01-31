@@ -17,6 +17,7 @@
 #include "video_layer/extracted_stream.h"
 #include "video_layer/video_common.h"
 
+#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 
 #include <algorithm>
@@ -91,17 +92,6 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
                    (int)cps.block_fixed_size;
   ICOV_INFO << boost::format("%-30s %-d") % "QP:" % (int)cps.qp;
 
-  if (media_type == eMediaType::VIDEO) {
-    ICOV_INFO << boost::format("%-30s %-d") % "Framecount:" %
-                     (int)cps.content_framecount;
-    ICOV_INFO << boost::format("%-30s %-.3f") % "Framerate:" %
-                     (int)cps.content_framerate;
-    ICOV_INFO << boost::format("%-30s %-.3f") % "Duration:" %
-                     (int)cps.content_duration;
-    ICOV_INFO << boost::format("%-30s %-.3f") % "Duration:" %
-                     (float)(cps.content_framecount * cps.content_framerate);
-  }
-
   auto coder_params = parseLdpcParams(cps);
   coder_params->database = p.LdpcDatabase.string();
   setLdpcParams(*coder_params);
@@ -125,15 +115,28 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
             ICOV_DEBUG_HEADER("Bitstream must be empty after block decoding"));
       };
   m_blockDecoder->setAfter(check_empty_bitsteam);
+  m_request = request_t::undefined();
+  m_video_frame = 0;
 }
 
 void decoder::SinglePassDecoder::openIcovFile(
     const boost::filesystem::path &path) {
-  ICOV_INFO << "open " << path;
+
+  ICOV_INFO << boost::format("%-30s %-d") % "Open ICOV file:" % path;
+
   m_icovFile = std::make_shared<InputIcov>(path);
 
   setContentParams(m_icovFile->contentParameterSet());
-  m_request = request_t::undefined();
+
+  const auto &cps = m_contentParams;
+  const auto &media_type = static_cast<eMediaType>(cps.content_type);
+
+  if (media_type == eMediaType::VIDEO) {
+    ICOV_INFO << boost::format("%-30s %-d") % "Framecount:" %
+                     (int)cps.content_framecount;
+    ICOV_INFO << boost::format("%-30s %-.3f") % "Framerate:" %
+                     (int)cps.content_framerate;
+  }
 }
 
 void decoder::SinglePassDecoder::addDefaultNavigation() {
@@ -268,18 +271,27 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
 
   VideoStreamDebugger::get_mutable_instance().reset();
 
+  int cg = m_current_gop;
+  int cf = m_gop_frame;
+
   if (m_request != r) {
     try {
 
-      int delta_frame = r.frameID - m_request.frameID;
+      int delta_frame = 0;
+
+      if (m_request.frameID != m_request.undefined().frameID) {
+        delta_frame = r.frameID - m_video_frame;
+      }
 
       m_request = r;
+      m_video_frame = r.frameID;
 
       request_t &tmp_r = m_request;
 
       bool play = false;
 
       if (m_gops > 0) {
+        tmp_r.frameID = m_gop_frame;
         for (int f = 0; f < delta_frame; ++f) {
           ++m_gop_frame;
           if (m_gop_frame >= m_contentParams.content_framecount) {
@@ -292,8 +304,10 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
 
             if (m_current_gop < m_gops) {
               m_params.IcovFile = m_icovFile->getPath().parent_path() /
-                                  std::to_string(m_current_gop);
-              this->openIcovFile(m_params.IcovFile);
+                                  (std::to_string(m_current_gop) + ".icov");
+              if (fs::is_directory(m_params.IcovFile)) {
+                this->openIcovFile(m_params.IcovFile);
+              }
             } else {
               play = false;
             }
@@ -305,11 +319,13 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
           play = true;
           tmp_r.frameID = m_gop_frame;
         }
-      }
 
-      if (tmp_r.frameID < m_contentParams.content_framecount) {
+        if (m_current_gop == cg && m_gop_frame == cf)
+          play = false;
+
+      } else if (tmp_r.frameID < m_contentParams.content_framecount) {
         play = true;
-      } else if (m_gops == 0 && getParams().LoopMode) {
+      } else if (getParams().LoopMode) {
         play = true;
         tmp_r.frameID %= m_contentParams.content_framecount;
         m_request.frameID = tmp_r.frameID;
@@ -318,6 +334,7 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
       m_extractionBitstream->empty();
 
       if (play) {
+        ICOV_INFO << "GOP " << m_current_gop << " Request " << to_string(tmp_r);
         m_navigation->Request->update(tmp_r);
         decoded = true;
       }

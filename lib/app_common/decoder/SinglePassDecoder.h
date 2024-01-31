@@ -142,6 +142,7 @@ class SinglePassDecoder
     int m_gops;
     int m_current_gop;
     int m_gop_frame;
+    int m_video_frame;
 
     void catchError();
 };
