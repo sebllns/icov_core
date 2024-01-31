@@ -106,6 +106,11 @@ void icov::omnidirectional_layer::RequestManager::processViewport() {
   }
 }
 
+void RequestManager::resetCache() {
+  for (auto &e : m_previousDecoded)
+      e = 0;
+}
+
 void RequestManager::update(const request_t &r) {
   if (r == m_request)
       return;

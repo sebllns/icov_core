@@ -109,6 +109,12 @@ const std::string positions_input = "decode-positions-input";
 const std::string headless = "decode-headless";
 const std::string ground_truth = "decode-ground-truth";
 
+const std::string gop_count = "gop-count";
+const std::string gop_size = "gop-size";
+const std::string resize_width = "frame-width";
+
+const std::string framerate = "framerate";
+
 struct EncoderArgs {
   std::string viewport_erp_horizontal_ratio_id() const {
     return "{ENC}viewport-erp-horizontal-ratio";
@@ -233,7 +239,8 @@ inline void init_options_desc(const std::string &modes, desc_t &output) {
 
       ("help,h", "Produce help message")
 
-          ((mode + ",m").c_str(), po::value<std::string>()->required(),
+          ((mode + ",m").c_str(),
+           po::value<std::string>()->default_value("icov"),
            (std::string("Set the program mode (see documentation for more "
                         "details on each mode)\nAccepted values: ") +
             modes)
@@ -266,7 +273,30 @@ inline void init_options_desc(const std::string &modes, desc_t &output) {
 
                                   ((output_file + ",o").c_str(),
                                    po::value<std::string>()->default_value(""),
-                                   "Set output file");
+                                   "Set output file")
+
+                                      ((gop_count).c_str(),
+                                       po::value<int>()->default_value(0),
+                                       "Set GOP number to be generated or to "
+                                       "be decoded")
+
+                                          ((gop_size).c_str(),
+                                           po::value<int>()->default_value(4),
+                                           "Set GOP size")
+
+                                              ((resize_width).c_str(),
+                                               po::value<int>()->default_value(
+                                                   0),
+                                               "Resize GOP frames. 0 Means no "
+                                               "change.")
+
+                                                  ((framerate).c_str(),
+                                                   po::value<float>()
+                                                       ->default_value(0),
+                                                   "Fix framerate for encoder "
+                                                   "or force framerate for "
+                                                   "decoder. Ignored if value "
+                                                   "is 0.");
 
   addEncoderOptions(output);
   addDecoderOptions(output);
@@ -338,6 +368,10 @@ inline float parseViewportPadding(const args_t &args) {
   return args[viewport_padding].as<float>();
 }
 
+inline float parseFramerate(const args_t &args) {
+  return args[framerate].as<float>();
+}
+
 inline bool parsePreEncodeOption(const args_t &args) {
   return args[pre_encode].as<bool>();
 }
@@ -348,6 +382,16 @@ inline bool parseDummyViewportOption(const args_t &args) {
 
 inline int parseEncodeIcuSizeOption(const args_t &args) {
   return args[icu_size].as<int>();
+}
+
+inline int parseGOPCount(const args_t &args) {
+  return args[gop_count].as<int>();
+}
+
+inline int parseGOPSize(const args_t &args) { return args[gop_size].as<int>(); }
+
+inline int parseFrameWidth(const args_t &args) {
+  return args[resize_width].as<int>();
 }
 
 inline void parseLdpcParams(const args_t &args,

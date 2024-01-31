@@ -71,6 +71,7 @@ namespace decoder {
 
 struct decoder_param_t {
   path::path_t input_icov_file;
+  int gop_count;
 
   bool enable_dummyViewport;
 
@@ -84,10 +85,11 @@ struct decoder_param_t {
   path::path_t ground_truth_file;
 
   decoder_param_t(const path::path_t &icov_file, const options::args_t &args)
-      : input_icov_file("/tmp/file.icov"), enable_dummyViewport(false),
-        enable_position_file(false), positions_file("/tmp/positions.csv"),
-        enable_export_csv(false), csv_export_file("/tmp/csv_output.csv"),
-        enable_ground_truth(false), ground_truth_file("")
+      : input_icov_file("/tmp/file.icov"), gop_count(0),
+        enable_dummyViewport(false), enable_position_file(false),
+        positions_file("/tmp/positions.csv"), enable_export_csv(false),
+        csv_export_file("/tmp/csv_output.csv"), enable_ground_truth(false),
+        ground_truth_file("")
 
   {
     try {
@@ -127,6 +129,12 @@ struct decoder_param_t {
         ICOV_INFO << boost::format("%-30s %-s") % "Ground truth file:" %
                          this->ground_truth_file;
       }
+
+      this->gop_count = options::parseGOPCount(args);
+      if (this->gop_count > 0) {
+        ICOV_INFO << boost::format("%-30s %-s") % "Playing GOPs: 0-" %
+                         (this->gop_count - 1);
+      }
     }
     CATCH_ALL(ICOV_DEBUG_HEADER("Error while parsing decoder parameters"))
   }
@@ -140,6 +148,7 @@ struct decoder_factory_t {
       : Params(icov_file, args),
         Decoder(std::make_unique<decoder::SinglePassDecoder>()) {
     path::assert_directory_exists(icov_file.string());
+    Decoder->setGopCount(Params.gop_count);
     Decoder->initLocal(decoder::SinglePassDecoder::params{
         .DummyViewport = Params.enable_dummyViewport,
         .IcovFile = Params.input_icov_file,

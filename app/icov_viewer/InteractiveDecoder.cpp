@@ -355,6 +355,7 @@ bool InteractiveDecoder::processKey(char key) {
           ICOV_ERROR << "Decoding error detected! "
                      << " MSE should be 0, but MSE=" << m_viewportMse;
           ICOV_ERROR << "Press F6 to detect bad decoded blocks";
+          getDecoder()->resetCache();
         }
       } else {
         m_decoderCtrl.analyzer().GroundTruth->getCurrentFrame().copyTo(
@@ -473,6 +474,7 @@ bool InteractiveDecoder::processKey(char key) {
 
   if (key == 'c') {
     is_decoding = !is_decoding;
+    m_decoderCtrl.getDecoder()->resetCache();
     m_decoderCtrl.getDecoder()->blockDecoder()->switchBypassDecodingFlag();
   }
 

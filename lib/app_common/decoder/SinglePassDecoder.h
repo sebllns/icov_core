@@ -78,7 +78,6 @@ class SinglePassDecoder
       bool DummyViewport = false;
       fs::path IcovFile;
       fs::path LdpcDatabase;
-      bool GopMode = false;
       bool LoopMode = true;
     };
 
@@ -93,6 +92,8 @@ class SinglePassDecoder
     void addDefaultNavigation();
     void addDefaultExtractor();
     void addDefaultDecoder();
+    void resetCache();
+
     const PelUnitBuf getDecodedBuf() const;
 
     const std::shared_ptr<BlockExtractor> &blockExtractor() const;
@@ -123,6 +124,7 @@ class SinglePassDecoder
 
     const params &getParams() const;
     void setParams(const params &newParams);
+    void setGopCount(int c);
 
   protected:
     params m_params;
@@ -137,7 +139,9 @@ class SinglePassDecoder
     std::shared_ptr<BlockDecoder> m_blockDecoder;
 
     request_t m_request;
-    std::queue<int> m_gops;
+    int m_gops;
+    int m_current_gop;
+    int m_gop_frame;
 
     void catchError();
 };

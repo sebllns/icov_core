@@ -344,8 +344,12 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
   //  cv::resize(img_src, img_src, cv::Size(new_w, new_h));
 
   const cv::Size size_before = img_src.size();
-  resize_covering_blocks(img_src,
-                         cv::Size(icuSize_luma.width, icuSize_luma.height));
+
+  if (size_before.width % icuSize_luma.width != 0 ||
+      size_before.height % icuSize_luma.height != 0) {
+    resize_covering_blocks(img_src,
+                           cv::Size(icuSize_luma.width, icuSize_luma.height));
+  }
   const cv::Size size_after = img_src.size();
 
   if (size_after != size_before) {

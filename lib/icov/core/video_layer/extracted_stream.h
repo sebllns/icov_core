@@ -8,7 +8,7 @@
  */
 
 /** @file ContentParameterSet.h
- *  @brief ContentParameterSet VCL data for ICOV coder
+ *  @brief ContentParameterSet
  *  @ingroup common
  *  @author Sebastien Bellenous (SIROCCO) <sebastien.bellenous@inria.fr>
  *  @version 1.5.0

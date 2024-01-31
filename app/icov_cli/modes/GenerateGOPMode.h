@@ -67,6 +67,7 @@ private:
   icov::frame_t m_start_frame;
   unsigned short m_gop_size;
   unsigned long m_gop_count;
+  unsigned short m_frame_width;
 
   icov::frame_t m_max_frame_count;
 

@@ -25,6 +25,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 std::unique_ptr<LdpcCoderParameters>
@@ -45,6 +46,9 @@ icov::decoder::SinglePassDecoder::SinglePassDecoder()
       m_request(request_t::undefined()) {
   m_blockProcessor->setName("Root");
   m_blockProcessor->setEnabled(true);
+  m_gops = 0;
+  m_current_gop = 0;
+  m_gop_frame = 0;
 }
 
 icov::decoder::SinglePassDecoder::~SinglePassDecoder() {}
@@ -125,6 +129,7 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
 
 void decoder::SinglePassDecoder::openIcovFile(
     const boost::filesystem::path &path) {
+  ICOV_INFO << "open " << path;
   m_icovFile = std::make_shared<InputIcov>(path);
 
   setContentParams(m_icovFile->contentParameterSet());
@@ -226,6 +231,10 @@ void decoder::SinglePassDecoder::addDefaultDecoder() {
       ldpcParams(), m_extractionBitstream));
 }
 
+void decoder::SinglePassDecoder::resetCache() {
+  m_navigation->Request->resetCache();
+}
+
 const PelUnitBuf decoder::SinglePassDecoder::getDecodedBuf() const {
   icov::assert::not_null(m_blockDecoder.get(),
                          ICOV_DEBUG_HEADER("Decoder cannot be null"));
@@ -261,31 +270,55 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
 
   if (m_request != r) {
     try {
+
+      int delta_frame = r.frameID - m_request.frameID;
+
       m_request = r;
+
+      request_t &tmp_r = m_request;
 
       bool play = false;
 
-      if (getParams().GopMode) {
-        if ((int)m_request.frameID == m_contentParams.content_framecount &&
-            !m_gops.empty()) {
-          play = true;
-          int nextGop = m_gops.front();
-          m_gops.pop();
+      if (m_gops > 0) {
+        for (int f = 0; f < delta_frame; ++f) {
+          ++m_gop_frame;
+          if (m_gop_frame >= m_contentParams.content_framecount) {
+            ++m_current_gop;
+            m_gop_frame = 0;
+            if (getParams().LoopMode) {
+              play = true;
+              m_current_gop %= m_gops;
+            }
 
-          if (getParams().LoopMode) {
-            m_gops.push(nextGop);
+            if (m_current_gop < m_gops) {
+              m_params.IcovFile = m_icovFile->getPath().parent_path() /
+                                  std::to_string(m_current_gop);
+              this->openIcovFile(m_params.IcovFile);
+            } else {
+              play = false;
+            }
           }
         }
 
-      } else if (getParams().LoopMode) {
+        if (m_current_gop < m_gops &&
+            m_gop_frame < m_contentParams.content_framecount) {
+          play = true;
+          tmp_r.frameID = m_gop_frame;
+        }
+      }
+
+      if (tmp_r.frameID < m_contentParams.content_framecount) {
         play = true;
-        m_request.frameID %= m_contentParams.content_framecount;
+      } else if (m_gops == 0 && getParams().LoopMode) {
+        play = true;
+        tmp_r.frameID %= m_contentParams.content_framecount;
+        m_request.frameID = tmp_r.frameID;
       }
 
       m_extractionBitstream->empty();
 
       if (play) {
-        m_navigation->Request->update(m_request);
+        m_navigation->Request->update(tmp_r);
         decoded = true;
       }
     } catch (const std::exception &e) {
@@ -345,6 +378,7 @@ decoder::SinglePassDecoder::extractionBitstream() const {
 void decoder::SinglePassDecoder::setContentParams(
     const ContentParameterSet &newContentParams) {
   m_contentParams = newContentParams;
+  m_contentParams.content_framerate = 30;
 }
 
 const decoder::SinglePassDecoder::params &
@@ -356,6 +390,8 @@ void decoder::SinglePassDecoder::setParams(
     const decoder::SinglePassDecoder::params &newParams) {
   m_params = newParams;
 }
+
+void decoder::SinglePassDecoder::setGopCount(int c) { m_gops = c; }
 
 const std::shared_ptr<BlockExtractor> &
 decoder::SinglePassDecoder::blockExtractor() const {

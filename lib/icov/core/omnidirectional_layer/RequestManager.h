@@ -88,6 +88,7 @@ public:
 
   void start();
   void update(const request_t &r);
+  void resetCache();
 
   const std::shared_ptr<IBlockOrdering> &ordering() const;
   void setOrdering(const std::shared_ptr<IBlockOrdering> &newOrdering);

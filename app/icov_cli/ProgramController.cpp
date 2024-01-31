@@ -40,14 +40,12 @@ void ProgramController::launchMode(const std::string &mode_id) {
     CheckMode mode(m_options_map, dataPath());
     mode.run();
     ICOV_DEBUG << "end check\n";
-  } else if (mode_id == "encode") {
+  } else if (mode_id == "encode" || mode_id == "icov") {
     ICOV_DEBUG << "encode mode started";
     EncodeMode mode(m_options_map);
     mode.run();
     ICOV_DEBUG << "end encode\n";
-  }
-  else if (mode_id == DecodeMode::name())
-  {
+  } else if (mode_id == DecodeMode::name()) {
     ICOV_DEBUG << "decode mode started";
     DecodeMode mode(parseInputFile(args()), args());
     mode.run();

@@ -20,8 +20,9 @@ GenerateGOPMode::GenerateGOPMode(const options::args_t &args) {
   m_video_path = options::parseInputFile(args);
   m_gop_path = options::parseOutputFile(args);
   m_start_frame = options::parseFrameStart(args);
-  m_gop_count = 10;
-  m_gop_size = 4;
+  m_gop_count = options::parseGOPCount(args);
+  m_gop_size = options::parseGOPSize(args);
+  m_frame_width = options::parseFrameWidth(args);
 }
 
 void GenerateGOPMode::run() {
@@ -62,9 +63,12 @@ void GenerateGOPMode::run() {
         frame_list << frame_file << std::endl;
 
         m_current_frame = video->getCurrentFrame();
-        //        cv::resize(m_current_frame, m_current_frame, cv::Size(2048,
-        //        1024), 0, 0,
-        //                   cv::INTER_LANCZOS4);
+
+        if (m_frame_width > 0)
+          cv::resize(m_current_frame, m_current_frame,
+                     cv::Size(m_frame_width, m_frame_width / 2), 0, 0,
+                     cv::INTER_LANCZOS4);
+
         cv::imwrite((gop_path / frame_file).string(), m_current_frame);
         imax = video->getFrameCount();
       }
@@ -81,4 +85,4 @@ void GenerateGOPMode::run() {
   }
 }
 
-std::string GenerateGOPMode::modeID() { return "extract-gop"; }
+std::string GenerateGOPMode::modeID() { return "make-gops"; }
