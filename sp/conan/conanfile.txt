@@ -15,8 +15,12 @@ freeglut/3.4.0
 glm/0.9.9.8
 llvm-openmp/12.0.1
 ccache/4.9
-#xkbcommon for glad
-xkbcommon/1.6.0
+# xkbcommon for glad
+# xkbcommon/1.6.0
+# ERROR: There are invalid packages:
+# [cmake] xkeyboard-config/system: Invalid: This recipe supports only Linux and FreeBSD
+# [cmake] xorg/system: Invalid: This recipe supports only Linux and FreeBSD
+# [cmake] xkbcommon/1.6.0: Invalid: xkbcommon/1.6.0 is only compatible with Linux and FreeBSD
 
 [generators]
 CMakeDeps
