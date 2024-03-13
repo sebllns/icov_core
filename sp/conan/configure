@@ -1,0 +1,19 @@
+#!/bin/bash
+
+exec > >(tee -ia config.log)
+exec 2> >(tee -ia config_err.out)
+
+which cmake
+cmake --version
+
+read -p "a) Press enter to setup Conan environment..."
+
+# we add -c tools.system.package_manager:mode=install if we want to install openGL
+conan install . --output-folder=conan --build=missing -c tools.system.package_manager:mode=install --settings compiler.libcxx="libstdc++11" --profile default --profile ./icov_profile
+
+read -p "b) Press enter to setup ICOV project..."
+
+cmake .. -preset conan-release -DCMAKE_TOOLCHAIN_FILE=$(pwd)/conan/build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release --log-level=TRACE -DICOV_USE_OMP=ON -DICOV_CORE_DEBUG_TRACE_ENABLED=OFF -DICOV_CORE_STACKTRACE_ENABLED=ON -DICOV_CHECK_BITPLANE_ENCODING_ENABLED=OFF -DICOV_CONSOLE_COLOR_ENABLED=ON -DICOV_LOG_BOOST=OFF -DICOV_ENCODER_EXPORT_TEXT_ENABLED=ON 
+
+
+
