@@ -30,7 +30,7 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 # ICOV_USE_ADDRESS_SANITIZER: use sanitizer - ICOV_BYPASS_SETUP: in case you
 # REALLY want to bypass the default setup. May cause severe issues. -
 # ICOV_LOG_LEVEL: minimum log level
-option(ICOV_LOG_BOOST "Build the icov log with boost" ON)
+option(ICOV_LOG_BOOST "Build the icov log with boost" OFF)
 option(ICOV_BUILD_ENCODER "Build the icov encoder lib" ON)
 option(ICOV_BUILD_EXTENSIONS "Build extensions code for ICOV" ON)
 option(ICOV_BUILD_APPS "Build ICOV apps" ON)
