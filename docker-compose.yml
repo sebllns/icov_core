@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  icov:
+    image: icov
+    build:
+      context: .
+      dockerfile: ./Dockerfile
