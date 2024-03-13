@@ -16,6 +16,20 @@ set(ICOV_CORE_VERSION
 # Specify the project name and the languages it is written in
 project(icov_core LANGUAGES CXX C)
 
+message(STATUS ${CMAKE_COMMAND})
+set(ENV{PATH} "ENV{PATH};C:/Qt/Tools/CMake_64/bin")
+#set PATH=%PATH%;C:\your\path\here\
+
+
+message(STATUS "CONFIGURE ICOV CORE PROJECT WITH CONAN")
+find_program(CONAN conan REQUIRED)
+execute_process(COMMAND ${CONAN} profile detect ERROR_QUIET)
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conan/icov_profile" DESTINATION "${CMAKE_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conan/conanfile.txt" DESTINATION "${CMAKE_BINARY_DIR}")
+execute_process(COMMAND ${CONAN} install ${CMAKE_BINARY_DIR} --output-folder=${CMAKE_BINARY_DIR}/conan --build=missing -c tools.system.package_manager:mode=install --profile default --profile ${CMAKE_BINARY_DIR}/icov_profile COMMAND_ERROR_IS_FATAL ANY) #on linux --settings compiler.libcxx="libstdc++11"
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan/build/Release/generators/conan_toolchain.cmake)
+return()
+
 # Display a message indicating that the project is being built
 message(STATUS "BUILD ICOV CORE PROJECT")
 
