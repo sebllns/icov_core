@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <memory>
-#include <omp.h>
 #include <sstream>
 #include <string>
 #include <vector>

@@ -11,6 +11,7 @@
 #include "icov_exception.h"
 #include "icov_io.h"
 #include "icov_log.h"
+#include "icov_omp.h"
 #include "icov_path.h"
 #include "ldpc_codec_layer/BitSymbolProvider.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
@@ -40,7 +41,6 @@
 #include <cstdio>
 #include <fstream>
 #include <memory>
-#include <omp.h>
 #include <sstream>
 #include <string>
 #include <vector>

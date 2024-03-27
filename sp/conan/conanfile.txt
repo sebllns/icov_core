@@ -9,12 +9,14 @@ zlib/1.2.13
 xz_utils/5.4.5
 openssl/3.2.1
 ffmpeg/4.4.4 
-boost/1.82.0
+boost/1.84.0
 opencv/4.8.1
 freeglut/3.4.0
 glm/0.9.9.8
-llvm-openmp/12.0.1
-ccache/4.9
+#ccache/4.9
+
+[tool_requires]
+cmake/[>=3.19]
 
 [generators]
 CMakeDeps
@@ -29,4 +31,7 @@ opencv*:with_ffmpeg = True
 opencv*:with_qt = False
 opencv*:with_gtk = True
 opencv*:with_openexr = False
-
+boost*:without_fiber = True
+boost*:without_cobalt = True
+boost*:without_python = True
+boost*:without_url = True

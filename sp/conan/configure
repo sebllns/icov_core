@@ -17,3 +17,8 @@ cmake .. -preset conan-release -DCMAKE_TOOLCHAIN_FILE=$(pwd)/conan/build/Release
 
 
 
+cmake ../sp -DCMAKE_BUILD_TYPE=Release && cmake --build . --target all -j8
+
+
+Illegal instruction (core dumped)
+CPU needs to support avx2 instruction

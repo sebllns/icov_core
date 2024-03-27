@@ -225,7 +225,7 @@ public:
 private:
   std::vector<std::string> m_columnsName;
   std::vector<std::string> m_columnsValue;
-  std::map<std::string, ushort> m_columnsIdx;
+  std::map<std::string, unsigned short> m_columnsIdx;
   std::string m_columnSeparator;
   std::ofstream m_file;
 };

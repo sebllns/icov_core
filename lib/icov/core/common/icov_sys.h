@@ -8,5 +8,5 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-//#include <Windows.h>
+#include <Windows.h>
 #endif

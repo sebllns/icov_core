@@ -2,6 +2,21 @@
 #           ldpc_codec_layer          #
 ########################################
 
+# ---------------------------------------------------------------------
+# Link with AFF3CT
+message(STATUS "[INFO] Checking AFF3CT support...")
+find_package(
+  AFF3CT
+  CONFIG
+  2.3.5
+  REQUIRED
+ # NO_DEFAULT_PATH
+)
+message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
+message("\n")
+message(
+  "-------------------------------------------------------------------------")
+
 # get source files
 file(GLOB_RECURSE SRC_FILES "*.cpp")
 

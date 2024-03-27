@@ -1,6 +1,8 @@
 # Specify the minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
+#set(CMAKE_FIND_DEBUG_MODE TRUE)
+
 # Define the ICOV core version number
 set(ICOV_CORE_VERSION_MAJOR "1")
 set(ICOV_CORE_VERSION_MINOR "8")
@@ -16,20 +18,6 @@ set(ICOV_CORE_VERSION
 # Specify the project name and the languages it is written in
 project(icov_core LANGUAGES CXX C)
 
-message(STATUS ${CMAKE_COMMAND})
-set(ENV{PATH} "ENV{PATH};C:/Qt/Tools/CMake_64/bin")
-#set PATH=%PATH%;C:\your\path\here\
-
-
-message(STATUS "CONFIGURE ICOV CORE PROJECT WITH CONAN")
-find_program(CONAN conan REQUIRED)
-execute_process(COMMAND ${CONAN} profile detect ERROR_QUIET)
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conan/icov_profile" DESTINATION "${CMAKE_BINARY_DIR}")
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conan/conanfile.txt" DESTINATION "${CMAKE_BINARY_DIR}")
-execute_process(COMMAND ${CONAN} install ${CMAKE_BINARY_DIR} --output-folder=${CMAKE_BINARY_DIR}/conan --build=missing -c tools.system.package_manager:mode=install --profile default --profile ${CMAKE_BINARY_DIR}/icov_profile COMMAND_ERROR_IS_FATAL ANY) #on linux --settings compiler.libcxx="libstdc++11"
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan/build/Release/generators/conan_toolchain.cmake)
-return()
-
 # Display a message indicating that the project is being built
 message(STATUS "BUILD ICOV CORE PROJECT")
 
@@ -43,6 +31,12 @@ message(STATUS "BUILD ICOV CORE PROJECT")
 # - ICOV_WITH_CLANG_TIDY: enable Clang Tidy analysis -
 # ICOV_USE_ADDRESS_SANITIZER: use sanitizer - ICOV_BYPASS_SETUP: in case you
 # REALLY want to bypass the default setup. May cause severe issues. -
+
+option(
+  ICOV_BYPASS_SETUP
+  "In case you REALLY want to bypass the default setup. May cause severe issues."
+  OFF)
+
 # ICOV_LOG_LEVEL: minimum log level
 option(ICOV_LOG_BOOST "Build the icov log with boost" OFF)
 option(ICOV_BUILD_ENCODER "Build the icov encoder lib" ON)
@@ -52,13 +46,13 @@ option(ICOV_WITH_CPPCHECK "ENABLE CPPCHECK" OFF)
 option(ICOV_WITH_CLANG_TIDY "ENABLE CLANG TIDY ANALYSE" OFF)
 option(ICOV_USE_ADDRESS_SANITIZER "Use Sanitizer" ON)
 option(ICOV_ONLINE_MODE "Disable this option is you work offline" ON)
-option(
-  ICOV_BYPASS_SETUP
-  "In case you REALLY want to bypass the default setup. May cause severe issues."
-  OFF)
 set(ICOV_LOG_LEVEL
     2
     CACHE STRING "Min Log Level")
+
+set(ICOV_SUPERBUILD_DIR
+    ""
+    CACHE STRING "Superbuild path or empty if not used")
 
 # Define some flags for macros here - ICOV_CORE_DEBUG_TRACE_ENABLED: enable the
 # trace debugger - ICOV_CORE_STACKTRACE_ENABLED: enable the stacktrace -
@@ -92,7 +86,7 @@ else()
 endif()
 
 # Define whether to build shared libraries or not
-option(BUILD_SHARED_LIBS "Build shared libs" ON)
+option(BUILD_SHARED_LIBS "Build shared libs" OFF)
 
 # Use folders in IDEs for projects (e.g. lib sample app test)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -114,6 +108,33 @@ include(ExternalProject)
 if(NOT ICOV_BYPASS_SETUP)
   message(DEBUG "[DEBUG] Initial setup")
 
+  if( NOT ${ICOV_SUPERBUILD_DIR} STREQUAL ""
+    AND EXISTS ${ICOV_SUPERBUILD_DIR} )
+
+    message(STATUS "[INFO] Use superbuild located: ${ICOV_SUPERBUILD_DIR}")
+
+    set(Boost_NO_SYSTEM_PATHS ON)
+    set(Boost_ROOT ${ICOV_SUPERBUILD_DIR}/third-party/boost)
+    set(Boost_ROOT ${ICOV_SUPERBUILD_DIR}/third-party/boost)
+
+    set(OpenCV_DIR ${ICOV_SUPERBUILD_DIR}/third-party/opencv)
+    list (APPEND CMAKE_PREFIX_PATH
+    ${ICOV_SUPERBUILD_DIR}/third-party/opencv)
+
+    set(FreeGLUT_DIR ${ICOV_SUPERBUILD_DIR}/third-party/freeglut)
+    list (APPEND CMAKE_PREFIX_PATH
+      ${ICOV_SUPERBUILD_DIR}/third-party/freeglut/lib)
+
+
+    set(GLM_DIR ${ICOV_SUPERBUILD_DIR}/third-party/glm)
+    list (APPEND CMAKE_PREFIX_PATH ${ICOV_SUPERBUILD_DIR}/third-party/glm)
+    set(GLM_LINK glm::glm)
+
+    set(AFF3CT_DIR ${ICOV_SUPERBUILD_DIR}/third-party/aff3ct/lib/cmake/aff3ct-3.0.1-21-g72af2d3)
+
+  endif()
+
+
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -130,9 +151,10 @@ if(NOT ICOV_BYPASS_SETUP)
   # some flags needed to build for windows
   if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /utf-8 /EHsc /MP")
+  else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+    add_compile_options(-mavx)
   endif()
-
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
   if(ICOV_USE_ADDRESS_SANITIZER AND CMAKE_BUILD_TYPE MATCHES Debug)
     # set address sanitizer compiler arguments
@@ -251,8 +273,8 @@ endif()
 # ---------------------------------------------------------------------
 # Link with Boost
 message(STATUS "[INFO] Checking Boost support...")
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED OFF)
 
 # Removed because of issue on windows set(Boost_USE_STATIC_RUNTIME OFF)
 
@@ -290,6 +312,7 @@ add_subdirectory("third-party/vvc/source/Lib/Utilities")
 if(UNIX OR MINGW)
   target_compile_options(CommonLib PUBLIC -w -Wno-register -msse4.1)
   add_compile_options("-msse4.1")
+  add_compile_options("-fPIC")
 endif()
 # enable parallel build for Visual Studio
 if(MSVC)
@@ -301,43 +324,13 @@ include_directories(SYSTEM third-party/vvc/source/Lib)
 set_target_properties(CommonLib PROPERTIES FOLDER "third-party")
 message("\n")
 
-# ---------------------------------------------------------------------
-# Link with AFF3CT
-message(STATUS "[INFO] Checking AFF3CT support...")
-set(AFF3CT_BUILD_DIR
-    third-party/aff3ct
-    CACHE
-      STRING
-      "Path to aff3ct build directory default is ${CMAKE_BINARY_DIR}/third-party/aff3ct"
-)
-set(AFF3CT_BUILD_DIR_FULL ${CMAKE_BINARY_DIR}/${AFF3CT_BUILD_DIR})
-if(NOT DEFINED AFF3CT_BUILD_TYPE)
-  set(AFF3CT_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-endif()
-
-# WE NEED TO BUILD and INSTALL AFF3CT BEFORE AS add_subdiretory command does NOT
-# work well with aff3ct
-include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/install_aff3ct.cmake)
-
-set(AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
-message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
-find_package(
-  AFF3CT
-  CONFIG
-  2.3.5
-  REQUIRED
-  PATHS
-  "${AFF3CT_PACKAGE_DIR}"
-  NO_DEFAULT_PATH)
-message(STATUS "[INFO] FOUND AFF3CT: ${AFF3CT_CONFIG}")
-message("\n")
-message(
-  "-------------------------------------------------------------------------")
 
 # ---------------------------------------------------------------------
 # Link with OpenCV
 message(STATUS "[INFO] Checking OpenCV support...")
-find_package(OpenCV REQUIRED)
+find_package(OpenCV
+  PATH_SUFFIXES lib/cmake/opencv4
+  REQUIRED)
 set(ICOV_OPENCV_INCLUDE ${OpenCV_INCLUDE_DIRS})
 set(ICOV_OPENCV_LIBS ${OpenCV_LIBS} ${OpenCV_LIBRARIES})
 message(
