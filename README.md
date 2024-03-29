@@ -1,3 +1,4 @@
+# **_INTERACTIVE CODER FOR OMNIDIRECTIONAL VIDEOS_**
 # ICOV-core 
 
 Core part  of the ADT project ICOV (Interactive Coder for Omnidirectional Videos)
@@ -5,6 +6,8 @@ All the source code in this project are meant to be shared publicly
 
 A codec framework to encode and decode your equirectangular 360° images/videos in optimal way.
 
+For more details on the principle, please refer to https://ieeexplore.ieee.org/document/9171593
+and https://project.inria.fr/intercom/ .
 ## Compile from source
 
 ### :arrow_right_hook: System requirements
