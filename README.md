@@ -20,6 +20,7 @@ and https://project.inria.fr/intercom/ .
 - Threads librairies
 - OpenGL if you build the viewer
 - OpenMP support will significantly speed up computing
+- CMake > 3.19
 - Git command should be installed - to manage third-party dependencies - if you want to compile the project with the CMake helpers
 
 ---
