@@ -70,13 +70,20 @@ cd icov/bin
 
 Equirectangular videos or images can be encoded/decoded with ICOV software.
 
-1 - Encode a file
+### First test: encode/decoded an image
 
+Encoding:
 ```bash
-
+mkdir encoded.icov
+./icov_cli -i /path/to/my/equirect.jpg -o encoded.icov/ -d data/imt_164_v2/
 ```
 
-2 - Decode a file
+Decoding:
+```bash
+./icov_viewer -i encoded.icov -d data/imt_164_v2/
+```
+
+Use Q,S,D,Z to move the viewpoint.
 
 ## Links
 
