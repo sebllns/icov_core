@@ -3,13 +3,38 @@
 Core part  of the ADT project ICOV (Interactive Coder for Omnidirectional Videos)
 All the source code in this project are meant to be shared publicly 
 
-## Links
+## Compile from source
 
-User manual: https://icov.gitlabpages.inria.fr/documentation/icov-documentation/user-manual.pdf
+1 - Download source from Gitlab
+
+```bash
+
+```
+
+2 - Compile
+The recommended way to compile ICOV is to use the CMake superbuild.
+
+```bash
+$ mkdir build
+$ cd build
+$ cmake ../sp -DCMAKE_BUILD_TYPE=Release 
+$ cmake --build . --target all -j8
+```
+
+## Run
+
+## Links
 
 Doxygen: https://icov.gitlabpages.inria.fr/src/core/index.html
 
-Interface Demonstrator : [![Download ICOV](https://img.shields.io/sourceforge/dw/icov.svg)](https://sourceforge.net/projects/icov/files/latest/download) [![Download ICOV](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/icov/files/latest/download)
+Resources: https://sourceforge.net/projects/icov/files
+
+
+<!-- Button to download + download counter -->
+<!-- [![Download ICOV](https://img.shields.io/sourceforge/dw/icov.svg)](https://sourceforge.net/projects/icov/files/latest/download)  -->
+
+<!-- Big green button to downoad last version on sourceforge -->
+<!-- [![Download ICOV](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/icov/files/latest/download) -->
 
 
 ## Copyright notice
@@ -39,7 +64,9 @@ If you have questions regarding the use of this software, please contact Inria u
  **This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.**
 
-## Contact
-- MAUGEY,Thomas (<thomas.maugey@inria.fr>)
-- ROUMY, Aline (<aline.roumy@inria.fr>)
+## [Contact](%6D%61%69%6C%74%6F%3A%69%63%6F%76%2D%67%69%74%6C%61%62%40%69%6E%72%69%61%2E%66%72%3F%73%75%62%6A%65%63%74%3D%50%72%6F%6A%65%63%74%20%49%43%4F%56)<!--(mailto:icov-gitlab%40inria.fr?subject=Project%20ICOV)-->
+
+- Developer: BELLENOUS, Sébastien
+- Project manager: MAUGEY, Thomas
+- Team leader: ROUMY, Aline 
 

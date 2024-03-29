@@ -10,8 +10,8 @@ project(icov_core_superbuild LANGUAGES CXX C)
 
 option(ICOV_CONFIGURE_WITH_CONAN "Configure ICOV project with conan package manager" OFF)
 option(ICOV_ONLINE_MODE "Disable this option is you work offline" ON)
-
 option(ICOV_BUILD_CORE "Build the icov core project" ON)
+option(BUILD_SHARED_LIBS "Build shared libs" OFF)
 
 # Display a message indicating that the project is being built
 message(STATUS "START BUILD ICOV CORE SUPERBUILD")
@@ -131,7 +131,7 @@ if(ICOV_CONFIGURE_WITH_CONAN)
       CONFIGURE_COMMAND ${Boost_Bootstrap_Command}
       BUILD_COMMAND ${Boost_b2_Command}
       link=static #shared,
-      runtime-link=static
+      #runtime-link=static
       variant=release
       --build-type=minimal
       --without-python
@@ -168,7 +168,7 @@ if(ICOV_CONFIGURE_WITH_CONAN)
         -DBUILD_EXAMPLES:BOOL=OFF
         -DBUILD_NEW_PYTHON_SUPPORT:BOOL=OFF
         -DBUILD_PACKAGE:BOOL=OFF
-        -DBUILD_SHARED_LIBS:BOOL=ON
+        -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
         -DBUILD_TESTS:BOOL=OFF
         -DCMAKE_BUILD_TYPE:STRING=Release
         -DWITH_FFMPEG:BOOL=ON
@@ -225,7 +225,7 @@ endif(ICOV_CONFIGURE_WITH_CONAN)
 
 # ---------------------------------------------------------------------
 # Link with AFF3CT
-message(STATUS "[INFO] Checking AFF3CT support...")
+message(STATUS "[INFO] Enable AFF3CT superbuild...")
 set(AFF3CT_BUILD_DIR
     third-party/aff3ct
     CACHE
@@ -242,24 +242,33 @@ list (APPEND ICOV_EXTRA_CMAKE_ARGS
   -DAFF3CT_DIR=${CMAKE_BINARY_DIR}/third-party/aff3ct/lib/cmake/aff3ct-3.0.1-21-g72af2d3)
 list (APPEND ICOV_DEPENDENCIES aff3ct)
 
-
-set(AFF3CT_PACKAGE_DIR "${AFF3CT_BUILD_DIR_FULL}/lib/cmake/")
-message(STATUS "[INFO] SEARCHING AFF3CT IN ${AFF3CT_PACKAGE_DIR}")
 message("\n")
 message(
   "-------------------------------------------------------------------------")
 
 
- list (APPEND ICOV_EXTRA_CMAKE_ARGS
-   -DICOV_BUILD_APPS=ON
-   -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
-   -DBUILD_SHARED_LIBS=OFF
-   -DICOV_CORE_STACKTRACE_ENABLED=OFF
-   -DGLM_LINK=glm::glm
-   #-DOPENGL_LIBRARY_DIR=${CMAKE_BINARY_DIR}/third-party/freeglut/lib
-)
-
 if(ICOV_BUILD_CORE)
+
+  set(ICOV_USE_OMP OFF)
+  find_package(OpenMP)
+  if(OpenMP_FOUND)
+    message(STATUS "[INFO] OpenMP enabled...")
+    set(ICOV_USE_OMP ON)
+  endif()
+
+  list (APPEND ICOV_EXTRA_CMAKE_ARGS
+    -DICOV_BUILD_APPS=ON
+    -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+    -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
+    -DICOV_CORE_STACKTRACE_ENABLED=OFF
+    -DGLM_LINK=glm::glm
+    -DICOV_LOG_BOOST=OFF
+    -DICOV_CONSOLE_COLOR_ENABLED=ON
+    -DICOV_LOG_LEVEL=0
+    -DICOV_USE_OMP=${ICOV_USE_OMP}
+    -DICOV_ONLINE_MODE=${ICOV_ONLINE_MODE}
+    #-DOPENGL_LIBRARY_DIR=${CMAKE_BINARY_DIR}/third-party/freeglut/lib
+  )
     message(STATUS "CONFIGURE ICOV with CMAKE ARGS ${ICOV_EXTRA_CMAKE_ARGS}")
     ExternalProject_Add (icov
       DEPENDS ${ICOV_DEPENDENCIES}

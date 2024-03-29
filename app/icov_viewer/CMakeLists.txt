@@ -50,10 +50,9 @@ ExternalProject_Add(
   glfw3_project
   PREFIX ${glfw3_PREFIX}
   GIT_REPOSITORY https://github.com/glfw/glfw.git
+  GIT_TAG 3.3.7
   INSTALL_DIR ${glfw3_INSTALL_DIR}
   CMAKE_ARGS ${glfw3_CMAKE_ARGS})
-
-# find_package(glfw3 3.3 REQUIRED)
 
 message("glfw3='${glfw3_INSTALL_DIR}'")
 
@@ -137,10 +136,6 @@ file(GLOB_RECURSE INC_FILES "*.h")
 add_executable(${EXE_NAME} main.cpp ${SRC_FILES} ${INC_FILES})
 add_dependencies(${EXE_NAME} glfw3_project glad_project)
 
-if(UNIX)
-  target_link_libraries(${EXE_NAME} dl)
-endif()
-
 set_source_files_properties("*.c" PROPERTIES LANGUAGE "CXX")
 
 # set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
@@ -148,10 +143,15 @@ set_source_files_properties("*.c" PROPERTIES LANGUAGE "CXX")
 
 target_include_directories(${EXE_NAME} PRIVATE . ${LIB_INCLUDE_DIRS})
 target_link_directories(${EXE_NAME} PUBLIC ${LIB_LINK_DIRS})
-target_link_libraries(
-  ${EXE_NAME} ${LIB_LINK_LIBS}
-  # IcovCoreLib IcovLdpcCodecLayer IcovOmnidirectionalLayer IcovEncoderLib
-  # IcovExtractorLib IcovDecoderLib IcovGlViewer
-)
+target_link_libraries( ${EXE_NAME} ${LIB_LINK_LIBS} )
+
+if(UNIX)
+find_package(X11 REQUIRED)
+target_include_directories(${EXE_NAME} PRIVATE ${X11_INCLUDE_DIR})
+  target_link_libraries(${EXE_NAME} ${X11_LIBRARIES})
+  target_link_libraries(${EXE_NAME} dl)
+endif()
+
+
 # set the folder where to place the projects
 set_target_properties(${EXE_NAME} PROPERTIES FOLDER "public/app")
