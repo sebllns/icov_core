@@ -64,7 +64,7 @@ If you have questions regarding the use of this software, please contact Inria u
  **This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.**
 
-## [Contact](%6D%61%69%6C%74%6F%3A%69%63%6F%76%2D%67%69%74%6C%61%62%40%69%6E%72%69%61%2E%66%72%3F%73%75%62%6A%65%63%74%3D%50%72%6F%6A%65%63%74%20%49%43%4F%56)<!--(mailto:icov-gitlab%40inria.fr?subject=Project%20ICOV)-->
+## [Contact](mailto:ICOV%20team%3C%69%63%6F%76%2D%67%69%74%6C%61%62%40%69%6E%72%69%61%2E%66%72%3E)
 
 - Developer: BELLENOUS, Sébastien
 - Project manager: MAUGEY, Thomas
