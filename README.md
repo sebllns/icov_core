@@ -5,10 +5,27 @@ All the source code in this project are meant to be shared publicly
 
 ## Compile from source
 
+Requirements:
+- Unix based system with X11 or Wayland if you need to execute the Viewer
+(Note: Windows is not fully supported for the current version, but you can try to compile the project without any garantee it compile or run... good luck...)
+- AVX2 support is required
+- Git command should be installed if you use compile the project with the CMake helpers (to manage third-party dependencies)
+
+Third-party libraies:
+- VTM
+- Aff3ct
+- Boost
+- freeGLUT
+- glad
+- glm
+- Glfw
+- OpenCV
+- OpenMP
+
 1 - Download source from Gitlab
 
 ```bash
-
+$ git clone https://gitlab.inria.fr/icov/src/core.git
 ```
 
 2 - Compile
