@@ -3,48 +3,82 @@
 Core part  of the ADT project ICOV (Interactive Coder for Omnidirectional Videos)
 All the source code in this project are meant to be shared publicly 
 
+A codec framework to encode and decode your equirectangular 360° images/videos in optimal way.
+
 ## Compile from source
 
-Requirements:
+### :arrow_right_hook: System requirements
 - Unix based system with X11 or Wayland if you need to execute the Viewer
-(Note: Windows is not fully supported for the current version, but you can try to compile the project without any garantee it compile or run... good luck...)
+(Note: Windows is not fully supported for the current version, but you can try to compile the project without any garantee it will compile or run... good luck :four_leaf_clover: )
 - AVX2 support is required
-- Git command should be installed if you use compile the project with the CMake helpers (to manage third-party dependencies)
+- Threads librairies
+- OpenGL if you build the viewer
+- OpenMP support will significantly speed up computing
+- Git command should be installed - to manage third-party dependencies - if you want to compile the project with the CMake helpers
 
-Third-party libraies:
-- VTM
-- Aff3ct
-- Boost
-- freeGLUT
-- glad
-- glm
-- Glfw
-- OpenCV
-- OpenMP
+---
+
+### :arrow_right_hook: Third-party libraries
+
+:wave: **You can manage third-party libraries on your own, but if you follow the steps below to build ICOV with the superbuild tool, it should handle everything for you - depending on your operating system, you may need to still install some system packages, so carefully read the build errors as they will probably  indicate which package is missing.**
+
+- For the core part:
+    - Custom VTM (included)
+    - Aff3ct (included)
+    - [OpenCV 4.6.0](https://opencv.org/releases/)
+    - [Boost 1.81.0](https://www.boost.org/users/history/version_1_81_0.html)
+- For the Viewer app:
+    - freeGLUT
+    - glad
+    - glm
+    - Glfw
+
+
+---
+
+### :arrow_right_hook: Download and build ICOV with the superbuild CMake project
 
 1 - Download source from Gitlab
 
+:rotating_light: **If you have any space in your path, the configuration or build of the project will probably fail**
+
 ```bash
-$ git clone https://gitlab.inria.fr/icov/src/core.git
+git clone --recurse-submodules -j8 https://gitlab.inria.fr/icov/src/core.git
 ```
 
 2 - Compile
-The recommended way to compile ICOV is to use the CMake superbuild.
+The recommended way to compile ICOV is to use the CMake superbuild
 
 ```bash
-$ mkdir build
-$ cd build
-$ cmake ../sp -DCMAKE_BUILD_TYPE=Release 
-$ cmake --build . --target all -j8
+mkdir build && cd build
+cmake ../sp -DCMAKE_BUILD_TYPE=Release && cmake --build . --target all -j8
+```
+
+3 - Once ICOV is built successfully, move to the bin folder
+
+```bash
+cd icov/bin
 ```
 
 ## Run
+
+Equirectangular videos or images can be encoded/decoded with ICOV software.
+
+1 - Encode a file
+
+```bash
+
+```
+
+2 - Decode a file
 
 ## Links
 
 Doxygen: https://icov.gitlabpages.inria.fr/src/core/index.html
 
 Resources: https://sourceforge.net/projects/icov/files
+
+Demo video: https://vimeo.com/user188622130
 
 
 <!-- Button to download + download counter -->
