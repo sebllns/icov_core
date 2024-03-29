@@ -16,11 +16,12 @@ and https://project.inria.fr/intercom/ .
 ### :arrow_right_hook: System requirements
 - Unix based system with X11 or Wayland if you need to execute the Viewer
 (Note: Windows is not fully supported for the current version, but you can try to compile the project without any garantee it will compile or run... good luck :four_leaf_clover: )
+- C++ compiler
+- CMake > 3.19
 - AVX2 support is required
 - Threads librairies
 - OpenGL if you build the viewer
 - OpenMP support will significantly speed up computing
-- CMake > 3.19
 - Git command should be installed - to manage third-party dependencies - if you want to compile the project with the CMake helpers
 
 ---
