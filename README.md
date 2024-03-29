@@ -46,6 +46,8 @@ and https://project.inria.fr/intercom/ .
 
 ### :arrow_right_hook: Download and build ICOV with the superbuild CMake project
 
+:warning: **Build the project from sources and install every dependencies will require heavy storage ~9GB**
+
 1 - Download source from Gitlab
 
 :rotating_light: **If you have any space in your path, the configuration or build of the project will probably fail**
