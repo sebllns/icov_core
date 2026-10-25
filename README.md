@@ -44,6 +44,54 @@ and https://project.inria.fr/intercom/ .
 
 ---
 
+### :arrow_right_hook: Build with a conda environment (recommended)
+
+The toolchain and dependencies come from conda-forge, listed in `environment.txt`. Only aff3ct is built from the submodule.
+
+```bash
+# 1. Sources, including the aff3ct submodule
+git clone --recurse-submodules https://github.com/sebllns/icov_core.git
+cd icov_core
+# or, in an existing clone:
+git submodule update --init --recursive
+
+# 2. Conda environment
+conda create -n icov-core -c conda-forge --override-channels --file environment.txt
+conda activate icov-core
+
+# 3. aff3ct, installed in a local prefix
+cmake -S third-party/aff3ct -B build/aff3ct -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="$PWD/build/aff3ct-install" \
+  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+  -DAFF3CT_COMPILE_EXE=OFF -DAFF3CT_COMPILE_STATIC_LIB=ON \
+  -DAFF3CT_POLAR_BIT_PACKING=OFF -DAFF3CT_COLORS=OFF -DAFF3CT_PREC=32
+cmake --build build/aff3ct --target install
+
+# 4. Configure ICOV
+cmake -S . -B build/release -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$CONDA_PREFIX;$PWD/build/aff3ct-install" \
+  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+  -DBoost_USE_STATIC_LIBS=OFF
+
+# 5. Build
+cmake --build build/release -j"$(nproc)"
+
+# 6. Check
+./build/release/bin/icov_cli --help
+```
+
+Debug build: same as steps 4-5 with `-B build/debug -DCMAKE_BUILD_TYPE=Debug`.
+
+For clang, use `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++` in steps 3 and 4.
+
+Notes:
+- conda-forge ships only shared Boost libraries, hence `-DBoost_USE_STATIC_LIBS=OFF`. `CMakeLists.txt` sets this variable to `ON` with a plain `set`, which may override the command line; if configuration fails on Boost, edit that line.
+- Main options: `-DICOV_USE_OMP=ON` (OpenMP), `-DICOV_BUILD_APPS=OFF` (skip the viewer and CLI), `-DICOV_ONLINE_MODE=OFF` (offline build).
+
+---
+
 ### :arrow_right_hook: Download and build ICOV with the superbuild CMake project
 
 :warning: **Building the project from source and installing all dependencies will require a significant storage ~9GB**
@@ -57,7 +105,7 @@ git clone --recurse-submodules -j8 https://gitlab.inria.fr/icov/src/core.git
 ```
 
 2 - Compile
-The recommended way to compile ICOV is to use the CMake superbuild
+Alternative to the conda build: the superbuild downloads and builds all dependencies
 
 ```bash
 mkdir build && cd build

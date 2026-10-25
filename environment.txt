@@ -1,0 +1,20 @@
+# Conda toolchain for icov_core.
+# Create: conda create -n icov-core -c conda-forge --override-channels --file environment.txt
+cmake=3.28
+ninja
+make
+pkg-config
+ccache
+gcc=12
+gxx=12
+clang=17
+clangxx=17
+clang-tools=17
+libgomp
+libboost-devel=1.84
+opencv=4.10
+freeglut
+glm
+libgl-devel
+python=3.11
+numpy
