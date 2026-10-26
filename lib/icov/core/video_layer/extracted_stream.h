@@ -52,15 +52,11 @@
 #include "icov_types.h"
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
+#include "video_layer/bit_io.h"
 #include "video_layer/icov_stream.h"
 
 #include <array>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/queue.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -73,7 +69,6 @@
 #include <sys/types.h>
 #include <vector>
 
-#define BITSTREAM_SIZE 8192
 
 namespace icov {
 namespace bitstream
@@ -184,164 +179,66 @@ struct BlockChannelDecoderParams {
       : DirMode(0), QIdx(0), Zmin(0), Zmax(0) {}
 };
 
-struct IcovExtractedBitstream {
-
-  IcovExtractedBitstream()
-      : m_WritePosition(0), m_ReadPosition(0), m_ActualSize(0) {
-    m_Buffer.fill(0);
+/// Transmitted block unit (TBU): what the extractor (server role) sends to
+/// the decoder (client role) for one block, at bit level. Per channel:
+///   num_bitplanes                         ue(v)
+///   if not an access block:
+///     si_mode                             u(7)   intra direction + 1
+///     pred_header                         ue(v)  q index + 1, 0: not coded
+///     if coded: z_min, z_max              u(8)
+///     if coded: rate index per bitplane   ue(v)
+///   syndrome prefix per bitplane          exact bit length, no padding
+/// then byte_alignment() once per block. Lengths are implicit: the decoder
+/// derives each syndrome length from its rate index.
+class IcovExtractedBitstream {
+public:
+  // writer side (extractor)
+  void writeBitplaneCount(unsigned v) { m_writer.ue(v); }
+  void writeMode(unsigned v) { m_writer.u(7, v); }
+  void writePredHeader(unsigned v) { m_writer.ue(v); }
+  void writeZ(unsigned v) { m_writer.u(8, v); }
+  void writeRate(unsigned v) { m_writer.ue(v); }
+  void writeSyndrome(const uint8_t *data, size_t nbits) {
+    m_writer.bits(data, nbits);
   }
+  /// Ends the unit of one block
+  void endUnit() { m_writer.byte_alignment(); }
+  size_t unitBytes() const { return m_writer.data().size(); }
+
+  // reader side (decoder)
+  unsigned readBitplaneCount() { return reader().ue(); }
+  unsigned readMode() { return reader().u(7); }
+  unsigned readPredHeader() { return reader().ue(); }
+  unsigned readZ() { return reader().u(8); }
+  unsigned readRate() { return reader().ue(); }
+  bool readSyndromeBit() { return reader().flag(); }
+
+  /// True when no whole byte is left to read
+  bool isEmpty() const {
+    return m_reading ? m_reader.bits_left() < 8 : m_writer.bit_count() == 0;
+  }
+  size_t getActualSize() const { return m_writer.data().size(); }
 
   void empty() {
-    m_WritePosition = 0;
-    m_ReadPosition = 0;
-    m_ActualSize = 0;
-    m_Buffer.fill(0);
+    m_writer.clear();
+    m_reader.reset(nullptr, 0);
+    m_reading = false;
   }
 
-  void push(const icov::byte &val) {
-    auto pos = m_WritePosition;
-    icov::assert::check(availableSpace() > 0,
-                        ICOV_DEBUG_HEADER("Buffer cannot overflow"));
-    shiftWritePosition(1);
-    ICOV_TRACE << ">>> EXBT PUSH " << (int)val << " AT " << pos << " NEW SIZE "
-               << m_ActualSize;
-    m_Buffer[pos] = val;
+private:
+  BitReader &reader() {
+    if (!m_reading) {
+      m_reader.reset(m_writer.data().data(), m_writer.data().size());
+      m_reading = true;
+    }
+    return m_reader;
   }
 
-  icov::byte get() {
-    icov::assert::check(!isEmpty(),
-                        ICOV_DEBUG_HEADER("Cannot read in empty buffer"));
-    ICOV_TRACE << ">>> EXBT READ " << (int)m_Buffer[m_ReadPosition] << " AT "
-               << m_ReadPosition;
-    return m_Buffer[m_ReadPosition];
-  }
-
-  icov::byte pop() {
-    byte val = get();
-    shiftReadPosition(1);
-    return val;
-  }
-
-  void get(std::vector<icov::byte> &output) {
-    icov::assert::check(m_ActualSize >= output.size(),
-                        ICOV_DEBUG_HEADER("Buffer cannot overflow"));
-    std::copy(m_Buffer.cbegin() + m_ReadPosition,
-              m_Buffer.cbegin() + m_ReadPosition + output.size(),
-              output.begin());
-  }
-
-  void pop(std::vector<icov::byte> &output) {
-    get(output);
-    shiftReadPosition(output.size());
-  }
-
-  void shiftWritePosition(size_t offset) {
-    ICOV_TRACE << __func__ << " " << offset;
-    m_WritePosition = (m_WritePosition + offset) % m_Buffer.size();
-    m_ActualSize += offset;
-    // std::cout << ActualSize << ", " << Buffer.size() << std::endl;
-
-    icov::assert::check_not(
-        overflows(), ICOV_DEBUG_HEADER("Buffer write overflow is forbidden"));
-    m_ActualSize = std::clamp(m_ActualSize, (size_t)0, m_Buffer.size());
-  }
-
-  /**
-   * @brief Shifts the read position by a given offset.
-   * @param offset The offset by which to shift the read position.
-   */
-  void shiftReadPosition(size_t offset) {
-    ICOV_TRACE << __func__ << " " << offset;
-    m_ReadPosition = (m_ReadPosition + offset) % m_Buffer.size();
-
-    icov::assert::check(getActualSize() >= offset,
-                        ICOV_DEBUG_HEADER("Buffer read overflow is forbidden"));
-    m_ActualSize = m_ActualSize > offset ? m_ActualSize - offset : 0;
-  }
-
-  /**
-   * @brief Retrieves the current write position in the bitstream.
-   * @return The write position.
-   */
-  size_t getWritePosition() const;
-
-  /**
-   * @brief Retrieves the current read position in the bitstream.
-   * @return The read position.
-   */
-  size_t getReadPosition() const;
-
-  /**
-   * @brief Retrieves the actual size of the bitstream.
-   * @return The actual size.
-   */
-  size_t getActualSize() const;
-
-  /**
-   * @brief Retrieves the full size of the buffer.
-   * @return The size of the buffer.
-   */
-  size_t getBufferSize() const;
-
-  /**
-   * @brief Retrieves a pointer to the writable data in the bitstream.
-   * @return A pointer to the writable data.
-   */
-  icov::byte *writableData();
-
-  /**
-   * @brief Retrieves a pointer to the readable data in the bitstream.
-   * @return A pointer to the readable data.
-   */
-  const icov::byte *readableData() const;
-
-  /**
-   * @brief Checks if the bitstream is empty.
-   * @return True if the bitstream is empty, false otherwise.
-   */
-  bool isEmpty() const { return m_ActualSize == 0; }
-
-  /**
-   * @brief Retrieves the number of remaining elements in the bitstream.
-   * @return The number of remaining elements.
-   */
-  int availableSpace() const { return (getBufferSize() - getActualSize()); }
-
-  bool overflows() const { return availableSpace() < 0; }
-
-protected:
-  size_t m_WritePosition; /**< The write position in the bitstream. */
-  size_t m_ReadPosition;  /**< The read position in the bitstream. */
-  size_t m_ActualSize;    /**< The actual size of the bitstream. */
-  std::array<icov::byte, BITSTREAM_SIZE>
-      m_Buffer; /**< The buffer to store the bitstream data. */
+  BitWriter m_writer;
+  BitReader m_reader;
+  bool m_reading = false;
 };
 
 using sp_IcovExtractedBitstream = std::shared_ptr<IcovExtractedBitstream>;
-
-inline size_t IcovExtractedBitstream::getWritePosition() const {
-  return m_WritePosition;
-}
-
-inline size_t IcovExtractedBitstream::getReadPosition() const {
-  return m_ReadPosition;
-}
-
-inline size_t IcovExtractedBitstream::getActualSize() const {
-  return m_ActualSize;
-}
-
-inline size_t IcovExtractedBitstream::getBufferSize() const {
-  return m_Buffer.size();
-}
-
-inline byte *IcovExtractedBitstream::writableData() {
-  return m_Buffer.data() + getWritePosition();
-}
-
-inline const byte *IcovExtractedBitstream::readableData() const {
-  return m_Buffer.data() + getReadPosition();
-}
-
 } // namespace bitstream
 } // namespace icov

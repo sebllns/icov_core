@@ -93,7 +93,7 @@ void icov::decoder::ChannelDecoder::_extract_numcode(
          omnidirectional_layer::BlockPrediction::ePredType::NONE)
             ? ldpc_codec_layer::IInteractiveCoder::SyndromeType::
                   SyndromeType_SOURCE
-            : m_bitstream->pop();
+            : m_bitstream->readRate();
 
     bitstream::VideoStreamDebugger::get_const_instance().assertNumcodeEqual(
         bp, quantizedNumcode);
@@ -148,7 +148,7 @@ void ChannelDecoder::decode_icu(
       ICOV_TRACE << ICOV_DEBUG_HEADER("DECODE ACCESS BLOCK");
     }
 
-    int bitplaneCount = (int)m_bitstream->pop();
+    int bitplaneCount = (int)m_bitstream->readBitplaneCount();
     ICOV_TRACE << ICOV_DEBUG_HEADER(" BP COUNT = ") << bitplaneCount;
 
     bitstream::VideoStreamDebugger::get_const_instance()
@@ -195,7 +195,7 @@ void ChannelDecoder::decode_icu(
 ushort ChannelDecoder::_extract_pred_mode() {
     ICOV_DEBUG << ICOV_DEBUG_HEADER("_extract_pred_mode");
 
-    byte dirmode = m_bitstream->pop();
+    byte dirmode = m_bitstream->readMode();
     bitstream::assertPredictionAvailable(dirmode);
     return bitstream::getPredDirMode(dirmode);
 }
@@ -289,7 +289,7 @@ void ChannelDecoder::_apply_intra_dir_mode(ushort dirmode) {
 void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
     ICOV_DEBUG << ICOV_DEBUG_HEADER("_extract_qary_params");
 
-    byte pred_hdr = m_bitstream->pop();
+    byte pred_hdr = m_bitstream->readPredHeader();
 
     codingFlag = bitstream::getCodingFlag(pred_hdr);
 
@@ -306,11 +306,11 @@ void icov::decoder::ChannelDecoder::_extract_qary_params(bool &codingFlag) {
       bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
           ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Q, q0);
 
-      zmin = m_bitstream->pop();
+      zmin = m_bitstream->readZ();
       bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
           ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
 
-      zmax = m_bitstream->pop();
+      zmax = m_bitstream->readZ();
       bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
           ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
 
@@ -369,16 +369,9 @@ void ChannelDecoder::read_syndrome(int syndrome_size) {
     ICOV_DEBUG << ICOV_DEBUG_HEADER("read_syndrome");
 
     m_syndrome.resize(syndrome_size);
-    byte bitstream_value = 0;
     ICOV_DEBUG << "READ SYNDROME " << syndrome_size;
-    for (int i = 0; i < syndrome_size; ++i) {
-      if ((i % BYTE_SIZE) == 0) {
-        bitstream_value = m_bitstream->pop();
-        ICOV_TRACE << (int)bitstream_value;
-      }
-      m_syndrome[i] =
-          ((bitstream_value & (1 << (BYTE_SIZE - 1 - i % BYTE_SIZE))) > 0);
-    }
+    for (int i = 0; i < syndrome_size; ++i)
+      m_syndrome[i] = m_bitstream->readSyndromeBit();
 }
 
 void ChannelDecoder::decode_bitplane_with_ldpc(int bp, NumcodeIdx numcode,

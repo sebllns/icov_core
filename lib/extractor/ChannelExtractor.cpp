@@ -77,7 +77,7 @@ void ChannelExtractor::extract_block_syndrome(
   int pred_type =
       is_access_block ? S_STORED : (is_inter_prediction ? S_INTER : S_INTRA);
 
-  m_bitstream->push(m_bitplaneCount);
+  m_bitstream->writeBitplaneCount(m_bitplaneCount);
 
   if (!is_access_block)
     _pushPredParams(pred_type);
@@ -226,12 +226,12 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
 }
 
 void ChannelExtractor::_pushPredParams(const bitstream::SIEncodedParams &si) {
-  m_bitstream->push(si.getMode());
-  m_bitstream->push(si.getPredictionHeader());
+  m_bitstream->writeMode(si.getMode());
+  m_bitstream->writePredHeader(si.getPredictionHeader());
 
   if (si.getCodingFlag()) {
-    m_bitstream->push(si.getZmin());
-    m_bitstream->push(si.getZmax());
+    m_bitstream->writeZ(si.getZmin());
+    m_bitstream->writeZ(si.getZmax());
   }
 }
 
@@ -243,7 +243,7 @@ void ChannelExtractor::_pushPredParams(int type) {
 
   if (m_predParams[type].getCodingFlag()) {
     for (auto &bp : m_bitplanes) {
-      m_bitstream->push(bp.BitRates[type].syndromeQuantizedSize());
+      m_bitstream->writeRate(bp.BitRates[type].syndromeQuantizedSize());
     }
   }
 
@@ -306,34 +306,12 @@ void ChannelExtractor::_extractBitplaneSyndrome(
   ICOV_TRACE << bytes_count_to_read << "/" << bytes_count_stored
              << " bytes to read";
 
-  ushort offset = bytes_count_stored - bytes_count_to_read;
-  icov::assert::check_not(offset < 0,
-                          ICOV_DEBUG_HEADER("Offset can't be negative"));
-
-  ICOV_TRACE << "BITSTREAM POS BEFORE READ " << m_bitstream->getWritePosition();
-
-  int total_read = 0;
-
-  if (bytes_count_to_read > 0) {
-    while (total_read < bytes_count_to_read) {
-      int read = std::min((int)(bytes_count_to_read - total_read),
-                          (int)((m_bitstream->getBufferSize() -
-                                 m_bitstream->getWritePosition())));
-
-      m_icovFile->readSyndrome(m_bitstream->writableData(), read, read);
-      m_bitstream->shiftWritePosition(read);
-
-      total_read += read;
-    }
-  }
-
-  icov::assert::equal(
-      total_read, (int)bytes_count_to_read,
-      ICOV_DEBUG_HEADER("Check syndrome read size consistency"));
-
-  m_icovFile->offsetSyndrome(offset);
-
-  ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
+  // the stored syndrome is byte-aligned; the unit gets the exact prefix
+  std::vector<uint8_t> prefix(bytes_count_to_read);
+  m_icovFile->readSyndrome(prefix.data(), bytes_count_to_read,
+                           bytes_count_stored);
+  m_bitstream->writeSyndrome(prefix.data(),
+                             bp.BitRates[pred_type].syndromeBitSize());
 
   ICOV_TRACE << "END _extractBitplaneSyndrome";
 }

@@ -129,6 +129,7 @@ void icov::extractor::BlockExtractor::_processBlock(
       .setDebuggingPredictionID(block_prediction);
 
   m_icovFile->selectBlock(b.getIdSelf());
+  m_extractionBitstream->empty();
 
   if (previouslyDecoded != r.frameID) {
     // get stored syndrome size per bitplane
@@ -220,6 +221,7 @@ void icov::extractor::BlockExtractor::_processBlock(
     for (auto &ch : m_channelExtractor) {
       ch->extract_block_syndrome(b, block_prediction);
     }
+    m_extractionBitstream->endUnit();
   }
 
   ICOV_DEBUG << "END EXTRACT BLOCK " << b.getIdSelf() << " WITH PREDICTION "
@@ -227,6 +229,9 @@ void icov::extractor::BlockExtractor::_processBlock(
                     block_prediction);
 
   fill_metrics(block_prediction, b, r.frameID, previouslyDecoded == r.frameID);
+  icov::video_layer::VideoMetrics::get_mutable_instance()
+      .getBlock(b)
+      .transmittedBytes = m_extractionBitstream->unitBytes();
 }
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {

@@ -40,6 +40,7 @@ icov::decoder::CsvOutput::CsvOutput(const std::string &path_prefix)
     m_blockFile.addColumn("bitrate ratio (encoded/all intra)"); // 10
     m_blockFile.addColumn("mse");                               // 13
     m_blockFile.addColumn("psnr");                              // 14
+    m_blockFile.addColumn("transmitted bytes");                 // 15
     m_blockFile.writeColumnNames();
 
     m_viewportFile.addColumn("request id");                        // 1
@@ -172,6 +173,11 @@ void icov::decoder::CsvOutput::_processBlock(
                                    static_cast<float>(area)); // 12
     m_blockFile.setColumnValue("mse", mse);                   // 13
     m_blockFile.setColumnValue("psnr", psnr);                 // 14
+    m_blockFile.setColumnValue(
+        "transmitted bytes",
+        icov::video_layer::VideoMetrics::get_const_instance()
+            .getBlock(b)
+            .transmittedBytes); // 15
 
     m_blockFile.writeAndClearValues();
 }

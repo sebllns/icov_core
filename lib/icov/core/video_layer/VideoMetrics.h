@@ -81,6 +81,7 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
         BitLength encodedBitlength;
         BitLength decodedBitlength;
         float mse;
+        size_t transmittedBytes; ///< size of the transmitted block unit
 
         block_infos_t() { reset(); }
 
@@ -92,6 +93,7 @@ class VideoMetrics : public boost::serialization::singleton<VideoMetrics>
             encodedBitlength = 0;
             decodedBitlength = 0;
             mse = 0.0f;
+            transmittedBytes = 0;
         }
 
         Rate rate() const
