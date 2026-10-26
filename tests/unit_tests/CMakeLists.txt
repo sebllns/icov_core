@@ -8,7 +8,7 @@ find_package(Boost 1.70.0
 find_package(AFF3CT CONFIG 2.3.5 REQUIRED)
 
 message(STATUS "[INFO] Building ICOV core unit tests")
-set(SRC icovunittest.cc ldpca_coder_tests.cc)
+set(SRC icovunittest.cc ldpca_coder_tests.cc bitstream_tests.cc)
 add_executable(icov_core_unit_tests ${SRC})
 target_link_libraries(icov_core_unit_tests IcovLdpcCodecLayer IcovCoreLib Boost::unit_test_framework)
 target_compile_definitions(icov_core_unit_tests PRIVATE

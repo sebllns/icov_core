@@ -1,5 +1,6 @@
 #pragma once
 
+#include "icov_console.h"
 #include "icov_stacktrace.h"
 
 #include <boost/exception/all.hpp>
