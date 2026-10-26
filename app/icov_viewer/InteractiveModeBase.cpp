@@ -91,6 +91,8 @@ void InteractiveModeBase::run() {
   }
 }
 
+void InteractiveModeBase::stop() { is_running = false; }
+
 float InteractiveModeBase::getPov_x_DEG() const { return pov_x; }
 
 float InteractiveModeBase::getPov_y_DEG() const { return pov_y; }

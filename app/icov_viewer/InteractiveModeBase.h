@@ -197,6 +197,8 @@ class InteractiveModeBase
 
     void setPOV_DEG(float pov_x, float pov_y);
 
+    void stop();
+
   private:
     std::unique_ptr<Single360degreeCameraHandler> m_360viewer;
     icov::udp::UdpReceiver m_udp_rcv;

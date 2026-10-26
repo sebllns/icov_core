@@ -52,7 +52,7 @@ icov::extractor::BlockExtractor::~BlockExtractor() {}
 void icov::extractor::BlockExtractor::fill_metrics(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
         prediction,
-    const Block &b, frame_t f) {
+    const Block &b, frame_t f, bool cached) {
   icov::video_layer::VideoMetrics::get_mutable_instance().metrics.resize(
       b.parent()->blockCount());
   icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).reset();
@@ -76,6 +76,11 @@ void icov::extractor::BlockExtractor::fill_metrics(
     icov::video_layer::VideoMetrics::get_mutable_instance()
         .getBlock(b)
         .decodedBitlength += ch->getBitplaneCount() * ch->getCoderSize();
+
+    // Already decoded for this frame: nothing is transmitted, and predParams()
+    // still holds the previous block's values
+    if (cached)
+      continue;
 
     int si_idx = 0;
     BlockPrediction::ePredType ept = BlockPrediction::toPredType(prediction);
@@ -215,7 +220,7 @@ void icov::extractor::BlockExtractor::_processBlock(
              << omnidirectional_layer::BlockPrediction::toString(
                     block_prediction);
 
-  fill_metrics(block_prediction, b, r.frameID);
+  fill_metrics(block_prediction, b, r.frameID, previouslyDecoded == r.frameID);
 }
 
 void icov::extractor::BlockExtractor::_beforeOrderingLoop(const request_t &r) {

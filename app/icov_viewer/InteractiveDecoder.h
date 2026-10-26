@@ -70,6 +70,7 @@ class InteractiveDecoder : public InteractiveModeBase
 
   private:
     std::queue<request_t> m_requests;
+    bool m_autoExit; // quit once the positions file is replayed
     decoder::DecoderController m_decoderCtrl;
     Rate m_viewportRate;
     float m_viewportMse;
@@ -100,6 +101,8 @@ class InteractiveDecoder : public InteractiveModeBase
     };
 
     void drawBlocks(drawType type);
+    static bool isFirstBlock(const video_layer::VideoMetrics::block_infos_t &i);
+    static void drawBorder(cv::Mat &output);
     void drawBlock(drawType type, const omnidirectional_layer::Block &b,
                    const video_layer::VideoMetrics::block_infos_t &i,
                    cv::Mat &output, const cv::Rect &roi);

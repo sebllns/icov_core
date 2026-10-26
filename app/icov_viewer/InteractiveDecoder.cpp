@@ -46,6 +46,7 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
 
   m_decoderCtrl.initAnalyzer();
   m_requests = m_decoderCtrl.readRequests();
+  m_autoExit = !m_requests.empty();
 
   m_vp_rate_sum = 0;
   m_vp_psnr_sum = 0;
@@ -86,6 +87,17 @@ void InteractiveDecoder::drawBlocks(drawType type) {
   }
 }
 
+bool InteractiveDecoder::isFirstBlock(
+    const video_layer::VideoMetrics::block_infos_t &i) {
+  return BlockPrediction::toPredType(i.prediction) == BlockPrediction::NONE;
+}
+
+// output is the block itself, so the border uses local coordinates
+void InteractiveDecoder::drawBorder(cv::Mat &output) {
+  cv::rectangle(output, cv::Rect(0, 0, output.cols, output.rows),
+                bgrColor::GRAY(), 1);
+}
+
 void InteractiveDecoder::drawBlock(
     drawType type, const Block &b,
     const video_layer::VideoMetrics::block_infos_t &i, cv::Mat &output,
@@ -96,10 +108,12 @@ void InteractiveDecoder::drawBlock(
   case drawType::BLOCK_RATE: {
     cv::Scalar color = bgrColor().BLACK();
 
-    if (i.rate() > 1) {
-      color = bgrColor().RED();
-    } else if (i.rate() == 1) {
+    // Green marks the first decoded block, as in F4/F5. Its rate is 1 only
+    // when it is transmitted, 0 when it comes from the cache
+    if (isFirstBlock(i)) {
       color = bgrColor().GREEN();
+    } else if (i.rate() > 1) {
+      color = bgrColor().RED();
     } else {
       color = (0.1 + 0.9 * i.rate()) * bgrColor().BLUE();
     }
@@ -107,16 +121,15 @@ void InteractiveDecoder::drawBlock(
     output.setTo(color);
     cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
                 cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::WHITE(), 1);
-    cv::rectangle(output,
-                  cv::Rect(roi.x + 1, roi.y + 1, roi.width - 1, roi.height - 1),
-                  bgrColor::GREEN(), 1);
+    drawBorder(output);
   } break;
 
     /////////////////////////////////////////
   case drawType::VIEWPORT_RATE: {
-    cv::Scalar color = m_viewportRate * bgrColor().BLUE();
+    cv::Scalar color = isFirstBlock(i) ? bgrColor::GREEN()
+                                       : m_viewportRate * bgrColor().BLUE();
     output.setTo(color);
-    cv::rectangle(output, roi, bgrColor::GREEN(), 1);
+    drawBorder(output);
     cv::putText(output, std::to_string(b.getIdSelf()), cv::Point(0, 16),
                 cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::WHITE(), 1);
 
@@ -277,6 +290,13 @@ bool InteractiveDecoder::processKey(char key) {
   //    if (!InteractiveModeBase::processKey(key))
   //        return false;
 
+  // The last viewpoint was decoded in the previous iteration
+  if (m_autoExit && m_requests.empty()) {
+    ICOV_INFO << "Positions file replayed, exiting";
+    stop();
+    return false;
+  }
+
   angle_t pov_x = 0;
   angle_t pov_y = 0;
 
@@ -298,8 +318,6 @@ bool InteractiveDecoder::processKey(char key) {
                 << m_erp_psnr_sum / m_req_count;
       ICOV_INFO << "DISP RD " << m_vp_rate_sum / m_req_count << ","
                 << m_vp_psnr_sum / m_req_count;
-
-      getchar();
     }
 
     setWait_delay(1);
