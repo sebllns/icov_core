@@ -1,6 +1,8 @@
 # ICOV bitstream: analysis and proposed schema
 
-This report covers the bitstream itself: what is stored, what is transmitted, and how to encode it. The file layout of the current encoder output (six files, debug frames, `info.txt`) is analyzed in `stream_format_report.md`; this report builds on it.
+This report covers the bitstream itself: what is stored, what is transmitted, and how to encode it. The file layout of the 1.9.0 encoder output (six files, debug frames, `info.txt`) is analyzed in `stream_format_report.md`; this report builds on it.
+
+Status: sections 1 to 11 describe version 1.9.0 and the proposal. Steps 1 to 6 are implemented in version 2.0.0 (tag `v2.0.0`); section 12 describes what was built and the measured results.
 
 Goals, in order:
 
@@ -432,7 +434,7 @@ Steps 1 to 4 deliver a clean, single-file, standard-shaped format and the first 
 
 ## 12. Implemented in 2.0.0 (steps 1 to 6)
 
-Branch `feature/bitstream`, one commit per step. All measurements on the same 1024x512 gradient and 20-viewpoint path as above; decoded blocks, predictions, rates and PSNR are identical to 1.9.0 at every step.
+Released as `v2.0.0` (merged from `feature/bitstream`, one commit per step). All measurements on the same 1024x512 gradient and 20-viewpoint path as above; decoded blocks, predictions, rates and PSNR are identical to 1.9.0 at every step.
 
 ### 12.1 What was built
 

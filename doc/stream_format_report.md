@@ -2,6 +2,8 @@
 
 Analyzed output: `build/release/bin/encoded.icov/`, the 1024x512 synthetic gradient, one frame, 512 blocks of 32x32, QP 27, encoder 1.9.0.
 
+Status: this report describes the 1.9.0 layout. Version 2.0.0 implements the single-file target (section 3) with a few differences, listed in `bitstream_report.md` section 12: the container uses ISOBMFF boxes, the statistics file is `name.stats.json`, reference frames are opt-in (`--export-reference`), and debug text goes to `name.debug.txt`.
+
 Objectives:
 
 1. A single file to stream from.
