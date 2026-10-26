@@ -144,15 +144,15 @@ void icov::extractor::InputIcov::selectBlock(
 }
 
 void icov::extractor::InputIcov::jumpPrediction(int bitplaneCount) {
-  byte val = 0;
-  // prediction mode + 1, 0 when the prediction is not available
-  readParam(val);
-  if (val == 0)
+  namespace bs = bitstream::block_syntax;
+  if (bs::read_mode(m_params) == 0) // prediction not available
     return;
-  // q index + 1, 0 when the block is not coded with this prediction
-  readParam(val);
-  if (val > 0)
-    m_params.skip((bitplaneCount + 2) * 8 * sizeof(rate_t)); // zmin, zmax, rates
+  if (bs::read_pred_header(m_params) == 0) // not coded
+    return;
+  bs::read_z(m_params);
+  bs::read_z(m_params);
+  for (int i = 0; i < bitplaneCount; ++i)
+    bs::read_rate(m_params);
 }
 
 void icov::extractor::InputIcov::readSyndrome(icov::byte *output,

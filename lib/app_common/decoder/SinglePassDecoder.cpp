@@ -1,4 +1,5 @@
 #include "SinglePassDecoder.h"
+#include "video_layer/ips.h"
 
 #include "Media.h"
 #include "Unit.h"
@@ -126,7 +127,8 @@ void decoder::SinglePassDecoder::openIcovFile(
 
   m_icovFile = std::make_shared<InputIcov>(path);
 
-  setContentParams(m_icovFile->contentParameterSet());
+  // the client side only gets the parameter set bytes, as over a network
+  setContentParams(bitstream::read_ips(m_icovFile->parameterSetBytes()));
 
   const auto &cps = m_contentParams;
   const auto &media_type = static_cast<eMediaType>(cps.content_type);

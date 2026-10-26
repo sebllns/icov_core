@@ -56,6 +56,7 @@
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
 #include "video_layer/bit_io.h"
+#include "video_layer/block_syntax.h"
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -89,10 +90,8 @@ public:
   void setFrame(frame_t frame) override;
   void selectBlock(const omnidirectional_layer::Block::id_t &id);
 
-  /// Next fixed-size parameter of the selected block
-  template <typename T> void readParam(T &output) {
-    output = static_cast<T>(m_params.u(8 * sizeof(rate_t)));
-  }
+  /// Parameters of the selected block, see block_syntax
+  bitstream::BitReader &params() { return m_params; }
 
   /// Skips the parameters of one prediction of one channel
   void jumpPrediction(int bitplaneCount);

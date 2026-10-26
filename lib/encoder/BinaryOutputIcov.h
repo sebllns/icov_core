@@ -102,7 +102,7 @@ private:
     uint32_t syndrome_size;///< bytes of syndromes
   };
 
-  void writeByte(unsigned v);
+  void checkByte(unsigned v);
   void writeStats() const;
 
   bitstream::BitWriter m_params;

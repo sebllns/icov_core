@@ -98,7 +98,8 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
              << std::to_string(is_access_block);
 
   // read bitplane count
-  m_icovFile->readParam(m_bitplaneCount);
+  m_bitplaneCount =
+      bitstream::block_syntax::read_bitplane_count(m_icovFile->params());
 
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
       m_bitplaneCount);
@@ -122,7 +123,7 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
     byte qSize = 0;
     ushort padding = 0;
 
-    m_icovFile->readParam(qSize);
+    qSize = bitstream::block_syntax::read_rate(m_icovFile->params());
 
     bitstream::VideoStreamDebugger::get_const_instance()
         .assertStoredNumcodeIdxEqual(bp.Index, qSize);
@@ -177,7 +178,7 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
   si.reset();
 
   byte dirmode = 0;
-  m_icovFile->readParam(dirmode);
+  dirmode = bitstream::block_syntax::read_mode(m_icovFile->params());
 
   ICOV_TRACE << "EXTRACTOR DM " << (int)dirmode;
 
@@ -186,7 +187,8 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
       dirmode);
 
   byte pred_hdr = bitstream::flag_t::NoCodingSI;
-  m_icovFile->readParam(pred_hdr);
+  pred_hdr =
+      bitstream::block_syntax::read_pred_header(m_icovFile->params());
   ICOV_TRACE << "EXTRACTOR QZ ";
 
   si.setMode(dirmode);
@@ -204,11 +206,11 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
 
     byte zmin = 0, zmax = 0;
 
-    m_icovFile->readParam(zmin);
+    zmin = bitstream::block_syntax::read_z(m_icovFile->params());
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
 
-    m_icovFile->readParam(zmax);
+    zmax = bitstream::block_syntax::read_z(m_icovFile->params());
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
 
@@ -257,7 +259,7 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
   ushort padding = 0;
 
   // read syndrome quantized size value
-  m_icovFile->readParam(qsize);
+  qsize = bitstream::block_syntax::read_rate(m_icovFile->params());
 
   // inverse size quantization and store the value
   bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, padding);

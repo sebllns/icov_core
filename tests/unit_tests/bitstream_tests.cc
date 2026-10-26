@@ -134,3 +134,24 @@ BOOST_AUTO_TEST_CASE(unknown_ldpc_family_rejected) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#include "video_layer/block_syntax.h"
+
+BOOST_AUTO_TEST_SUITE(block_syntax)
+
+BOOST_AUTO_TEST_CASE(rate_roundtrip_and_cost) {
+  namespace bs = icov::bitstream::block_syntax;
+  BitWriter w;
+  for (unsigned q = 0; q <= 255; ++q)
+    bs::write_rate(w, q);
+  BitReader r(w.data());
+  for (unsigned q = 0; q <= 255; ++q)
+    BOOST_TEST(bs::read_rate(r) == q);
+
+  // the most frequent index (1, no coding) costs a single bit
+  BitWriter one;
+  bs::write_rate(one, 1);
+  BOOST_TEST(one.bit_count() == 1u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -4,6 +4,7 @@
 #include "icov_exception.h"
 #include "icov_log.h"
 #include "video_layer/encoded_stream.h"
+#include "video_layer/block_syntax.h"
 #include "video_layer/icov_stream.h"
 #include "video_layer/ips.h"
 #include "video_layer/isobmff.h"
@@ -36,25 +37,26 @@ BinaryOutputIcov::~BinaryOutputIcov() {
   fs::remove(m_payloadPath, ec);
 }
 
-void BinaryOutputIcov::writeByte(unsigned v) {
+void BinaryOutputIcov::checkByte(unsigned v) {
   if (v > std::numeric_limits<rate_t>::max())
     ICOV_THROW_OUT_OF_RANGE("Value " + std::to_string(v) +
                             " overflows the max possible value " +
                             std::to_string(std::numeric_limits<rate_t>::max()));
-  m_params.u(8 * sizeof(rate_t), v);
 }
 
 void BinaryOutputIcov::writeQaryParams(
     const ldpc_codec_layer::QaryDistribution &bsp) {
+  namespace bs = bitstream::block_syntax;
   if (!bsp.codingflag()) {
-    writeByte(0);
+    bs::write_pred_header(m_params, 0);
     return;
   }
   bitstream::QaryParams q;
   bitstream::writeQaryParams(q, bsp.getRawQ0(), bsp.getRawZmin(),
                              bsp.getRawZmax());
-  for (int i = 0; i < QARY_PARAMS_SIZE; ++i)
-    writeByte(q[i]);
+  bs::write_pred_header(m_params, q[0]);
+  bs::write_z(m_params, q[1]);
+  bs::write_z(m_params, q[2]);
 }
 
 void BinaryOutputIcov::writeSyndrome(const Syndrome &s) {
@@ -83,14 +85,19 @@ void BinaryOutputIcov::writeBlockSize() {
   m_syndromes.clear();
 }
 
-void BinaryOutputIcov::writeBitplaneCount(const uint &v) { writeByte(v); }
+void BinaryOutputIcov::writeBitplaneCount(const uint &v) {
+  bitstream::block_syntax::write_bitplane_count(m_params, v);
+}
 
 void BinaryOutputIcov::writeSIRate(const NumcodeIdx &v, const Rate &,
                                    const uint &) {
-  writeByte(v);
+  checkByte(v);
+  bitstream::block_syntax::write_rate(m_params, v);
 }
 
-void BinaryOutputIcov::writeSIMode(const uint &v) { writeByte(v); }
+void BinaryOutputIcov::writeSIMode(const uint &v) {
+  bitstream::block_syntax::write_mode(m_params, v);
+}
 
 void BinaryOutputIcov::startWriteBlock(
     const icov::omnidirectional_layer::Block &) {}

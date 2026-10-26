@@ -53,6 +53,7 @@
 #include "ldpc_codec_layer/QaryDistribution.h"
 #include "ldpc_codec_layer/interface/IInteractiveCoder.h"
 #include "video_layer/bit_io.h"
+#include "video_layer/block_syntax.h"
 #include "video_layer/icov_stream.h"
 
 #include <array>
@@ -186,18 +187,22 @@ struct BlockChannelDecoderParams {
 ///     si_mode                             u(7)   intra direction + 1
 ///     pred_header                         ue(v)  q index + 1, 0: not coded
 ///     if coded: z_min, z_max              u(8)
-///     if coded: rate index per bitplane   ue(v)
+///     if coded: rate index per bitplane   ue(v), see block_syntax::write_rate
 ///   syndrome prefix per bitplane          exact bit length, no padding
 /// then byte_alignment() once per block. Lengths are implicit: the decoder
 /// derives each syndrome length from its rate index.
 class IcovExtractedBitstream {
 public:
   // writer side (extractor)
-  void writeBitplaneCount(unsigned v) { m_writer.ue(v); }
-  void writeMode(unsigned v) { m_writer.u(7, v); }
-  void writePredHeader(unsigned v) { m_writer.ue(v); }
-  void writeZ(unsigned v) { m_writer.u(8, v); }
-  void writeRate(unsigned v) { m_writer.ue(v); }
+  void writeBitplaneCount(unsigned v) {
+    block_syntax::write_bitplane_count(m_writer, v);
+  }
+  void writeMode(unsigned v) { block_syntax::write_mode(m_writer, v); }
+  void writePredHeader(unsigned v) {
+    block_syntax::write_pred_header(m_writer, v);
+  }
+  void writeZ(unsigned v) { block_syntax::write_z(m_writer, v); }
+  void writeRate(unsigned v) { block_syntax::write_rate(m_writer, v); }
   void writeSyndrome(const uint8_t *data, size_t nbits) {
     m_writer.bits(data, nbits);
   }
@@ -206,11 +211,13 @@ public:
   size_t unitBytes() const { return m_writer.data().size(); }
 
   // reader side (decoder)
-  unsigned readBitplaneCount() { return reader().ue(); }
-  unsigned readMode() { return reader().u(7); }
-  unsigned readPredHeader() { return reader().ue(); }
-  unsigned readZ() { return reader().u(8); }
-  unsigned readRate() { return reader().ue(); }
+  unsigned readBitplaneCount() {
+    return block_syntax::read_bitplane_count(reader());
+  }
+  unsigned readMode() { return block_syntax::read_mode(reader()); }
+  unsigned readPredHeader() { return block_syntax::read_pred_header(reader()); }
+  unsigned readZ() { return block_syntax::read_z(reader()); }
+  unsigned readRate() { return block_syntax::read_rate(reader()); }
   bool readSyndromeBit() { return reader().flag(); }
 
   /// True when no whole byte is left to read
