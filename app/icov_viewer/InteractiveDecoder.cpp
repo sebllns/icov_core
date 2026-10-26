@@ -54,6 +54,8 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   m_req_count = 0;
   m_frame = 0;
   is_decoding = true;
+  // A still image has nothing to play: avoid decoding it again on every loop
+  is_playing = getDecoder()->contentParams().content_framecount > 1;
 
   m_monitor = cv::Mat(cv::Size(400, 200), CV_8UC3, bgrColor::BLACK());
 }
