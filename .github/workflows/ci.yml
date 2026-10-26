@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0} # login shell, needed for conda activate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # aff3ct needs only its lib/* submodules (conf and refs are large and unused).
+      # Full history so that aff3ct can derive its version from git describe.
+      - name: Fetch submodules
+        run: |
+          git submodule update --init third-party/aff3ct
+          git -C third-party/aff3ct submodule update --init lib/MIPP lib/cli lib/rang lib/date
+          echo "AFF3CT_SHA=$(git rev-parse HEAD:third-party/aff3ct)" >> "$GITHUB_ENV"
+
+      - name: Cache conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ hashFiles('environment.txt') }}
+
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: icov-core
+          channels: conda-forge
+          conda-remove-defaults: true
+          pkgs-dirs: ~/conda_pkgs_dir
+
+      - name: Install dependencies
+        run: conda install -y -n icov-core -c conda-forge --override-channels --file environment.txt
+
+      - name: Cache aff3ct
+        id: cache-aff3ct
+        uses: actions/cache@v4
+        with:
+          path: build/aff3ct-install
+          key: aff3ct-${{ runner.os }}-${{ env.AFF3CT_SHA }}-${{ hashFiles('environment.txt') }}
+
+      - name: Build aff3ct
+        if: steps.cache-aff3ct.outputs.cache-hit != 'true'
+        run: |
+          cmake -S third-party/aff3ct -B build/aff3ct -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PWD/build/aff3ct-install" \
+            -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+            -DAFF3CT_COMPILE_EXE=OFF -DAFF3CT_COMPILE_STATIC_LIB=ON \
+            -DAFF3CT_POLAR_BIT_PACKING=OFF -DAFF3CT_COLORS=OFF -DAFF3CT_PREC=32
+          cmake --build build/aff3ct --target install
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: ccache-${{ runner.os }}-
+
+      - name: Configure
+        run: |
+          cmake -S . -B build/release -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$CONDA_PREFIX;$PWD/build/aff3ct-install" \
+            -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+            -DBoost_USE_STATIC_LIBS=OFF \
+            -DICOV_USE_OMP=ON \
+            -DICOV_BUILD_TESTS=ON
+
+      - name: Build
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: cmake --build build/release -j"$(nproc)"
+
+      - name: Unit tests
+        run: ctest --test-dir build/release -L unit --output-on-failure
+
+      - name: Integration tests
+        run: ctest --test-dir build/release -L integration --output-on-failure
+
+      - name: Upload test outputs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-outputs
+          path: |
+            build/release/tests/integration/work/*.log
+            build/release/tests/integration/work/*.csv
+            build/release/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

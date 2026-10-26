@@ -92,6 +92,16 @@ Notes:
 - `-DICOV_USE_OMP=ON` parallelizes the encoder over block predictions; keep it on whenever the compiler supports OpenMP (default `OFF`). With conda clang, also install `llvm-openmp`.
 - Other options: `-DICOV_BUILD_APPS=OFF` (skip the viewer and CLI), `-DICOV_ONLINE_MODE=OFF` (skip the git update of downloaded dependencies such as GLFW and glad, to rebuild without network; the first build still downloads them).
 
+Tests: configure with `-DICOV_BUILD_TESTS=ON` (default in Debug), build, then run:
+
+```bash
+ctest --test-dir build/release --output-on-failure      # all tests
+ctest --test-dir build/release -L unit                  # LDPCA coder unit tests, about 1 s
+ctest --test-dir build/release -L integration           # encode/decode round trip, about 20 s
+```
+
+The integration test encodes two small synthetic images twice (the outputs must be identical), then decodes a few viewpoints and checks the PSNR of every block. GitHub CI (`.github/workflows/ci.yml`) runs both on every push and pull request.
+
 ---
 
 ### :arrow_right_hook: Download and build ICOV with the superbuild CMake project

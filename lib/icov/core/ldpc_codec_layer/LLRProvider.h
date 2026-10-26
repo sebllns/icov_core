@@ -72,6 +72,12 @@ public:
   // Back to the undoped LLR; the next doping restarts from scratch
   inline void reset_doping() { m_doping_ready = false; }
 
+  // Sets the LLRs directly, e.g. from an external channel model
+  inline void setLLR(const std::vector<LLRVal> &llr) {
+    reset();
+    m_llr = llr;
+  }
+
   inline const std::vector<size_t> &llr_order() const { return m_doping_order; }
 
   inline std::vector<size_t> &llr_order() { return m_doping_order; }

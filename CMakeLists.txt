@@ -439,8 +439,12 @@ if(ICOV_BUILD_TESTS)
   message(STATUS "[INFO] Building ICOV core tests")
   message(
     "-------------------------------------------------------------------------")
+  enable_testing()
   add_subdirectory(tests/unit_tests)
   add_subdirectory(tests/benchmarks)
+  if(ICOV_BUILD_APPS)
+    add_subdirectory(tests/integration)
+  endif()
 endif()
 
 # If ICOV_BUILD_APPS is set to true, build the executables

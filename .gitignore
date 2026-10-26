@@ -1,4 +1,5 @@
 build*/
+.ccache/
 doc/html/
 doc/latex
 data/imt/*/alist/
