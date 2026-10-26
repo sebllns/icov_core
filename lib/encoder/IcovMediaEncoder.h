@@ -62,7 +62,7 @@ namespace icov {
 namespace encoder {
 class IcovMediaEncoder : public IMediaEncoder<cv::Mat> {
 public:
-  enum eOutputType { UNKNOWN = 0, BINARY = 1, TEXT = 2, COUNT };
+  enum eOutputType { UNKNOWN = 0, BINARY = 1, COUNT };
 
   struct params {
     fs::path InputPath;

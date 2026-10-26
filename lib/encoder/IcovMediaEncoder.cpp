@@ -4,7 +4,6 @@
 #include "encoder/FakeFrameEncoder.h"
 #include "encoder/FrameEncoder.h"
 #include "encoder/InputMedia.h"
-#include "encoder/TextOutputIcov.h"
 #include "icov_log.h"
 #include "icov_path.h"
 #include "omnidirectional_layer/factory.h"
@@ -123,6 +122,10 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   m_output->contentParameterSet().icov_version = ICOV_CORE_VERSION;
 
+  m_output->contentParameterSet().ldpc_coder_type = m_LDPC_params->type();
+  m_output->contentParameterSet().ldpc_bp_ite =
+      m_LDPC_params->beliefPropagationIterations;
+
   m_output->contentParameterSet().content_framecount = 0;
 
   m_output->contentParameterSet().is_block_fixed_size =
@@ -178,10 +181,6 @@ icov::encoder::IcovMediaEncoder::createOutputFile() const {
   case BINARY:
     ICOV_INFO << "Icov output format is binary";
     ptr = std::make_shared<encoder::BinaryOutputIcov>(m_params.OutputPath);
-    break;
-  case TEXT:
-    ICOV_INFO << "Icov output format is text";
-    ptr = std::make_shared<encoder::TextOutputIcov>(m_params.OutputPath);
     break;
   default:
     ICOV_THROW_INVALID_ARGUMENT("Unknown encoder type");

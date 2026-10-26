@@ -4,7 +4,7 @@
 #include "omnidirectional_layer/interface/IBlockPredictionManager.h"
 #include "video_layer/encoded_stream.h"
 #include "video_layer/icov_stream.h"
-#include <boost/serialization/array_wrapper.hpp>
+#include "video_layer/ips.h"
 #include <ios>
 #include <limits>
 #include <memory>
@@ -35,10 +35,9 @@ void BinaryOutputIcov::writeQaryParams(
 }
 
 void BinaryOutputIcov::writeContentParameterSet() {
-  boost::archive::binary_oarchive o_archive(
-      *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
-      boost::archive::no_header);
-  o_archive &m_contentParameterSet;
+  const auto ips = bitstream::write_ips(m_contentParameterSet);
+  icov::io::write_array(*m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
+                        ips.data(), ips.size(), false);
   flush(bitstream::eIcovStream::MEDIA_HEADER);
 }
 

@@ -49,7 +49,6 @@
 
 #include "omnidirectional_layer/Block.h"
 #include "video_layer/icov_stream.h"
-#include <boost/serialization/map.hpp>
 #include <cstdint>
 
 namespace icov {
@@ -136,7 +135,9 @@ inline bool operator==(const ContentParameterSet &a,
          a.fixed_tu_count == b.fixed_tu_count &&
          a.numcode_byte_count == b.numcode_byte_count &&
          a.has_metadata == b.has_metadata &&
-         a.encoded_blocks == b.encoded_blocks && a.icu_count == b.icu_count;
+         a.encoded_blocks == b.encoded_blocks && a.icu_count == b.icu_count &&
+         a.ldpc_coder_type == b.ldpc_coder_type &&
+         a.ldpc_bp_ite == b.ldpc_bp_ite;
 }
 
 inline bool operator!=(const ContentParameterSet &a, const ContentParameterSet &b)

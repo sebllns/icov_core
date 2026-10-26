@@ -8,9 +8,9 @@
 #include "video_layer/encoded_stream.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
+#include "video_layer/ips.h"
 
 #include <boost/filesystem/path.hpp>
-#include <boost/serialization/array_wrapper.hpp>
 
 #include <cstdint>
 #include <fstream>
@@ -49,10 +49,10 @@ icov::extractor::InputIcov::contentParameterSet() {
 }
 
 void icov::extractor::InputIcov::readContentParameterSet() {
-  boost::archive::binary_iarchive archive(
-      *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER],
-      boost::archive::no_header);
-  archive &m_contentParameterSet;
+  auto &header = *m_fileParts[bitstream::eIcovStream::MEDIA_HEADER];
+  const std::vector<uint8_t> ips((std::istreambuf_iterator<char>(header)),
+                                 std::istreambuf_iterator<char>());
+  m_contentParameterSet = bitstream::read_ips(ips);
   m_frameCount = m_contentParameterSet.content_framecount;
 
   if (m_contentParameterSet.icov_version != ICOV_CORE_VERSION) {

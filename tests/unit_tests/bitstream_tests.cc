@@ -95,3 +95,42 @@ BOOST_AUTO_TEST_CASE(read_past_end_throws) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#include "video_layer/ips.h"
+
+BOOST_AUTO_TEST_SUITE(ips)
+
+BOOST_AUTO_TEST_CASE(parameter_set_roundtrip) {
+  icov::bitstream::ContentParameterSet cps;
+  cps.icov_version = "2.0.0";
+  cps.content_type = 1;
+  cps.content_chroma_format = 1;
+  cps.content_width = 1024;
+  cps.content_height = 512;
+  cps.qp = 27;
+  cps.content_framecount = 3;
+  cps.content_framerate = 29.97f;
+  cps.viewport_width = 409;
+  cps.viewport_height = 230;
+  cps.viewport_fov_x = 1.3962634f;
+  cps.viewport_fov_y = 0.8819f;
+  cps.viewport_padding = 1.2f;
+  cps.block_fixed_size = 32;
+  cps.ldpc_coder_type = "imt164";
+  cps.ldpc_bp_ite = 20;
+  cps.icu_count = 512;
+  for (unsigned id = 1; id <= 512; ++id)
+    cps.encoded_blocks[id] = id - 1;
+
+  const auto bytes = icov::bitstream::write_ips(cps);
+  BOOST_TEST(bytes.size() < 120u); // the block list costs one bit per block
+  BOOST_TEST((icov::bitstream::read_ips(bytes) == cps));
+}
+
+BOOST_AUTO_TEST_CASE(unknown_ldpc_family_rejected) {
+  icov::bitstream::ContentParameterSet cps;
+  cps.ldpc_coder_type = "unknown";
+  BOOST_CHECK_THROW(icov::bitstream::write_ips(cps), std::exception);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

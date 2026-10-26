@@ -54,9 +54,6 @@
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
 #include <boost/dynamic_bitset.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/array_wrapper.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <cmath>
 #include <cstdint>
 #include <sys/types.h>
@@ -178,81 +175,3 @@ inline std::string writeSyndrome(const Syndrome &s) {
 
 } // namespace bitstream
 } // namespace icov
-namespace boost {
-namespace serialization {
-
-// When the class Archive corresponds to an output archive, the
-// & operator is defined similar to <<.  Likewise, when the class Archive
-// is a type of input archive the & operator is defined similar to >>.
-
-template <class Archive>
-void serialize(Archive &ar, icov::Syndrome &io,
-               const unsigned int /*version*/) {
-  size_t byte_count = icov::bitstream::bitToByteCount(io.size());
-  icov::byte *data = new icov::byte[byte_count];
-  ar &make_array<icov::byte>(data, byte_count);
-}
-
-template <class Archive>
-void serialize(Archive &ar, icov::bitstream::ContentParameterSet &io,
-               const unsigned int /*version*/) {
-
-  ar &io.icov_version;
-  ar &io.content_type;
-  ar &io.content_width;
-  ar &io.content_height;
-  ar &io.qp;
-  ar &io.content_chroma_format;
-  ar &io.content_framecount;
-  ar &io.content_framerate;
-  ar &io.content_duration;
-  ar &io.viewport_padding;
-  ar &io.viewport_fov_x;
-  ar &io.viewport_fov_y;
-  ar &io.viewport_height;
-  ar &io.viewport_width;
-
-  ar &io.is_sov_fixed_size;
-  if (io.is_sov_fixed_size)
-    ar &io.sov_fixed_size;
-
-  ar &io.is_block_fixed_size;
-  if (io.is_block_fixed_size)
-    ar &io.block_fixed_size;
-
-  ar &io.is_tu_count_fixed;
-  if (io.is_tu_count_fixed)
-    ar &io.fixed_tu_count;
-
-  ar &io.has_metadata;
-  ar &io.icu_count;
-  ar &io.encoded_blocks;
-}
-
-template <typename Ar, typename Block, typename Alloc>
-void save(Ar &ar, dynamic_bitset<Block, Alloc> const &bs, unsigned) {
-  size_t num_bits = bs.size();
-  std::vector<Block> blocks(bs.num_blocks());
-  to_block_range(bs, blocks.begin());
-
-  ar &num_bits &blocks;
-}
-
-template <typename Ar, typename Block, typename Alloc>
-void load(Ar &ar, dynamic_bitset<Block, Alloc> &bs, unsigned /*version*/) {
-  size_t num_bits;
-  std::vector<Block> blocks;
-  ar &num_bits &blocks;
-
-  bs.resize(num_bits);
-  from_block_range(blocks.begin(), blocks.end(), bs);
-  bs.resize(num_bits);
-}
-
-template <typename Ar, typename Block, typename Alloc>
-void serialize(Ar &ar, dynamic_bitset<Block, Alloc> &bs, unsigned version) {
-  split_free(ar, bs, version);
-}
-
-} // namespace serialization
-} // namespace boost
