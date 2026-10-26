@@ -40,6 +40,8 @@ public:
 
   int errorCount(const BitVec &decoded, const BitVec &source) const;
 
+  Rate conditional_entropy(const BitVec &source) const;
+
   int encode(NumcodeIdx &io_numcode, Syndrome &o_stored_syndrome,
              const BitVec &source);
 

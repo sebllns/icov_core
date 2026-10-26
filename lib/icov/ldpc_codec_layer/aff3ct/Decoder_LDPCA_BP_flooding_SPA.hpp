@@ -57,6 +57,7 @@ protected:
                           std::vector<R> &msg_chk_to_var);
   void _compute_post(const R *Y_N, const std::vector<R> &msg_chk_to_var,
                      std::vector<R> &post);
+  bool _check_syndrome(const std::vector<R> &post) const;
 };
 
 } // namespace ldpc_codec_layer

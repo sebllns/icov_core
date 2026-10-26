@@ -68,37 +68,78 @@ int InteractiveCoder<Matrix>::errorCount(const BitVec &decoded,
 }
 
 template <class Matrix>
+Rate InteractiveCoder<Matrix>::conditional_entropy(const BitVec &source) const {
+  // Ideal Slepian-Wolf rate: mean of -log2 P(x_i | llr_i), with llr < 0 <=> 1
+  const auto &llr = m_pllrProvider->llr();
+  double bits = 0;
+  for (size_t k = 0; k < source.size(); k++)
+    bits += std::log1p(std::exp(source[k] ? llr[k] : -llr[k]));
+  return static_cast<Rate>(bits / (std::log(2.0) * source.size()));
+}
+
+template <class Matrix>
 int InteractiveCoder<Matrix>::encode(NumcodeIdx &i, Syndrome &o_stored_syndrome,
                                      const BitVec &source) {
-  o_stored_syndrome.resize(0);
+  // Rates are searched from the conditional entropy estimate: exponential
+  // steps up to the first converging rate, then bisection down. Each attempt
+  // starts from a fresh doping state, as the decoder does, so that a lower
+  // rate never benefits from bits doped by a previously tried higher rate.
+  // Rates above 1 are skipped: storing the bitplane raw is cheaper.
+  constexpr Rate estimate_margin = 0.05f;
 
-  BitVec decoded(m_psyndromeMgr->get_n());
+  const int n = static_cast<int>(get_n());
+  int last = m_matrix_provider->getNumCodesCount() - 1;
+  while (last > 0 && get_m(last) > n)
+    last--;
 
-  bool convergence = false;
-  while (i < m_matrix_provider->getNumCodesCount() && !convergence) {
-    uint32_t io_numcode = m_matrix_provider->getNumcode(i);
+  m_pllrProvider->reset_doping();
+  const Rate start_rate = conditional_entropy(source) - estimate_margin;
+  int start = static_cast<int>(i);
+  while (start < last && get_r(start) < start_rate)
+    start++;
 
-#if ICOV_CORE_DEBUG_TRACE_ENABLED
-    ICOV_TRACE << "m = " << this->syndromeMgr()->get_m(io_numcode)
-               << ", r = " << this->get_r(i);
-#endif
-    m_psyndromeMgr->compute_stored(o_stored_syndrome, io_numcode,
-                                   *m_pllrProvider.get(), source);
-    this->decode(decoded, i, o_stored_syndrome);
+  BitVec decoded(n);
+  int stored_k = -1;
+  auto converges = [&](int k) {
+    stored_k = k;
+    m_pllrProvider->reset_doping();
+    o_stored_syndrome.resize(0);
+    m_psyndromeMgr->compute_stored(
+        o_stored_syndrome, m_matrix_provider->getNumcode(k),
+        *m_pllrProvider.get(), source);
+    this->decode(decoded, k, o_stored_syndrome);
+    return testConvergence(decoded, source);
+  };
 
-    convergence = testConvergence(decoded, source);
-    if (!convergence) {
-      ++i;
-      if (!m_pllrProvider->doping_ready() && m_matrix_provider->is_doping(i)) {
-        this->m_pllrProvider->init_doping();
-        // m_pdecoder->get_llr_order(io_numcode, m_pllrProvider->llr_order());
-      }
+  // Exponential search: lo fails (or is below start), hi converges
+  int lo = start - 1;
+  int hi = start;
+  int step = 1;
+  while (!converges(hi)) {
+    if (hi == last) {
+      i = last;
+      return errorCount(decoded, source);
     }
+    lo = hi;
+    hi = std::min(hi + step, last);
+    step *= 2;
   }
 
-  if (convergence)
-    return 0;
-  return errorCount(decoded, source);
+  // Bisection between lo and hi
+  while (hi - lo > 1) {
+    const int mid = lo + (hi - lo) / 2;
+    if (converges(mid))
+      hi = mid;
+    else
+      lo = mid;
+  }
+
+  // Restore the syndrome of the selected rate if the last attempt was lower
+  if (stored_k != hi)
+    converges(hi);
+
+  i = hi;
+  return 0;
 }
 
 template <class Matrix>

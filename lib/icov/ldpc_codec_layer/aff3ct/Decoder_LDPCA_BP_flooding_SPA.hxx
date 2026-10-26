@@ -163,9 +163,10 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode(const R *Y_N,
                              this->msg_chk_to_var[frame_id]);
     this->up_rule.end_ite();
 
-    if (this->enable_syndrome && ite != this->n_ite - 1) {
+    // Early stop once the hard decision matches the LDPCA syndrome (H x = s)
+    if (ite != this->n_ite - 1) {
       this->_compute_post(Y_N, this->msg_chk_to_var[frame_id], this->post);
-      if (this->check_syndrome_soft(this->post.data()))
+      if (this->_check_syndrome(this->post))
         break;
     }
   }
@@ -173,6 +174,20 @@ void Decoder_LDPCA_BP_flooding_SPA<B, R>::_decode(const R *Y_N,
     this->_compute_post(Y_N, this->msg_chk_to_var[frame_id], this->post);
 
   this->up_rule.end_decoding();
+}
+
+template <typename B, typename R>
+bool Decoder_LDPCA_BP_flooding_SPA<B, R>::_check_syndrome(
+    const std::vector<R> &post) const {
+  const auto &chk_to_var = this->H.get_col_to_rows();
+  for (size_t c = 0; c < chk_to_var.size(); c++) {
+    bool parity = m_syndrome->at(c);
+    for (const auto v : chk_to_var[c])
+      parity ^= !(post[v] >= 0); // same hard decision as _decode_siho
+    if (parity)
+      return false;
+  }
+  return true;
 }
 
 template <typename B, typename R>

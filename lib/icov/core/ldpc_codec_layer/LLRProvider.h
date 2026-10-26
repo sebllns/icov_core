@@ -69,6 +69,9 @@ public:
     return m_doping_ready ? m_llr_doping : m_llr;
   }
 
+  // Back to the undoped LLR; the next doping restarts from scratch
+  inline void reset_doping() { m_doping_ready = false; }
+
   inline const std::vector<size_t> &llr_order() const { return m_doping_order; }
 
   inline std::vector<size_t> &llr_order() { return m_doping_order; }
