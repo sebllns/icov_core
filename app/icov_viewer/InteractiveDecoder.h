@@ -103,6 +103,13 @@ class InteractiveDecoder : public InteractiveModeBase
     void drawBlocks(drawType type);
     static bool isFirstBlock(const video_layer::VideoMetrics::block_infos_t &i);
     static void drawBorder(cv::Mat &output);
+    static cv::Scalar
+    predictionColor(omnidirectional_layer::BlockPrediction::ePredType p);
+    static cv::Scalar categoryColor(
+        omnidirectional_layer::BlockPrediction::eSICategory c);
+    void drawLegendItem(int &y, const cv::Scalar &color,
+                        const std::string &label);
+    void drawLegend(int y);
     void drawBlock(drawType type, const omnidirectional_layer::Block &b,
                    const video_layer::VideoMetrics::block_infos_t &i,
                    cv::Mat &output, const cv::Rect &roi);

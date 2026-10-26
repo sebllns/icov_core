@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -58,7 +59,7 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   // A still image has nothing to play: avoid decoding it again on every loop
   is_playing = getDecoder()->contentParams().content_framecount > 1;
 
-  m_monitor = cv::Mat(cv::Size(400, 200), CV_8UC3, bgrColor::BLACK());
+  m_monitor = cv::Mat(cv::Size(400, 280), CV_8UC3, bgrColor::BLACK());
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &
@@ -96,6 +97,144 @@ bool InteractiveDecoder::isFirstBlock(
 void InteractiveDecoder::drawBorder(cv::Mat &output) {
   cv::rectangle(output, cv::Rect(0, 0, output.cols, output.rows),
                 bgrColor::GRAY(), 1);
+}
+
+cv::Scalar InteractiveDecoder::predictionColor(BlockPrediction::ePredType p) {
+  cv::Scalar color = bgrColor::BLACK();
+
+  cv::Scalar r_color(127, 127, 0);
+  cv::Scalar l_color(0, 127, 127);
+  cv::Scalar t_color(127, 0, 127);
+  cv::Scalar b_color(127, 127, 127);
+
+  switch (p) {
+  case icov::omnidirectional_layer::BlockPrediction::RIGHT:
+    color = r_color;
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::LEFT:
+    color = l_color;
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::TOP:
+    color = t_color;
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::BOTTOM:
+    color = b_color;
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::TOP_RIGHT:
+    color = t_color + r_color;
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::TOP_LEFT:
+    color = t_color + l_color;
+    break;
+
+  case icov::omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
+    color = b_color + r_color;
+    break;
+
+  case icov::omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
+    color = b_color + l_color;
+    break;
+
+  case icov::omnidirectional_layer::BlockPrediction::NONE:
+    color = bgrColor::GREEN();
+    break;
+
+  case icov::omnidirectional_layer::BlockPrediction::INTER:
+    color = bgrColor::YELLOW();
+    break;
+
+  case icov::omnidirectional_layer::BlockPrediction::UNKNOWN:
+  case icov::omnidirectional_layer::BlockPrediction::MAX:
+  case icov::omnidirectional_layer::BlockPrediction::ERROR_PRED:
+    color = bgrColor::RED();
+    break;
+  }
+  return color;
+}
+
+cv::Scalar
+InteractiveDecoder::categoryColor(BlockPrediction::eSICategory c) {
+  cv::Scalar color = bgrColor::BLACK();
+
+  switch (c) {
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_COUNT:
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_UNKNOWN:
+    color = bgrColor::RED();
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_NONE:
+    color = bgrColor::GREEN();
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_SINGLE:
+    color = bgrColor::BLUE();
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_DOUBLE:
+    color = bgrColor::CYAN();
+    break;
+  case icov::omnidirectional_layer::BlockPrediction::SI_CAT_TEMPORAL:
+    color = bgrColor::YELLOW();
+    break;
+  }
+  return color;
+}
+
+void InteractiveDecoder::drawLegendItem(int &y, const cv::Scalar &color,
+                                        const std::string &label) {
+  cv::rectangle(m_monitor, cv::Rect(10, y - 9, 10, 10), color, cv::FILLED);
+  cv::rectangle(m_monitor, cv::Rect(10, y - 9, 10, 10), bgrColor::GRAY(), 1);
+  cv::putText(m_monitor, label, cv::Point(28, y), cv::FONT_HERSHEY_PLAIN, 1,
+              bgrColor::WHITE(), 1);
+  y += 15;
+}
+
+void InteractiveDecoder::drawLegend(int y) {
+  auto title = [&](const std::string &t) {
+    cv::putText(m_monitor, t, cv::Point(10, y), cv::FONT_HERSHEY_PLAIN, 1,
+                bgrColor::PASTEL_YELLOW(), 1);
+    y += 18;
+  };
+
+  const int key = special_key();
+  if (key == config().f1) {
+    title(m_showSource ? "F1 Source (X: decoded)" : "F1 Decoded (X: source)");
+  } else if (key == config().f2) {
+    title("F2 Rate per block (number: block id)");
+    drawLegendItem(y, bgrColor::GREEN(), "first decoded block");
+    drawLegendItem(y, 0.1 * bgrColor::BLUE(), "rate 0 (cached or free)");
+    drawLegendItem(y, bgrColor::BLUE(), "rate 1 (as many bits as intra)");
+    drawLegendItem(y, bgrColor::RED(), "rate > 1");
+  } else if (key == config().f3) {
+    std::stringstream t;
+    t << "F3 Viewport rate " << std::fixed << std::setprecision(3)
+      << m_viewportRate;
+    title(t.str());
+    drawLegendItem(y, bgrColor::GREEN(), "first decoded block");
+    drawLegendItem(y, m_viewportRate * bgrColor::BLUE(),
+                   "other blocks: blue = viewport rate");
+  } else if (key == config().f4) {
+    title("F4 Prediction (number: decoding order)");
+    using P = BlockPrediction;
+    const std::pair<P::ePredType, const char *> items[] = {
+        {P::NONE, "none (first)"}, {P::LEFT, "left"},
+        {P::RIGHT, "right"},       {P::TOP, "top"},
+        {P::BOTTOM, "bottom"},     {P::TOP_LEFT, "top left"},
+        {P::TOP_RIGHT, "top right"}, {P::BOTTOM_LEFT, "bottom left"},
+        {P::BOTTOM_RIGHT, "bottom right"}, {P::INTER, "inter (previous frame)"},
+        {P::ERROR_PRED, "unknown or error"}};
+    for (const auto &it : items)
+      drawLegendItem(y, predictionColor(it.first), it.second);
+  } else if (key == config().f5) {
+    title("F5 Category (number: decoding order)");
+    using P = BlockPrediction;
+    drawLegendItem(y, categoryColor(P::SI_CAT_NONE), "none (first)");
+    drawLegendItem(y, categoryColor(P::SI_CAT_SINGLE), "one neighbor");
+    drawLegendItem(y, categoryColor(P::SI_CAT_DOUBLE), "two neighbors");
+    drawLegendItem(y, categoryColor(P::SI_CAT_TEMPORAL), "previous frame");
+    drawLegendItem(y, categoryColor(P::SI_CAT_UNKNOWN), "unknown");
+  } else if (key == config().f6) {
+    title("F6 Difference (number: decoding order)");
+    drawLegendItem(y, bgrColor::GREEN(), "identical");
+    drawLegendItem(y, bgrColor::RED(), "differs");
+  }
 }
 
 void InteractiveDecoder::drawBlock(
@@ -137,55 +276,8 @@ void InteractiveDecoder::drawBlock(
 
     /////////////////////////////////////////
   case drawType::PREDICTION: {
-    cv::Scalar color = bgrColor::BLACK();
-
-    cv::Scalar r_color(127, 127, 0);
-    cv::Scalar l_color(0, 127, 127);
-    cv::Scalar t_color(127, 0, 127);
-    cv::Scalar b_color(127, 127, 127);
-
-    switch (BlockPrediction::toPredType(i.prediction)) {
-    case icov::omnidirectional_layer::BlockPrediction::RIGHT:
-      color = r_color;
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::LEFT:
-      color = l_color;
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::TOP:
-      color = t_color;
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::BOTTOM:
-      color = b_color;
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::TOP_RIGHT:
-      color = t_color + r_color;
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::TOP_LEFT:
-      color = t_color + l_color;
-      break;
-
-    case icov::omnidirectional_layer::BlockPrediction::BOTTOM_RIGHT:
-      color = b_color + r_color;
-      break;
-
-    case icov::omnidirectional_layer::BlockPrediction::BOTTOM_LEFT:
-      color = b_color + l_color;
-      break;
-
-    case icov::omnidirectional_layer::BlockPrediction::NONE:
-      color = bgrColor::GREEN();
-      break;
-
-    case icov::omnidirectional_layer::BlockPrediction::INTER:
-      color = bgrColor::YELLOW();
-      break;
-
-    case icov::omnidirectional_layer::BlockPrediction::UNKNOWN:
-    case icov::omnidirectional_layer::BlockPrediction::MAX:
-    case icov::omnidirectional_layer::BlockPrediction::ERROR_PRED:
-      color = bgrColor::RED();
-      break;
-    }
+    cv::Scalar color =
+        predictionColor(BlockPrediction::toPredType(i.prediction));
     output.setTo(color);
     cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
                 cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::BLACK(), 1);
@@ -193,27 +285,8 @@ void InteractiveDecoder::drawBlock(
 
     /////////////////////////////////////////
   case drawType::PREDICTION_CAT: {
-    cv::Scalar color = bgrColor::BLACK();
-
-    switch (BlockPrediction::getCategory(
-        BlockPrediction::toPredType(i.prediction))) {
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_COUNT:
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_UNKNOWN:
-      color = bgrColor::RED();
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_NONE:
-      color = bgrColor::GREEN();
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_SINGLE:
-      color = bgrColor::BLUE();
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_DOUBLE:
-      color = bgrColor::CYAN();
-      break;
-    case icov::omnidirectional_layer::BlockPrediction::SI_CAT_TEMPORAL:
-      color = bgrColor::YELLOW();
-      break;
-    }
+    cv::Scalar color = categoryColor(BlockPrediction::getCategory(
+        BlockPrediction::toPredType(i.prediction)));
     output.setTo(color);
     cv::putText(output, std::to_string(i.decodingOrder), cv::Point(0, 16),
                 cv::FONT_HERSHEY_PLAIN, 0.8, bgrColor::BLACK(), 1);
@@ -480,6 +553,8 @@ bool InteractiveDecoder::processKey(char key) {
   info_txt << "ICOV Decoder: " << (is_decoding ? "ON" : "OFF");
   cv::putText(m_monitor, info_txt.str(), cv::Point(10, yline),
               cv::FONT_HERSHEY_PLAIN, 1, bgrColor::PASTEL_GREEN(), 1);
+
+  drawLegend(yline + 2 * hline);
 
   cv::imshow("ICOV Monitor", m_monitor);
 
