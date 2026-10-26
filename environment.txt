@@ -16,5 +16,10 @@ opencv=4.10
 freeglut
 glm
 libgl-devel
+# X11 dev headers required by GLFW (icov_viewer)
+xorg-libxrandr
+xorg-libxinerama
+xorg-libxcursor
+xorg-libxi
 python=3.11
 numpy
