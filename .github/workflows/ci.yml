@@ -77,7 +77,8 @@ jobs:
             -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
             -DBoost_USE_STATIC_LIBS=OFF \
             -DICOV_USE_OMP=ON \
-            -DICOV_BUILD_TESTS=ON
+            -DICOV_BUILD_TESTS=ON \
+            -DPython3_EXECUTABLE="$CONDA_PREFIX/bin/python"
 
       - name: Build
         env:
