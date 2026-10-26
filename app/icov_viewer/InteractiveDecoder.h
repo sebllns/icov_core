@@ -45,6 +45,8 @@
  *****************************************************************************/
 #pragma once
 
+#include <functional>
+
 #include "InteractiveModeBase.h"
 
 #include "app_common/decoder/DecoderController.h"
@@ -109,6 +111,9 @@ class InteractiveDecoder : public InteractiveModeBase
         omnidirectional_layer::BlockPrediction::eSICategory c);
     void drawLegendItem(int &y, const cv::Scalar &color,
                         const std::string &label);
+    void drawRateGradient(int &y,
+                          const std::function<cv::Scalar(float)> &color,
+                          float mark);
     void drawLegend(int y);
     void drawBlock(drawType type, const omnidirectional_layer::Block &b,
                    const video_layer::VideoMetrics::block_infos_t &i,

@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -59,7 +60,7 @@ InteractiveDecoder::InteractiveDecoder(const path::path_t &icov_file,
   // A still image has nothing to play: avoid decoding it again on every loop
   is_playing = getDecoder()->contentParams().content_framecount > 1;
 
-  m_monitor = cv::Mat(cv::Size(400, 280), CV_8UC3, bgrColor::BLACK());
+  m_monitor = cv::Mat(cv::Size(400, 300), CV_8UC3, bgrColor::BLACK());
 }
 
 const icov_unique_ptr(decoder::SinglePassDecoder) &
@@ -186,6 +187,28 @@ void InteractiveDecoder::drawLegendItem(int &y, const cv::Scalar &color,
   y += 15;
 }
 
+// Horizontal bar from rate 0 to 1, with an optional marker at rate `mark`
+void InteractiveDecoder::drawRateGradient(
+    int &y, const std::function<cv::Scalar(float)> &color, float mark) {
+  const int x0 = 10, w = 256, h = 12;
+  for (int i = 0; i < w; ++i)
+    cv::line(m_monitor, cv::Point(x0 + i, y), cv::Point(x0 + i, y + h),
+             color(i / float(w - 1)));
+  cv::rectangle(m_monitor, cv::Rect(x0, y, w, h), bgrColor::GRAY(), 1);
+  if (mark >= 0) {
+    int xm = x0 + int(std::min(mark, 1.f) * (w - 1));
+    cv::line(m_monitor, cv::Point(xm, y - 3), cv::Point(xm, y + h + 3),
+             bgrColor::WHITE(), 2);
+  }
+  y += h + 13;
+  cv::putText(m_monitor, "0", cv::Point(x0, y), cv::FONT_HERSHEY_PLAIN, 1,
+              bgrColor::WHITE(), 1);
+  cv::putText(m_monitor, "0.5", cv::Point(x0 + w / 2 - 12, y),
+              cv::FONT_HERSHEY_PLAIN, 1, bgrColor::WHITE(), 1);
+  cv::putText(m_monitor, "1", cv::Point(x0 + w - 8, y), cv::FONT_HERSHEY_PLAIN,
+              1, bgrColor::WHITE(), 1);
+}
+
 void InteractiveDecoder::drawLegend(int y) {
   auto title = [&](const std::string &t) {
     cv::putText(m_monitor, t, cv::Point(10, y), cv::FONT_HERSHEY_PLAIN, 1,
@@ -195,21 +218,44 @@ void InteractiveDecoder::drawLegend(int y) {
 
   const int key = special_key();
   if (key == config().f1) {
-    title(m_showSource ? "F1 Source (X: decoded)" : "F1 Decoded (X: source)");
+    title(m_showSource ? "F1 Source" : "F1 Decoded image");
+    const std::pair<const char *, const char *> keys[] = {
+        {"Z Q S D", "move up, left, down, right"},
+        {"R", "reset viewpoint"},
+        {"W", "viewport / full ERP view"},
+        {"F1 to F6", "view mode"},
+        {"X", "decoded / source (F1)"},
+        {"C", "ICOV decoding on / off"},
+        {"P", "play / pause"},
+        {"F", "next frame"},
+        {"Esc", "quit"}};
+    for (const auto &k : keys) {
+      cv::putText(m_monitor, k.first, cv::Point(10, y), cv::FONT_HERSHEY_PLAIN,
+                  1, bgrColor::PASTEL_BLUE(), 1);
+      cv::putText(m_monitor, k.second, cv::Point(100, y),
+                  cv::FONT_HERSHEY_PLAIN, 1, bgrColor::WHITE(), 1);
+      y += 15;
+    }
   } else if (key == config().f2) {
     title("F2 Rate per block (number: block id)");
     drawLegendItem(y, bgrColor::GREEN(), "first decoded block");
-    drawLegendItem(y, 0.1 * bgrColor::BLUE(), "rate 0 (cached or free)");
-    drawLegendItem(y, bgrColor::BLUE(), "rate 1 (as many bits as intra)");
     drawLegendItem(y, bgrColor::RED(), "rate > 1");
+    drawRateGradient(y, [](float r) { return (0.1 + 0.9 * r) * bgrColor::BLUE(); },
+                     -1);
+    y += 15;
+    cv::putText(m_monitor, "rate: bits sent / intra bits (0: cached)",
+                cv::Point(10, y), cv::FONT_HERSHEY_PLAIN, 1, bgrColor::WHITE(), 1);
   } else if (key == config().f3) {
     std::stringstream t;
     t << "F3 Viewport rate " << std::fixed << std::setprecision(3)
       << m_viewportRate;
     title(t.str());
     drawLegendItem(y, bgrColor::GREEN(), "first decoded block");
-    drawLegendItem(y, m_viewportRate * bgrColor::BLUE(),
-                   "other blocks: blue = viewport rate");
+    drawRateGradient(y, [](float r) { return r * bgrColor::BLUE(); },
+                     m_viewportRate);
+    y += 15;
+    cv::putText(m_monitor, "other blocks: viewport rate (marker)",
+                cv::Point(10, y), cv::FONT_HERSHEY_PLAIN, 1, bgrColor::WHITE(), 1);
   } else if (key == config().f4) {
     title("F4 Prediction (number: decoding order)");
     using P = BlockPrediction;
