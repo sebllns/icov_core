@@ -50,10 +50,6 @@ set(ICOV_LOG_LEVEL
     2
     CACHE STRING "Min Log Level")
 
-set(ICOV_SUPERBUILD_DIR
-    ""
-    CACHE STRING "Superbuild path or empty if not used")
-
 # Define some flags for macros here - ICOV_CORE_DEBUG_TRACE_ENABLED: enable the
 # trace debugger - ICOV_CORE_STACKTRACE_ENABLED: enable the stacktrace -
 # ICOV_CHECK_BITPLANE_ENCODING_ENABLED: enable the bitplane decoding check right
@@ -102,38 +98,10 @@ endif()
 
 # Include functions
 message(VERBOSE "[TRACE] Load cmake includes")
-include(${CMAKE_CURRENT_SOURCE_DIR}/.cmake/AddGitSubmodule.cmake)
 include(ExternalProject)
 
 if(NOT ICOV_BYPASS_SETUP)
   message(DEBUG "[DEBUG] Initial setup")
-
-  if( NOT ${ICOV_SUPERBUILD_DIR} STREQUAL ""
-    AND EXISTS ${ICOV_SUPERBUILD_DIR} )
-
-    message(STATUS "[INFO] Use superbuild located: ${ICOV_SUPERBUILD_DIR}")
-
-    set(Boost_NO_SYSTEM_PATHS ON)
-    set(Boost_ROOT ${ICOV_SUPERBUILD_DIR}/third-party/boost)
-    set(Boost_ROOT ${ICOV_SUPERBUILD_DIR}/third-party/boost)
-
-    set(OpenCV_DIR ${ICOV_SUPERBUILD_DIR}/third-party/opencv)
-    list (APPEND CMAKE_PREFIX_PATH
-    ${ICOV_SUPERBUILD_DIR}/third-party/opencv)
-
-    set(FreeGLUT_DIR ${ICOV_SUPERBUILD_DIR}/third-party/freeglut)
-    list (APPEND CMAKE_PREFIX_PATH
-      ${ICOV_SUPERBUILD_DIR}/third-party/freeglut/lib)
-
-
-    set(GLM_DIR ${ICOV_SUPERBUILD_DIR}/third-party/glm)
-    list (APPEND CMAKE_PREFIX_PATH ${ICOV_SUPERBUILD_DIR}/third-party/glm)
-    set(GLM_LINK glm::glm)
-
-    set(AFF3CT_DIR ${ICOV_SUPERBUILD_DIR}/third-party/aff3ct/lib/cmake/aff3ct-3.0.1-21-g72af2d3)
-
-  endif()
-
 
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -250,8 +218,6 @@ message(
   "-------------------------------------------------------------------------")
 
 # ---------------------------------------------------------------------
-# Use Conan message(STATUS "Using conan...") not needed for conan 2
-# include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) conan_basic_setup()
 
 # message("\n")
 

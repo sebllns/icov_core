@@ -22,19 +22,19 @@ and https://project.inria.fr/intercom/ .
 - Threads librairies
 - OpenGL if you build the viewer
 - OpenMP support will significantly speed up computing
-- Git command should be installed - to manage third-party dependencies - if you want to compile the project with the CMake helpers
+- Git, to fetch the aff3ct submodule
 
 ---
 
 ### :arrow_right_hook: Third-party libraries
 
-:wave: **You can manage third-party libraries on your own, but if you follow the steps below to build ICOV with the superbuild tool, it should handle everything for you - depending on your operating system, you may need to still install some system packages, so carefully read the build errors as they will probably  indicate which package is missing.**
+All external dependencies come from conda-forge (`environment.txt`, see the conda build below). aff3ct (git submodule) and the VTM subset are built from this repository.
 
 - For the core part:
     - Custom VTM (included)
     - Aff3ct (included)
-    - [OpenCV 4.6.0](https://opencv.org/releases/)
-    - [Boost 1.81.0](https://www.boost.org/users/history/version_1_81_0.html)
+    - [OpenCV 4.10](https://opencv.org/releases/)
+    - [Boost 1.84](https://www.boost.org/users/history/version_1_84_0.html)
 - For the Viewer app:
     - freeGLUT
     - glad
@@ -110,34 +110,6 @@ conda run -n icov-doc doxygen doc/Doxyfile    # output in doc/html/
 ```
 
 The Docs workflow (`.github/workflows/docs.yml`) builds it the same way and publishes it to GitHub Pages on every push to `main`.
-
----
-
-### :arrow_right_hook: Download and build ICOV with the superbuild CMake project
-
-:warning: **Building the project from source and installing all dependencies will require a significant storage ~9GB**
-
-1 - Download source from Gitlab
-
-:rotating_light: **If you have any space in your path, the configuration or build of the project will probably fail**
-
-```bash
-git clone --recurse-submodules -j8 https://gitlab.inria.fr/icov/src/core.git
-```
-
-2 - Compile
-Alternative to the conda build: the superbuild downloads and builds all dependencies
-
-```bash
-mkdir build && cd build
-cmake ../sp -DCMAKE_BUILD_TYPE=Release && cmake --build . --target all -j8
-```
-
-3 - Once ICOV is built successfully, move to the bin folder
-
-```bash
-cd icov/bin
-```
 
 ## Run
 
