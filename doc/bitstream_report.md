@@ -484,3 +484,18 @@ Per predicted block, the 23.1 B beyond the syndrome are: about 11.4 B of rate in
 3. `z_min` / `z_max`: code `z_max - z_min` and predict `z_min` from the channel.
 4. Requests as messages and extractor and decoder in two processes, to measure real network traffic.
 5. `trak` / `stsd` sample entry and OMAF projection boxes (step 8).
+
+## 13. LDPC matrices (2.1.0)
+
+Decoding needs the LDPC matrices used by the encoder. Up to 2.0.0 they were read from a data directory given with `-d` (default `data/`, which does not hold them directly), and the parameter set only recorded the coder type `imt164`, shared by two different matrix sets (`imt_164` and `imt_164_v2`).
+
+Since 2.1.0:
+
+- The default set `imt_164_v2` and the q-ary table are compiled into the library (`cmake/EmbedData.cmake`, `lib/icov/core/common/icov_data.h`): no data directory is needed.
+- The parameter set (IPS version 2) records the set name and a CRC-32 of its content, computed over the relative paths and the integers of each file, so independent of text formatting. IPS version 1 files (2.0.0) still decode, with the built-in set.
+- A set that is not built in (encoded with `-d <dir>`, different content) is stored in the file, in an optional `ildp` box in `moov`: integers packed at the bit width of each file, 17.6 KB for a set like `imt_164_v2` (46 KB of text). `--external-matrices` disables this; the decoder then needs the same `-d`.
+- The decoder looks for a set with the right CRC in the file, then in the built-in set, then in `-d`, and otherwise stops with the set name and CRC.
+
+A path is never stored: it only exists on the machine that encoded the file.
+
+For streaming, the `ildp` box is not part of the block units. A server would send it once per session, only to clients that do not know the set CRC (not implemented: requests are not messages yet). With the built-in set, nothing is sent.

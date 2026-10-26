@@ -115,7 +115,7 @@ The Docs workflow (`.github/workflows/docs.yml`) builds it the same way and publ
 
 ICOV encodes an equirectangular (ERP) image or video once. A client then decodes only the blocks of its viewport, each one predicted from whichever neighboring block it has already decoded.
 
-The commands below run from the build output directory, where `data/` holds the LDPC matrices:
+The commands below run from the build output directory:
 
 ```bash
 cd build/release/bin
@@ -134,7 +134,7 @@ Options: `--width` (default 1024), `--height` (default width / 2), and `--stripe
 ### 2. Encode
 
 ```bash
-./icov_cli -i erp.ppm -o encoded.icov -d data/imt_164_v2/
+./icov_cli -i erp.ppm -o encoded.icov
 ```
 
 `-o` names the output file (default: the input name with `.icov`). On 14 threads, encoding the 1024x512 gradient takes about 80 s. For quick tests, `--ldpc-bp-ite 20` is about 3x faster for less than 0.5% more data.
@@ -148,6 +148,9 @@ Main encoder options:
 | `-f`, `--encode-fov` | 80 | Horizontal field of view of the viewport, in degrees |
 | `--ldpc-bp-ite` | 100 | Maximum belief-propagation iterations |
 | `--encode-frame-count`, `--encode-start-frame` | 0, 0 | Frame range for videos (0: all frames) |
+| `--export-reference` | off | Also write the original and reconstructed frames (see below) |
+| `-d` | built-in | LDPC matrix set directory, see "LDPC matrices" below |
+| `--external-matrices` | off | Do not store the matrices of a `-d` set in the file |
 
 The encoder writes:
 
@@ -164,25 +167,25 @@ Warnings like `No convergence for bitplane N` mean that a bitplane could not be 
 ### 3. Navigate in the viewer
 
 ```bash
-./icov_viewer -i encoded.icov -d data/imt_164_v2/
+./icov_viewer -i encoded.icov
 ```
 
-The source and difference views need the reference frames: encode with `--export-reference`. Keys (AZERTY layout):
+Add `--decode-ground-truth erp.ppm` to display the viewport PSNR against the original. The source view (`X`) and the difference view (`F6`) need the reference frames: encode with `--export-reference`. Keys (AZERTY layout):
 
 | Key | Action |
 |---|---|
 | `Z` `Q` `S` `D` | Move the viewpoint up, left, down, right |
 | `R` | Reset the viewpoint |
 | `W` | Switch between the viewport and the full ERP view |
-| `F1` | Decoded image (`X` toggles the source, needs the ground truth) |
+| `F1` | Decoded image (`X` toggles the source, needs `--export-reference`) |
 | `F2` / `F3` | Rate per block / rate of the current viewport |
 | `F4` / `F5` | Prediction direction / prediction category per block |
-| `F6` | Difference with the ground truth |
+| `F6` | Difference with the encoder reconstruction (needs `--export-reference`) |
 | `C` | Toggle ICOV decoding |
 | `P` / `F` | Play or pause / next frame (videos) |
 | `Esc` | Quit |
 
-A small "ICOV Monitor" window shows the frame, the viewpoint and the decoder state.
+A small "ICOV Monitor" window shows the frame, the viewpoint, the decoder state, the key bindings (F1) and a color legend for the current view.
 
 ### 4. Decode a navigation path without display
 
@@ -191,7 +194,7 @@ The CLI decoder replays a list of viewpoints and exports metrics to CSV, with no
 ```bash
 printf '0,0,0\n0,10,45\n0,-20,-90\n' > positions.csv
 mkdir -p results
-./icov_cli -m decode -i encoded.icov -d data/imt_164_v2/ \
+./icov_cli -m decode -i encoded.icov \
   --decode-positions-input positions.csv \
   --decode-csv-output results/run --decode-headless 1 --verify-hash
 ```
@@ -207,6 +210,14 @@ Each line of `positions.csv` is `time_in_seconds,latitude,longitude` in degrees.
 `--verify-hash` compares every decoded block with the encoder reconstruction (CRC-32 stored in the file) and exits with an error on any difference.
 
 The same `--decode-positions-input` option makes `icov_viewer` replay the path instead of using the keyboard; it exits once the path is replayed.
+
+### LDPC matrices
+
+The LDPC matrix set `imt_164_v2` is compiled into the programs, so no data directory is needed. The file records which set was used (name and CRC-32), and the decoder refuses a set that does not match.
+
+To experiment with another set, pass its directory with `-d` (the sets in `data/` are copied next to the binaries). Unless the set has the content of the built-in one, the encoder stores its matrices in the file (about 18 KB), so the file decodes anywhere without `-d`. With `--external-matrices` they are not stored, and the decoder needs the same `-d`. The decoder looks for the matrices in the file first, then in the built-in set, then in `-d`.
+
+The stored matrices are not part of the block units: a streaming server would send them once per session, only to clients that do not already know the set (not implemented yet).
 
 ## Links
 
