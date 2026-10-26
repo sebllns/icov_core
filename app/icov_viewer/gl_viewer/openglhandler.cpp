@@ -25,7 +25,7 @@ const char *fragmentShader360Video =
 "        #version 420 core                                                                                                      \n"
 "        ///#extension GL_ARB_shader_image_load_store : enable                                                                  \n"
 "        const float pi = 3.141592653589793;                                                                                    \n"
-"        varying vec3 planePoints;                                                                                              \n"
+"        in vec3 planePoints;                                                                                                   \n"
 "        uniform sampler2D tex;                                                                                                 \n"
 "        layout(binding = 3, r8) writeonly uniform image2D maskImage;    // put 3 just to show that it can be any number        \n"
 "        uniform bool computeMask;                                                                                              \n"
@@ -77,7 +77,7 @@ const char *fragmentShader360Video =
 "                imageStore(maskImage, pt10, vec4(1.0, 0.0, 0.0, 0.0));                                                         \n"
 "                imageStore(maskImage, pt11, vec4(1.0, 0.0, 0.0, 0.0));                                                         \n"
 "            }                                                                                                                  \n"
-"            FragColor = texture2D(tex, equirectangularTexturePos);                                                             \n"
+"            FragColor = texture(tex, equirectangularTexturePos);                                                               \n"
 "                                                                                                                               \n"
 "        }                                                                                                                      \n";
 
@@ -188,7 +188,7 @@ const char* fragmentShader360Healpix =
         "const double inv_halfpi=0.6366197723675813430755350534900574;\n"
         "const double halfpi = 0.5 * pi;\n"
         "const double root3 = sqrt(3.0);\n"
-        "varying vec3 planePoints;\n"
+        "in vec3 planePoints;\n"
         "layout(binding = 3, r8) writeonly uniform image2D maskImage;    // put 3 just to show that it can be any number\n"
         "uniform bool computeMask;\n"
         "layout(location = 0) out vec4 FragColor;\n"
