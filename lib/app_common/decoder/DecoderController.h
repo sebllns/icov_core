@@ -123,10 +123,10 @@ struct decoder_param_t {
       this->ground_truth_file = options::parseGroundTruth(args);
       this->enable_ground_truth =
           icov::path::file_exists(this->ground_truth_file.string());
-      ICOV_INFO << boost::format("%-30s %-b") % "Ground truth enabled:" %
+      ICOV_INFO << boost::format("%-30s %-b") % "Original enabled:" %
                        this->enable_ground_truth;
       if (this->enable_ground_truth) {
-        ICOV_INFO << boost::format("%-30s %-s") % "Ground truth file:" %
+        ICOV_INFO << boost::format("%-30s %-s") % "Original file:" %
                          this->ground_truth_file;
       }
 
@@ -247,9 +247,11 @@ public:
       m_analyzer.RD_DISP->addColumn("psnr");
     }
 
+    // The user file is the original: it serves PSNR, not the exact check,
+    // which needs the encoder reconstruction (--export-reference)
     if (getDecoderParams().enable_ground_truth) {
       encoder::instantiateInputMedia(getDecoderParams().ground_truth_file,
-                                     m_analyzer.GroundTruth);
+                                     m_analyzer.Source);
     }
   }
 

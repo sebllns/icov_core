@@ -225,7 +225,9 @@ inline void addDecoderOptions(desc_t &output) {
 
   output.add_options()(ground_truth.c_str(),
                        po::value<std::string>()->default_value(""),
-                       "Path to use ground truth when non-empty");
+                       "Original image or video, for the viewport PSNR. The "
+                       "exact check and the difference view use the "
+                       "reconstruction written with --export-reference");
 
   output.add_options()(positions_input.c_str(),
                        po::value<std::string>()->default_value(""),
@@ -262,7 +264,7 @@ inline void init_options_desc(const std::string &modes, desc_t &output) {
                "Set the coder type")
 
                   ((data_path + ",d").c_str(),
-                   po::value<std::string>()->default_value("data/"),
+                   po::value<std::string>()->default_value("data/imt_164_v2/"),
                    "Set the data path")
 
                       ((code_length + ",n").c_str(),
