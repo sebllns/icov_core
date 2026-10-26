@@ -82,7 +82,7 @@ struct LdpcCoderParameters
         int min_n = ceilf(n / max_level);
         int max_n = floorf(n / min_level);
 
-        if (icov::path::file_exists(path))
+        if (icov::data::exists(path))
         {
             icov::io::read_vector(path, numcodes_v);
             icov::assert::check(numcodes_v.front() >= min_n,

@@ -50,18 +50,14 @@
 
 
 
+#include "icov_data.h"
+
 #include <fstream>
 #include <sstream>
 
 void PcmData::read_matrix(const std::string &filepath, AffMatrix &h) {
-  std::ifstream file(filepath);
-
-  if (!file.is_open()) {
-    std::stringstream message;
-    message << "'filename' couldn't be opened ('filename' = " << filepath
-            << ").";
-    throw std::runtime_error(message.str());
-  }
+  auto in = icov::data::open(filepath);
+  std::istream &file = *in;
 
   int n_rows = 0;
   int n_cols = 0;
@@ -84,22 +80,13 @@ void PcmData::read_matrix(const std::string &filepath, AffMatrix &h) {
     }
   }
 
-  file.close();
 }
 
 void PcmData::read_matrix(const std::string &filepath,
                           icov::FastMatrix<bool> &h) {
 
-  icov::path::assert_file_exists(filepath);
-
-  std::ifstream file(filepath);
-
-  if (!file.is_open()) {
-    std::stringstream message;
-    message << "'filename' couldn't be opened ('filename' = " << filepath
-            << ").";
-    throw std::runtime_error(message.str());
-  }
+  auto in = icov::data::open(filepath);
+  std::istream &file = *in;
 
   int n_rows = 0;
   int n_cols = 0;
@@ -122,23 +109,15 @@ void PcmData::read_matrix(const std::string &filepath,
     }
   }
 
-  file.close();
 }
 
 void PcmData::read_mapping_vector(const std::string &filepath,
                                   icov::FastMatrix<uint16_t> &m) {
 
-  icov::path::assert_file_exists(filepath);
-
-  std::ifstream file(filepath);
+  auto in = icov::data::open(filepath);
+  std::istream &file = *in;
 
   ICOV_DEBUG << "Read vector at " << filepath;
-
-#ifdef ICOV_ASSERTION_ENABLED
-  icov::assert::check(
-      file.is_open(),
-      "'filename' couldn't be opened ('filename' = " + filepath + ").");
-#endif
 
   int n_rows = 0;
   int n_cols = 0;
@@ -160,5 +139,4 @@ void PcmData::read_mapping_vector(const std::string &filepath,
     }
   }
   ICOV_TRACE << "END";
-  file.close();
 }

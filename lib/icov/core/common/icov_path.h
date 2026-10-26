@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icov_assert.h"
+#include "icov_data.h"
 #include "icov_exception.h"
 #include "icov_log.h"
 #include <boost/filesystem.hpp>
@@ -26,6 +27,8 @@ inline bool try_create_directories(const std::string &path) {
 }
 
 inline std::string combine(const std::string &path1, const std::string &path2) {
+  if (icov::data::is_virtual(path1))
+    return (fs::path(path1) / path2).generic_string();
   return fs::absolute(fs::path(path1).append(path2).make_preferred()).string();
 }
 
@@ -52,6 +55,8 @@ inline std::string get_data_folder(const std::string &root, int code_size,
                                    bool auto_create) {
   fs::path path(root);
   path /= std::to_string(code_size);
+  if (icov::data::is_virtual(root)) // builtin: or stream: root
+    return path.generic_string();
 
   path = fs::absolute(path).make_preferred();
   if (auto_create) {

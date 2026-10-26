@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icov_assert.h"
+#include "icov_data.h"
 #include "icov_exception.h"
 #include "icov_log.h"
 #include "icov_string.h"
@@ -70,11 +71,8 @@ void write_vector(const std::string &filename, const std::vector<T> &data,
 
 template <typename T>
 void read_vector(const std::string &filename, std::vector<T> &data) {
-  std::ifstream file(filename);
-
-  if (!file.is_open()) {
-    throw std::invalid_argument("cannot open file " + filename);
-  }
+  auto in = icov::data::open(filename);
+  std::istream &file = *in;
 
   int n = 0;
   file >> n;
@@ -85,7 +83,6 @@ void read_vector(const std::string &filename, std::vector<T> &data) {
     file >> val;
     data[i] = val;
   }
-  file.close();
 }
 
 template <typename TInputIter>
