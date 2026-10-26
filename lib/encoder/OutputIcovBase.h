@@ -100,6 +100,8 @@ public:
                            const uint &m) = 0;
   virtual void writeSIMode(const uint &v) = 0;
   virtual void writeMse(const float &mse) = 0;
+  /// CRC-32 of a reconstructed block, written after its MSE
+  virtual void writeBlockHash(uint32_t crc) = 0;
   virtual void endIcov() = 0;
 
   /// Writes the ICOV file and the statistics file; call once, after encoding

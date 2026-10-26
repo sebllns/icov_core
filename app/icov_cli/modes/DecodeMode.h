@@ -72,4 +72,5 @@ public:
 private:
   decoder::DecoderController m_decoderCtrl;
   std::queue<request_t> m_requests;
+  bool m_verifyHash = false;
 };

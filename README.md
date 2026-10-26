@@ -134,10 +134,10 @@ Options: `--width` (default 1024), `--height` (default width / 2), and `--stripe
 ### 2. Encode
 
 ```bash
-./icov_cli -i erp.ppm -o encoded.icov/ -d data/imt_164_v2/
+./icov_cli -i erp.ppm -o encoded.icov -d data/imt_164_v2/
 ```
 
-The output directory is created if needed. On 14 threads, encoding the 1024x512 gradient takes about 80 s. For quick tests, `--ldpc-bp-ite 20` is about 3x faster for less than 0.5% more data.
+`-o` names the output file (default: the input name with `.icov`). On 14 threads, encoding the 1024x512 gradient takes about 80 s. For quick tests, `--ldpc-bp-ite 20` is about 3x faster for less than 0.5% more data.
 
 Main encoder options:
 
@@ -149,17 +149,25 @@ Main encoder options:
 | `--ldpc-bp-ite` | 100 | Maximum belief-propagation iterations |
 | `--encode-frame-count`, `--encode-start-frame` | 0, 0 | Frame range for videos (0: all frames) |
 
-`encoded.icov/` contains the stored data (`header`, `prediction`, `syndrome`, `bsize`, `fsize`, `metric`). It also holds `info.txt`, a human-readable summary with the distribution of the encoded rates, which the decoder does not read.
+The encoder writes:
+
+| File | Content |
+|---|---|
+| `encoded.icov` | The stream, a single ISOBMFF file: parameter set, block index, and one storage unit per block. Everything a server needs, nothing else |
+| `encoded.stats.json` | Encoder information and statistics: version, input name, rate histograms, MSE per block. Optional for the decoder (PSNR columns of the CSV export) |
+| `encoded.ref/` | Only with `--export-reference`: `original_<f>.tif` and `reconstructed_<f>.tif`, used by the viewer difference view (F6) and the source view |
+
+The bitstream syntax is described in `doc/bitstream_report.md`.
 
 Warnings like `No convergence for bitplane N` mean that a bitplane could not be LDPC-coded and was stored raw. Coding stays lossless, so they are expected on content with sharp edges (e.g. `--stripes`). See `doc/encoder_performance_report.md`.
 
 ### 3. Navigate in the viewer
 
 ```bash
-./icov_viewer -i encoded.icov -d data/imt_164_v2/ --decode-ground-truth erp.ppm
+./icov_viewer -i encoded.icov -d data/imt_164_v2/
 ```
 
-`--decode-ground-truth` is optional. It enables the source and difference views. Keys (AZERTY layout):
+The source and difference views need the reference frames: encode with `--export-reference`. Keys (AZERTY layout):
 
 | Key | Action |
 |---|---|
@@ -185,8 +193,7 @@ printf '0,0,0\n0,10,45\n0,-20,-90\n' > positions.csv
 mkdir -p results
 ./icov_cli -m decode -i encoded.icov -d data/imt_164_v2/ \
   --decode-positions-input positions.csv \
-  --decode-ground-truth erp.ppm \
-  --decode-csv-output results/run --decode-headless 1
+  --decode-csv-output results/run --decode-headless 1 --verify-hash
 ```
 
 Each line of `positions.csv` is `time_in_seconds,latitude,longitude` in degrees. The time is converted to a frame number with the content frame rate; use 0 for an image. The decoder writes:
@@ -194,10 +201,12 @@ Each line of `positions.csv` is `time_in_seconds,latitude,longitude` in degrees.
 | File | Content |
 |---|---|
 | `results/run_requests.csv` | One line per viewpoint request |
-| `results/run_blocks.csv` | One line per decoded block: prediction used, encoded bitrate, all-intra bitrate, MSE, PSNR |
+| `results/run_blocks.csv` | One line per decoded block: prediction used, encoded bitrate, all-intra bitrate, MSE, PSNR, transmitted bytes |
 | `results/run_viewports.csv` | Per-viewport summary (only the header is written in the current version) |
 
-The same `--decode-positions-input` option makes `icov_viewer` replay the path instead of using the keyboard.
+`--verify-hash` compares every decoded block with the encoder reconstruction (CRC-32 stored in the file) and exits with an error on any difference.
+
+The same `--decode-positions-input` option makes `icov_viewer` replay the path instead of using the keyboard; it exits once the path is replayed.
 
 ## Links
 

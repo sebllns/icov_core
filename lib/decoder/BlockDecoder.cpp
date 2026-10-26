@@ -10,6 +10,7 @@
 #include "video_layer/ExtractedStreamDebugger.h"
 #include "video_layer/ICOV_Quant.h"
 #include "video_layer/vtm_utility.h"
+#include "video_layer/vtm_utility.h"
 
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/filesystem.hpp>
@@ -116,6 +117,29 @@ void icov::decoder::BlockDecoder::_beforeOrderingLoop(const request_t &r) {}
 
 void icov::decoder::BlockDecoder::_afterOrderingLoop(const request_t &r) {}
 
+void icov::decoder::BlockDecoder::setExpectedHashes(
+    const std::vector<std::vector<uint32_t>> &hashes) {
+  m_expectedHashes = hashes;
+  m_checkedBlocks = 0;
+  m_hashMismatches = 0;
+}
+
+void icov::decoder::BlockDecoder::checkHash(
+    frame_t frame, uint icuIndex, const omnidirectional_layer::Block &b) {
+  const auto &expected = m_expectedHashes[frame];
+  if (icuIndex >= expected.size())
+    return;
+  const auto area = m_dec_struc->vec_icus()[icuIndex].get_sourceX();
+  const uint32_t crc = VTM_Utility::blockCrc32(
+      m_vvc_bufs->get(PIC_RECONSTRUCTION).getBuf(area));
+  ++m_checkedBlocks;
+  if (crc != expected[icuIndex]) {
+    ++m_hashMismatches;
+    ICOV_ERROR << "Block " << b.getIdSelf() << " of frame " << frame
+               << " differs from the encoder reconstruction";
+  }
+}
+
 void icov::decoder::BlockDecoder::_processBlock(
     const request_t &r, const omnidirectional_layer::Block &b,
     omnidirectional_layer::IBlockPredictionManager::prediction_t prediction,
@@ -163,6 +187,8 @@ void icov::decoder::BlockDecoder::_processBlock(
       if (icov::debug::debug_trace_enabled)
         ICOV_TRACE << "END DECODE COMP " << dec->get_params().CompID;
     }
+    if (size_t(r.frameID) < m_expectedHashes.size())
+      checkHash(r.frameID, icuIndex, b);
   } else {
     m_bitstream->empty();
   }

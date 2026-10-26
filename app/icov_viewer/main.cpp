@@ -6,6 +6,5 @@
 /****************************************************************************************/
 int main(int argc, char *argv[]) {
   ProgramController pc;
-  icov_main(argc, argv, pc);
-  return 0;
+  return icov_main(argc, argv, pc);
 }

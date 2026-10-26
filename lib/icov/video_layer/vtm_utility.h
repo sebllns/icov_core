@@ -45,6 +45,7 @@
  *****************************************************************************/
 #pragma once
 #include "CommonLib/Unit.h"
+#include <boost/crc.hpp>
 #include "Encodingstructure.h"
 #include "ICOV_DistorsionCost.h"
 
@@ -133,6 +134,17 @@ setNotMaskTo(AreaBuf<T> &buff, const AreaBuf<bool> &buff_mask,
         buff_rowPtr[x] = value;
     }
   }
+}
+
+/// CRC-32 of the samples of all components of a block, row by row
+template <typename T> inline uint32_t blockCrc32(const T &buf) {
+  boost::crc_32_type crc;
+  for (UInt ch = 0; ch < getNumberValidComponents(buf.chromaFormat); ch++) {
+    const auto &b = buf.get(ComponentID(ch));
+    for (unsigned y = 0; y < b.height; y++)
+      crc.process_bytes(&b.at(0, y), b.width * sizeof(Pel));
+  }
+  return crc.checksum();
 }
 
 template <typename T>

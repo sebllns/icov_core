@@ -102,7 +102,15 @@ public:
   void setBypassDecodingFlag(bool flag);
   void switchBypassDecodingFlag();
 
+  /// Compares each decoded block with the encoder CRC-32 (conformance)
+  void setExpectedHashes(const std::vector<std::vector<uint32_t>> &hashes);
+  size_t checkedBlocks() const { return m_checkedBlocks; }
+  size_t hashMismatches() const { return m_hashMismatches; }
+
 protected:
+  void checkHash(frame_t frame, uint icuIndex,
+                 const omnidirectional_layer::Block &b);
+
   std::shared_ptr<icov::video::EncodingStructure> m_dec_struc;
   std::shared_ptr<icov::video::BufGroups> m_vvc_bufs;
   std::vector<std::unique_ptr<ChannelDecoder>> m_channelDecoder;
@@ -110,6 +118,9 @@ protected:
   params m_params;
   UnitArea mainFrameArea;
   bitstream::sp_IcovExtractedBitstream m_bitstream;
+  std::vector<std::vector<uint32_t>> m_expectedHashes;
+  size_t m_checkedBlocks = 0;
+  size_t m_hashMismatches = 0;
 
   // IBlockProcessor interface
 protected:

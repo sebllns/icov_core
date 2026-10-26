@@ -105,6 +105,7 @@ const std::string dummy_viewport = "encode-dummy-viewport";
 
 // DECODER OPTIONS
 const std::string pre_encode = "decode-preencode";
+const std::string verify_hash = "verify-hash";
 const std::string csv_output = "decode-csv-output";
 const std::string positions_input = "decode-positions-input";
 const std::string headless = "decode-headless";
@@ -212,6 +213,11 @@ inline void addEncoderOptions(desc_t &output) {
 }
 
 inline void addDecoderOptions(desc_t &output) {
+  output.add_options()(verify_hash.c_str(),
+                       "Compare every decoded block with the encoder "
+                       "reconstruction (CRC-32 stored in the file); fails "
+                       "on any difference");
+
   output.add_options()(pre_encode.c_str(),
                        po::value<bool>()->default_value(false),
                        "Pre-encode the media before decode (useful to get more "
@@ -317,6 +323,10 @@ template <typename T> T parse(const std::string &id, const args_t &args) {
 
 inline std::string parseInputFile(const args_t &args) {
   return args[input_file].as<std::string>();
+}
+
+inline bool parseVerifyHash(const args_t &args) {
+  return args.count(verify_hash) > 0;
 }
 
 inline bool parseExportReference(const args_t &args) {

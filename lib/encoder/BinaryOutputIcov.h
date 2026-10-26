@@ -92,6 +92,7 @@ public:
   void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
                                const uint &m) override;
   void writeMse(const float &mse) override;
+  void writeBlockHash(uint32_t crc) override;
   void endIcov() override;
   void close() override;
 
@@ -109,6 +110,7 @@ private:
   std::vector<uint8_t> m_syndromes;
   std::vector<IndexEntry> m_index;
   std::vector<std::vector<float>> m_mse; ///< per frame, per block
+  std::vector<std::vector<uint32_t>> m_hash; ///< per frame, per block
   fs::path m_payloadPath;
   std::ofstream m_payload;
   uint64_t m_payloadSize;

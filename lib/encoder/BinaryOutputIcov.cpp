@@ -124,6 +124,11 @@ void BinaryOutputIcov::writeMse(const float &mse) {
   m_mse.back().push_back(mse);
 }
 
+void BinaryOutputIcov::writeBlockHash(uint32_t crc) {
+  m_hash.resize(m_mse.size());
+  m_hash.back().push_back(crc);
+}
+
 void BinaryOutputIcov::endIcov() {}
 
 void BinaryOutputIcov::close() {
@@ -151,8 +156,21 @@ void BinaryOutputIcov::close() {
   isobmff::put_type(ftyp_payload, isobmff::BRAND);
   const auto ftyp = isobmff::box("ftyp", ftyp_payload);
 
+  // optional conformance data, never sent to a client
+  std::vector<uint8_t> hash;
+  if (!m_hash.empty()) {
+    std::vector<uint8_t> h;
+    isobmff::put_u32(h, uint32_t(m_hash.size()));
+    isobmff::put_u32(h, uint32_t(m_hash.front().size()));
+    for (const auto &f : m_hash)
+      for (uint32_t crc : f)
+        isobmff::put_u32(h, crc);
+    hash = isobmff::full_box("ihsh", 0, h);
+  }
+
   const uint64_t icbi_size = 8 + 4 + index.size() + m_index.size() * 16;
-  const uint64_t moov_size = 8 + moov_payload.size() + icbi_size;
+  const uint64_t moov_size =
+      8 + moov_payload.size() + icbi_size + hash.size();
   const auto mdat_header = isobmff::box_header("mdat", m_payloadSize);
   const uint64_t payload_start = ftyp.size() + moov_size + mdat_header.size();
 
@@ -163,6 +181,7 @@ void BinaryOutputIcov::close() {
   }
   const auto icbi = isobmff::full_box("icbi", 0, index);
   moov_payload.insert(moov_payload.end(), icbi.begin(), icbi.end());
+  moov_payload.insert(moov_payload.end(), hash.begin(), hash.end());
   const auto moov = isobmff::box("moov", moov_payload);
 
   m_outputStream.reset();

@@ -52,6 +52,15 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
     const size_t size = box.payload_size() - 4;
     if (box.type == "icvC") {
       m_ips.assign(p, p + size);
+    } else if (box.type == "ihsh") {
+      const uint32_t frames = isobmff::get_u32(p);
+      const uint32_t blocks = isobmff::get_u32(p + 4);
+      if (8 + uint64_t(frames) * blocks * 4 > size)
+        ICOV_THROW_RUNTIME_EXCEPTION("Truncated block hashes");
+      m_hash.assign(frames, std::vector<uint32_t>(blocks));
+      for (uint32_t f = 0; f < frames; ++f)
+        for (uint32_t i = 0; i < blocks; ++i)
+          m_hash[f][i] = isobmff::get_u32(p + 8 + (f * blocks + i) * 4);
     } else if (box.type == "icbi") {
       const uint32_t frames = isobmff::get_u32(p);
       m_blockCount = isobmff::get_u32(p + 4);

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end test: encode synthetic ERP images twice (output must be
-# identical), then decode a few viewpoints headless against the ground truth
-# and check the PSNR of every decoded block.
+# identical), then decode a few viewpoints headless, check every decoded block
+# against the encoder reconstruction (CRC-32) and its PSNR.
 # Usage: roundtrip.sh <bin dir> <python> <scripts dir> <work dir>
 set -euo pipefail
 
@@ -42,8 +42,10 @@ for pattern in gradient stripes; do
   ./icov_cli -m decode -i "$work/${pattern}_1.icov" -d "$data" \
     --decode-positions-input "$work/positions.csv" \
     --decode-ground-truth "$img" \
-    --decode-csv-output "$work/$pattern" --decode-headless 1 \
-    > "$work/${pattern}_decode.log" 2>&1
+    --decode-csv-output "$work/$pattern" --decode-headless 1 --verify-hash \
+    > "$work/${pattern}_decode.log" 2>&1 ||
+    { echo "FAIL $pattern: decoding or hash check failed"; tail -5 "$work/${pattern}_decode.log"; exit 1; }
+  grep -h "Hash check" "$work/${pattern}_decode.log" | sed "s/^.*Hash/OK $pattern: hash/"
 
   # column 14: psnr of the decoded block
   awk -F, -v min="$min_psnr" -v name="$pattern" '

@@ -104,6 +104,12 @@ public:
   /// Encoder MSE of the selected block, NaN without statistics file
   float blockMse() const;
 
+  /// CRC-32 of each reconstructed block, per frame and block in encoding
+  /// order; empty when the file has no ihsh box
+  const std::vector<std::vector<uint32_t>> &blockHashes() const {
+    return m_hash;
+  }
+
   omnidirectional_layer::Block::id_t
   getBlockIndexInStream(const omnidirectional_layer::Block::id_t &id) const;
 
@@ -132,6 +138,7 @@ private:
   size_t m_syndromePos; ///< read position in the syndrome part of m_sbu
 
   std::vector<std::vector<float>> m_mse; ///< per frame, per block
+  std::vector<std::vector<uint32_t>> m_hash;
 };
 
 } // namespace extractor
