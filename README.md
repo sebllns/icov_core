@@ -155,7 +155,7 @@ Demo video: https://vimeo.com/user188622130
 
 ## Copyright notice
 
-**Copyright (C) 2021-2024 by Inria. All rights reserved.**
+**Copyright (C) 2021-2026 by Inria. All rights reserved.**
 
 The copyright in this software is being made available under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. 
 
