@@ -429,3 +429,56 @@ Steps 1 to 4 deliver a clean, single-file, standard-shaped format and the first 
 - Transmission protocol: extraction server (smallest traffic) or plain HTTP range requests (no server logic), or both.
 - Access block coding: keep raw for now, or plan the VVC residual coding.
 - Compatibility of the old directory format: read-only for one release, or dropped.
+
+## 12. Implemented in 2.0.0 (steps 1 to 6)
+
+Branch `feature/bitstream`, one commit per step. All measurements on the same 1024x512 gradient and 20-viewpoint path as above; decoded blocks, predictions, rates and PSNR are identical to 1.9.0 at every step.
+
+### 12.1 What was built
+
+| Step | Implementation | Differences with the proposal |
+|---|---|---|
+| 1 | `video_layer/bit_io.h`: `BitWriter` / `BitReader`, `u(n)`, `ue(v)`, `se(v)`, unaligned bit copies, byte alignment, trailing bits | VTM `BitStream` not used: no Exp-Golomb helpers, and the extractor library does not link VTM |
+| 2 | `video_layer/ips.{h,cpp}`: ICOV parameter set replacing the Boost header. Stores the LDPC code family and BP iterations, which the decoder now uses | Floats (fov, padding, frame rate) stored bit-exact as `u(32)` so encoder and decoder geometry match. Code lengths are not stored: they follow from block size and chroma format. Coded blocks as id deltas minus one (1 bit per block when all are coded) |
+| 3 | Single `name.icov` file: `ftyp`, `moov` (`icvC` parameter set, `icbi` block index), `mdat` (one storage block unit per block). Side files: `name.stats.json` (statistics, MSE, no absolute paths), `name.ref/` (only with `--export-reference`), `name.debug.txt` (debug builds) | No `trak` / `stsd` hierarchy and no OMAF boxes yet: `icvC` sits directly under `moov`. The SBU has no `block_idx` field: the index gives its position |
+| 4 | `IcovExtractedBitstream` is now a per-block bit buffer carrying the transmitted block unit; the decoder parses the parameter set from its bytes; "transmitted bytes" column in the CSV export | Extractor and decoder still run in one process; requests are not serialized messages yet |
+| 5 | `video_layer/block_syntax.h`: one field syntax for SBU and TBU. Rate indices as `ue(q - 1)`, raw source mapped to the largest code | Delta coding across bitplanes rejected after measurement (see 12.3) |
+| 6 | CRC-32 of each reconstructed block in an optional `ihsh` box; `icov_cli decode --verify-hash`; used by the integration test. Both programs now return a non-zero exit code on failure | |
+
+### 12.2 Measurements
+
+| | 1.9.0 | 2.0.0 |
+|---|---|---|
+| Stream files | 6 files, 305 019 B (header 8 276, prediction 158 337, syndrome 132 245, bsize 4 099, fsize 11, metric 2 051) | 1 file, 236 210 B |
+| Parameter set / header | 8 276 B (Boost archive) | 123 B (`icvC`) |
+| Block parameters and syndromes | 290 582 B | 225 779 B (`mdat`, -22%) |
+| Index | 4 110 B (`bsize`, `fsize`) | 8 212 B (`icbi`, absolute 64-bit offsets) |
+| Conformance hashes | none | 2 068 B (`ihsh`, optional) |
+| Side data next to the stream | `metric`, `info.txt`, `source_frames/` (270 KB) by default | `stats.json` (20 KB); reference frames only on request |
+| Transmitted on the path (452 blocks) | about 64.3 KB (estimate of section 2.2) | 60.6 KB measured |
+| Per predicted block | about 117 B | 109.3 B (86.2 B of syndrome, 23.1 B of parameters and padding) |
+
+### 12.3 Rate index coding: measured options
+
+On the 96 085 rate indices of the test file:
+
+| Coding | Bits per index |
+|---|---|
+| 1 byte (1.9.0) | 8 |
+| `ue(q)` | 4.28 |
+| `ue(q - 1)`, raw source last (implemented) | 3.42 |
+| Order-0 entropy | 2.59 |
+| `ue(rank)`, one static table per channel and bitplane in the IPS | 2.17 |
+| Entropy given channel and bitplane | 1.62 |
+
+Rates are not monotonic across bitplanes (most frequent values 1, 2 and 4, with jumps), so the proposed leading-zero count and `se(v)` deltas would not help. The per-channel, per-bitplane table is the next gain: about 3 B per predicted block, for a table sent once per session.
+
+### 12.4 Remaining overhead and next steps
+
+Per predicted block, the 23.1 B beyond the syndrome are: about 11.4 B of rate indices, 6 B of `z_min` / `z_max` (`u(8)` each, three channels), 3 B of mode and coding header, 2.6 B of bitplane counts, and the final byte alignment. In order of expected gain:
+
+1. Access blocks: still raw, 12 KB of the 60.6 KB on the path (step 7, VVC residual coding).
+2. Rate table in the IPS (12.3).
+3. `z_min` / `z_max`: code `z_max - z_min` and predict `z_min` from the channel.
+4. Requests as messages and extractor and decoder in two processes, to measure real network traffic.
+5. `trak` / `stsd` sample entry and OMAF projection boxes (step 8).
