@@ -3,7 +3,7 @@
 Date: 2026-10-26
 Build: `build/release` (CMake `Release`, GCC 12.4, conda env `icov-core`, `ICOV_USE_OMP=OFF`, `ICOV_ASSERTION_ENABLED=ON`)
 Machine: Intel Core Ultra 7 165U, 14 logical CPUs, Linux 6.14
-Input: synthetic ERP images from `scripts/gen_synthetic_erp.py`
+Input: synthetic ERP images from `scripts/gen_synthetic_erp.py` (at the time of the measurements the stripes were the default; they now need `--stripes`)
 
 ## 1. Summary
 
@@ -20,15 +20,9 @@ cd core/build/release/bin
 S=/path/to/workdir
 
 # Test images
-python scripts/gen_synthetic_erp.py $S/s256.ppm --width 256    # striped, 256x128
-python scripts/gen_synthetic_erp.py $S/t64.ppm  --width 64     # striped, 64x32
-# Smooth gradient (same R and G, constant B, no stripes), 256x128
-python -c "
-import numpy as np
-h,w=128,256
-y,x=np.mgrid[0:h,0:w]
-img=np.stack([x*255//w,y*255//h,np.full_like(x,128)],-1).astype(np.uint8)
-open('$S/g256.ppm','wb').write(b'P6 %d %d 255\n'%(w,h)+img.tobytes())"
+python scripts/gen_synthetic_erp.py $S/s256.ppm --width 256 --stripes  # striped, 256x128
+python scripts/gen_synthetic_erp.py $S/t64.ppm  --width 64 --stripes   # striped, 64x32
+python scripts/gen_synthetic_erp.py $S/g256.ppm --width 256            # smooth gradient, 256x128
 ```
 
 The ICU size is 32, so a 256x128 image has 32 blocks.
@@ -135,7 +129,7 @@ Measured effect: going from 100 to 20 iterations gives the same failures and the
 - Failures only affect bitplanes 6 to 9, the low-order magnitude bits of the quantized coefficients. For these bits the side information is nearly uninformative (LLR close to 0), so they need a rate close to 1, where BP is weakest.
 - **Content dependence (measured):** the smooth gradient gives 0 failures, while the same image with diagonal stripes (`b = ((x + y) % 64) * 4`) gives 137. The stripes produce a 252-to-0 jump every 64 pixels, i.e. sharp diagonal edges in most 32x32 blocks, hence many large coefficients with uncertain low bits. The test image is close to a worst case.
 - **Iteration budget is not the cause (measured):** 20 and 100 iterations give exactly the same failures.
-- **Likely aggravating factor (not verified):** the doping order is the identity. The sort by LLR reliability is commented out (`lib/icov/core/ldpc_codec_layer/LLRProvider.cpp:132`), so the doped bits are the first positions of the block rather than the least reliable ones. At full rate, BP must then solve the 128 remaining unreliable bits with 128 checks of the rate-1/2 matrix, which commonly fails on stopping sets.
+- **Aggravating factor (confirmed in 6.3, but it cannot simply be changed, see 6.4):** the doping order is the identity. The sort by LLR reliability is commented out (`lib/icov/core/ldpc_codec_layer/LLRProvider.cpp:132`), so the doped bits are the first positions of the block rather than the least reliable ones. At full rate, BP must then solve the 128 remaining unreliable bits with 128 checks of the rate-1/2 matrix, which commonly fails on stopping sets.
 
 ### 4.4 Other factors
 
@@ -147,11 +141,96 @@ Measured effect: going from 100 to 20 iterations gives the same failures and the
 | # | Action | Expected gain | Status |
 |---|---|---|---|
 | 1 | Use `--ldpc-bp-ite 20` for tests and tutorials | 3.4x to 3.9x | measured |
-| 2 | Add an LDPCA syndrome check (`H x == s`) in `_decode` and enable early stopping | most of the remaining BP time for converging decodes | not implemented |
-| 3 | Start the rate search near the expected rate (e.g. from the conditional entropy estimate), or use a bisection, instead of a linear scan from the lowest rate | fewer decodes per bitplane | not implemented |
-| 4 | Skip LDPC and store raw when the estimated rate is close to 1 | removes the 34-attempt cost of the failing bitplanes | not implemented |
-| 5 | Build with `-DICOV_USE_OMP=ON` | up to 9x on the prediction loop | not measured |
-| 6 | Restore the doping order by LLR reliability and check whether full-rate failures disappear | fewer raw bitplanes | hypothesis, not verified |
-| 7 | Use a smooth gradient (no stripes) as the tutorial test image | 0 warnings, 1.7x faster | measured |
+| 2 | Add an LDPCA syndrome check (`H x == s`) in `_decode` and enable early stopping | most of the remaining BP time for converging decodes | implemented (section 6) |
+| 3 | Start the rate search near the expected rate (e.g. from the conditional entropy estimate), or use a bisection, instead of a linear scan from the lowest rate | fewer decodes per bitplane | implemented (section 6) |
+| 4 | Skip LDPC and store raw when the estimated rate is close to 1 | removes the 34-attempt cost of the failing bitplanes | replaced by the rate search and the rate-1 cap (section 6) |
+| 5 | Build with `-DICOV_USE_OMP=ON` | up to 9x on the prediction loop | in README, measured about 3x (section 6) |
+| 6 | Restore the doping order by LLR reliability and check whether full-rate failures disappear | fewer raw bitplanes | tested and reverted: incompatible with the shared syndrome (section 6.4) |
+| 7 | Use a smooth gradient (no stripes) as the tutorial test image | 0 warnings, 1.7x faster | implemented: generator default, `--stripes` for the hard case |
 
-Items 2 and 3 change encoder behavior. They should be validated against the golden outputs planned in the maintenance plan (bit-exact output, or an equal or lower rate).
+Items 2 and 3 change encoder behavior. They should be validated against the golden outputs planned in the maintenance plan (bit-exact output, or an equal or lower rate). Section 6 reports what was implemented.
+
+## 6. Implemented changes and results
+
+### 6.1 Changes
+
+| # | Change | Location |
+|---|---|---|
+| 2 | Early stopping: after each BP iteration, stop as soon as the hard decision satisfies the LDPCA syndrome (`H x = s`) | `Decoder_LDPCA_BP_flooding_SPA::_check_syndrome`, `_decode` |
+| 3 | Rate search: start from the conditional entropy estimate minus 0.05, then use exponential steps up to the first converging rate and bisect back down. Each attempt starts from a fresh doping state, as in the decoder | `InteractiveCoder::encode`, `InteractiveCoder::conditional_entropy`, `LLRProvider::reset_doping` |
+| 4 | Rates above 1 are no longer tried (luma codes go up to m = 1520 for n = 1024), because raw storage is cheaper | `InteractiveCoder::encode` |
+| 5 | `-DICOV_USE_OMP=ON` added to the README build command | `README.md` |
+
+A separate skip-to-raw threshold (original item 4) was not needed: with the new search, a failing bitplane costs about log2(rates) decodes instead of all of them.
+
+**Compatibility:** items 2 to 4 change the rates the encoder chooses but not the bitstream format, so files encoded before these changes still decode. One theoretical exception: with early stopping, the decoder could stop on another word with the same syndrome, which requires the difference to be a codeword of H. This was not observed.
+
+### 6.2 Method
+
+To find the starting rate, the encoder was temporarily instrumented to log, for each bitplane, the conditional entropy estimate `H = mean(-log2 P(x_i | llr_i))` and the rate the linear search selected (8579 bitplanes, g256 and s256):
+
+- n = 256: 5369 bitplanes, 89 failures. n = 1024: 3210 bitplanes, 10 failures.
+- n = 1024 uses 87% of the failed-decode work (158 rates in steps of 8/1024).
+- Chosen rate minus H: median +0.021, 5th percentile -0.027, 1st percentile -0.041. 28% of the bitplanes converge slightly below H (finite-length effects and LLR model mismatch).
+- A start at H - 0.05 alone would remove only 19% of the decodes. This led to the exponential search plus bisection.
+
+Each variant was measured with the script below. It encodes, decodes 5 viewpoints headless against the ground truth, and compares per-block bitrate and PSNR from the decoder CSV:
+
+```bash
+icov_cli -i $S/$img.ppm -o $d/out/ -d data/imt_164_v2/ [options]
+icov_cli -m decode -i $d/out -d data/imt_164_v2/ \
+    --decode-positions-input $S/positions.csv --decode-ground-truth $S/$img.ppm \
+    --decode-csv-output $d/csv/res --decode-headless 1
+```
+
+`positions.csv` holds 5 viewpoints (`time,latitude,longitude`): `0,0,0`, `0,10,45`, `0,-20,-90`, `0,30,170`, `0,-60,120`. They cover 50 block decodes. "Stored" is the size of `syndrome` + `prediction`, and "Viewed bits" is the sum of the encoded bitrate of the decoded blocks.
+
+### 6.3 Results (256x128, 100 BP iterations unless noted)
+
+| Variant | Image | Encode time | Warnings | Stored | Viewed bits | Mean PSNR |
+|---|---|---|---|---|---|---|
+| baseline | g256 | 110.0 s | 0 | 31387 B | 108608 | 51.363 dB |
+| + early stop (2) | g256 | 119.0 s | 0 | 31372 B | 108576 | 51.363 dB |
+| + rate search (3, 4) | g256 | 24.4 s | 0 | 31376 B | 108704 | 51.363 dB |
+| + OpenMP (5) | g256 | 8.3 s | 0 | 31376 B | 108704 | 51.363 dB |
+| (doping order, reverted) | g256 | 8.6 s | 0 | 30858 B | 107680 | 51.363 dB |
+| baseline | s256 | 207.1 s | 137 | 34623 B | 189208 | 45.475 dB |
+| + early stop (2) | s256 | 198.5 s | 99 | 34615 B | 188848 | 45.475 dB |
+| + rate search (3, 4) | s256 | 32.9 s | 100 | 34576 B | 189352 | 45.475 dB |
+| + OpenMP (5) | s256 | 11.1 s | 100 | 34576 B | 189352 | 45.475 dB |
+| (doping order, reverted) | s256 | 11.2 s | 0 | 33168 B | 172104 | 45.475 dB |
+
+The baseline, early stop and rate search rows ran two or four encodes in parallel. OpenMP and later rows ran one at a time. The 512x256 result is in 6.5.
+
+Observations:
+
+- Early stopping alone does not reduce time: within a linear search, all attempts but the last fail and still run every iteration. It does reduce warnings (137 to 99), because full-length runs sometimes moved away from a decode that had already converged.
+- The rate search gives 4.5x to 6.3x, with viewed bits within +0.1% of the baseline.
+- The OpenMP build produces byte-identical output to the serial build (`syndrome`, `prediction`, `header` compared with `cmp`) and runs about 3x faster on this machine.
+- Doping by reliability removed the full-rate failures (s256: 100 to 0, viewed bits -9.1%), but it is not valid, see 6.4.
+- Mean PSNR is identical in every variant: all decoded blocks are exact, since the coding is lossless after quantization.
+- Overall, with the kept changes and 100 iterations, encoding is 13x (g256) to 19x (s256) faster than the baseline, with stored size within 0.2% and identical PSNR. The OpenMP output is deterministic: three runs gave byte-identical files.
+
+### 6.4 Doping order by LLR reliability: tested and reverted
+
+A block stores one syndrome per bitplane, the longest across its predictions, and each prediction reads a prefix of it (`FrameEncoder::saveDataToEncode`, `lib/encoder/FrameEncoder.cpp:680`). The prefix is valid for every prediction only if the syndrome bits do not depend on the side information:
+
+- The parity bits `H x` depend only on the source.
+- With the identity doping order, the doped bits are `src[0..k]`, which also depends only on the source.
+- With an LLR-sorted order, the doped bits are the source bits at the least reliable positions of the prediction that produced the stored syndrome. Another prediction reading a prefix in the doped range would get bits for the wrong positions and decode incorrectly.
+
+The symptom was nondeterministic OpenMP output: when two predictions reach the same length, the first thread to write wins, and three runs gave three different `syndrome` files. The headless decode test (5 viewpoints, 50 block decodes, each through a single prediction) did not exercise the faulty case, so identical PSNR there did not prove correctness.
+
+The full-rate failures are therefore the cost of a doping order that is identical for all predictions. Removing them needs another order with that property, e.g. one based on the matrix structure (variable nodes that break stopping sets). This is left as a research item. A useful test to add would decode every prediction of every block from the final stored syndrome.
+
+### 6.5 BP iterations with the kept changes
+
+| Variant | Image | Encode time | Warnings | Stored |
+|---|---|---|---|---|
+| all kept, 100 iterations | g256 | 8.3 s | 0 | 31376 B |
+| all kept, 100 iterations | s256 | 10.3 s to 11.1 s | 100 | 34576 B |
+| all kept, 20 iterations | g256 | 3.1 s | 0 | 31410 B |
+| all kept, 20 iterations | s256 | 3.8 s | 100 | 34637 B |
+| all kept, 100 iterations | 512x256 striped | 35.6 s | 442 | 118348 B |
+
+20 iterations is about 3x faster for +0.1% to +0.2% size and identical PSNR. It is a good setting for quick tests, while the default stays at 100. The 512x256 striped image, which had not finished after 7 minutes, now encodes in 36 s.

@@ -73,7 +73,8 @@ cmake -S . -B build/release -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH="$CONDA_PREFIX;$PWD/build/aff3ct-install" \
   -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
-  -DBoost_USE_STATIC_LIBS=OFF
+  -DBoost_USE_STATIC_LIBS=OFF \
+  -DICOV_USE_OMP=ON
 
 # 5. Build
 cmake --build build/release -j"$(nproc)"
@@ -88,7 +89,8 @@ For clang, use `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++` in steps 
 
 Notes:
 - conda-forge ships only shared Boost libraries, hence `-DBoost_USE_STATIC_LIBS=OFF` (default `ON`).
-- Main options: `-DICOV_USE_OMP=ON` (OpenMP), `-DICOV_BUILD_APPS=OFF` (skip the viewer and CLI), `-DICOV_ONLINE_MODE=OFF` (offline build).
+- `-DICOV_USE_OMP=ON` parallelizes the encoder over block predictions; keep it on whenever the compiler supports OpenMP (default `OFF`). With conda clang, also install `llvm-openmp`.
+- Other options: `-DICOV_BUILD_APPS=OFF` (skip the viewer and CLI), `-DICOV_ONLINE_MODE=OFF` (skip the git update of downloaded dependencies such as GLFW and glad, to rebuild without network; the first build still downloads them).
 
 ---
 
@@ -120,22 +122,91 @@ cd icov/bin
 
 ## Run
 
-Equirectangular videos or images can be encoded/decoded with ICOV software.
+ICOV encodes an equirectangular (ERP) image or video once. A client then decodes only the blocks of its viewport, each one predicted from whichever neighboring block it has already decoded.
 
-### First test: encode/decoded an image
+The commands below run from the build output directory, where `data/` holds the LDPC matrices:
 
-Encoding:
 ```bash
-mkdir encoded.icov
-./icov_cli -i /path/to/my/equirect.jpg -o encoded.icov/ -d data/imt_164_v2/
+cd build/release/bin
 ```
 
-Decoding:
+### 1. Create a test image
+
+Any ERP image readable by OpenCV works (2:1 ratio). Its width and height should be multiples of the 32-pixel block size, otherwise the encoder resizes it. To generate a synthetic 1024x512 color gradient:
+
 ```bash
-./icov_viewer -i encoded.icov -d data/imt_164_v2/
+python ../../../scripts/gen_synthetic_erp.py erp.ppm
 ```
 
-Use Q,S,D,Z to move the viewpoint.
+Options: `--width` (default 1024), `--height` (default width / 2), and `--stripes`, which adds sharp diagonal edges, a harder content (see step 2).
+
+### 2. Encode
+
+```bash
+./icov_cli -i erp.ppm -o encoded.icov/ -d data/imt_164_v2/
+```
+
+The output directory is created if needed. On 14 threads, encoding the 1024x512 gradient takes about 80 s. For quick tests, `--ldpc-bp-ite 20` is about 3x faster for less than 0.5% more data.
+
+Main encoder options:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--encode-qp` | 27 | Quantization parameter (higher: lower quality, fewer bits) |
+| `--encode-icu-size` | 32 | Block size in pixels |
+| `-f`, `--encode-fov` | 80 | Horizontal field of view of the viewport, in degrees |
+| `--ldpc-bp-ite` | 100 | Maximum belief-propagation iterations |
+| `--encode-frame-count`, `--encode-start-frame` | 0, 0 | Frame range for videos (0: all frames) |
+
+`encoded.icov/` contains the stored data (`header`, `prediction`, `syndrome`, `bsize`, `fsize`, `metric`). It also holds `info.txt`, a human-readable summary with the distribution of the encoded rates, which the decoder does not read.
+
+Warnings like `No convergence for bitplane N` mean that a bitplane could not be LDPC-coded and was stored raw. Coding stays lossless, so they are expected on content with sharp edges (e.g. `--stripes`). See `doc/encoder_performance_report.md`.
+
+### 3. Navigate in the viewer
+
+```bash
+./icov_viewer -i encoded.icov -d data/imt_164_v2/ --decode-ground-truth erp.ppm
+```
+
+`--decode-ground-truth` is optional. It enables the source and difference views. Keys (AZERTY layout):
+
+| Key | Action |
+|---|---|
+| `Z` `Q` `S` `D` | Move the viewpoint up, left, down, right |
+| `R` | Reset the viewpoint |
+| `W` | Switch between the viewport and the full ERP view |
+| `F1` | Decoded image (`X` toggles the source, needs the ground truth) |
+| `F2` / `F3` | Rate per block / rate of the current viewport |
+| `F4` / `F5` | Prediction direction / prediction category per block |
+| `F6` | Difference with the ground truth |
+| `C` | Toggle ICOV decoding |
+| `P` / `F` | Play or pause / next frame (videos) |
+| `Esc` | Quit |
+
+A small "ICOV Monitor" window shows the frame, the viewpoint and the decoder state.
+
+### 4. Decode a navigation path without display
+
+The CLI decoder replays a list of viewpoints and exports metrics to CSV, with no graphical output:
+
+```bash
+printf '0,0,0\n0,10,45\n0,-20,-90\n' > positions.csv
+mkdir -p results
+./icov_cli -m decode -i encoded.icov -d data/imt_164_v2/ \
+  --decode-positions-input positions.csv \
+  --decode-ground-truth erp.ppm \
+  --decode-csv-output results/run --decode-headless 1
+```
+
+Each line of `positions.csv` is `time_in_seconds,latitude,longitude` in degrees. The time is converted to a frame number with the content frame rate; use 0 for an image. The decoder writes:
+
+| File | Content |
+|---|---|
+| `results/run_requests.csv` | One line per viewpoint request |
+| `results/run_blocks.csv` | One line per decoded block: prediction used, encoded bitrate, all-intra bitrate, MSE, PSNR |
+| `results/run_viewports.csv` | Per-viewport summary (only the header is written in the current version) |
+
+The same `--decode-positions-input` option makes `icov_viewer` replay the path instead of using the keyboard.
 
 ## Links
 
