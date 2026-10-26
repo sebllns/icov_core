@@ -73,6 +73,7 @@ public:
     omnidirectional_layer::Block::id_t StartBlock;
     size_t BlockCount;
     bool DummyViewport;
+    bool ExternalMatrices = false; ///< never store the LDPC matrices
 
     params() = default;
   };

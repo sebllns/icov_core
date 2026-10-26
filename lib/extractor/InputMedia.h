@@ -84,6 +84,9 @@ public:
   const bitstream::ContentParameterSet &contentParameterSet() const;
   bitstream::ContentParameterSet &contentParameterSet();
 
+  /// Root of the LDPC matrix set stored in the file ('ildp' box), empty if none
+  const std::string &storedMatrixSet() const { return m_matrixRoot; }
+
   /// Raw parameter set, as sent to a client
   const std::vector<uint8_t> &parameterSetBytes() const;
 
@@ -128,6 +131,7 @@ private:
 
   bitstream::ContentParameterSet m_contentParameterSet;
   std::vector<uint8_t> m_ips;
+  std::string m_matrixRoot;
   std::ifstream m_file;
   std::vector<IndexEntry> m_index; ///< per frame, per coded block
   size_t m_blockCount;             ///< coded blocks per frame

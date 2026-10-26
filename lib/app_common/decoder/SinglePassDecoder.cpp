@@ -1,5 +1,6 @@
 #include "SinglePassDecoder.h"
 #include "video_layer/ips.h"
+#include "video_layer/matrix_set.h"
 
 #include "Media.h"
 #include "Unit.h"
@@ -94,7 +95,10 @@ void decoder::SinglePassDecoder::initLocal(const params &p) {
   ICOV_INFO << boost::format("%-30s %-d") % "QP:" % (int)cps.qp;
 
   auto coder_params = parseLdpcParams(cps);
-  coder_params->database = p.LdpcDatabase.string();
+  coder_params->database = bitstream::resolve_matrix_set(
+      cps, m_icovFile->storedMatrixSet(), p.LdpcDatabase.string());
+  ICOV_INFO << boost::format("%-30s %-s") % "LDPC matrices:" %
+                   (cps.ldpc_matrix_set + " (" + coder_params->database + ")");
   setLdpcParams(*coder_params);
 
   ICOV_INFO << "Init 360 navigation";

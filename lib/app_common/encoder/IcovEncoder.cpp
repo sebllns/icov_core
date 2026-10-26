@@ -33,7 +33,8 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params,
           .AllBlocks = true, //@todo TODO !!!
           .StartBlock = 61,
           .BlockCount = 23,
-          .DummyViewport = m_params.DummyViewport},
+          .DummyViewport = m_params.DummyViewport,
+          .ExternalMatrices = m_params.ExternalMatrices},
       this->ldpc_params());
 
   // m_encoder->output_ptr()->stream() <<
@@ -102,6 +103,7 @@ icov::encoder::IcovEncoder::params::params(
   Inputfile = options::parseInputFile(args);
   Outputfile = options::parseOutputFile(args);
   ExportReference = options::parseExportReference(args);
+  ExternalMatrices = options::parseExternalMatrices(args);
   // -o names the ICOV file; default: the input name with .icov
   if (Outputfile.empty())
     Outputfile = fs::path(Inputfile).replace_extension(".icov").string();

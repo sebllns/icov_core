@@ -168,6 +168,11 @@ void BinaryOutputIcov::close() {
     hash = isobmff::full_box("ihsh", 0, h);
   }
 
+  if (!m_matrixSet.empty()) {
+    const auto ildp = isobmff::full_box("ildp", 0, m_matrixSet);
+    moov_payload.insert(moov_payload.end(), ildp.begin(), ildp.end());
+  }
+
   const uint64_t icbi_size = 8 + 4 + index.size() + m_index.size() * 16;
   const uint64_t moov_size =
       8 + moov_payload.size() + icbi_size + hash.size();

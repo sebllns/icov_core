@@ -7,6 +7,7 @@
 #include "icov_log.h"
 #include "icov_path.h"
 #include "version.h"
+#include "video_layer/matrix_set.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 
@@ -127,6 +128,19 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   m_output->contentParameterSet().ldpc_coder_type = m_LDPC_params->type();
   m_output->contentParameterSet().ldpc_bp_ite =
       m_LDPC_params->beliefPropagationIterations;
+
+  // identity of the matrix set; the matrices themselves are stored unless
+  // the set is built in (same content) or --external-matrices is given
+  const std::string &root = m_LDPC_params->database;
+  const auto matrices = data::load_set(root);
+  const uint32_t crc = data::set_crc32(matrices);
+  m_output->contentParameterSet().ldpc_matrix_set = data::set_name(root);
+  m_output->contentParameterSet().ldpc_matrix_crc = crc;
+  const bool builtin =
+      crc == data::set_crc32(data::load_set(data::DEFAULT_MATRIX_SET));
+  if (!builtin && !m_params.ExternalMatrices)
+    m_output->setMatrixSet(bitstream::write_matrix_set(
+        m_output->contentParameterSet().ldpc_matrix_set, matrices));
 
   m_output->contentParameterSet().content_framecount = 0;
 

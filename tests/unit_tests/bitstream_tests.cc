@@ -118,12 +118,14 @@ BOOST_AUTO_TEST_CASE(parameter_set_roundtrip) {
   cps.block_fixed_size = 32;
   cps.ldpc_coder_type = "imt164";
   cps.ldpc_bp_ite = 20;
+  cps.ldpc_matrix_set = "imt_164";
+  cps.ldpc_matrix_crc = 0x12345678;
   cps.icu_count = 512;
   for (unsigned id = 1; id <= 512; ++id)
     cps.encoded_blocks[id] = id - 1;
 
   const auto bytes = icov::bitstream::write_ips(cps);
-  BOOST_TEST(bytes.size() < 120u); // the block list costs one bit per block
+  BOOST_TEST(bytes.size() < 140u); // the block list costs one bit per block
   BOOST_TEST((icov::bitstream::read_ips(bytes) == cps));
 }
 
@@ -152,6 +154,45 @@ BOOST_AUTO_TEST_CASE(rate_roundtrip_and_cost) {
   BitWriter one;
   bs::write_rate(one, 1);
   BOOST_TEST(one.bit_count() == 1u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#include "icov_data.h"
+#include "video_layer/matrix_set.h"
+
+BOOST_AUTO_TEST_SUITE(matrix_set)
+
+BOOST_AUTO_TEST_CASE(builtin_set_matches_directory) {
+  namespace data = icov::data;
+  const auto builtin = data::load_set(data::DEFAULT_MATRIX_SET);
+  const auto dir = data::load_set(ICOV_TEST_DATA_DIR);
+  BOOST_TEST(builtin.size() == dir.size());
+  BOOST_TEST(data::set_crc32(builtin) == data::set_crc32(dir));
+  BOOST_TEST(data::set_name(ICOV_TEST_DATA_DIR) == "imt_164_v2");
+  BOOST_TEST(data::exists(std::string(data::DEFAULT_MATRIX_SET) + "/1024/H.pcm"));
+}
+
+BOOST_AUTO_TEST_CASE(stored_set_roundtrip) {
+  namespace data = icov::data;
+  const auto files = data::load_set(data::DEFAULT_MATRIX_SET);
+  const auto payload = icov::bitstream::write_matrix_set("imt_164_v2", files);
+  BOOST_TEST(payload.size() < 20000u); // packed integers, not text
+
+  std::string name;
+  uint32_t crc = 0;
+  const auto back = icov::bitstream::read_matrix_set(payload, name, crc);
+  BOOST_TEST(name == "imt_164_v2");
+  BOOST_TEST(crc == data::set_crc32(files));
+  BOOST_TEST(data::set_crc32(back) == crc);
+
+  // a stored set is readable like the built-in one
+  data::register_set("stream:test", back);
+  auto in = data::open("stream:test/256/H.pcm");
+  int rows = 0, cols = 0;
+  *in >> rows >> cols;
+  BOOST_TEST(rows == 256);
+  BOOST_TEST(cols == 128);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

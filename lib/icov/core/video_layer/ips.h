@@ -10,7 +10,7 @@ namespace icov {
 namespace bitstream {
 
 /// Version of the ICOV parameter set syntax
-constexpr uint8_t IPS_FORMAT_VERSION = 1;
+constexpr uint8_t IPS_FORMAT_VERSION = 2;
 
 /// Writes the ICOV parameter set (sequence parameters) as an RBSP
 void write_ips(BitWriter &w, const ContentParameterSet &cps);

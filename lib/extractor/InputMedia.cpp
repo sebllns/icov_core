@@ -8,6 +8,7 @@
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/ips.h"
 #include "video_layer/isobmff.h"
+#include "video_layer/matrix_set.h"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -52,6 +53,13 @@ icov::extractor::InputIcov::InputIcov(const boost::filesystem::path &path)
     const size_t size = box.payload_size() - 4;
     if (box.type == "icvC") {
       m_ips.assign(p, p + size);
+    } else if (box.type == "ildp") {
+      std::string name;
+      uint32_t crc = 0;
+      auto files = bitstream::read_matrix_set(
+          std::vector<uint8_t>(p, p + size), name, crc);
+      m_matrixRoot = "stream:" + std::to_string(crc);
+      data::register_set(m_matrixRoot, std::move(files));
     } else if (box.type == "ihsh") {
       const uint32_t frames = isobmff::get_u32(p);
       const uint32_t blocks = isobmff::get_u32(p + 4);

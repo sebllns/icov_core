@@ -72,6 +72,8 @@ void write_ips(BitWriter &w, const ContentParameterSet &cps) {
                                 cps.ldpc_coder_type);
   w.u(4, family);
   w.ue(cps.ldpc_bp_ite - 1);
+  write_string(w, cps.ldpc_matrix_set);
+  w.u(32, cps.ldpc_matrix_crc);
 
   // Coded blocks in stream order, as id deltas minus one
   w.ue(cps.icu_count);
@@ -100,7 +102,7 @@ ContentParameterSet read_ips(BitReader &r) {
   ContentParameterSet cps;
 
   const unsigned version = r.u(8);
-  if (version != IPS_FORMAT_VERSION)
+  if (version < 1 || version > IPS_FORMAT_VERSION)
     ICOV_THROW_INVALID_ARGUMENT("Unsupported IPS version " +
                                 std::to_string(version));
   cps.icov_version = read_string(r);
@@ -129,6 +131,10 @@ ContentParameterSet read_ips(BitReader &r) {
                                 std::to_string(family));
   cps.ldpc_coder_type = LDPC_FAMILIES[family];
   cps.ldpc_bp_ite = r.ue() + 1;
+  if (version >= 2) {
+    cps.ldpc_matrix_set = read_string(r);
+    cps.ldpc_matrix_crc = r.u(32);
+  } // version 1 (2.0.0): imt_164_v2, crc unknown
 
   cps.icu_count = r.ue();
   const size_t coded = r.ue();

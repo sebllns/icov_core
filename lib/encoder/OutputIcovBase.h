@@ -111,6 +111,11 @@ public:
   void setInfo(const std::string &key, const std::string &value);
   void setStatistics(const EncoderStatistics &stats);
 
+  /// Payload of the optional 'ildp' box (LDPC matrices)
+  void setMatrixSet(std::vector<uint8_t> payload) {
+    m_matrixSet = std::move(payload);
+  }
+
   /// Debug text output (ExportDebugTextFormat), opened on first use
   std::ostream &debugStream();
 
@@ -125,6 +130,7 @@ protected:
   bitstream::ContentParameterSet m_contentParameterSet;
   std::map<std::string, std::string> m_info;
   std::unique_ptr<EncoderStatistics> m_stats;
+  std::vector<uint8_t> m_matrixSet;
 
 private:
   std::unique_ptr<std::ofstream> m_debug;

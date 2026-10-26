@@ -93,6 +93,7 @@ const std::string block_count = "encode-block-count";
 const std::string frame_start = "encode-start-frame";
 const std::string frame_count = "encode-frame-count";
 const std::string export_reference = "export-reference";
+const std::string external_matrices = "external-matrices";
 const std::string viewport_padding = "encode-viewport-padding";
 const std::string viewport_erp_horizontal_ratio_id =
     "encode-viewport-erp-horizontal-ratio";
@@ -210,6 +211,10 @@ inline void addEncoderOptions(desc_t &output) {
   output.add_options()(export_reference.c_str(),
                        "Write the original and reconstructed frames to "
                        "<name>.ref/ (difference view and PSNR in the viewer)");
+
+  output.add_options()(external_matrices.c_str(),
+                       "Do not store the LDPC matrices given with -d in the "
+                       "file; the decoder then needs the same -d");
 }
 
 inline void addDecoderOptions(desc_t &output) {
@@ -264,8 +269,8 @@ inline void init_options_desc(const std::string &modes, desc_t &output) {
                "Set the coder type")
 
                   ((data_path + ",d").c_str(),
-                   po::value<std::string>()->default_value("data/imt_164_v2/"),
-                   "Set the data path")
+                   po::value<std::string>()->default_value(""),
+                   "LDPC matrix set directory (default: built-in imt_164_v2)")
 
                       ((code_length + ",n").c_str(),
                        po::value<int>()->default_value(1024),
@@ -315,9 +320,14 @@ inline void init_options_desc(const std::string &modes, desc_t &output) {
   addDecoderOptions(output);
 }
 
-#define ICOV_DATA_DIR(args)                                                    \
-  fs::absolute(fs::path(args[icov::options::data_path].as<std::string>()))
-#define ICOV_Q_VALUES_FILE(args) (ICOV_DATA_DIR(args) / "../q-ary/q")
+/// q-ary table: built in, or next to the matrix set given with -d
+inline fs::path qValuesFile(const std::string &database) {
+  if (icov::data::is_virtual(database))
+    return "builtin:q-ary/q";
+  return fs::absolute(fs::path(database)) / "../q-ary/q";
+}
+#define ICOV_Q_VALUES_FILE(args)                                               \
+  icov::options::qValuesFile(icov::options::parseDatabase(args))
 
 template <typename T> T parse(const std::string &id, const args_t &args) {
   return args[id].as<T>();
@@ -329,6 +339,10 @@ inline std::string parseInputFile(const args_t &args) {
 
 inline bool parseVerifyHash(const args_t &args) {
   return args.count(verify_hash) > 0;
+}
+
+inline bool parseExternalMatrices(const args_t &args) {
+  return args.count(external_matrices) > 0;
 }
 
 inline bool parseExportReference(const args_t &args) {
@@ -355,8 +369,10 @@ inline std::string parseLdpcCoderType(const args_t &args) {
   return args[coder_type].as<std::string>();
 }
 
+/// LDPC matrix set: the -d directory, or the built-in set
 inline std::string parseDatabase(const args_t &args) {
-  return args[data_path].as<std::string>();
+  const auto d = args[data_path].as<std::string>();
+  return d.empty() ? icov::data::DEFAULT_MATRIX_SET : d;
 }
 
 inline int parseCodeLength(const args_t &args) {

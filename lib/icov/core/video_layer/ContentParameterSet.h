@@ -72,6 +72,8 @@ struct ContentParameterSet {
   byte qp;
   uint16_t ldpc_bp_ite;
   std::string ldpc_coder_type;
+  std::string ldpc_matrix_set = "imt_164_v2"; ///< matrix set name
+  uint32_t ldpc_matrix_crc = 0; ///< icov::data::set_crc32, 0: unknown
 
   byte content_chroma_format;
 
@@ -137,7 +139,9 @@ inline bool operator==(const ContentParameterSet &a,
          a.has_metadata == b.has_metadata &&
          a.encoded_blocks == b.encoded_blocks && a.icu_count == b.icu_count &&
          a.ldpc_coder_type == b.ldpc_coder_type &&
-         a.ldpc_bp_ite == b.ldpc_bp_ite;
+         a.ldpc_bp_ite == b.ldpc_bp_ite &&
+         a.ldpc_matrix_set == b.ldpc_matrix_set &&
+         a.ldpc_matrix_crc == b.ldpc_matrix_crc;
 }
 
 inline bool operator!=(const ContentParameterSet &a, const ContentParameterSet &b)

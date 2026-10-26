@@ -26,7 +26,7 @@ for pattern in gradient stripes; do
   fi
 
   for run in 1 2; do
-    ./icov_cli -i "$img" -o "$work/${pattern}_$run.icov" -d "$data" \
+    ./icov_cli -i "$img" -o "$work/${pattern}_$run.icov" \
       > "$work/${pattern}_$run.log" 2>&1
   done
   cmp "$work/${pattern}_1.icov" "$work/${pattern}_2.icov" ||
@@ -39,7 +39,7 @@ for pattern in gradient stripes; do
   [ -f "$work/${pattern}_1.stats.json" ] ||
     { echo "FAIL $pattern: missing statistics file"; exit 1; }
 
-  ./icov_cli -m decode -i "$work/${pattern}_1.icov" -d "$data" \
+  ./icov_cli -m decode -i "$work/${pattern}_1.icov" \
     --decode-positions-input "$work/positions.csv" \
     --decode-ground-truth "$img" \
     --decode-csv-output "$work/$pattern" --decode-headless 1 --verify-hash \
@@ -56,3 +56,35 @@ for pattern in gradient stripes; do
       print "OK " name ": " n " blocks decoded, psnr >= " min
     }' "$work/${pattern}_blocks.csv"
 done
+
+# A matrix set that is not built in (here a copy with an extra file, so its
+# CRC differs) is stored in the file: it decodes without the directory
+sets=$work/sets
+mkdir -p "$sets"
+cp -r "$data" "$sets/custom"
+cp -r data/q-ary "$sets/q-ary"
+echo 1 > "$sets/custom/extra.txt"
+img=$work/gradient.ppm
+decode_custom() {
+  ./icov_cli -m decode -i "$1" "${@:2}" \
+    --decode-positions-input "$work/positions.csv" --decode-headless 1 \
+    --verify-hash
+}
+
+./icov_cli -i "$img" -o "$work/custom.icov" -d "$sets/custom" > "$work/custom.log" 2>&1
+decode_custom "$work/custom.icov" > "$work/custom_decode.log" 2>&1 ||
+  { echo "FAIL stored matrices: decoding failed"; tail -5 "$work/custom_decode.log"; exit 1; }
+grep -q "stream:" "$work/custom_decode.log" ||
+  { echo "FAIL stored matrices: not used"; exit 1; }
+echo "OK stored matrices: decoded from the file"
+
+# --external-matrices: the decoder needs the same -d
+./icov_cli -i "$img" -o "$work/external.icov" -d "$sets/custom" \
+  --external-matrices > "$work/external.log" 2>&1
+if decode_custom "$work/external.icov" > "$work/external_decode.log" 2>&1; then
+  echo "FAIL external matrices: decoded without -d"; exit 1
+fi
+decode_custom "$work/external.icov" -d "$sets/custom" \
+  > "$work/external_decode.log" 2>&1 ||
+  { echo "FAIL external matrices: decoding with -d failed"; exit 1; }
+echo "OK external matrices: required -d, then decoded"

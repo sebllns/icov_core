@@ -78,6 +78,7 @@ class IcovEncoder
         frame_t FrameCount;
         frame_t FrameStart;
         bool ExportReference;
+        bool ExternalMatrices;
 
         uint m_debugframecount;
         uint m_icuSize;
