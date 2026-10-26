@@ -87,7 +87,7 @@ Debug build: same as steps 4-5 with `-B build/debug -DCMAKE_BUILD_TYPE=Debug`.
 For clang, use `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++` in steps 3 and 4.
 
 Notes:
-- conda-forge ships only shared Boost libraries, hence `-DBoost_USE_STATIC_LIBS=OFF`. `CMakeLists.txt` sets this variable to `ON` with a plain `set`, which may override the command line; if configuration fails on Boost, edit that line.
+- conda-forge ships only shared Boost libraries, hence `-DBoost_USE_STATIC_LIBS=OFF` (default `ON`).
 - Main options: `-DICOV_USE_OMP=ON` (OpenMP), `-DICOV_BUILD_APPS=OFF` (skip the viewer and CLI), `-DICOV_ONLINE_MODE=OFF` (offline build).
 
 ---

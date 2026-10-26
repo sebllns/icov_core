@@ -273,7 +273,7 @@ endif()
 # ---------------------------------------------------------------------
 # Link with Boost
 message(STATUS "[INFO] Checking Boost support...")
-set(Boost_USE_STATIC_LIBS ON)
+option(Boost_USE_STATIC_LIBS "Link Boost statically" ON)
 set(Boost_USE_MULTITHREADED OFF)
 
 # Removed because of issue on windows set(Boost_USE_STATIC_RUNTIME OFF)
