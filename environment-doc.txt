@@ -1,0 +1,5 @@
+# Documentation tools, in their own environment (graphviz conflicts with the
+# OpenCV dependencies of icov-core).
+# Create: conda create -n icov-doc -c conda-forge --override-channels --file environment-doc.txt
+doxygen=1.18
+graphviz=14

@@ -1,0 +1,54 @@
+# Doxygen documentation published to GitHub Pages
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0} # login shell, needed for conda activate
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same doxygen and graphviz versions as a local install
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: icov-doc
+          channels: conda-forge
+          conda-remove-defaults: true
+
+      - name: Install documentation tools
+        run: conda install -y -n icov-doc -c conda-forge --override-channels --file environment-doc.txt
+
+      - name: Generate documentation
+        run: doxygen doc/Doxyfile
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

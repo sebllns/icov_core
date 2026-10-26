@@ -102,6 +102,15 @@ ctest --test-dir build/release -L integration           # encode/decode round tr
 
 The integration test encodes two small synthetic images twice (the outputs must be identical), then decodes a few viewpoints and checks the PSNR of every block. GitHub CI (`.github/workflows/ci.yml`) runs both on every push and pull request.
 
+Documentation: doxygen and graphviz live in a separate environment, because graphviz conflicts with the OpenCV dependencies of `icov-core`:
+
+```bash
+conda create -n icov-doc -c conda-forge --override-channels --file environment-doc.txt
+conda run -n icov-doc doxygen doc/Doxyfile    # output in doc/html/
+```
+
+The Docs workflow (`.github/workflows/docs.yml`) builds it the same way and publishes it to GitHub Pages on every push to `main`.
+
 ---
 
 ### :arrow_right_hook: Download and build ICOV with the superbuild CMake project
@@ -220,7 +229,7 @@ The same `--decode-positions-input` option makes `icov_viewer` replay the path i
 
 ## Links
 
-Doxygen: https://icov.gitlabpages.inria.fr/src/core/index.html
+Doxygen: https://sebllns.github.io/icov_core/
 
 Resources: https://sourceforge.net/projects/icov/files
 

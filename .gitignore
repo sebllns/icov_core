@@ -3,6 +3,7 @@ build*/
 doc/html/
 doc/latex
 data/imt/*/alist/
+/nogit/
 
 # Winmerge
 *.orig
