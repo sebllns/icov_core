@@ -79,6 +79,9 @@ public:
                  const bitstream::sp_IcovExtractedBitstream &extraction);
   ~BlockExtractor();
 
+  /// Switches to another file, e.g. the next GOP
+  void setIcovFile(const std::shared_ptr<InputIcov> &icovFile);
+
 protected:
   std::shared_ptr<InputIcov>
       m_icovFile; /**< Shared pointer to input ICOV file */

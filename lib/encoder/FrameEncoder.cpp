@@ -72,7 +72,7 @@ FrameEncoder::FrameEncoder(const params &p,
 /*****************************************************************************/
 FrameEncoder::~FrameEncoder() {
   ICOV_TRACE << "Destroy FrameEncoder";
-  m_stats.write(m_icov_file->stream());
+  m_icov_file->setStatistics(m_stats);
   m_icov_file->endIcov();
 }
 
@@ -170,7 +170,7 @@ void icov::encoder::FrameEncoder::serializeParameters() {
                                        si_coder.bitplanes[bp].m);
 
               if (m_params.ExportDebugTextFormat) {
-                m_icov_file->stream() << " " << si_coder.bitplanes[bp].c << "("
+                m_icov_file->debugStream() << " " << si_coder.bitplanes[bp].c << "("
                                       << si_coder.bitplanes[bp].m << ")";
               }
             }
@@ -298,6 +298,8 @@ void FrameEncoder::encodeBlock(
         &block_prediction_mgr) {
 
   m_stats.addBlock();
+  if (access_block)
+    m_stats.addAccessBlock();
 
   //  ICOV_DEBUG << "start encode block "
   //             << b.getId(omnidirectional_layer::Block::SELF);
@@ -469,16 +471,17 @@ void FrameEncoder::processInput(const IInputMedia<cv::Mat> &input) {
 
   if (m_params.ExportRecoFrames) {
     cv::imwrite(path::combine(m_framesPath.string(),
-                              "x" + std::to_string(frame()) + ".tif"),
+                              "reconstructed_" + std::to_string(frame()) +
+                                  ".tif"),
                 m_reco);
 
     cv::imwrite(path::combine(m_framesPath.string(),
-                              "v" + std::to_string(frame()) + ".tif"),
+                              "original_" + std::to_string(frame()) + ".tif"),
                 img_src);
   }
 
   if (m_params.ExportDebugTextFormat) {
-    m_icov_file->stream() << "frame " << frame() << std::endl;
+    m_icov_file->debugStream() << "frame " << frame() << std::endl;
   }
 }
 
@@ -934,8 +937,7 @@ void FrameEncoder::setIcovFile(
                          ICOV_DEBUG_HEADER("Cannot encode into NULL file"));
 
   if (m_params.ExportRecoFrames) {
-    m_framesPath =
-        path::combine(m_icov_file->getDir().string(), "source_frames");
+    m_framesPath = m_icov_file->referenceDir();
     fs::create_directories(m_framesPath);
   }
 }

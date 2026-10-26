@@ -52,10 +52,8 @@
 #include "OutputIcovBase.h"
 
 #include "omnidirectional_layer/Block.h"
+#include "video_layer/bit_io.h"
 #include "video_layer/icov_stream.h"
-
-#include <boost/dynamic_bitset.hpp>
-#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include <cstdint>
 #include <fstream>
@@ -66,19 +64,17 @@
 namespace icov {
 namespace encoder {
 
+/// Writes the single-file ICOV stream: parameters and syndromes of each block
+/// are buffered, appended to a temporary payload file as a storage block
+/// unit (SBU), and the ISOBMFF file is assembled in close()
 class BinaryOutputIcov : public OutputIcovBase {
 public:
   using rate_t = icov::bitstream::rate_t;
   explicit BinaryOutputIcov(const fs::path &path);
-  ~BinaryOutputIcov() = default;
-
-private:
-  icov::bitstream::QaryParams m_qaryParams;
+  ~BinaryOutputIcov();
 
   // OutputIcovBase interface
-public:
   void writeQaryParams(const ldpc_codec_layer::QaryDistribution &bsp) override;
-  void writeContentParameterSet() override;
   void writeSyndrome(const Syndrome &s) override;
   void writeFrameSize() override;
   void writeBlockSize() override;
@@ -93,9 +89,30 @@ public:
       omnidirectional_layer::IBlockPredictionManager::prediction_t pred)
       override;
   void endWriteBlock(const omnidirectional_layer::Block &b) override;
-  void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r, const uint &m) override;
+  void writeStoredSyndromeSize(const NumcodeIdx &v, const Rate &r,
+                               const uint &m) override;
   void writeMse(const float &mse) override;
   void endIcov() override;
+  void close() override;
+
+private:
+  struct IndexEntry {
+    uint64_t offset;       ///< from the start of the payload
+    uint32_t params_size;  ///< bytes of parameters
+    uint32_t syndrome_size;///< bytes of syndromes
+  };
+
+  void writeByte(unsigned v);
+  void writeStats() const;
+
+  bitstream::BitWriter m_params;
+  std::vector<uint8_t> m_syndromes;
+  std::vector<IndexEntry> m_index;
+  std::vector<std::vector<float>> m_mse; ///< per frame, per block
+  fs::path m_payloadPath;
+  std::ofstream m_payload;
+  uint64_t m_payloadSize;
+  bool m_closed;
 };
 
 } // namespace encoder

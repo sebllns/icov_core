@@ -92,6 +92,7 @@ const std::string start_block = "encode-start-block";
 const std::string block_count = "encode-block-count";
 const std::string frame_start = "encode-start-frame";
 const std::string frame_count = "encode-frame-count";
+const std::string export_reference = "export-reference";
 const std::string viewport_padding = "encode-viewport-padding";
 const std::string viewport_erp_horizontal_ratio_id =
     "encode-viewport-erp-horizontal-ratio";
@@ -204,6 +205,10 @@ inline void addEncoderOptions(desc_t &output) {
   output.add_options()(frame_start.c_str(),
                        po::value<frame_t>()->default_value(0),
                        "Frame to start the encoding from");
+
+  output.add_options()(export_reference.c_str(),
+                       "Write the original and reconstructed frames to "
+                       "<name>.ref/ (difference view and PSNR in the viewer)");
 }
 
 inline void addDecoderOptions(desc_t &output) {
@@ -312,6 +317,10 @@ template <typename T> T parse(const std::string &id, const args_t &args) {
 
 inline std::string parseInputFile(const args_t &args) {
   return args[input_file].as<std::string>();
+}
+
+inline bool parseExportReference(const args_t &args) {
+  return args.count(export_reference) > 0;
 }
 
 inline std::string parseOutputFile(const args_t &args) {

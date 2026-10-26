@@ -26,15 +26,20 @@ for pattern in gradient stripes; do
   fi
 
   for run in 1 2; do
-    ./icov_cli -i "$img" -o "$work/${pattern}_$run/" -d "$data" \
+    ./icov_cli -i "$img" -o "$work/${pattern}_$run.icov" -d "$data" \
       > "$work/${pattern}_$run.log" 2>&1
   done
-  for f in header prediction syndrome; do
-    cmp "$work/${pattern}_1/$f" "$work/${pattern}_2/$f" ||
-      { echo "FAIL $pattern: $f differs between two encodes"; exit 1; }
-  done
+  cmp "$work/${pattern}_1.icov" "$work/${pattern}_2.icov" ||
+    { echo "FAIL $pattern: two encodes differ"; exit 1; }
 
-  ./icov_cli -m decode -i "$work/${pattern}_1" -d "$data" \
+  # only the stream and its statistics: no reference frames, no temporary file
+  for f in "${pattern}_1.ref" "${pattern}_1.icov.payload.tmp"; do
+    [ ! -e "$work/$f" ] || { echo "FAIL $pattern: unexpected $f"; exit 1; }
+  done
+  [ -f "$work/${pattern}_1.stats.json" ] ||
+    { echo "FAIL $pattern: missing statistics file"; exit 1; }
+
+  ./icov_cli -m decode -i "$work/${pattern}_1.icov" -d "$data" \
     --decode-positions-input "$work/positions.csv" \
     --decode-ground-truth "$img" \
     --decode-csv-output "$work/$pattern" --decode-headless 1 \

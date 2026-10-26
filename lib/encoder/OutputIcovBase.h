@@ -55,34 +55,28 @@
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/icov_stream.h"
 
-#include <boost/dynamic_bitset.hpp>
-#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include <array>
 #include <cstdint>
 #include <fstream>
+#include <map>
 #include <memory>
+#include <string>
 #include <ostream>
 #include <vector>
 
 namespace icov {
 namespace encoder {
 
+class EncoderStatistics;
+
+/// Encoder output: the stream goes to one ICOV file, statistics and debug
+/// information to side files next to it
 class OutputIcovBase : public icov::IOutputIcov {
 public:
-  enum eWriteCounter {
-    ENC_BLOCK_RATE_SIZE = 0,
-    ENC_BLOCK_SYNDROME_SIZE,
-    ENC_FRAME_RATE_SIZE,
-    ENC_FRAME_SYNDROME_SIZE,
-    TOTAL_WRITE,
-    TOTAL_LOST,
-    COUNT
-  };
-
   using rate_t = icov::bitstream::rate_t;
-  explicit OutputIcovBase(const fs::path &path, int openflag);
-  ~OutputIcovBase() = default;
+  explicit OutputIcovBase(const fs::path &path);
+  virtual ~OutputIcovBase() = default;
 
   const bitstream::ContentParameterSet &contentParameterSet() const;
   bitstream::ContentParameterSet &contentParameterSet();
@@ -96,7 +90,6 @@ public:
 
   virtual void
   writeQaryParams(const ldpc_codec_layer::QaryDistribution &bsp) = 0;
-  virtual void writeContentParameterSet() = 0;
   virtual void writeSyndrome(const Syndrome &s) = 0;
   virtual void writeFrameSize() = 0;
   virtual void writeBlockSize() = 0;
@@ -108,20 +101,31 @@ public:
   virtual void writeSIMode(const uint &v) = 0;
   virtual void writeMse(const float &mse) = 0;
   virtual void endIcov() = 0;
-  void flush(int id);
-  std::ostream &getStream(int id);
+
+  /// Writes the ICOV file and the statistics file; call once, after encoding
+  virtual void close() = 0;
+
+  /// Human-readable encoder information, written to the statistics file
+  void setInfo(const std::string &key, const std::string &value);
+  void setStatistics(const EncoderStatistics &stats);
+
+  /// Debug text output (ExportDebugTextFormat), opened on first use
+  std::ostream &debugStream();
 
   int channel() const;
   void setChannel(int newChannel);
 
-  fs::path getDir() const;
+  /// Side files: <name>.stats.json, <name>.ref/ (reference frames)
+  fs::path statsPath() const;
+  fs::path referenceDir() const;
 
 protected:
   bitstream::ContentParameterSet m_contentParameterSet;
-  std::map<int, std::unique_ptr<std::ostream>> m_fileParts;
-  std::array<uint32_t, eWriteCounter::COUNT> m_total_write_byte;
+  std::map<std::string, std::string> m_info;
+  std::unique_ptr<EncoderStatistics> m_stats;
 
 private:
+  std::unique_ptr<std::ofstream> m_debug;
   int m_channel;
 };
 

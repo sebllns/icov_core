@@ -126,6 +126,10 @@ public:
 
   const std::array<bitstream::SIEncodedParams, PRED_COUNT> &predParams() const;
 
+  void setIcovFile(const std::shared_ptr<InputIcov> &icovFile) {
+    m_icovFile = icovFile;
+  }
+
 private:
   void _extractPredParams(bitstream::SIEncodedParams &si);
   void _pushPredParams(int type);

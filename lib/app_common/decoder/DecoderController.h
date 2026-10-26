@@ -147,7 +147,7 @@ struct decoder_factory_t {
   decoder_factory_t(const path::path_t &icov_file, const options::args_t &args)
       : Params(icov_file, args),
         Decoder(std::make_unique<decoder::SinglePassDecoder>()) {
-    path::assert_directory_exists(icov_file.string());
+    path::assert_file_exists(icov_file.string());
     Decoder->setGopCount(Params.gop_count);
     Decoder->initLocal(decoder::SinglePassDecoder::params{
         .DummyViewport = Params.enable_dummyViewport,
@@ -185,12 +185,18 @@ public:
     return m_factory.Decoder;
   }
 
+  /// Reference frames written by the encoder with --export-reference.
+  /// Absolute, as stored by IMedia::getPath(), so an unchanged frame is not
+  /// reloaded
+  fs::path referenceDir() const {
+    fs::path p = getDecoder()->getParams().IcovFile;
+    return fs::absolute(p.replace_extension(".ref"));
+  }
+
   bool loadGroundTruthFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
-    std::string frame_name = "x" + std::to_string(f) + ".tif";
-    // Absolute, as stored by IMedia::getPath(), so an unchanged frame is not reloaded
-    fs::path frame_path = fs::absolute(
-        getDecoder()->getParams().IcovFile / "source_frames" / frame_name);
+    fs::path frame_path =
+        referenceDir() / ("reconstructed_" + std::to_string(f) + ".tif");
 
     if (fs::is_regular_file(frame_path) &&
         (!m_analyzer.GroundTruth ||
@@ -205,10 +211,8 @@ public:
 
   bool loadSourceFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
-    std::string frame_name = "v" + std::to_string(f) + ".tif";
-    // Absolute, as stored by IMedia::getPath(), so an unchanged frame is not reloaded
-    fs::path frame_path = fs::absolute(
-        getDecoder()->getParams().IcovFile / "source_frames" / frame_name);
+    fs::path frame_path =
+        referenceDir() / ("original_" + std::to_string(f) + ".tif");
 
     if (fs::is_regular_file(frame_path) &&
         (!m_analyzer.Source || m_analyzer.Source->getPath() != frame_path)) {
@@ -231,18 +235,14 @@ public:
       IBlockProcessor::addChild(getDecoder()->blockDecoder(),
                                 m_analyzer.CsvOutput);
       m_analyzer.RD_ERP =
-          std::make_unique<io::CsvFileWriter>(getDecoderParams()
-                                                  .input_icov_file.parent_path()
-                                                  .append("rd_erp.csv")
-                                                  .string());
+          std::make_unique<io::CsvFileWriter>(
+              getDecoderParams().csv_export_file.string() + "_rd_erp.csv");
       m_analyzer.RD_ERP->addColumn("rate");
       m_analyzer.RD_ERP->addColumn("psnr");
 
       m_analyzer.RD_DISP =
-          std::make_unique<io::CsvFileWriter>(getDecoderParams()
-                                                  .input_icov_file.parent_path()
-                                                  .append("rd_disp.csv")
-                                                  .string());
+          std::make_unique<io::CsvFileWriter>(
+              getDecoderParams().csv_export_file.string() + "_rd_disp.csv");
       m_analyzer.RD_DISP->addColumn("rate");
       m_analyzer.RD_DISP->addColumn("psnr");
     }

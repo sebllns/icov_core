@@ -49,6 +49,13 @@ icov::extractor::BlockExtractor::BlockExtractor(
 
 icov::extractor::BlockExtractor::~BlockExtractor() {}
 
+void icov::extractor::BlockExtractor::setIcovFile(
+    const std::shared_ptr<InputIcov> &icovFile) {
+  m_icovFile = icovFile;
+  for (auto &ch : m_channelExtractor)
+    ch->setIcovFile(icovFile);
+}
+
 void icov::extractor::BlockExtractor::fill_metrics(
     icov::omnidirectional_layer::IBlockPredictionManager::prediction_t
         prediction,
@@ -68,8 +75,7 @@ void icov::extractor::BlockExtractor::fill_metrics(
       .visible_blocks.push_back(b.getIdSelf());
   icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).frame = f;
   // extract mse
-  float mse = 0.;
-  m_icovFile->read(bitstream::eIcovStream::METRICS, mse);
+  const float mse = m_icovFile->blockMse();
   icov::video_layer::VideoMetrics::get_mutable_instance().getBlock(b).mse = mse;
 
   for (auto &ch : m_channelExtractor) {

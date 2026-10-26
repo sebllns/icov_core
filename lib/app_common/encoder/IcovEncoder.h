@@ -77,6 +77,7 @@ class IcovEncoder
         float ViewportPadding;
         frame_t FrameCount;
         frame_t FrameStart;
+        bool ExportReference;
 
         uint m_debugframecount;
         uint m_icuSize;

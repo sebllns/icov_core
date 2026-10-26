@@ -106,7 +106,7 @@ public:
         false;
 #endif
 
-    bool ExportRecoFrames = true;
+    bool ExportRecoFrames = false; ///< reference frames in <name>.ref/
   };
 
   FrameEncoder(const params &p, const LdpcCoderParameters &LDPC_Params);

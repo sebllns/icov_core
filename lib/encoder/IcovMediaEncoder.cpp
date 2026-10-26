@@ -6,6 +6,7 @@
 #include "encoder/InputMedia.h"
 #include "icov_log.h"
 #include "icov_path.h"
+#include "version.h"
 #include "omnidirectional_layer/factory.h"
 #include "omnidirectional_layer/icov_geometry.h"
 
@@ -94,11 +95,12 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
   icov_visualization.AccessBlockManager->buildAccessBlocks(
       *icov_visualization.Picture, *icov_visualization.ViewportManager);
 
-  m_output->stream() << "Input: " << input->getPath() << std::endl;
-  m_output->stream() << "Output: " << m_output->getPath() << std::endl;
-  m_output->stream() << "Encoded: "
-                     << boost::posix_time::second_clock::local_time()
-                     << std::endl;
+  // file names only: the statistics file must not leak local paths
+  m_output->setInfo("version", ICOV_CORE_VERSION);
+  m_output->setInfo("input", input->getPath().filename().string());
+  m_output->setInfo("output", m_output->getPath().filename().string());
+  m_output->setInfo("date", boost::posix_time::to_iso_extended_string(
+                                boost::posix_time::second_clock::local_time()));
 
   m_output->contentParameterSet().content_type =
       static_cast<byte>(input->getType());
@@ -148,8 +150,7 @@ void icov::encoder::IcovMediaEncoder::defaultEncode(
 
   ICOV_INFO << "Start encoding media";
   this->encode(*input, *icov_visualization.Picture, icov_blockPrediction);
-  m_output->writeContentParameterSet();
-  m_output->flush(bitstream::eIcovStream::COUNT);
+  m_output->close();
   ICOV_INFO << "End encoding media";
 }
 

@@ -55,8 +55,7 @@
 #include "video_layer/ContentParameterSet.h"
 #include "video_layer/extracted_stream.h"
 #include "video_layer/icov_stream.h"
-#include <boost/dynamic_bitset.hpp>
-#include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include "video_layer/bit_io.h"
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -71,6 +70,9 @@ namespace icov {
 namespace extractor {
 
 using pstream = std::unique_ptr<std::istream>;
+
+/// Reader of a single-file ICOV stream (server role): parses the parameter
+/// set and the block index, then loads one storage block unit (SBU) at a time
 class InputIcov : public icov::IInputIcov<pstream> {
 public:
   using rate_t = icov::bitstream::rate_t;
@@ -80,75 +82,57 @@ public:
 
   const bitstream::ContentParameterSet &contentParameterSet() const;
   bitstream::ContentParameterSet &contentParameterSet();
-  void readContentParameterSet();
 
+  /// Raw parameter set, as sent to a client
+  const std::vector<uint8_t> &parameterSetBytes() const;
+
+  void setFrame(frame_t frame) override;
+  void selectBlock(const omnidirectional_layer::Block::id_t &id);
+
+  /// Next fixed-size parameter of the selected block
+  template <typename T> void readParam(T &output) {
+    output = static_cast<T>(m_params.u(8 * sizeof(rate_t)));
+  }
+
+  /// Skips the parameters of one prediction of one channel
+  void jumpPrediction(int bitplaneCount);
+
+  /// Copies read_size bytes of syndrome, then skips to the end of the
+  /// stored syndrome (stored_size bytes in total)
+  void readSyndrome(byte *output, uint64_t read_size, uint64_t stored_size);
   void offsetSyndrome(uint offset);
 
-  void readSyndrome(byte *output, uint64_t read_size,
-                    uint64_t stored_size);
-  void readFrameSize();
-  void readBlockPos();
-  void selectBlock(const omnidirectional_layer::Block::id_t &id);
-  void readSyndromesSizes(std::vector<int> &bitplaneCount,
-                          std::vector<NumcodeIdxVec> &output);
-  void readSyndromesSizes(NumcodeIdxVec &output);
-  void selectPrediction(ushort pred_idx, const std::vector<int> &bitplaneCount);
-
-  template <typename T> void read(int id, int size, T *output) {
-    icov::io::read_value(getStream(id), output, size);
-  }
-
-  template <typename T> void read(int id, T &output) {
-    icov::io::read_value(getStream(id), &output, 1);
-  }
-
-  int readByteIntParam();
-  void readQaryParams(byte header, int &q_idx, int &z_min,
-                      int &z_max);
-  void readSIRates(NumcodeIdxVec &v);
-  void extractBlock(bitstream::BlockChannelDecoderParams &output, int icu_idx);
-
-  void writeInfos(std::ofstream &output, int key, void *param) override;
-  void setFrame(frame_t frame) override;
+  /// Encoder MSE of the selected block, NaN without statistics file
+  float blockMse() const;
 
   omnidirectional_layer::Block::id_t
   getBlockIndexInStream(const omnidirectional_layer::Block::id_t &id) const;
 
   void resetStreams();
 
-  /**
-   * @brief Get the input stream for a given ID
-   * @param id The ID of the input stream
-   * @return A reference to the input stream for the given ID
-   */
-  std::istream &getStream(int id);
-
-  /**
-   * @brief Jump the prediction for the given number of bitplanes
-   * @param bitplaneCount The number of bitplanes to pass the prediction for
-   */
-  void jumpPrediction(int bitplaneCount);
+  void writeInfos(std::ofstream &output, int key, void *param) override;
 
 private:
-  bitstream::ContentParameterSet
-      m_contentParameterSet; ///< The content parameter set for the input stream
+  struct IndexEntry {
+    uint64_t offset;
+    uint32_t params_size;
+    uint32_t syndrome_size;
+  };
 
-  std::map<int, pstream>
-      m_fileParts; ///< The map of input file streams for each ID
+  void readStatistics();
 
-  size_t m_blockCount; ///< The number of blocks in the input stream
+  bitstream::ContentParameterSet m_contentParameterSet;
+  std::vector<uint8_t> m_ips;
+  std::ifstream m_file;
+  std::vector<IndexEntry> m_index; ///< per frame, per coded block
+  size_t m_blockCount;             ///< coded blocks per frame
 
-  std::vector<std::streampos>
-      m_rates_pos; ///< The vector of stream positions that indicates where SI
-                   ///< rates data start for each block in the input stream
-                   /// < 0 index is for frame start
+  std::vector<uint8_t> m_sbu; ///< selected storage block unit
+  size_t m_blockPos;          ///< index of the selected block in its frame
+  bitstream::BitReader m_params;
+  size_t m_syndromePos; ///< read position in the syndrome part of m_sbu
 
-  std::vector<std::streampos>
-      m_synd_pos; ///< The vector of stream positions that indicates where
-                  ///< syndrome data start for each block in the input stream
-                  /// < 0 index is for frame start
-
-  bitstream::QaryParams m_qaryParams;
+  std::vector<std::vector<float>> m_mse; ///< per frame, per block
 };
 
 } // namespace extractor

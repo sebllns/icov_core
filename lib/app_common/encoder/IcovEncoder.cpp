@@ -28,7 +28,8 @@ icov::encoder::IcovEncoder::IcovEncoder(const params &params,
                   .ChFormat = CHROMA_420,
                   .ICU_Size = cv::Size(m_params.m_icuSize, m_params.m_icuSize),
                   .BSP_Params = m_params.bsp_params,
-                  .MaxRateNoCoding = 8},
+                  .MaxRateNoCoding = 8,
+                  .ExportRecoFrames = m_params.ExportReference},
           .AllBlocks = true, //@todo TODO !!!
           .StartBlock = 61,
           .BlockCount = 23,
@@ -100,8 +101,11 @@ icov::encoder::IcovEncoder::params::params(
 
   Inputfile = options::parseInputFile(args);
   Outputfile = options::parseOutputFile(args);
+  ExportReference = options::parseExportReference(args);
+  // -o names the ICOV file; default: the input name with .icov
   if (Outputfile.empty())
-    Outputfile = (fs::path(Inputfile).parent_path() / "info.txt").string();
-  else
-    Outputfile = (fs::path(Outputfile) / "info.txt").string();
+    Outputfile = fs::path(Inputfile).replace_extension(".icov").string();
+  else if (Outputfile.back() == '/' || fs::is_directory(Outputfile))
+    ICOV_THROW_INVALID_ARGUMENT("-o expects a file name, e.g. out.icov, got " +
+                                Outputfile);
 }

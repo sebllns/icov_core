@@ -68,16 +68,6 @@ namespace icov {
 
 namespace bitstream {
 
-typedef enum {
-  MEDIA_HEADER = 0,
-  FRAMES_SIZE,
-  BLOCKS_SIZE,
-  ENCODE_PARAMS,
-  SYNDROME,
-  METRICS,
-  COUNT
-} eIcovStream;
-
 static const omnidirectional_layer::IBlockPredictionManager::prediction_t
     PredictionID[PREDICTION_COUNT] = {
         omnidirectional_layer::BlockPrediction::INTER,
@@ -90,26 +80,6 @@ static const omnidirectional_layer::IBlockPredictionManager::prediction_t
         omnidirectional_layer::BlockPrediction::TOP,
         omnidirectional_layer::BlockPrediction::BOTTOM,
 };
-
-inline std::string getIcovPartName(int id) {
-  switch (static_cast<eIcovStream>(id)) {
-  case MEDIA_HEADER:
-    return "header";
-  case FRAMES_SIZE:
-    return "fsize";
-  case BLOCKS_SIZE:
-    return "bsize";
-  case ENCODE_PARAMS:
-    return "prediction";
-  case SYNDROME:
-    return "syndrome";
-  case METRICS:
-    return "metric";
-  default:
-    ICOV_THROW_INVALID_ARGUMENT("getIcovPartName");
-  }
-  return "";
-}
 
 inline int
 getPredictionOrder(omnidirectional_layer::BlockPrediction::ePredType pred) {

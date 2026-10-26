@@ -49,6 +49,8 @@
 
 #pragma once
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <fstream>
 #include <functional>
@@ -64,6 +66,7 @@ public:
   ~EncoderStatistics() = default;
 
   void write(std::ostream &output) const;
+  boost::property_tree::ptree toTree() const;
 
   unsigned long getTotal_frames() const;
   void setTotal_frames(unsigned long newTotal_frames);

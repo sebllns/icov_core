@@ -98,8 +98,7 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
              << std::to_string(is_access_block);
 
   // read bitplane count
-  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS,
-                   m_bitplaneCount);
+  m_icovFile->readParam(m_bitplaneCount);
 
   bitstream::VideoStreamDebugger::get_const_instance().assertBitplaneCountEqual(
       m_bitplaneCount);
@@ -123,7 +122,7 @@ void ChannelExtractor::extract_stored_syndrome_size(bool is_access_block) {
     byte qSize = 0;
     ushort padding = 0;
 
-    m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, qSize);
+    m_icovFile->readParam(qSize);
 
     bitstream::VideoStreamDebugger::get_const_instance()
         .assertStoredNumcodeIdxEqual(bp.Index, qSize);
@@ -147,10 +146,9 @@ void ChannelExtractor::pass_access_block() {
 
   ICOV_TRACE << std::to_string(m_params.CompID) << ": pass_access_block ";
 
-  ushort syndrome_size = 0, syndrome_padding = 0;
-  bitstream::getByteCount(m_ldpc_coder->get_n() * m_bitplaneCount,
-                          syndrome_size, syndrome_padding);
-  m_icovFile->offsetSyndrome(syndrome_size);
+  // raw bitplanes are stored byte-aligned one by one
+  m_icovFile->offsetSyndrome(bitstream::bitToByteCount(m_ldpc_coder->get_n()) *
+                             m_bitplaneCount);
 
   ICOV_TRACE << "END pass_access_block ";
 }
@@ -179,7 +177,7 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
   si.reset();
 
   byte dirmode = 0;
-  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, dirmode);
+  m_icovFile->readParam(dirmode);
 
   ICOV_TRACE << "EXTRACTOR DM " << (int)dirmode;
 
@@ -188,7 +186,7 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
       dirmode);
 
   byte pred_hdr = bitstream::flag_t::NoCodingSI;
-  m_icovFile->read(icov::bitstream::eIcovStream::ENCODE_PARAMS, pred_hdr);
+  m_icovFile->readParam(pred_hdr);
   ICOV_TRACE << "EXTRACTOR QZ ";
 
   si.setMode(dirmode);
@@ -206,11 +204,11 @@ void ChannelExtractor::_extractPredParams(bitstream::SIEncodedParams &si) {
 
     byte zmin = 0, zmax = 0;
 
-    m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmin);
+    m_icovFile->readParam(zmin);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MIN, zmin);
 
-    m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, zmax);
+    m_icovFile->readParam(zmax);
     bitstream::VideoStreamDebugger::get_const_instance().assertQaryParamEqual(
         ldpc_codec_layer::QaryDistribution::QaryParamsIndex_Z_MAX, zmax);
 
@@ -259,7 +257,7 @@ void ChannelExtractor::_extractBitplaneNumcode(BitplaneSyndromeExtractor &bp,
   ushort padding = 0;
 
   // read syndrome quantized size value
-  m_icovFile->read(bitstream::eIcovStream::ENCODE_PARAMS, qsize);
+  m_icovFile->readParam(qsize);
 
   // inverse size quantization and store the value
   bp.BitRates[pred_type].set(qsize, *m_ldpc_coder, padding);
@@ -312,10 +310,6 @@ void ChannelExtractor::_extractBitplaneSyndrome(
   icov::assert::check_not(offset < 0,
                           ICOV_DEBUG_HEADER("Offset can't be negative"));
 
-  ICOV_TRACE
-      << "SYNDROME POS IN ENCODED FILE START FROM "
-      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
-
   ICOV_TRACE << "BITSTREAM POS BEFORE READ " << m_bitstream->getWritePosition();
 
   int total_read = 0;
@@ -338,10 +332,6 @@ void ChannelExtractor::_extractBitplaneSyndrome(
       ICOV_DEBUG_HEADER("Check syndrome read size consistency"));
 
   m_icovFile->offsetSyndrome(offset);
-
-  ICOV_DEBUG
-      << "SYNDROME POS NOW IS "
-      << m_icovFile->getStream(icov::bitstream::eIcovStream::SYNDROME).tellg();
 
   ICOV_TRACE << "BITSTREAM POS AFTER READ " << m_bitstream->getWritePosition();
 

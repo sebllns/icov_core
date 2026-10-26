@@ -37,6 +37,28 @@ void EncoderStatistics::write(std::ostream &output) const {
     output << p.first << "\t" << p.second << std::endl;
 }
 
+boost::property_tree::ptree EncoderStatistics::toTree() const {
+  boost::property_tree::ptree t;
+  t.put("frames", total_frames);
+  t.put("blocks", total_block);
+  t.put("access_blocks", total_access_block);
+
+  // histograms: syndrome length in bits -> count
+  auto histogram = [](const std::map<float, unsigned long> &h) {
+    boost::property_tree::ptree out;
+    for (const auto &p : h) {
+      boost::property_tree::ptree item;
+      item.put("bits", p.first);
+      item.put("count", p.second);
+      out.push_back({"", item});
+    }
+    return out;
+  };
+  t.add_child("stored_rates", histogram(encoded_rates));
+  t.add_child("prediction_rates", histogram(si_rates));
+  return t;
+}
+
 unsigned long EncoderStatistics::getTotal_frames() const {
   return total_frames;
 }

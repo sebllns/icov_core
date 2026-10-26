@@ -305,8 +305,10 @@ bool decoder::SinglePassDecoder::setRequest(const request_t &r) {
             if (m_current_gop < m_gops) {
               m_params.IcovFile = m_icovFile->getPath().parent_path() /
                                   (std::to_string(m_current_gop) + ".icov");
-              if (fs::is_directory(m_params.IcovFile)) {
+              if (fs::is_regular_file(m_params.IcovFile)) {
                 this->openIcovFile(m_params.IcovFile);
+                if (m_blockExtractor)
+                  m_blockExtractor->setIcovFile(m_icovFile);
               }
             } else {
               play = false;

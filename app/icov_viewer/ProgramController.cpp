@@ -29,7 +29,7 @@ void ProgramController::launchMode(const std::string &mode_id)
         encoder::IcovEncoder::params enc_params(args());
         encoder::IcovEncoder encoder(enc_params, *ldpc_params);
         encoder.run();
-        icov_file = fs::path(enc_params.Outputfile).parent_path().string();
+        icov_file = enc_params.Outputfile;
     }
 
     InteractiveDecoder decoder(icov_file, args());
