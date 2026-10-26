@@ -188,8 +188,9 @@ public:
   bool loadGroundTruthFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
     std::string frame_name = "x" + std::to_string(f) + ".tif";
-    fs::path frame_path =
-        getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
+    // Absolute, as stored by IMedia::getPath(), so an unchanged frame is not reloaded
+    fs::path frame_path = fs::absolute(
+        getDecoder()->getParams().IcovFile / "source_frames" / frame_name);
 
     if (fs::is_regular_file(frame_path) &&
         (!m_analyzer.GroundTruth ||
@@ -205,8 +206,9 @@ public:
   bool loadSourceFrame() {
     frame_t f = getDecoder()->getRequest().frameID;
     std::string frame_name = "v" + std::to_string(f) + ".tif";
-    fs::path frame_path =
-        getDecoder()->getParams().IcovFile / "source_frames" / frame_name;
+    // Absolute, as stored by IMedia::getPath(), so an unchanged frame is not reloaded
+    fs::path frame_path = fs::absolute(
+        getDecoder()->getParams().IcovFile / "source_frames" / frame_name);
 
     if (fs::is_regular_file(frame_path) &&
         (!m_analyzer.Source || m_analyzer.Source->getPath() != frame_path)) {
