@@ -223,16 +223,8 @@ The stored matrices are not part of the block units: a streaming server would se
 
 Doxygen: https://sebllns.github.io/icov_core/
 
-Resources: https://sourceforge.net/projects/icov/files
-
 Demo video: https://vimeo.com/user188622130
 
-
-<!-- Button to download + download counter -->
-<!-- [![Download ICOV](https://img.shields.io/sourceforge/dw/icov.svg)](https://sourceforge.net/projects/icov/files/latest/download)  -->
-
-<!-- Big green button to downoad last version on sourceforge -->
-<!-- [![Download ICOV](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/icov/files/latest/download) -->
 
 
 ## Copyright notice
