@@ -482,7 +482,7 @@ Per predicted block, the 23.1 B beyond the syndrome are: about 11.4 B of rate in
 1. Access blocks: still raw, 12 KB of the 60.6 KB on the path (step 7, VVC residual coding).
 2. Rate table in the IPS (12.3).
 3. `z_min` / `z_max`: code `z_max - z_min` and predict `z_min` from the channel.
-4. Requests as messages and extractor and decoder in two processes, to measure real network traffic.
+4. Requests as messages and extractor and decoder in two processes, to measure real network traffic. Specified in `streaming_protocol.md` (protocol version 1, not implemented yet).
 5. `trak` / `stsd` sample entry and OMAF projection boxes (step 8).
 
 ## 13. LDPC matrices (2.1.0)
